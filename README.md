@@ -45,8 +45,6 @@ Objective Scoring
 ↓
 Robustness Analysis
 
-yaml
-Copy code
 
 The core system is fully domain-agnostic.
 
