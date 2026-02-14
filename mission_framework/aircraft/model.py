@@ -1,25 +1,21 @@
-# mission_framework/simulation/aircraft/model.py
+# mission_framework/aircraft/model.py
 """
 Point-mass UAV dynamics (MODULE A / aircraft).
 
-This is a lightweight, "good enough to start optimizing" aircraft model:
-- 2D horizontal motion (x, y) with altitude (z) as a state (optional).
-- Point-mass kinematics with commanded airspeed and heading rate (or heading).
-- Wind is injected externally (see wind.py) as a world-frame velocity field.
+Lightweight point-mass kinematics suitable for optimization loops.
 
-State (world/NED-ish but using z-up by convention here):
-    x, y, z      [m]
-    psi          heading/yaw [rad]
-    v            airspeed magnitude [m/s]
+State (world frame, z-up):
+    x, y, z   [m]
+    psi       heading/yaw [rad]
+    v         airspeed magnitude [m/s]
 
 Control:
-    v_cmd        desired airspeed [m/s]
-    psi_rate_cmd desired heading rate [rad/s]   (or psi_cmd if you prefer)
-    vz_cmd       desired vertical speed [m/s]   (optional)
+    v_cmd         desired airspeed [m/s]
+    psi_rate_cmd  desired heading rate [rad/s]
+    vz_cmd        desired vertical speed [m/s] (optional)
 
-Notes:
-- This file intentionally does NOT model lift/drag in detail. That’s what energy.py is for.
-- Planner can treat v_cmd and psi_rate_cmd as decision variables.
+Wind:
+    wind_fn(t, x, y, z) -> (wx, wy, wz) [m/s] world-frame wind velocity
 """
 
 from __future__ import annotations
@@ -40,8 +36,11 @@ def clamp(x: float, lo: float, hi: float) -> float:
 
 def wrap_angle_pi(a: float) -> float:
     """Wrap angle to (-pi, pi]."""
-    a = (a + math.pi) % (2.0 * math.pi) - math.pi
-    return a
+    return (a + math.pi) % (2.0 * math.pi) - math.pi
+
+
+# Wind model signature: returns (wx, wy, wz) in world frame [m/s]
+WindFn = Callable[[float, float, float, float], Tuple[float, float, float]]
 
 
 # ============================================================
@@ -54,20 +53,20 @@ class AircraftParams:
     v_min: float = 10.0
     v_max: float = 40.0
 
-    # Accel limits (simple first-order speed response)
-    a_long_max: float = 2.0     # max accel [m/s^2]
-    a_long_min: float = -3.0    # max decel [m/s^2]
+    # Longitudinal accel limits (simple “track v_cmd with bounded accel”)
+    a_long_max: float = 2.0     # [m/s^2]
+    a_long_min: float = -3.0    # [m/s^2] (decel)
 
-    # Turn limits
+    # Heading rate limits
     psi_rate_max: float = math.radians(25.0)  # [rad/s]
     psi_rate_min: float = -math.radians(25.0)
 
-    # Vertical motion
-    vz_max: float = 5.0   # [m/s] positive up
+    # Vertical speed limits (z-up positive)
+    vz_max: float = 5.0
     vz_min: float = -5.0
 
-    # Optional: steady-speed "bank-limited" turn radius proxy
-    min_turn_radius: Optional[float] = None  # [m], if set overrides psi_rate limits via v/r
+    # Optional: enforce a minimum turn radius R by bounding |psi_rate| <= v/R
+    min_turn_radius: Optional[float] = None  # [m]
 
     # Numerics
     dt_default: float = 1.0
@@ -108,45 +107,38 @@ class AircraftControl:
         }
 
 
-# Wind model signature: returns (wx, wy, wz) in world frame [m/s]
-WindFn = Callable[[float, float, float, float], Tuple[float, float, float]]
-
-
 # ============================================================
 # Dynamics
 # ============================================================
 
 class PointMassUAV:
     """
-    Point-mass kinematic UAV with simple rate/acceleration limits.
+    Point-mass kinematic UAV with simple accel/rate limits.
 
-    You can use:
-      - step(state, control, t, dt, wind_fn)
-      - propagate(initial, controls, t0, dt, wind_fn) -> (states, times)
+    Methods:
+        step(state, control, t, dt, wind_fn) -> next_state
+        propagate(initial, controls, ...) -> (states, times)
     """
 
     def __init__(self, params: Optional[AircraftParams] = None):
         self.p = params if params is not None else AircraftParams()
 
     def _limit_heading_rate(self, v: float, psi_rate_cmd: float) -> float:
-        """Apply psi-rate limits and optional min turn radius."""
-        # Base clamp
         psi_rate = clamp(psi_rate_cmd, self.p.psi_rate_min, self.p.psi_rate_max)
 
-        # If a min turn radius is specified, cap heading rate by v / R
         if self.p.min_turn_radius is not None and self.p.min_turn_radius > 0:
-            max_rate_from_radius = abs(v) / float(self.p.min_turn_radius)
-            psi_rate = clamp(psi_rate, -max_rate_from_radius, max_rate_from_radius)
+            max_rate = abs(v) / float(self.p.min_turn_radius)
+            psi_rate = clamp(psi_rate, -max_rate, max_rate)
 
         return psi_rate
 
     def _speed_update(self, v: float, v_cmd: float, dt: float) -> float:
-        """First-order speed response with accel/decel limits."""
         v_cmd = clamp(v_cmd, self.p.v_min, self.p.v_max)
         dv = v_cmd - v
-        # Convert desired dv into an accel, then clamp accel
+
         a_des = dv / dt if dt > 0 else 0.0
         a = clamp(a_des, self.p.a_long_min, self.p.a_long_max)
+
         v_new = v + a * dt
         return clamp(v_new, self.p.v_min, self.p.v_max)
 
@@ -157,51 +149,48 @@ class PointMassUAV:
         self,
         state: AircraftState,
         control: AircraftControl,
+        *,
         t: float,
         dt: Optional[float] = None,
         wind_fn: Optional[WindFn] = None,
     ) -> AircraftState:
         """
-        One integration step (Euler).
+        One Euler integration step.
 
-        - Air-relative velocity is (v*cos(psi), v*sin(psi), vz).
-        - Wind is added in world frame.
+        Ground velocity = air-relative velocity + wind.
         """
         if dt is None:
             dt = self.p.dt_default
         if dt <= 0:
             return state.copy()
 
-        # Update speed (airspeed)
+        # Update airspeed and heading
         v_new = self._speed_update(state.v, control.v_cmd, dt)
-
-        # Update heading
         psi_rate = self._limit_heading_rate(v_new, control.psi_rate_cmd)
         psi_new = wrap_angle_pi(state.psi + psi_rate * dt)
 
-        # Vertical speed (world-up positive)
-        vz = self._vz_update(control.vz_cmd)
+        # Vertical speed
+        vz_air = self._vz_update(control.vz_cmd)
 
-        # Air-relative velocity in world frame (assuming psi measured in world XY plane)
+        # Air-relative velocity in world frame
         vx_air = v_new * math.cos(psi_new)
         vy_air = v_new * math.sin(psi_new)
-        vz_air = vz
 
-        # Wind velocity in world frame
+        # Wind in world frame
         if wind_fn is None:
             wx = wy = wz = 0.0
         else:
-            wx, wy, wz = wind_fn(t, state.x, state.y, state.z)
+            wx, wy, wz = wind_fn(float(t), state.x, state.y, state.z)
 
         # Ground-relative velocity
         vx = vx_air + wx
         vy = vy_air + wy
-        vz_g = vz_air + wz
+        vz = vz_air + wz
 
-        # Integrate position
+        # Integrate
         x_new = state.x + vx * dt
         y_new = state.y + vy * dt
-        z_new = state.z + vz_g * dt
+        z_new = state.z + vz * dt
 
         return AircraftState(x=x_new, y=y_new, z=z_new, psi=psi_new, v=v_new)
 
@@ -245,7 +234,7 @@ class PointMassUAV:
 
 
 # ============================================================
-# Convenience constructors
+# Convenience helpers
 # ============================================================
 
 def default_state(
@@ -259,6 +248,7 @@ def default_state(
 
 
 def control_from_heading(
+    *,
     v_cmd: float,
     psi_cmd: float,
     psi_current: float,
@@ -267,9 +257,9 @@ def control_from_heading(
     vz_cmd: float = 0.0,
 ) -> AircraftControl:
     """
-    Helper if your planner outputs desired heading instead of heading-rate.
-    Converts (psi_cmd) into a rate command respecting psi_rate_limit.
+    Helper if planner outputs desired heading (psi_cmd) rather than heading-rate.
+    Converts heading error into a bounded psi_rate_cmd.
     """
-    dpsi = wrap_angle_pi(psi_cmd - psi_current)
-    psi_rate_cmd = clamp(dpsi / dt, -abs(psi_rate_limit), abs(psi_rate_limit))
-    return AircraftControl(v_cmd=v_cmd, psi_rate_cmd=psi_rate_cmd, vz_cmd=vz_cmd)
+    dpsi = wrap_angle_pi(float(psi_cmd) - float(psi_current))
+    psi_rate_cmd = clamp(dpsi / max(dt, 1e-9), -abs(psi_rate_limit), abs(psi_rate_limit))
+    return AircraftControl(v_cmd=float(v_cmd), psi_rate_cmd=float(psi_rate_cmd), vz_cmd=float(vz_cmd))
