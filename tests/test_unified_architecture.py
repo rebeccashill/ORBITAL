@@ -27,7 +27,7 @@ import yaml
 
 from mission_framework.core.planner import Planner, PlannerConfig, Problem
 from mission_framework.core.decision_variables import DecisionSpace
-from mission_framework.core.constraints import Constraint
+from mission_framework.core.constraints import Constraint, ConstraintGroup
 from mission_framework.core.objective import Objective
 
 
@@ -50,7 +50,7 @@ def test_aircraft_problem_builds_with_unified_core_types():
     assert isinstance(problem.decision_space, DecisionSpace)
     assert isinstance(problem.objective, Objective)
     assert isinstance(problem.constraints, list)
-    assert all(isinstance(c, Constraint) for c in problem.constraints)
+    assert all(isinstance(c, (Constraint, ConstraintGroup)) for c in problem.constraints)
 
 
 def test_spacecraft_problem_builds_with_unified_core_types():
@@ -64,7 +64,7 @@ def test_spacecraft_problem_builds_with_unified_core_types():
     assert isinstance(problem.decision_space, DecisionSpace)
     assert isinstance(problem.objective, Objective)
     assert isinstance(problem.constraints, list)
-    assert all(isinstance(c, Constraint) for c in problem.constraints)
+    assert all(isinstance(c, (Constraint, ConstraintGroup)) for c in problem.constraints)
 
 
 def test_both_domains_use_same_planner_class():
