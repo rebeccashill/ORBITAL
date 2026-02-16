@@ -1,4 +1,3 @@
-
 # examples/aircraft_uav_demo.yaml
 #
 # Aircraft UAV Mission Demo
@@ -144,7 +143,6 @@ output:
   export_flight_path: true
   export_constraint_report: true
   export_summary_metrics: true
-  save_history: true
   verbose: true
 
 simulation:
