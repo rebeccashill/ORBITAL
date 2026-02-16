@@ -9,7 +9,6 @@ import numpy as np
 
 from mission_framework.core.types import SimResult, Trajectory, Plan
 
-# New modules (AeroHack-ready)
 from mission_framework.aircraft.wind_model import WindModel, ZeroWind, StochasticWind
 from mission_framework.aircraft.battery_model import BatteryModel, BatteryParams
 from mission_framework.aircraft.dynamics import (
@@ -25,7 +24,6 @@ from mission_framework.aircraft.geofence import GeofenceMap
 class AircraftSimParams:
     """
     High-level sim settings + guidance settings for a waypoint-following demo.
-    We keep these separate from dynamics params so you can tune guidance without touching physics.
     """
     # simulation
     t_max_s: float = 10_000.0
@@ -36,32 +34,26 @@ class AircraftSimParams:
     stall_improve_m: float = 1.0
 
     # guidance
-    k_heading: float = 1.2            # heading error -> yaw rate command (through psi_cmd)
-    k_speed: float = 0.8              # speed error -> accel proxy (we use v_air_cmd lag in dynamics)
-    max_speed_step_mps: float = 3.0   # per-step clamp on v_air_cmd changes
+    k_heading: float = 1.2
+    k_speed: float = 0.8
+    max_speed_step_mps: float = 3.0
 
 
 @dataclass
 class AircraftSim:
     """
     Aircraft simulator (point-mass + heading dynamics + wind + battery).
-
-    Key AeroHack requirements covered:
-    - Wind: injected via WindModel (time-varying/spatial/stochastic)
-    - Maneuver: bank-angle -> yaw rate limit inside AircraftKinematics
-    - Endurance: explicit BatteryModel integration
-    - Geofence: optional GeofenceMap audit at the end (trajectory-level)
     """
-    dyn: DynParams = None
-    sim: AircraftSimParams = None
+    dyn: Optional[DynParams] = None
+    sim: Optional[AircraftSimParams] = None
 
-    wind: WindModel = None
-    battery_params: BatteryParams = None
+    wind: Optional[WindModel] = None
+    battery_params: Optional[BatteryParams] = None
 
     geofence: Optional[GeofenceMap] = None
     geofence_clearance_m: float = 0.0  # buffer distance (0 = strict boundary)
-    
-    def __post_init__(self):
+
+    def __post_init__(self) -> None:
         if self.dyn is None:
             self.dyn = DynParams()
         if self.sim is None:
@@ -77,10 +69,6 @@ class AircraftSim:
         rng: Optional[np.random.Generator] = None,
         t_max_s: Optional[float] = None,
     ) -> SimResult:
-        """
-        Plan.waypoints must include at least START and one waypoint with x_m/y_m.
-        We follow waypoints in order, with maneuver limits + wind + battery.
-        """
         if not plan.waypoints or len(plan.waypoints) < 2:
             raise ValueError("Aircraft plan must include at least START and one waypoint.")
 
@@ -90,19 +78,24 @@ class AircraftSim:
         if isinstance(self.wind, StochasticWind):
             self.wind.reset(rng)
 
+        # After __post_init__, dyn/sim/wind/battery_params are set
+        assert self.dyn is not None
+        assert self.sim is not None
+        assert self.wind is not None
+        assert self.battery_params is not None
+
         kin = AircraftKinematics(self.dyn, wind=self.wind)
         batt = BatteryModel(self.battery_params)
         batt.reset()
 
         wps = plan.waypoints
-
         dt = float(self.dyn.dt_s)
         if dt <= 0:
             raise ValueError("Dynamics dt_s must be > 0")
 
         t_max = float(self.sim.t_max_s if t_max_s is None else t_max_s)
 
-        # initial state
+        # initial state (START)
         x0 = float(wps[0].get("x_m", 0.0))
         y0 = float(wps[0].get("y_m", 0.0))
         z0 = float(wps[0].get("z_m", 0.0))
@@ -113,7 +106,9 @@ class AircraftSim:
 
         # battery initial from plan (optional)
         if "battery_Wh" in plan.metadata:
-            batt.state.energy_Wh = float(np.clip(float(plan.metadata["battery_Wh"]), 0.0, self.battery_params.capacity_Wh))
+            batt.state.energy_Wh = float(
+                np.clip(float(plan.metadata["battery_Wh"]), 0.0, self.battery_params.capacity_Wh)
+            )
 
         # commanded cruise speed from decisions/metadata
         v_cmd = float(plan.metadata.get("cruise_speed_mps", v0))
@@ -124,9 +119,13 @@ class AircraftSim:
         idx = 1  # next waypoint index
 
         t_hist: List[float] = [t]
+        # state order: x, y, z, heading, v_air, battery
         state_hist: List[List[float]] = [[x0, y0, z0, psi0, v0, batt.state.energy_Wh]]
+
+        # store per-step vectors as components to keep resources 1D
         wind_hist: List[List[float]] = [[0.0, 0.0, 0.0]]
         vground_hist: List[List[float]] = [[0.0, 0.0, 0.0]]
+
         yawrate_hist: List[float] = [0.0]
         reached_hist: List[float] = [0.0]
 
@@ -166,14 +165,14 @@ class AircraftSim:
             psi_des = math.atan2(dy, dx)
             e = wrap_angle_rad(psi_des - s.psi_rad)
 
-            # convert heading error into a psi_cmd one step ahead (bounded)
-            # (kinematics will enforce yaw-rate/bank constraints)
+            # psi_cmd for heading tracking (kin enforces bank/yaw-rate limits)
             psi_cmd = wrap_angle_rad(s.psi_rad + self.sim.k_heading * e)
 
             # speed command with small per-step changes (stability)
-            # dynamics uses 1st-order lag to reach v_air_cmd
             v_err = v_cmd - s.v_air_mps
-            v_air_cmd = s.v_air_mps + float(np.clip(self.sim.k_speed * v_err, -self.sim.max_speed_step_mps, self.sim.max_speed_step_mps))
+            v_air_cmd = s.v_air_mps + float(
+                np.clip(self.sim.k_speed * v_err, -self.sim.max_speed_step_mps, self.sim.max_speed_step_mps)
+            )
             v_air_cmd = float(np.clip(v_air_cmd, self.dyn.v_air_min_mps, self.dyn.v_air_max_mps))
 
             # step dynamics
@@ -187,7 +186,7 @@ class AircraftSim:
             )
             s = step.state
 
-            # battery drain uses *air-relative* speed and yaw rate proxy
+            # battery drain uses air-relative speed and yaw rate proxy
             batt.step(
                 dt_s=dt,
                 v_air_mps=float(np.linalg.norm(step.v_air_enu_mps[:2])),
@@ -204,35 +203,43 @@ class AircraftSim:
             yawrate_hist.append(float(step.yaw_rate_radps))
             reached_hist.append(0.0)
 
-        t_arr = np.array(t_hist, dtype=float)
-        state_arr = np.array(state_hist, dtype=float)
-        wind_arr = np.array(wind_hist, dtype=float)
-        vground_arr = np.array(vground_hist, dtype=float)
-        yawrate_arr = np.array(yawrate_hist, dtype=float)
-        v_air_arr = state_arr[:, 4]
+        # arrays
+        t_arr = np.asarray(t_hist, dtype=float)
+        state_arr = np.asarray(state_hist, dtype=float)
+        wind_arr = np.asarray(wind_hist, dtype=float)       # (T,3)
+        vground_arr = np.asarray(vground_hist, dtype=float) # (T,3)
+        yawrate_arr = np.asarray(yawrate_hist, dtype=float).reshape(-1)
 
+        # unpack 1D traces (constraint-safe)
+        x_arr = state_arr[:, 0]
+        y_arr = state_arr[:, 1]
+        z_arr = state_arr[:, 2]
+        heading_arr = state_arr[:, 3]
+        v_air_arr = state_arr[:, 4]
+        battery_arr = state_arr[:, 5]
+
+        # cumulative energy used trace (Wh)
+        energy_used_arr = np.maximum(0.0, battery_arr[0] - battery_arr)
+        energy_used_Wh = float(energy_used_arr[-1])
+
+        # build trajectory (optional for plotting)
         traj = Trajectory(
             t=t_arr,
             state=state_arr,
             control=None,
             frame="ENU",
-            metadata={
-                "state_order": ["x_m", "y_m", "z_m", "heading_rad", "v_air_mps", "battery_Wh"],
-            },
+            metadata={"state_order": ["x_m", "y_m", "z_m", "heading_rad", "v_air_mps", "battery_Wh"]},
         )
 
-        battery_trace = state_arr[:, 5]
-        t_end = float(t_arr[-1])
-        energy_used_Wh = float(max(0.0, battery_trace[0] - battery_trace[-1]))
-
-        # --- geofence audit (trajectory-level) ---
+        # geofence audit (trajectory-level)
         nfz_viol = 0.0
         min_clear = float("inf")
         geofence_audit_payload: Optional[Dict[str, Any]] = None
+
         if self.geofence is not None:
             audit = self.geofence.audit_trajectory(
-                xs_m=state_arr[:, 0].tolist(),
-                ys_m=state_arr[:, 1].tolist(),
+                xs_m=x_arr.tolist(),
+                ys_m=y_arr.tolist(),
                 clearance_m=float(self.geofence_clearance_m),
             )
             nfz_viol = 1.0 if audit.violated else 0.0
@@ -245,36 +252,56 @@ class AircraftSim:
                 "num_hits": len(audit.hits),
                 "hits": [
                     {"zone_id": h.zone_id, "index": h.index, "point": h.point, "kind": h.kind}
-                    for h in audit.hits[:50]  # keep bounded
+                    for h in audit.hits[:50]
                 ],
                 "metadata": audit.metadata,
             }
 
-        # Scalars for objectives/constraints
-        # Create energy_used array matching time array length (cumulative)
-        energy_used_arr = np.full(len(t_arr), energy_used_Wh, dtype=float)
-        
-        # Scalar resources (1D arrays of length T)
-        geofence_violated_arr = np.full(len(t_arr), nfz_viol, dtype=float)
-        geofence_min_clearance_arr = np.full(len(t_arr), min_clear, dtype=float)
-        waypoint_reached_arr = np.array(reached_hist, dtype=float)
-        
+        # 1D resources for constraints/objectives (do NOT rely on trajectory in constraints)
+        wind_e = wind_arr[:, 0]
+        wind_n = wind_arr[:, 1]
+        wind_u = wind_arr[:, 2]
+        vg_e = vground_arr[:, 0]
+        vg_n = vground_arr[:, 1]
+        vg_u = vground_arr[:, 2]
+
+        geofence_violated_arr = np.full(t_arr.shape[0], nfz_viol, dtype=float)
+        geofence_min_clearance_arr = np.full(t_arr.shape[0], min_clear, dtype=float)
+        waypoint_reached_arr = np.asarray(reached_hist, dtype=float).reshape(-1)
+
+        t_end = float(t_arr[-1])
+
         sim = SimResult(
             t=t_arr,
-            trajectory=traj,
+            trajectory=traj,  # keep for plotting, but constraints should use resources
             resources={
-                "battery_Wh": battery_trace,
+                # canonical 1D traces
+                "x_m": x_arr,
+                "y_m": y_arr,
+                "z_m": z_arr,
+                "heading_rad": heading_arr,
+                "v_air_mps": v_air_arr,
+                "battery_Wh": battery_arr,
                 "energy_used_Wh": energy_used_arr,
                 "yaw_rate_radps": yawrate_arr,
+
+                # wind and ground speed components (1D)
+                "wind_east_mps": wind_e,
+                "wind_north_mps": wind_n,
+                "wind_up_mps": wind_u,
+                "v_ground_east_mps": vg_e,
+                "v_ground_north_mps": vg_n,
+                "v_ground_up_mps": vg_u,
+
+                # geofence / mission progress (1D)
                 "geofence_violated": geofence_violated_arr,
                 "geofence_min_clearance_m": geofence_min_clearance_arr,
                 "waypoint_reached_flag": waypoint_reached_arr,
-                "v_air_mps": v_air_arr,
             },
             scalars={
                 "t_end_s": t_end,
                 "energy_used_Wh": energy_used_Wh,
-                "final_battery_Wh": float(battery_trace[-1]),
+                "final_battery_Wh": float(battery_arr[-1]),
                 "waypoints_completed": float(min(idx, len(wps) - 1)),
                 "waypoints_total": float(len(wps) - 1),
                 "geofence_violated": float(nfz_viol),
@@ -283,9 +310,6 @@ class AircraftSim:
             metadata={
                 "reached_all": bool(idx >= len(wps)),
                 "geofence_audit": geofence_audit_payload,
-                # Store 2D vector arrays in metadata since resources expects 1D arrays
-                "wind_enu_mps": wind_arr,  # (T, 3)
-                "v_ground_enu_mps": vground_arr,  # (T, 3)
             },
         )
         return sim
