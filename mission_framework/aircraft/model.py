@@ -52,14 +52,24 @@ class AircraftSim:
     - Endurance: explicit BatteryModel integration
     - Geofence: optional GeofenceMap audit at the end (trajectory-level)
     """
-    dyn: DynParams = DynParams()
-    sim: AircraftSimParams = AircraftSimParams()
+    dyn: DynParams = None
+    sim: AircraftSimParams = None
 
-    wind: WindModel = ZeroWind()
-    battery_params: BatteryParams = BatteryParams(capacity_Wh=800.0)
+    wind: WindModel = None
+    battery_params: BatteryParams = None
 
     geofence: Optional[GeofenceMap] = None
     geofence_clearance_m: float = 0.0  # buffer distance (0 = strict boundary)
+    
+    def __post_init__(self):
+        if self.dyn is None:
+            self.dyn = DynParams()
+        if self.sim is None:
+            self.sim = AircraftSimParams()
+        if self.wind is None:
+            self.wind = ZeroWind()
+        if self.battery_params is None:
+            self.battery_params = BatteryParams(capacity_Wh=800.0)
 
     def simulate(
         self,
@@ -241,18 +251,24 @@ class AircraftSim:
             }
 
         # Scalars for objectives/constraints
+        # Create energy_used array matching time array length (cumulative)
+        energy_used_arr = np.full(len(t_arr), energy_used_Wh, dtype=float)
+        
+        # Scalar resources (1D arrays of length T)
+        geofence_violated_arr = np.full(len(t_arr), nfz_viol, dtype=float)
+        geofence_min_clearance_arr = np.full(len(t_arr), min_clear, dtype=float)
+        waypoint_reached_arr = np.array(reached_hist, dtype=float)
+        
         sim = SimResult(
             t=t_arr,
             trajectory=traj,
             resources={
                 "battery_Wh": battery_trace,
-                "energy_used_Wh": np.array([energy_used_Wh], dtype=float),
-                "wind_enu_mps": wind_arr,
-                "v_ground_enu_mps": vground_arr,
+                "energy_used_Wh": energy_used_arr,
                 "yaw_rate_radps": yawrate_arr,
-                "geofence_violated": np.array([nfz_viol], dtype=float),
-                "geofence_min_clearance_m": np.array([min_clear], dtype=float),
-                "waypoint_reached_flag": np.array(reached_hist, dtype=float),
+                "geofence_violated": geofence_violated_arr,
+                "geofence_min_clearance_m": geofence_min_clearance_arr,
+                "waypoint_reached_flag": waypoint_reached_arr,
                 "v_air_mps": v_air_arr,
             },
             scalars={
@@ -267,6 +283,9 @@ class AircraftSim:
             metadata={
                 "reached_all": bool(idx >= len(wps)),
                 "geofence_audit": geofence_audit_payload,
+                # Store 2D vector arrays in metadata since resources expects 1D arrays
+                "wind_enu_mps": wind_arr,  # (T, 3)
+                "v_ground_enu_mps": vground_arr,  # (T, 3)
             },
         )
         return sim

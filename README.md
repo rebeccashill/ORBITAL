@@ -237,6 +237,51 @@ pip install -r requirements.txt
 
 ---
 
+## 🔬 Reproduce Results (AeroHack Submission)
+
+### Quick Start (Baseline Runs)
+
+```bash
+# Aircraft UAV Demo (200 iterations)
+python -m mission_framework.cli examples/aircraft_uav_demo.yaml \
+  --iterations 200 --restarts 1 --robustness 20
+
+# Spacecraft CubeSat Demo (200 iterations)
+python -m mission_framework.cli examples/cubesat_leo_demo.yaml \
+  --iterations 200 --restarts 1 --robustness 10
+```
+
+### Full Validation (Monte Carlo Analysis)
+
+```bash
+# Run complete validation suite with 50+ robustness cases
+python scripts/run_validation.py
+```
+
+### Output Locations
+
+Results are saved to `runs/<scenario_name>/`:
+- **constraints.json** - Constraint evaluation with margins
+- **score.json** - Objective breakdown and penalty terms
+- **robustness.json** - Monte Carlo statistics (CVaR, pass rates)
+- **waypoints.csv** (aircraft) or **schedule.csv** (spacecraft)
+
+Pre-generated outputs are also available in `outputs/` for reference.
+
+### Expected Runtime
+
+- Aircraft demo: ~30-60 seconds (200 iterations)
+- Spacecraft demo: ~60-120 seconds (200 iterations)  
+- Full validation: ~10-15 minutes (both domains with Monte Carlo)
+
+### Reproducibility Notes
+
+- Results vary slightly due to random initialization and Monte Carlo sampling
+- Constraint feasibility and score ranges should be consistent
+- For deterministic results, set a fixed random seed in the YAML config
+
+---
+
 ## 🔮 Roadmap
 
 ### Planned Extensions

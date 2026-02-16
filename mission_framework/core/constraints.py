@@ -80,9 +80,12 @@ class ConstraintResult:
         if idx is None:
             return None
         t = self.metadata.get("t", None)
-        if t is None:
+        if t is None or callable(t):
             return None
-        t_arr = np.asarray(t, dtype=float).reshape(-1)
+        try:
+            t_arr = np.asarray(t, dtype=float).reshape(-1)
+        except (TypeError, ValueError):
+            return None
         if idx < 0 or idx >= t_arr.size:
             return None
         return float(t_arr[idx])

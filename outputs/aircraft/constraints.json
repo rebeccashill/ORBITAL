@@ -1,0 +1,86 @@
+{
+  "summary": {
+    "hard_pass": false,
+    "soft_pass": true,
+    "total_penalty": 4.0,
+    "worst_hard": {
+      "name": "all_waypoints_reached",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": false,
+      "min_margin": -2.0,
+      "max_violation": 2.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": []
+    },
+    "worst_soft": null
+  },
+  "results": [
+    {
+      "name": "battery_nonnegative",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 792.5510213242044,
+      "max_violation": 0.0,
+      "worst_index": 61,
+      "worst_time": null,
+      "metadata_keys": [
+        "t"
+      ]
+    },
+    {
+      "name": "all_waypoints_reached",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": false,
+      "min_margin": -2.0,
+      "max_violation": 2.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": []
+    },
+    {
+      "name": "bank_angle_turn_limit",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 0.21268323318226395,
+      "max_violation": 0.0,
+      "worst_index": 1,
+      "worst_time": null,
+      "metadata_keys": [
+        "bank_max_deg"
+      ]
+    },
+    {
+      "name": "geofence_no_entry",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 0.5,
+      "max_violation": 0.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": []
+    },
+    {
+      "name": "geofence_clearance",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 2500.0,
+      "max_violation": 0.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": []
+    }
+  ]
+}

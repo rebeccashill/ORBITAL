@@ -1,0 +1,46 @@
+{
+  "total_score": 8124.234693602741,
+  "objective_cost": 124.23469360273869,
+  "constraint_penalty": 4.0,
+  "constraint_margin_reward": 0.0,
+  "objective": {
+    "total_cost": 124.23469360273869,
+    "terms": [
+      {
+        "name": "time",
+        "raw": 122.0,
+        "weighted_cost": 122.0,
+        "weight": 1.0
+      },
+      {
+        "name": "energy",
+        "raw": 7.448978675795615,
+        "weighted_cost": 2.2346936027386843,
+        "weight": 0.3
+      }
+    ]
+  },
+  "constraint_summary": {
+    "hard_pass": false,
+    "soft_pass": true,
+    "total_penalty": 4.0,
+    "worst_hard": {
+      "name": "all_waypoints_reached",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": false,
+      "min_margin": -2.0,
+      "max_violation": 2.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": []
+    },
+    "worst_soft": null
+  },
+  "metadata": {
+    "extras": 0.0,
+    "penalty_weight": 2000.0,
+    "robust_aggregated_score": 8124.234693602741
+  }
+}
