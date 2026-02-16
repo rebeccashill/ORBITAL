@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 
@@ -139,42 +139,73 @@ class Objective:
 
 
 # ---------------------------
+# Internal scalar getter
+# ---------------------------
+
+def _get_scalar(sim: Any, key: str) -> Optional[float]:
+    """
+    Try to read a scalar value from common locations:
+    1) attribute: sim.<key>
+    2) SimResult-like: sim.scalars[<key>]
+    3) dict: sim[<key>]
+    Returns None if not found.
+    """
+    if hasattr(sim, key):
+        try:
+            return float(getattr(sim, key))
+        except Exception:
+            pass
+
+    if hasattr(sim, "scalars"):
+        scalars = getattr(sim, "scalars", None)
+        if isinstance(scalars, dict) and key in scalars:
+            return float(scalars[key])
+
+    if isinstance(sim, dict) and key in sim:
+        return float(sim[key])
+
+    return None
+
+
+# ---------------------------
 # Common helper terms (optional convenience)
 # ---------------------------
 
 def term_minimize_time(name: str = "time", weight: float = 1.0, key: str = "t_end_s") -> FunctionalObjectiveTerm:
     """
-    Assumes sim has an attribute or dict entry representing total time in seconds.
+    Assumes sim exposes total time in seconds.
+    Supports SimResult.scalars[key] (preferred), attribute, or dict.
     """
     def _get(sim: Any) -> float:
-        if hasattr(sim, key):
-            return float(getattr(sim, key))
-        if isinstance(sim, dict) and key in sim:
-            return float(sim[key])
-        raise AttributeError(f"Simulation result missing '{key}' for time objective.")
+        v = _get_scalar(sim, key)
+        if v is None:
+            raise AttributeError(f"Simulation result missing '{key}' for time objective.")
+        return v
     return FunctionalObjectiveTerm(name=name, fn=_get, weight=weight, is_cost=True)
+
 
 def term_minimize_energy(name: str = "energy", weight: float = 1.0, key: str = "energy_used_Wh") -> FunctionalObjectiveTerm:
     """
-    Assumes sim has total energy used (Wh).
+    Assumes sim exposes total energy used (Wh).
+    Supports SimResult.scalars[key] (preferred), attribute, or dict.
     """
     def _get(sim: Any) -> float:
-        if hasattr(sim, key):
-            return float(getattr(sim, key))
-        if isinstance(sim, dict) and key in sim:
-            return float(sim[key])
-        raise AttributeError(f"Simulation result missing '{key}' for energy objective.")
+        v = _get_scalar(sim, key)
+        if v is None:
+            raise AttributeError(f"Simulation result missing '{key}' for energy objective.")
+        return v
     return FunctionalObjectiveTerm(name=name, fn=_get, weight=weight, is_cost=True)
+
 
 def term_maximize_value(name: str = "value", weight: float = 1.0, key: str = "mission_value") -> FunctionalObjectiveTerm:
     """
-    Assumes sim has a scalar mission value (higher is better).
-    Will be negated into cost space.
+    Assumes sim exposes mission value (higher is better).
+    Supports SimResult.scalars[key] (preferred), attribute, or dict.
+    Negated into cost space.
     """
     def _get(sim: Any) -> float:
-        if hasattr(sim, key):
-            return float(getattr(sim, key))
-        if isinstance(sim, dict) and key in sim:
-            return float(sim[key])
-        raise AttributeError(f"Simulation result missing '{key}' for value objective.")
+        v = _get_scalar(sim, key)
+        if v is None:
+            raise AttributeError(f"Simulation result missing '{key}' for value objective.")
+        return v
     return FunctionalObjectiveTerm(name=name, fn=_get, weight=weight, is_cost=False)

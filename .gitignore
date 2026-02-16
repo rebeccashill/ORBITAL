@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+.venv/
+venv/
+
+# Pytest
+.pytest_cache/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+
+# Output runs
+runs/

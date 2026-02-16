@@ -90,10 +90,28 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Run ORBITAL unified mission planning scenarios.")
     ap.add_argument("scenario_yaml", type=str, help="Path to scenario YAML (aircraft or spacecraft).")
     ap.add_argument("--outdir", type=str, default="runs", help="Output directory for reports/artifacts.")
+    ap.add_argument("--iterations", type=int, default=None, help="Override planner.iterations")
+    ap.add_argument("--restarts", type=int, default=None, help="Override planner.restarts")
+    ap.add_argument("--robustness", type=int, default=None, help="Override robustness.cases")
+
     args = ap.parse_args()
 
     scenario_path = Path(args.scenario_yaml).resolve()
     cfg = _load_yaml(scenario_path)
+
+    # Optional overrides for fast runs
+    if args.iterations is not None:
+        cfg.setdefault("planner", {})
+        cfg["planner"]["iterations"] = int(args.iterations)
+
+    if args.restarts is not None:
+        cfg.setdefault("planner", {})
+        cfg["planner"]["restarts"] = int(args.restarts)
+
+    if args.robustness is not None:
+        cfg.setdefault("robustness", {})
+        cfg["robustness"]["cases"] = int(args.robustness)
+
 
     # Build problem
     problem = _build_problem(cfg)
@@ -133,6 +151,29 @@ def main() -> None:
     # Write basic artifacts (domain exporters can override later)
     outdir = Path(args.outdir).resolve() / scenario_path.stem
     outdir.mkdir(parents=True, exist_ok=True)
+
+    if str(cfg.get("scenario", {}).get("type", "")).strip().lower() == "aircraft":
+        from mission_framework.reporting.flight_output import print_flight_plan
+        print("\n--- Flight Plan ---")
+        print(print_flight_plan(result.plan))
+
+    elif str(cfg.get("scenario", {}).get("type", "")).strip().lower() == "spacecraft":
+        from mission_framework.reporting.schedule_output import print_schedule
+        print("\n--- 7-Day Schedule ---")
+        print(print_schedule(result.plan))
+
+
+    scenario_type = str(cfg.get("scenario", {}).get("type", "")).strip().lower()
+
+    if scenario_type == "aircraft":
+        from mission_framework.reporting.flight_output import export_waypoints_csv
+        csv_path = outdir / "waypoints.csv"
+        export_waypoints_csv(result.plan, csv_path)
+
+    elif scenario_type == "spacecraft":
+        from mission_framework.reporting.schedule_output import export_schedule_csv
+        csv_path = outdir / "schedule.csv"
+        export_schedule_csv(result.plan, csv_path)
 
     _write_json(outdir / "objective.json", result.objective.summary())
     _write_json(outdir / "constraints.json", result.constraints.summary())

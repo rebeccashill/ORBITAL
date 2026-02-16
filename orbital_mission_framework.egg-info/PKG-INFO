@@ -1,0 +1,279 @@
+Metadata-Version: 2.4
+Name: orbital-mission-framework
+Version: 0.1.0
+Summary: Unified mission planning and simulation framework for UAV and CubeSat operations.
+Author: Your Name
+License: MIT
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.24
+Requires-Dist: PyYAML>=6.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: black>=23.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
+Requires-Dist: mypy>=1.5; extra == "dev"
+
+# ORBITAL  
+**A Unified Mission Planning & Simulation Framework**  
+*Constraint-based planning for both UAV and CubeSat missions*
+
+---
+
+## Overview
+
+ORBITAL is a domain-agnostic mission planning framework that:
+
+- Defines decision variables
+- Applies operational constraints
+- Optimizes an objective
+- Simulates mission execution
+- Verifies feasibility
+- Evaluates robustness under uncertainty
+
+It supports two example domains using the **same planning engine**:
+
+1. ✈ **Aircraft (UAV / fixed-wing) mission planning**
+2. 🛰 **CubeSat-style LEO mission scheduling**
+
+The key architectural requirement:
+
+> Both domains use the same decision system, constraint system, objective system, and single planning method.
+
+This is not two scripts.  
+It is one unified mission planning engine.
+
+---
+
+## Architecture
+
+Decision Variables
+↓
+Planner (stochastic optimization, simulation-in-the-loop)
+↓
+Plan
+↓
+Simulation
+↓
+Constraint Evaluation
+↓
+Objective Scoring
+↓
+Robustness Analysis
+
+
+The core system is fully domain-agnostic.
+
+Aircraft and spacecraft modules only define:
+- Their physics models
+- Their domain-specific constraints
+- Their mission definitions
+
+Everything else is shared.
+
+---
+
+## Project Structure
+
+mission_framework/
+├── core/ # Unified planning layer
+├── simulation/ # Simulation harness
+├── aircraft/ # UAV module
+├── spacecraft/ # CubeSat module
+├── reporting/ # Output & metrics
+└── cli.py # Entry point
+
+yaml
+Copy code
+
+---
+
+# Module A — Aircraft (UAV)
+
+### Capabilities
+
+- Route planning with ordered waypoints and timestamps
+- Point-mass kinematic simulation
+- Wind model (time-varying or spatial)
+- Energy consumption model (battery/fuel budget)
+- Maneuver limits (turn/bank rate constraints)
+- Geofencing (polygon no-fly zones)
+- Objective: minimum time or minimum energy
+- Robustness: multi-seed wind evaluation
+
+### Outputs
+
+- Time-stamped flight path
+- Constraint pass/fail report
+- Performance metrics (time, energy)
+- Robustness summary
+
+---
+
+# Module B — Spacecraft (CubeSat LEO)
+
+### Capabilities
+
+- Two-body orbital propagation
+- Ground target visibility logic
+- Ground station contact windows
+- 7-day mission schedule generation
+- Slew-rate feasibility constraints
+- Power/battery proxy model
+- Optional cooldown / per-orbit limits
+- Objective: maximize science value delivered
+
+### Outputs
+
+- 7-day time-ordered schedule
+- Visibility/contact evidence
+- Constraint pass/fail report
+- Mission value metrics
+- Robustness summary
+
+---
+
+# Unified Planning Method
+
+The planner uses a **simulation-based stochastic optimization approach**:
+
+1. Propose candidate decisions
+2. Build executable plan
+3. Simulate mission
+4. Evaluate constraints
+5. Compute objective
+6. Penalize violations
+7. Iterate
+
+This allows:
+- Mixed decision variables (continuous + discrete)
+- Domain independence
+- Robust optimization via Monte Carlo
+
+---
+
+# Core Concepts
+
+### Decision Variables
+What the planner is allowed to choose:
+- Continuous (throttle, timing)
+- Integer (slot indices)
+- Binary (observe or not)
+- Permutation (visit order)
+
+### Constraints
+Return a margin:
+- margin ≥ 0 → satisfied
+- margin < 0 → violation
+
+### Objective
+Converted into scalar cost:
+- Minimize time/energy
+- Maximize mission value
+
+### Robustness
+Evaluate plan across multiple uncertainty cases:
+- Wind variation
+- Power variation
+- Parameter drift
+
+Metrics reported:
+- Feasibility rate
+- Worst-case margin
+- Mean and P90 score
+
+---
+
+# Running the Framework
+
+### Install
+
+```bash
+pip install -r requirements.txt
+Run Aircraft Demo
+bash
+Copy code
+python -m mission_framework.cli examples/aircraft_uav_demo.yaml
+Run Spacecraft Demo
+bash
+Copy code
+python -m mission_framework.cli examples/cubesat_leo_demo.yaml
+Outputs include:
+
+Plan summary
+
+Constraint report
+
+Metrics
+
+Robustness analysis
+
+Example Use Cases
+UAV
+Autonomous inspection route planning
+
+Delivery optimization under wind
+
+Energy-constrained flight path planning
+
+CubeSat
+Earth observation scheduling
+
+Downlink optimization
+
+Power-constrained mission planning
+
+Trade studies under uncertainty
+
+Engineering Principles Demonstrated
+Systems-level architecture
+
+Separation of planning vs simulation
+
+Constraint-based reasoning
+
+Mixed discrete/continuous optimization
+
+Robustness validation
+
+Reproducible evaluation
+
+Why This Project Exists
+Modern aerospace operations require:
+
+Verified plans
+
+Constraint compliance
+
+Tradeoff analysis
+
+Robustness to uncertainty
+
+Cross-domain adaptability
+
+ORBITAL demonstrates a reusable mission planning architecture capable of handling both atmospheric and orbital missions using the same conceptual framework.
+
+Future Extensions
+6-DOF aircraft dynamics
+
+Higher-fidelity orbital models (J2, drag)
+
+MILP backend option
+
+Parallel Monte Carlo
+
+GUI visualization
+
+Real ephemeris ingestion
+
+Multi-vehicle coordination
+
+Author
+Designed and implemented as a unified mission planning and simulation framework demonstrating cross-domain aerospace systems architecture.
+
+License
+MIT License
+
+
+
+

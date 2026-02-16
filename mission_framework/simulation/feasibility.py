@@ -161,3 +161,30 @@ def rank_by_feasibility_then_score(
 
     keyed_sorted = sorted(keyed, key=lambda t: (-t[1], -t[2], t[3]))
     return [t[0] for t in keyed_sorted]
+
+def format_feasibility_report(report: ConstraintReport, max_lines: int = 50) -> str:
+    """
+    Human-readable report string for CLI output.
+
+    Sorted worst-first (lowest min_margin). Shows pass/fail, severity, margins, penalty.
+    """
+    lines: List[str] = []
+    lines.append(
+        f"HARD pass: {report.hard_pass} | SOFT pass: {report.soft_pass} | total_penalty: {report.total_penalty():.6g}"
+    )
+
+    # sort constraints by worst margin
+    sorted_results = sorted(report.results, key=lambda r: r.min_margin)
+
+    for r in sorted_results[:max_lines]:
+        status = "PASS" if r.is_satisfied else "FAIL"
+        sev = r.severity.value.upper() if hasattr(r.severity, "value") else str(r.severity).upper()
+        lines.append(
+            f"[{status}] {sev:4s}  {r.name:30s}  "
+            f"min_margin={r.min_margin:+.6g}  max_violation={r.max_violation:.6g}  penalty={r.penalty():.6g}"
+        )
+
+    if len(sorted_results) > max_lines:
+        lines.append(f"... ({len(sorted_results) - max_lines} more constraints not shown)")
+
+    return "\n".join(lines)

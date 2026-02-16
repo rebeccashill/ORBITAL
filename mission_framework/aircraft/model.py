@@ -1,265 +1,205 @@
 # mission_framework/aircraft/model.py
-"""
-Point-mass UAV dynamics (MODULE A / aircraft).
-
-Lightweight point-mass kinematics suitable for optimization loops.
-
-State (world frame, z-up):
-    x, y, z   [m]
-    psi       heading/yaw [rad]
-    v         airspeed magnitude [m/s]
-
-Control:
-    v_cmd         desired airspeed [m/s]
-    psi_rate_cmd  desired heading rate [rad/s]
-    vz_cmd        desired vertical speed [m/s] (optional)
-
-Wind:
-    wind_fn(t, x, y, z) -> (wx, wy, wz) [m/s] world-frame wind velocity
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional, Tuple
-
 import math
+from typing import List, Optional
+
+import numpy as np
+
+from mission_framework.core.types import SimResult, Trajectory, Plan
+from mission_framework.aircraft.wind import WindField, NoWind
+from mission_framework.aircraft.energy import EnergyModel
+from mission_framework.aircraft.geofence import GeofenceMap
 
 
-# ============================================================
-# Helpers
-# ============================================================
-
-def clamp(x: float, lo: float, hi: float) -> float:
-    return lo if x < lo else hi if x > hi else x
-
-
-def wrap_angle_pi(a: float) -> float:
-    """Wrap angle to (-pi, pi]."""
+def wrap_pi(a: float) -> float:
+    """Wrap angle to [-pi, pi]."""
     return (a + math.pi) % (2.0 * math.pi) - math.pi
 
 
-# Wind model signature: returns (wx, wy, wz) in world frame [m/s]
-WindFn = Callable[[float, float, float, float], Tuple[float, float, float]]
-
-
-# ============================================================
-# Data structures
-# ============================================================
-
 @dataclass(frozen=True)
 class AircraftParams:
-    # Speed limits
-    v_min: float = 10.0
-    v_max: float = 40.0
-
-    # Longitudinal accel limits (simple “track v_cmd with bounded accel”)
-    a_long_max: float = 2.0     # [m/s^2]
-    a_long_min: float = -3.0    # [m/s^2] (decel)
-
-    # Heading rate limits
-    psi_rate_max: float = math.radians(25.0)  # [rad/s]
-    psi_rate_min: float = -math.radians(25.0)
-
-    # Vertical speed limits (z-up positive)
-    vz_max: float = 5.0
-    vz_min: float = -5.0
-
-    # Optional: enforce a minimum turn radius R by bounding |psi_rate| <= v/R
-    min_turn_radius: Optional[float] = None  # [m]
-
-    # Numerics
-    dt_default: float = 1.0
+    # speed/turn limits
+    min_speed_mps: float = 12.0
+    max_speed_mps: float = 30.0
+    max_turn_rate_radps: float = 0.35
+    # battery
+    battery_capacity_Wh: float = 800.0
+    # simulation
+    dt_s: float = 5.0
+    reach_radius_m: float = 15.0
+    # stall detection
+    stall_time_s: float = 120.0          # how long we tolerate no progress
+    stall_improve_m: float = 1.0         # improvement threshold to reset stall
 
 
 @dataclass
-class AircraftState:
-    x: float
-    y: float
-    z: float
-    psi: float   # heading [rad]
-    v: float     # airspeed [m/s]
+class AircraftSim:
+    params: AircraftParams
+    wind: WindField = NoWind()
+    energy: EnergyModel = EnergyModel()
+    geofence: Optional[GeofenceMap] = None
 
-    def copy(self) -> "AircraftState":
-        return AircraftState(self.x, self.y, self.z, self.psi, self.v)
+    # Simple guidance tuning
+    k_heading: float = 1.2  # heading error -> turn rate
+    k_speed: float = 0.8    # speed error -> accel (m/s^2)
+    max_accel_mps2: float = 2.0
 
-    def to_dict(self) -> Dict[str, float]:
-        return {
-            "x": float(self.x),
-            "y": float(self.y),
-            "z": float(self.z),
-            "psi": float(self.psi),
-            "v": float(self.v),
-        }
-
-
-@dataclass(frozen=True)
-class AircraftControl:
-    v_cmd: float
-    psi_rate_cmd: float
-    vz_cmd: float = 0.0
-
-    def to_dict(self) -> Dict[str, float]:
-        return {
-            "v_cmd": float(self.v_cmd),
-            "psi_rate_cmd": float(self.psi_rate_cmd),
-            "vz_cmd": float(self.vz_cmd),
-        }
-
-
-# ============================================================
-# Dynamics
-# ============================================================
-
-class PointMassUAV:
-    """
-    Point-mass kinematic UAV with simple accel/rate limits.
-
-    Methods:
-        step(state, control, t, dt, wind_fn) -> next_state
-        propagate(initial, controls, ...) -> (states, times)
-    """
-
-    def __init__(self, params: Optional[AircraftParams] = None):
-        self.p = params if params is not None else AircraftParams()
-
-    def _limit_heading_rate(self, v: float, psi_rate_cmd: float) -> float:
-        psi_rate = clamp(psi_rate_cmd, self.p.psi_rate_min, self.p.psi_rate_max)
-
-        if self.p.min_turn_radius is not None and self.p.min_turn_radius > 0:
-            max_rate = abs(v) / float(self.p.min_turn_radius)
-            psi_rate = clamp(psi_rate, -max_rate, max_rate)
-
-        return psi_rate
-
-    def _speed_update(self, v: float, v_cmd: float, dt: float) -> float:
-        v_cmd = clamp(v_cmd, self.p.v_min, self.p.v_max)
-        dv = v_cmd - v
-
-        a_des = dv / dt if dt > 0 else 0.0
-        a = clamp(a_des, self.p.a_long_min, self.p.a_long_max)
-
-        v_new = v + a * dt
-        return clamp(v_new, self.p.v_min, self.p.v_max)
-
-    def _vz_update(self, vz_cmd: float) -> float:
-        return clamp(vz_cmd, self.p.vz_min, self.p.vz_max)
-
-    def step(
+    def simulate(
         self,
-        state: AircraftState,
-        control: AircraftControl,
-        *,
-        t: float,
-        dt: Optional[float] = None,
-        wind_fn: Optional[WindFn] = None,
-    ) -> AircraftState:
+        plan: Plan,
+        rng: Optional[np.random.Generator] = None,
+        t_max_s: float = 10_000.0,
+    ) -> SimResult:
         """
-        One Euler integration step.
+        Plan.waypoints must include at least START and one waypoint with x_m/y_m.
+        We follow waypoints in order, with turn-rate limits and wind.
+        """
+        if not plan.waypoints or len(plan.waypoints) < 2:
+            raise ValueError("Aircraft plan must include at least START and one waypoint.")
 
-        Ground velocity = air-relative velocity + wind.
-        """
-        if dt is None:
-            dt = self.p.dt_default
+        wps = plan.waypoints
+
+        # Fixed timestep (set once!)
+        dt = float(self.params.dt_s)
         if dt <= 0:
-            return state.copy()
+            raise ValueError("AircraftParams.dt_s must be > 0")
 
-        # Update airspeed and heading
-        v_new = self._speed_update(state.v, control.v_cmd, dt)
-        psi_rate = self._limit_heading_rate(v_new, control.psi_rate_cmd)
-        psi_new = wrap_angle_pi(state.psi + psi_rate * dt)
+        # initial
+        x = float(wps[0].get("x_m", 0.0))
+        y = float(wps[0].get("y_m", 0.0))
+        psi = float(plan.metadata.get("heading_rad", 0.0))
+        v = float(plan.metadata.get("speed_mps", (self.params.min_speed_mps + self.params.max_speed_mps) / 2.0))
+        v = float(np.clip(v, self.params.min_speed_mps, self.params.max_speed_mps))
 
-        # Vertical speed
-        vz_air = self._vz_update(control.vz_cmd)
+        batt = float(plan.metadata.get("battery_Wh", self.params.battery_capacity_Wh))
+        batt = float(np.clip(batt, 0.0, self.params.battery_capacity_Wh))
 
-        # Air-relative velocity in world frame
-        vx_air = v_new * math.cos(psi_new)
-        vy_air = v_new * math.sin(psi_new)
+        # commanded speed (from decisions)
+        v_cmd = float(plan.metadata.get("cruise_speed_mps", v))
+        v_cmd = float(np.clip(v_cmd, self.params.min_speed_mps, self.params.max_speed_mps))
 
-        # Wind in world frame
-        if wind_fn is None:
-            wx = wy = wz = 0.0
-        else:
-            wx, wy, wz = wind_fn(float(t), state.x, state.y, state.z)
+        # tracking
+        t = 0.0
+        idx = 1  # next waypoint index
 
-        # Ground-relative velocity
-        vx = vx_air + wx
-        vy = vy_air + wy
-        vz = vz_air + wz
+        t_hist: List[float] = [t]
+        state_hist: List[List[float]] = [[x, y, psi, v, batt]]
+        windx_hist: List[float] = [0.0]
+        windy_hist: List[float] = [0.0]
+        inside_nf_hist: List[float] = [0.0]
 
-        # Integrate
-        x_new = state.x + vx * dt
-        y_new = state.y + vy * dt
-        z_new = state.z + vz * dt
+        # stall detection variables (persist across loop)
+        best_dist = float("inf")
+        stall_steps = 0
+        stall_limit = max(1, int(self.params.stall_time_s / dt))
 
-        return AircraftState(x=x_new, y=y_new, z=z_new, psi=psi_new, v=v_new)
+        # simulate until last waypoint reached or timeout or battery dead
+        while t < t_max_s and idx < len(wps) and batt > -1e-6:
+            tx = float(wps[idx]["x_m"])
+            ty = float(wps[idx]["y_m"])
 
-    def propagate(
-        self,
-        initial: AircraftState,
-        controls: List[AircraftControl],
-        *,
-        t0: float = 0.0,
-        dt: Optional[float] = None,
-        wind_fn: Optional[WindFn] = None,
-        include_initial: bool = True,
-    ) -> Tuple[List[AircraftState], List[float]]:
-        """
-        Propagate over a list of controls, each applied for one dt.
+            dx = tx - x
+            dy = ty - y
+            dist = math.hypot(dx, dy)
 
-        Returns:
-            states: list of AircraftState
-            times:  list of times aligned with states
-        """
-        if dt is None:
-            dt = self.p.dt_default
+            # waypoint reached?
+            if dist <= float(self.params.reach_radius_m):
+                idx += 1
+                best_dist = float("inf")
+                stall_steps = 0
+                continue
 
-        states: List[AircraftState] = []
-        times: List[float] = []
+            # stall detection (no progress toward current waypoint)
+            if dist < best_dist - float(self.params.stall_improve_m):
+                best_dist = dist
+                stall_steps = 0
+            else:
+                stall_steps += 1
+                if stall_steps > stall_limit:
+                    # Give up on this rollout; planner will penalize via constraints (not all waypoints completed).
+                    break
 
-        s = initial.copy()
-        t = float(t0)
+            # desired heading to waypoint
+            psi_des = math.atan2(dy, dx)
+            e = wrap_pi(psi_des - psi)
 
-        if include_initial:
-            states.append(s.copy())
-            times.append(t)
+            # turn rate command (limited)
+            turn_rate_cmd = self.k_heading * e
+            turn_rate = float(
+                np.clip(turn_rate_cmd, -self.params.max_turn_rate_radps, self.params.max_turn_rate_radps)
+            )
 
-        for u in controls:
-            s = self.step(s, u, t=t, dt=dt, wind_fn=wind_fn)
+            # speed control (simple accel clamp)
+            a_cmd = self.k_speed * (v_cmd - v)
+            a = float(np.clip(a_cmd, -self.max_accel_mps2, self.max_accel_mps2))
+
+            # wind at current state/time
+            wx, wy = self.wind.wind(t, x, y, rng=rng)
+
+            # update heading and speed
+            psi = wrap_pi(psi + turn_rate * dt)
+            v = float(np.clip(v + a * dt, self.params.min_speed_mps, self.params.max_speed_mps))
+
+            # air-relative velocity
+            vx_air = v * math.cos(psi)
+            vy_air = v * math.sin(psi)
+
+            # ground velocity
+            vx = vx_air + wx
+            vy = vy_air + wy
+
+            # integrate position
+            x += vx * dt
+            y += vy * dt
+
+            # energy drain
+            batt -= self.energy.drain_Wh(v_mps=v, turn_rate_radps=turn_rate, dt_s=dt)
+
+            # geofence flag
+            inside = 1.0 if (self.geofence is not None and self.geofence.is_violation(x, y)) else 0.0
+
+            # log
             t += dt
-            states.append(s.copy())
-            times.append(t)
+            t_hist.append(t)
+            state_hist.append([x, y, psi, v, batt])
+            windx_hist.append(wx)
+            windy_hist.append(wy)
+            inside_nf_hist.append(inside)
 
-        return states, times
+        t_arr = np.array(t_hist, dtype=float)
+        state_arr = np.array(state_hist, dtype=float)
 
+        traj = Trajectory(
+            t=t_arr,
+            state=state_arr,
+            control=None,
+            frame="ENU",
+            metadata={"state_order": ["x_m", "y_m", "heading_rad", "speed_mps", "battery_Wh"]},
+        )
 
-# ============================================================
-# Convenience helpers
-# ============================================================
+        # resources & scalars
+        battery_trace = state_arr[:, 4]
+        t_end = float(t_arr[-1])
+        energy_used = float(max(0.0, battery_trace[0] - battery_trace[-1]))
 
-def default_state(
-    x: float = 0.0,
-    y: float = 0.0,
-    z: float = 0.0,
-    psi_deg: float = 0.0,
-    v: float = 20.0,
-) -> AircraftState:
-    return AircraftState(x=x, y=y, z=z, psi=math.radians(psi_deg), v=v)
-
-
-def control_from_heading(
-    *,
-    v_cmd: float,
-    psi_cmd: float,
-    psi_current: float,
-    dt: float,
-    psi_rate_limit: float,
-    vz_cmd: float = 0.0,
-) -> AircraftControl:
-    """
-    Helper if planner outputs desired heading (psi_cmd) rather than heading-rate.
-    Converts heading error into a bounded psi_rate_cmd.
-    """
-    dpsi = wrap_angle_pi(float(psi_cmd) - float(psi_current))
-    psi_rate_cmd = clamp(dpsi / max(dt, 1e-9), -abs(psi_rate_limit), abs(psi_rate_limit))
-    return AircraftControl(v_cmd=float(v_cmd), psi_rate_cmd=float(psi_rate_cmd), vz_cmd=float(vz_cmd))
+        sim = SimResult(
+            t=t_arr,
+            trajectory=traj,
+            resources={
+                "battery_Wh": battery_trace,
+                "wind_x_mps": np.array(windx_hist, dtype=float),
+                "wind_y_mps": np.array(windy_hist, dtype=float),
+                "nfz_inside": np.array(inside_nf_hist, dtype=float),
+            },
+            scalars={
+                "t_end_s": t_end,
+                "energy_used_Wh": energy_used,
+                "final_battery_Wh": float(battery_trace[-1]),
+                "waypoints_completed": float(min(idx, len(wps) - 1)),
+                "waypoints_total": float(len(wps) - 1),
+            },
+            metadata={"reached_all": bool(idx >= len(wps))},
+        )
+        return sim

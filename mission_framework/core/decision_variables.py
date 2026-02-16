@@ -24,6 +24,7 @@ class VarType(str, Enum):
     CONTINUOUS = "continuous"
     INTEGER = "integer"
     BINARY = "binary"
+    DISCRETE = "discrete"
     PERMUTATION = "permutation"
 
 
@@ -81,6 +82,35 @@ class BinaryVar(DecisionVar):
         super().__init__(name=name, vtype=VarType.BINARY, shape=tuple(shape),
                          bounds=Bounds(0, 1), metadata=metadata or {})
 
+@dataclass
+class DiscreteVar(DecisionVar):
+    """
+    A categorical variable: choose one item from a fixed set.
+
+    Stored assignment value is either:
+      - the item itself (preferred), OR
+      - an integer index into items (also accepted)
+
+    Internally we treat it like an INTEGER index [0, len(items)-1],
+    but expose user-friendly items.
+
+    Examples:
+      DiscreteVar("downlink_policy", items=[0,1,2])
+      DiscreteVar("mode", items=["eco","nominal","burst"])
+    """
+    items: Sequence[Any] = field(default_factory=list)
+
+    def __init__(self, name: str, items: Sequence[Any], metadata=None):
+        if len(items) < 1:
+            raise ValueError("DiscreteVar requires at least one item.")
+        super().__init__(
+            name=name,
+            vtype=VarType.DISCRETE,
+            shape=(1,),
+            bounds=Bounds(0, len(items) - 1),
+            metadata=metadata or {},
+        )
+        self.items = list(items)
 
 @dataclass
 class PermutationVar(DecisionVar):
@@ -160,6 +190,15 @@ class DecisionSpace:
                 return v
         raise KeyError(f"Unknown decision variable: {name}")
 
+    def decode_discrete(self, a: DecisionAssignment, name: str) -> Any:
+        v = self.var(name)
+        if v.vtype != VarType.DISCRETE:
+            raise ValueError(f"'{name}' is not a discrete variable.")
+        items = list(getattr(v, "items"))
+        idx = int(a[name])
+        return items[idx]
+
+
     # -------------------------
     # Validation / coercion
     # -------------------------
@@ -173,6 +212,18 @@ class DecisionSpace:
 
             if v.vtype == VarType.PERMUTATION:
                 self._validate_permutation(v, val)
+                continue
+
+            if v.vtype == VarType.DISCRETE:
+                items = list(getattr(v, "items"))
+                # allow either item or integer index
+                if isinstance(val, (int, np.integer, float)) and np.isfinite(val):
+                    idx = int(round(float(val)))
+                    if idx < 0 or idx >= len(items):
+                        raise ValueError(f"Discrete var '{v.name}' index out of range.")
+                else:
+                    if val not in items:
+                        raise ValueError(f"Discrete var '{v.name}' must be one of {items}.")
                 continue
 
             arr = np.array(val, dtype=float).reshape(v.shape)
@@ -201,6 +252,20 @@ class DecisionSpace:
         for v in self.variables:
             if v.vtype == VarType.PERMUTATION:
                 continue
+
+            if v.vtype == VarType.DISCRETE:
+                items = list(getattr(v, "items"))
+                val = out[v.name]
+                # item -> index
+                if val in items:
+                    out[v.name] = int(items.index(val))
+                else:
+                    # numeric -> clipped index
+                    idx = int(round(float(val)))
+                    idx = int(np.clip(idx, 0, len(items) - 1))
+                    out[v.name] = idx
+                continue
+
 
             arr = np.array(out[v.name], dtype=float).reshape(v.shape)
 
@@ -245,6 +310,11 @@ class DecisionSpace:
                 vals[v.name] = rng.integers(lo_i, hi_i + 1, size=v.shape, dtype=int)
             else:
                 vals[v.name] = rng.uniform(lo, hi, size=v.shape)
+            if v.vtype == VarType.DISCRETE:
+                items = list(getattr(v, "items"))
+                vals[v.name] = int(rng.integers(0, len(items)))
+                continue
+
 
         a = DecisionAssignment(vals)
         self.validate(a)
@@ -282,6 +352,17 @@ class DecisionSpace:
                 arr = np.where(flips, 1 - arr, arr)
                 out[v.name] = arr.astype(int)
                 continue
+
+            if v.vtype == VarType.DISCRETE:
+                items = list(getattr(v, "items"))
+                # small random step in index space
+                cur = int(out[v.name])
+                step = max(1, int(round(cfg.int_step * intensity)))
+                cur = cur + int(rng.integers(-step, step + 1))
+                cur = int(np.clip(cur, 0, len(items) - 1))
+                out[v.name] = cur
+                continue
+
 
             if v.bounds is None:
                 raise ValueError(f"Numeric var '{v.name}' missing bounds (needed for mutation).")
@@ -330,6 +411,13 @@ This is optional; you can ignore crossover and just mutate.
                 if rng.random() < p_swap:
                     child[v.name] = self._perm_nudge_towards(child[v.name], parent_b[v.name], rng)
                 continue
+
+            if v.vtype == VarType.DISCRETE:
+                child[v.name] = parent_b[v.name] if (rng.random() < p_swap) else parent_a[v.name]
+                # keep as int index
+                child[v.name] = int(round(float(child[v.name])))
+                continue
+
 
             a_arr = np.array(parent_a[v.name], dtype=float).reshape(v.shape)
             b_arr = np.array(parent_b[v.name], dtype=float).reshape(v.shape)

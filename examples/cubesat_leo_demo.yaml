@@ -133,6 +133,10 @@ planner:
     perm_swaps: 2
   seed: 123
 
+downlink:
+  duration_s: 180
+  max_windows_per_station: 6
+
 # ------------------------------------------------------------
 # Robustness / Monte Carlo
 # ------------------------------------------------------------
