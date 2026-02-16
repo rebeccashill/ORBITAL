@@ -1,0 +1,235 @@
+{
+  "kind": "spacecraft",
+  "metadata": {
+    "scenario": "CubeSat 7-Day Earth Observation Demo",
+    "horizon_s": 604800.0
+  },
+  "waypoints": null,
+  "schedule": [
+    {
+      "t_start": 744.0,
+      "t_end": 924.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS2",
+      "target_id": null,
+      "location": [
+        48.8566,
+        2.3522
+      ],
+      "data": {
+        "station_id": "GS2",
+        "duration_s": 180.0
+      }
+    },
+    {
+      "t_start": 3350.4576989392444,
+      "t_end": 3380.4576989392444,
+      "etype": "EventType.OBSERVATION",
+      "label": "OBS_TGT3",
+      "target_id": "TGT3",
+      "location": [
+        -33.86,
+        151.21
+      ],
+      "data": {
+        "value": 8.0,
+        "duration_s": 30.0
+      }
+    },
+    {
+      "t_start": 8093.216435418678,
+      "t_end": 8123.216435418678,
+      "etype": "EventType.OBSERVATION",
+      "label": "OBS_TGT2",
+      "target_id": "TGT2",
+      "location": [
+        35.68,
+        139.69
+      ],
+      "data": {
+        "value": 15.0,
+        "duration_s": 30.0
+      }
+    },
+    {
+      "t_start": 23535.78943990297,
+      "t_end": 23565.78943990297,
+      "etype": "EventType.OBSERVATION",
+      "label": "OBS_TGT1",
+      "target_id": "TGT1",
+      "location": [
+        34.05,
+        -118.25
+      ],
+      "data": {
+        "value": 10.0,
+        "duration_s": 30.0
+      }
+    },
+    {
+      "t_start": 23574.0,
+      "t_end": 23754.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS1",
+      "target_id": null,
+      "location": [
+        37.7749,
+        -122.4194
+      ],
+      "data": {
+        "station_id": "GS1",
+        "duration_s": 180.0
+      }
+    },
+    {
+      "t_start": 29286.0,
+      "t_end": 29466.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS1",
+      "target_id": null,
+      "location": [
+        37.7749,
+        -122.4194
+      ],
+      "data": {
+        "station_id": "GS1",
+        "duration_s": 180.0
+      }
+    },
+    {
+      "t_start": 42276.0,
+      "t_end": 42456.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS2",
+      "target_id": null,
+      "location": [
+        48.8566,
+        2.3522
+      ],
+      "data": {
+        "station_id": "GS2",
+        "duration_s": 180.0
+      }
+    },
+    {
+      "t_start": 47928.0,
+      "t_end": 48108.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS2",
+      "target_id": null,
+      "location": [
+        48.8566,
+        2.3522
+      ],
+      "data": {
+        "station_id": "GS2",
+        "duration_s": 180.0
+      }
+    },
+    {
+      "t_start": 71148.0,
+      "t_end": 71328.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS1",
+      "target_id": null,
+      "location": [
+        37.7749,
+        -122.4194
+      ],
+      "data": {
+        "station_id": "GS1",
+        "duration_s": 180.0
+      }
+    },
+    {
+      "t_start": 76794.0,
+      "t_end": 76974.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS1",
+      "target_id": null,
+      "location": [
+        37.7749,
+        -122.4194
+      ],
+      "data": {
+        "station_id": "GS1",
+        "duration_s": 180.0
+      }
+    },
+    {
+      "t_start": 81162.0,
+      "t_end": 81342.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS2",
+      "target_id": null,
+      "location": [
+        48.8566,
+        2.3522
+      ],
+      "data": {
+        "station_id": "GS2",
+        "duration_s": 180.0
+      }
+    },
+    {
+      "t_start": 86838.0,
+      "t_end": 87018.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS2",
+      "target_id": null,
+      "location": [
+        48.8566,
+        2.3522
+      ],
+      "data": {
+        "station_id": "GS2",
+        "duration_s": 180.0
+      }
+    },
+    {
+      "t_start": 109650.0,
+      "t_end": 109830.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS1",
+      "target_id": null,
+      "location": [
+        37.7749,
+        -122.4194
+      ],
+      "data": {
+        "station_id": "GS1",
+        "duration_s": 180.0
+      }
+    },
+    {
+      "t_start": 115386.0,
+      "t_end": 115566.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS1",
+      "target_id": null,
+      "location": [
+        37.7749,
+        -122.4194
+      ],
+      "data": {
+        "station_id": "GS1",
+        "duration_s": 180.0
+      }
+    },
+    {
+      "t_start": 128352.0,
+      "t_end": 128532.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS2",
+      "target_id": null,
+      "location": [
+        48.8566,
+        2.3522
+      ],
+      "data": {
+        "station_id": "GS2",
+        "duration_s": 180.0
+      }
+    }
+  ]
+}
