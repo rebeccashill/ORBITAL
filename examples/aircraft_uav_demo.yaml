@@ -52,8 +52,8 @@ mission:
 # Vehicle Model Parameters
 # ------------------------------------------------------------
 vehicle:
-  dt_s: 2.0
-  reach_radius_m: 25.0
+  dt_s: 5.0
+  reach_radius_m: 75.0
   mass_kg: 12.0
   cruise_speed_mps: 22.0
   max_speed_mps: 30.0
@@ -62,6 +62,7 @@ vehicle:
   battery_capacity_Wh: 800.0
   energy_rate_cruise_W: 450.0
   energy_rate_turn_W: 550.0
+
 
 # ------------------------------------------------------------
 # Wind Model
@@ -123,6 +124,8 @@ planner:
     p_perm_swap: 0.5
     perm_swaps: 2
   seed: 42
+  stop_if_feasible_for: 50
+
 
 # ------------------------------------------------------------
 # Robustness / Monte Carlo
@@ -137,8 +140,15 @@ robustness:
 # Output Configuration
 # ------------------------------------------------------------
 output:
+  save_history: false
   export_flight_path: true
   export_constraint_report: true
   export_summary_metrics: true
   save_history: true
   verbose: true
+
+simulation:
+  stall_time_s: 900
+  stall_improve_m: 0.0
+  k_heading: 0.6
+  k_speed: 0.6

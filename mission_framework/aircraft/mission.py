@@ -117,10 +117,8 @@ def _aircraft_constraints_from_cfg(cfg: Dict[str, Any]) -> List[Constraint | Con
 
     # Must reach all waypoints
     def wp_complete_margin(sim: SimResult) -> np.ndarray:
-        done = float(sim.scalars.get("waypoints_completed", 0.0))
-        total = float(sim.scalars.get("waypoints_total", 1.0))
-        # margin >= 0 when done >= total
-        return np.array([done - total], dtype=float)
+        reached_all = bool(sim.metadata.get("reached_all", False))
+        return np.array([1.0 if reached_all else -1.0], dtype=float)
 
     c_wp = FunctionalConstraint(
         name="all_waypoints_reached",

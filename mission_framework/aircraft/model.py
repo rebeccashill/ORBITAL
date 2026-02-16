@@ -166,7 +166,7 @@ class AircraftSim:
             e = wrap_angle_rad(psi_des - s.psi_rad)
 
             # psi_cmd for heading tracking (kin enforces bank/yaw-rate limits)
-            psi_cmd = wrap_angle_rad(s.psi_rad + self.sim.k_heading * e)
+            psi_cmd = wrap_angle_rad(s.psi_rad + np.clip(e, -0.5, 0.5))
 
             # speed command with small per-step changes (stability)
             v_err = v_cmd - s.v_air_mps
@@ -270,6 +270,14 @@ class AircraftSim:
         waypoint_reached_arr = np.asarray(reached_hist, dtype=float).reshape(-1)
 
         t_end = float(t_arr[-1])
+
+        reached_all = bool(idx >= len(wps))
+        if not reached_all:
+            # make partial missions expensive in objective even before constraints kick in
+            t_end = float(t_max)  # or t + (t_max - t) to max it out
+        else:
+            t_end = float(t_arr[-1])
+
 
         sim = SimResult(
             t=t_arr,
