@@ -162,7 +162,7 @@ class AircraftSim:
                     break
 
             # desired heading to waypoint
-            psi_des = math.atan2(dy, dx)
+            psi_des = math.atan2(dx, dy)
             e = wrap_angle_rad(psi_des - s.psi_rad)
 
             # psi_cmd for heading tracking (kin enforces bank/yaw-rate limits)
