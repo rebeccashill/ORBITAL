@@ -5,6 +5,9 @@ __pycache__/
 *.pyd
 *.egg-info/
 
+# Editable install
+src/
+
 # Virtual env
 .venv/
 venv/
