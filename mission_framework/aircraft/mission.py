@@ -2,10 +2,11 @@
 """
 Waypoint mission definition + Problem builder (MODULE A / aircraft).
 
-This module defines:
-- Waypoints (declarative targets)
-- Missions (ordered list of waypoints + metadata)
-- build_problem_from_config(cfg): YAML -> unified core Problem (Planner-ready)
+UPDATED for AeroHack readiness:
+- Uses new wind_model.py (ZeroWind / SinusoidalWind / VortexFieldWind / StochasticWind)
+- Uses new AircraftSim in aircraft/model.py (wind + battery + maneuver limits + geofence audit)
+- Builds explicit HARD constraints (battery >= 0, all waypoints reached, geofence clearance, yaw-rate limit)
+- Objective uses shared core/objective.py terms (time / energy)
 
 Coordinates:
 - Flat-earth planar frame: x,y in meters; z in meters (altitude, positive up).
@@ -14,7 +15,7 @@ Coordinates:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Sequence, List
 
 import math
 import numpy as np
@@ -23,24 +24,31 @@ from mission_framework.core.decision_variables import Bounds, ContinuousVar, Dec
 from mission_framework.core.objective import Objective, term_minimize_energy, term_minimize_time
 from mission_framework.core.planner import Problem
 from mission_framework.core.types import Plan, SimResult
+from mission_framework.core.constraints import (
+    Constraint,
+    ConstraintGroup,
+    FunctionalConstraint,
+    Severity,
+    margin_geq,
+    margin_leq,
+)
 
-from mission_framework.aircraft.model import AircraftParams, AircraftSim
-from mission_framework.aircraft.wind import NoWind, SinusoidalWind
-from mission_framework.aircraft.energy import EnergyModel
+from mission_framework.aircraft.model import AircraftSim, AircraftSimParams
+from mission_framework.aircraft.dynamics import AircraftParams as DynParams, G0
+from mission_framework.aircraft.wind_model import (
+    ZeroWind,
+    UniformWind,
+    SinusoidalWind,
+    VortexFieldWind,
+    StochasticWind,
+)
+from mission_framework.aircraft.battery_model import BatteryParams
 from mission_framework.aircraft.geofence import GeofenceMap, NoFlyZone
-from mission_framework.aircraft.constraints import default_aircraft_constraints
 
 
 # ============================================================
 # Helpers
 # ============================================================
-
-def _dist3(a: Tuple[float, float, float], b: Tuple[float, float, float]) -> float:
-    dx = a[0] - b[0]
-    dy = a[1] - b[1]
-    dz = a[2] - b[2]
-    return math.sqrt(dx * dx + dy * dy + dz * dz)
-
 
 def _dist2(a: Tuple[float, float], b: Tuple[float, float]) -> float:
     dx = a[0] - b[0]
@@ -54,41 +62,12 @@ def _dist2(a: Tuple[float, float], b: Tuple[float, float]) -> float:
 
 @dataclass(frozen=True)
 class Waypoint:
-    """
-    A mission waypoint.
-
-    Required:
-      x, y, z: target location [m]
-
-    Optional "hints"/constraints:
-      radius_m:      capture radius for considering it reached
-      target_speed:  desired speed near waypoint [m/s]
-      min_speed/max_speed: allowable speed near waypoint [m/s]
-      min_alt/max_alt: allowable altitude near waypoint [m]
-      loiter_time_s: time to loiter after reaching waypoint [s]
-      name:          identifier
-      tags:          free-form metadata (e.g., "inspect", "drop", "handoff")
-    """
     x: float
     y: float
     z: float = 0.0
-
     radius_m: float = 10.0
-
-    target_speed: Optional[float] = None
-    min_speed: Optional[float] = None
-    max_speed: Optional[float] = None
-
-    min_alt: Optional[float] = None
-    max_alt: Optional[float] = None
-
-    loiter_time_s: float = 0.0
-
     name: str = ""
     tags: Dict[str, object] = field(default_factory=dict)
-
-    def pos3(self) -> Tuple[float, float, float]:
-        return float(self.x), float(self.y), float(self.z)
 
     def pos2(self) -> Tuple[float, float]:
         return float(self.x), float(self.y)
@@ -96,16 +75,107 @@ class Waypoint:
 
 @dataclass(frozen=True)
 class Mission:
-    """
-    An ordered list of waypoints.
-
-    mission_id: unique identifier
-    waypoints: ordered list
-    metadata: free-form mission metadata (client, payload, etc.)
-    """
     waypoints: Tuple[Waypoint, ...]
     mission_id: str = "mission"
     metadata: Dict[str, object] = field(default_factory=dict)
+
+
+# ============================================================
+# Constraint constructors (aircraft-specific, core-compatible)
+# ============================================================
+
+def _aircraft_constraints_from_cfg(cfg: Dict[str, Any]) -> List[Constraint | ConstraintGroup]:
+    """
+    Build AeroHack-visible constraints with clear, auditable margins.
+
+    Expected SimResult fields produced by aircraft/model.py:
+      - sim.t (timeline)
+      - sim.trajectory.state[:, ...] including battery_Wh at index 5
+      - sim.resources["yaw_rate_radps"] (array)
+      - sim.scalars["waypoints_completed"], sim.scalars["waypoints_total"]
+      - sim.scalars["geofence_violated"], sim.scalars["geofence_min_clearance_m"]
+    """
+    constraints_cfg = cfg.get("constraints", {}) or {}
+
+    # Battery must never drop below 0
+    def battery_margin(sim: SimResult) -> np.ndarray:
+        # trajectory state order: [x,y,z,heading,v_air,battery_Wh]
+        batt = np.asarray(sim.trajectory.state[:, 5], dtype=float).reshape(-1)
+        return margin_geq(batt, 0.0)  # batt >= 0
+
+    c_batt = FunctionalConstraint(
+        name="battery_nonnegative",
+        fn=battery_margin,
+        severity=Severity.HARD,
+        metadata={"t": lambda sim: sim.t},  # lightweight hint; constraints system may ignore callables
+    )
+
+    # Must reach all waypoints
+    def wp_complete_margin(sim: SimResult) -> np.ndarray:
+        done = float(sim.scalars.get("waypoints_completed", 0.0))
+        total = float(sim.scalars.get("waypoints_total", 1.0))
+        # margin >= 0 when done >= total
+        return np.array([done - total], dtype=float)
+
+    c_wp = FunctionalConstraint(
+        name="all_waypoints_reached",
+        fn=wp_complete_margin,
+        severity=Severity.HARD,
+    )
+
+    # Geofence: must not violate AND (optionally) maintain clearance buffer
+    enforce_geofence = bool(constraints_cfg.get("enforce_geofence", True))
+    clearance_m = float((cfg.get("geofence", {}) or {}).get("clearance_m", 0.0))
+
+    def geofence_violation_margin(sim: SimResult) -> np.ndarray:
+        # geofence_violated scalar is 1.0 when violated
+        v = float(sim.scalars.get("geofence_violated", 0.0))
+        # margin >=0 when v==0
+        return np.array([0.5 - v], dtype=float)  # if v=0 -> +0.5; if v=1 -> -0.5
+
+    def geofence_clearance_margin(sim: SimResult) -> np.ndarray:
+        mc = float(sim.scalars.get("geofence_min_clearance_m", float("inf")))
+        return np.array([mc - clearance_m], dtype=float)
+
+    c_geo = FunctionalConstraint(
+        name="geofence_no_entry",
+        fn=geofence_violation_margin,
+        severity=Severity.HARD,
+    )
+    c_clear = FunctionalConstraint(
+        name="geofence_clearance",
+        fn=geofence_clearance_margin,
+        severity=Severity.HARD,
+    )
+
+    # Maneuver: yaw-rate limited by bank angle and speed
+    # yaw_rate_max = g * tan(phi_max) / v_air
+    dyn_cfg = cfg.get("vehicle", {}) or {}
+    bank_max_deg = float(dyn_cfg.get("bank_max_deg", 30.0))
+    bank_max_rad = math.radians(bank_max_deg)
+
+    def yaw_rate_margin(sim: SimResult) -> np.ndarray:
+        yaw_rate = np.asarray(sim.resources.get("yaw_rate_radps", []), dtype=float).reshape(-1)
+        v_air = np.asarray(sim.trajectory.state[:, 4], dtype=float).reshape(-1)
+        v_air = np.maximum(v_air, 1e-3)
+        yaw_rate_lim = (G0 * math.tan(bank_max_rad)) / v_air  # array
+        # margin >= 0 when |yaw_rate| <= yaw_rate_lim
+        return yaw_rate_lim - np.abs(yaw_rate)
+
+    c_turn = FunctionalConstraint(
+        name="bank_angle_turn_limit",
+        fn=yaw_rate_margin,
+        severity=Severity.HARD,
+        metadata={"bank_max_deg": bank_max_deg},
+    )
+
+    items: List[Constraint | ConstraintGroup] = [c_batt, c_wp, c_turn]
+
+    if enforce_geofence:
+        # Group to keep reporting tidy
+        items.append(ConstraintGroup("geofence", [c_geo, c_clear]))
+
+    return items
 
 
 # ============================================================
@@ -119,9 +189,6 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     Decision variables (minimal but meaningful):
     - visit_order: permutation of required waypoints
     - cruise_speed_mps: nominal commanded airspeed
-
-    Planning loop:
-    assignment -> build_plan() -> AircraftSim.simulate() -> constraints + objective
     """
     scenario = cfg.get("scenario", {}) or {}
     if str(scenario.get("type", "")).lower() != "aircraft":
@@ -164,44 +231,124 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
 
     # --- Wind model ---
     wcfg = cfg.get("wind", {}) or {}
-    wtype = str(wcfg.get("type", "sinusoidal")).lower()
-    if wtype == "none" or wtype == "no_wind":
-        wind = NoWind()
-    else:
-        wind = SinusoidalWind(
-            base_speed_mps=float(wcfg.get("base_speed_mps", 5.0)),
-            direction_rad=float(wcfg.get("direction_rad", 0.0)),
-            gust_amplitude_mps=float(wcfg.get("gust_amplitude_mps", 2.0)),
-            gust_frequency_hz=float(wcfg.get("gust_frequency_hz", 0.005)),
+    wtype = str(wcfg.get("type", "sinusoidal")).strip().lower()
+
+    if wtype in ("none", "no_wind", "zero"):
+        wind = ZeroWind()
+
+    elif wtype in ("uniform", "constant"):
+        wind = UniformWind(
+            w_enu_mps=np.array([
+                float(wcfg.get("w_east_mps", 0.0)),
+                float(wcfg.get("w_north_mps", 0.0)),
+                float(wcfg.get("w_up_mps", 0.0)),
+            ], dtype=float)
         )
 
-    # --- Energy model (simple but credible) ---
-    # Use YAML "energy_rate_cruise_W" as base load if present.
-    p_base = float(vcfg.get("energy_rate_cruise_W", 250.0))
-    energy = EnergyModel(p_base_W=p_base)
+    elif wtype in ("vortex", "swirl"):
+        wind = VortexFieldWind(
+            mean_enu_mps=np.array([
+                float(wcfg.get("mean_east_mps", 0.0)),
+                float(wcfg.get("mean_north_mps", 0.0)),
+                float(wcfg.get("mean_up_mps", 0.0)),
+            ], dtype=float),
+            center_xy_m=(float(wcfg.get("center_x_m", 0.0)), float(wcfg.get("center_y_m", 0.0))),
+            swirl_strength=float(wcfg.get("swirl_strength", 1500.0)),
+            core_radius_m=float(wcfg.get("core_radius_m", 250.0)),
+            vertical_shear=float(wcfg.get("vertical_shear", 0.0)),
+        )
+
+    else:
+        # default sinusoidal time-varying wind
+        wind = SinusoidalWind(
+            mean_enu_mps=np.array([
+                float(wcfg.get("mean_east_mps", 2.0)),
+                float(wcfg.get("mean_north_mps", 0.0)),
+                float(wcfg.get("mean_up_mps", 0.0)),
+            ], dtype=float),
+            amp_enu_mps=np.array([
+                float(wcfg.get("amp_east_mps", 1.0)),
+                float(wcfg.get("amp_north_mps", 1.0)),
+                float(wcfg.get("amp_up_mps", 0.0)),
+            ], dtype=float),
+            period_s=float(wcfg.get("period_s", 600.0)),
+            phase_s=float(wcfg.get("phase_s", 0.0)),
+        )
+
+    # Optional: uncertainty wrapper for Monte-Carlo robustness
+    if bool(wcfg.get("stochastic", False)):
+        wind = StochasticWind(
+            base=wind,
+            sigma_bias_mps=float(wcfg.get("sigma_bias_mps", 1.0)),
+            sigma_gust_mps=float(wcfg.get("sigma_gust_mps", 0.8)),
+            tau_gust_s=float(wcfg.get("tau_gust_s", 60.0)),
+            dt_s=float(vcfg.get("dt_s", 1.0)),
+        )
 
     # --- Geofence map ---
     gcfg = cfg.get("geofence", {}) or {}
     zones_yaml = gcfg.get("no_fly_zones", []) or []
-    zones = []
+    zones: List[NoFlyZone] = []
     for z in zones_yaml:
         poly = [(float(p[0]), float(p[1])) for p in (z.get("polygon", []) or [])]
         if len(poly) >= 3:
             zones.append(NoFlyZone(zone_id=str(z.get("id", "NFZ")), polygon=poly))
     geofence = GeofenceMap(zones=zones) if zones else None
+    clearance_m = float(gcfg.get("clearance_m", 0.0))
 
-    # --- Simulator params ---
+    # --- Initial state ---
     ic = cfg.get("initial_state", {}) or {}
-    batt_cap = float(vcfg.get("battery_capacity_Wh", float(ic.get("battery_Wh", 800.0))))
-    params = AircraftParams(
-        min_speed_mps=min_v,
-        max_speed_mps=max_v,
-        max_turn_rate_radps=float(vcfg.get("max_turn_rate_radps", 0.35)),
-        battery_capacity_Wh=batt_cap,
-        dt_s=float(vcfg.get("dt_s", 1.0)),
-        reach_radius_m=float(vcfg.get("reach_radius_m", 15.0)),
+    x_init = float(ic.get("x_m", 0.0))
+    y_init = float(ic.get("y_m", 0.0))
+    z_init = float(ic.get("z_m", 0.0))
+
+    # --- Dynamics + sim engine ---
+    dt_s = float(vcfg.get("dt_s", 1.0))
+    bank_max_deg = float(vcfg.get("bank_max_deg", 30.0))
+    climb_rate_max_mps = float(vcfg.get("climb_rate_max_mps", 3.0))
+    descent_rate_max_mps = float(vcfg.get("descent_rate_max_mps", 3.0))
+
+    dyn = DynParams(
+        v_air_min_mps=min_v,
+        v_air_max_mps=max_v,
+        bank_max_rad=math.radians(bank_max_deg),
+        yaw_rate_max_radps=float(vcfg["yaw_rate_max_radps"]) if "yaw_rate_max_radps" in vcfg else None,
+        climb_rate_max_mps=climb_rate_max_mps,
+        descent_rate_max_mps=descent_rate_max_mps,
+        dt_s=dt_s,
+        z_min_m=float(vcfg["z_min_m"]) if "z_min_m" in vcfg else None,
+        z_max_m=float(vcfg["z_max_m"]) if "z_max_m" in vcfg else None,
     )
-    sim_engine = AircraftSim(params=params, wind=wind, energy=energy, geofence=geofence)
+
+    simcfg = (cfg.get("simulation", {}) or {})
+    sim_params = AircraftSimParams(
+        t_max_s=float(simcfg.get("t_max_s", 10_000.0)),
+        reach_radius_m=float(vcfg.get("reach_radius_m", 15.0)),
+        stall_time_s=float(simcfg.get("stall_time_s", 120.0)),
+        stall_improve_m=float(simcfg.get("stall_improve_m", 1.0)),
+        k_heading=float(simcfg.get("k_heading", 1.2)),
+        k_speed=float(simcfg.get("k_speed", 0.8)),
+        max_speed_step_mps=float(simcfg.get("max_speed_step_mps", 3.0)),
+    )
+
+    batt_cap = float(vcfg.get("battery_capacity_Wh", float(ic.get("battery_Wh", 800.0))))
+    battery_params = BatteryParams(
+        capacity_Wh=batt_cap,
+        initial_Wh=float(ic.get("battery_Wh", batt_cap)),
+        p_idle_W=float(vcfg.get("p_idle_W", 60.0)),
+        k_v_W_per_m2s2=float(vcfg.get("k_v_W_per_m2s2", 1.0)),
+        k_climb_W_per_mps=float(vcfg.get("k_climb_W_per_mps", 120.0)),
+        k_turn_W_per_radps=float(vcfg.get("k_turn_W_per_radps", 30.0)),
+    )
+
+    sim_engine = AircraftSim(
+        dyn=dyn,
+        sim=sim_params,
+        wind=wind,
+        battery_params=battery_params,
+        geofence=geofence,
+        geofence_clearance_m=clearance_m,
+    )
 
     # --- Build plan from decisions ---
     def build_plan(a: DecisionAssignment) -> Plan:
@@ -211,43 +358,34 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
         name_to_wp = {wp.name: wp for wp in mission.waypoints}
         ordered = [name_to_wp[n] for n in order]
 
-        x0 = float(ic.get("x_m", 0.0))
-        y0 = float(ic.get("y_m", 0.0))
-
-        # Plan.waypoints is an ordered list of dicts (reporting-friendly).
-        rows = [{"id": "START", "x_m": x0, "y_m": y0, "z_m": float(ic.get("z_m", 0.0)), "eta_s": 0.0}]
-        t = 0.0
+        rows = [{"id": "START", "x_m": x_init, "y_m": y_init, "z_m": z_init, "eta_s": 0.0}]
+        t_eta = 0.0
+        x, y = x_init, y_init
         for wp in ordered:
-            d = _dist2((x0, y0), (wp.x, wp.y))
+            d = _dist2((x, y), (wp.x, wp.y))
             dt = d / max(1e-6, cruise_speed)
-            t += dt
-            rows.append({"id": wp.name, "x_m": float(wp.x), "y_m": float(wp.y), "z_m": float(wp.z), "eta_s": float(t)})
-            x0, y0 = wp.x, wp.y
+            t_eta += dt
+            rows.append({"id": wp.name, "x_m": float(wp.x), "y_m": float(wp.y), "z_m": float(wp.z), "eta_s": float(t_eta)})
+            x, y = wp.x, wp.y
 
-        # Put "execution parameters" in metadata so the simulator can use them.
-        plan = Plan(
+        return Plan(
             kind="aircraft",
             waypoints=rows,
             metadata={
                 "mission_id": mission.mission_id,
                 "cruise_speed_mps": float(cruise_speed),
-                # initial conditions (used by sim)
                 "heading_rad": float(ic.get("heading_rad", 0.0)),
                 "speed_mps": float(ic.get("speed_mps", cruise_default)),
                 "battery_Wh": float(ic.get("battery_Wh", batt_cap)),
             },
         )
-        return plan
 
-    # --- Simulation wrapper (Plan -> SimResult) ---
+    # --- Simulation wrapper ---
     def simulate(plan: Plan, rng: np.random.Generator | None) -> SimResult:
-        # Large cap; sim stops when final waypoint reached or battery depleted.
-        return sim_engine.simulate(plan, rng=rng, t_max_s=4_000.0)
+        return sim_engine.simulate(plan, rng=rng, t_max_s=float(sim_params.t_max_s))
 
     # --- Constraints ---
-    cflags = cfg.get("constraints", {}) or {}
-    enforce_geofence = bool(cflags.get("enforce_geofence", True))
-    constraints = default_aircraft_constraints(enforce_geofence=enforce_geofence)
+    constraints = _aircraft_constraints_from_cfg(cfg)
 
     # --- Objective ---
     obj_cfg = cfg.get("objective", {}) or {}
@@ -256,28 +394,26 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
 
     if terms_cfg:
         for term in terms_cfg:
-            tname = str(term.get("name", "")).strip()
+            tname = str(term.get("name", "")).strip().lower()
             weight = float(term.get("weight", 1.0))
-            mode = str(term.get("mode", "minimize")).lower()
-
-            # We support your YAML names by mapping to sim.scalars keys
             if tname in ("total_time", "time", "t_end_s"):
                 objective.add(term_minimize_time(name="time", weight=weight, key="t_end_s"))
-            elif tname in ("energy_used", "energy", "energy_used_Wh"):
+            elif tname in ("energy_used", "energy", "energy_used_wh"):
                 objective.add(term_minimize_energy(name="energy", weight=weight, key="energy_used_Wh"))
-            else:
-                # Unknown term name: ignore (or raise if you want strict configs)
-                continue
     else:
-        # Default: minimize time
+        # Default: minimize time (AeroHack objective option)
         objective.add(term_minimize_time(name="time", weight=1.0, key="t_end_s"))
+
+    # --- Robustness wiring from YAML ---
+    rob = cfg.get("robustness", {}) or {}
+    robustness_cases = int(rob.get("cases", 0)) if rob else 0
 
     return Problem(
         decision_space=ds,
         build_plan=build_plan,
         simulate=simulate,
-        constraints=constraints,  # Sequence[Constraint] recommended in Problem typing
+        constraints=constraints,
         objective=objective,
-        robustness_cases=0,
+        robustness_cases=robustness_cases,
         metadata={"mission_id": mission.mission_id},
     )

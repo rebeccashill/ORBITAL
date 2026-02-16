@@ -10,18 +10,12 @@ What this CLI does:
 - Loads YAML scenario
 - Builds a Problem (domain-specific builder, unified core interfaces)
 - Runs the unified Planner
-- Runs nominal simulation + optional robustness evaluation
-- Prints summary + writes optional outputs (stubs / simple JSON)
+- Prints summary + writes simple JSON artifacts
 
-NOTE:
-This file assumes you'll implement:
+Assumes you'll implement:
 - mission_framework.aircraft.mission.build_problem_from_config
 - mission_framework.spacecraft.mission.build_problem_from_config
-- mission_framework.reporting.* exporters (optional; can be simple prints at first)
-
-Hackathon strategy:
-- Make this runnable ASAP
-- Then fill in domain modules incrementally
+- mission_framework.reporting.* exporters (optional; can be simple prints first)
 """
 
 from __future__ import annotations
@@ -33,8 +27,10 @@ from typing import Any, Dict
 
 import yaml  # PyYAML
 
-from mission_framework.core.planner import Planner, PlannerConfig, Problem
 from mission_framework.core.constraints import Severity
+from mission_framework.core.decision_variables import MutationConfig
+from mission_framework.core.objective import ScoreConfig, RobustAggregation
+from mission_framework.core.planner import Planner, PlannerConfig, Problem
 from mission_framework.simulation.feasibility import format_feasibility_report
 
 
@@ -47,14 +43,25 @@ def _planner_config_from_yaml(cfg: Dict[str, Any]) -> PlannerConfig:
     p = cfg.get("planner", {}) or {}
     mut = p.get("mutation", {}) or {}
 
+    # Scoring config (unified with core/objective.py)
+    scoring = ScoreConfig(
+        penalty_weight=float(p.get("penalty_weight", 1000.0)),
+        include_hard=True,
+        include_soft=True,
+        margin_reward_weight=float(p.get("margin_reward_weight", 0.0)),
+        robust_aggregation=RobustAggregation.MEAN,  # overridden in Problem when robustness is enabled
+        cvar_alpha=float(p.get("cvar_alpha", 0.8)),
+    )
+
     return PlannerConfig(
         iterations=int(p.get("iterations", 2000)),
         restarts=int(p.get("restarts", 5)),
-        penalty_weight=float(p.get("penalty_weight", 1000.0)),
+        scoring=scoring,
         hard_infeasible_penalty=float(p.get("hard_infeasible_penalty", 1e6)),
         seed=int(p.get("seed", 0)),
         keep_history=bool(cfg.get("output", {}).get("save_history", True)),
-        mutation=PlannerConfig().mutation.__class__(  # MutationConfig
+        history_stride=int(p.get("history_stride", 1)),
+        mutation=MutationConfig(
             cont_sigma=float(mut.get("cont_sigma", 0.10)),
             cont_sigma_is_frac=bool(mut.get("cont_sigma_is_frac", True)),
             int_step=int(mut.get("int_step", 1)),
@@ -112,13 +119,24 @@ def main() -> None:
         cfg.setdefault("robustness", {})
         cfg["robustness"]["cases"] = int(args.robustness)
 
-
     # Build problem
     problem = _build_problem(cfg)
 
     # Attach robustness settings (planner uses Problem.robustness_cases/seeds)
     rob = cfg.get("robustness", {}) or {}
     problem.robustness_cases = int(rob.get("cases", 0)) if rob else 0
+
+    # Optional robust aggregation settings from YAML (nice for AeroHack tuning)
+    # Example:
+    # robustness:
+    #   cases: 50
+    #   aggregation: cvar
+    #   cvar_alpha: 0.8
+    agg = (rob.get("aggregation") or "").strip().lower()
+    if agg in ("mean", "worst", "cvar"):
+        problem.robust_aggregation = RobustAggregation(agg)
+    if "cvar_alpha" in rob:
+        problem.cvar_alpha = float(rob["cvar_alpha"])
 
     # Planner
     planner_cfg = _planner_config_from_yaml(cfg)
@@ -141,71 +159,69 @@ def main() -> None:
     print("\n--- Constraint Report (top worst first) ---")
     print(format_feasibility_report(result.constraints, max_lines=40))
 
-    print("\n--- Objective Breakdown ---")
-    print(json.dumps(result.objective.summary(), indent=2))
+    print("\n--- Score Breakdown ---")
+    print(json.dumps(result.score_report.to_jsonable(), indent=2))
 
     if result.robustness is not None:
         print("\n--- Robustness Summary ---")
         print(json.dumps(result.robustness, indent=2))
 
-    # Write basic artifacts (domain exporters can override later)
+    # Write basic artifacts
     outdir = Path(args.outdir).resolve() / scenario_path.stem
     outdir.mkdir(parents=True, exist_ok=True)
-
-    if str(cfg.get("scenario", {}).get("type", "")).strip().lower() == "aircraft":
-        from mission_framework.reporting.flight_output import print_flight_plan
-        print("\n--- Flight Plan ---")
-        print(print_flight_plan(result.plan))
-
-    elif str(cfg.get("scenario", {}).get("type", "")).strip().lower() == "spacecraft":
-        from mission_framework.reporting.schedule_output import print_schedule
-        print("\n--- 7-Day Schedule ---")
-        print(print_schedule(result.plan))
-
 
     scenario_type = str(cfg.get("scenario", {}).get("type", "")).strip().lower()
 
     if scenario_type == "aircraft":
-        from mission_framework.reporting.flight_output import export_waypoints_csv
-        csv_path = outdir / "waypoints.csv"
-        export_waypoints_csv(result.plan, csv_path)
+        # Optional human-readable output
+        try:
+            from mission_framework.reporting.flight_output import print_flight_plan, export_waypoints_csv
+            print("\n--- Flight Plan ---")
+            print(print_flight_plan(result.plan))
+            export_waypoints_csv(result.plan, outdir / "waypoints.csv")
+        except Exception as e:
+            print(f"(flight reporting skipped: {e})")
 
     elif scenario_type == "spacecraft":
-        from mission_framework.reporting.schedule_output import export_schedule_csv
-        csv_path = outdir / "schedule.csv"
-        export_schedule_csv(result.plan, csv_path)
+        try:
+            from mission_framework.reporting.schedule_output import print_schedule, export_schedule_csv
+            print("\n--- 7-Day Schedule ---")
+            print(print_schedule(result.plan))
+            export_schedule_csv(result.plan, outdir / "schedule.csv")
+        except Exception as e:
+            print(f"(schedule reporting skipped: {e})")
 
-    _write_json(outdir / "objective.json", result.objective.summary())
-    _write_json(outdir / "constraints.json", result.constraints.summary())
+    # Core JSON artifacts (judge-friendly)
+    _write_json(outdir / "score.json", result.score_report.to_jsonable())
+    _write_json(outdir / "constraints.json", result.constraints.to_jsonable() if hasattr(result.constraints, "to_jsonable") else result.constraints.summary())
     if result.robustness is not None:
         _write_json(outdir / "robustness.json", result.robustness)
 
-    # Plan export (minimal generic export)
-    plan_payload = {
+    # Minimal generic plan export
+    plan_payload: Dict[str, Any] = {
         "kind": getattr(result.plan, "kind", None),
         "metadata": getattr(result.plan, "metadata", {}),
         "waypoints": getattr(result.plan, "waypoints", None),
         "schedule": None,
     }
-    # If schedule exists, serialize events
     sched = getattr(result.plan, "schedule", None)
     if sched is not None:
         plan_payload["schedule"] = [
             {
-                "t_start": e.t_start,
-                "t_end": e.t_end,
-                "etype": str(e.etype),
-                "label": e.label,
-                "target_id": e.target_id,
-                "location": e.location,
-                "data": e.data,
+                "t_start": getattr(e, "t_start", None),
+                "t_end": getattr(e, "t_end", None),
+                "etype": str(getattr(e, "etype", None)),
+                "label": getattr(e, "label", None),
+                "target_id": getattr(e, "target_id", None),
+                "location": getattr(e, "location", None),
+                "data": getattr(e, "data", None),
             }
-            for e in sched.events
+            for e in getattr(sched, "events", [])
         ]
 
     _write_json(outdir / "plan.json", plan_payload)
 
-    # History
+    # History (if enabled)
     if result.history is not None:
         _write_json(outdir / "history.json", result.history)
 

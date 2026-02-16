@@ -2,31 +2,25 @@
 """
 Domain-agnostic constraint system.
 
-Key design choices (hackathon + "SpaceX-style" verification):
+Key design choices:
 - Every constraint returns a *margin* (float or array of floats):
     margin >= 0  => PASS
     margin <  0  => FAIL (violation magnitude = -margin)
 - Constraints are evaluated on a SimulationResult-like object produced by your simulator.
   This keeps planning unified across aircraft + spacecraft.
 
-This module does NOT assume what "state" is.
-It only assumes the simulator returns a context object (any Python object)
-that constraints can read.
-
-Typical usage:
-    constraints = [
-        ConstraintSet(...),
-        ...
-    ]
-    report = evaluate_constraints(sim_result, constraints)
-    penalty = report.total_penalty()
+Upgrades (AeroHack-focused):
+- Traceability: worst index + optional worst time extraction
+- Grouping: ConstraintGroup preserves per-constraint results (audit-friendly)
+- Registry: ConstraintRegistry for presets and reproducible assembly
+- JSON exports: report/results are easy to dump to /outputs for validation bundles
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Union
 
 import numpy as np
 
@@ -55,7 +49,7 @@ class ConstraintResult:
     severity: Severity
     margins: np.ndarray  # shape (K,) or (1,)
     reduce_mode: ReduceMode = ReduceMode.MIN
-    weight: float = 1.0  # penalty weight (used when severity=SOFT or for hard penalties in scoring)
+    weight: float = 1.0
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -68,8 +62,30 @@ class ConstraintResult:
 
     @property
     def max_violation(self) -> float:
-        # violation is positive number (0 means no violation)
         return float(max(0.0, -self.min_margin))
+
+    @property
+    def worst_index(self) -> Optional[int]:
+        """Index of the worst (minimum) margin, if margins are non-empty."""
+        if self.margins.size == 0:
+            return None
+        return int(np.argmin(self.margins))
+
+    def worst_time(self) -> Optional[float]:
+        """
+        If metadata contains a 1D 't' array aligned with margins, return time at worst index.
+        Convention: simulator outputs can attach metadata={'t': sim.t} in the constraint.
+        """
+        idx = self.worst_index
+        if idx is None:
+            return None
+        t = self.metadata.get("t", None)
+        if t is None:
+            return None
+        t_arr = np.asarray(t, dtype=float).reshape(-1)
+        if idx < 0 or idx >= t_arr.size:
+            return None
+        return float(t_arr[idx])
 
     def reduced(self) -> float:
         m = self.margins
@@ -88,12 +104,26 @@ class ConstraintResult:
     def penalty(self) -> float:
         """
         Penalty computed from violations.
-        - For HARD constraints, this can still be used in "repair / scoring" mode,
-          but feasibility should be assessed separately via is_satisfied.
+        Default: sum of squared violations.
         """
-        # Use a smooth-ish penalty: sum of squared violations (common hackathon default)
         v = np.maximum(0.0, -self.margins)
         return float(self.weight * np.sum(v * v))
+
+    def to_dict(self) -> Dict[str, Any]:
+        """JSON-friendly summary for results bundles."""
+        return {
+            "name": self.name,
+            "severity": str(self.severity.value),
+            "reduce_mode": str(self.reduce_mode.value),
+            "weight": float(self.weight),
+            "is_satisfied": bool(self.is_satisfied),
+            "min_margin": float(self.min_margin),
+            "max_violation": float(self.max_violation),
+            "worst_index": self.worst_index,
+            "worst_time": self.worst_time(),
+            # keep metadata but make it safer to serialize (avoid huge arrays)
+            "metadata_keys": sorted(list(self.metadata.keys())),
+        }
 
 
 @dataclass(frozen=True)
@@ -107,7 +137,6 @@ class ConstraintReport:
 
     @property
     def soft_pass(self) -> bool:
-        # soft constraints can violate; "pass" means none violated
         return all(r.is_satisfied for r in self.results if r.severity == Severity.SOFT)
 
     def by_name(self) -> Dict[str, ConstraintResult]:
@@ -117,7 +146,7 @@ class ConstraintReport:
         candidates = self.results if severity is None else [r for r in self.results if r.severity == severity]
         if not candidates:
             return None
-        return min(candidates, key=lambda r: r.min_margin)  # smallest margin = worst
+        return min(candidates, key=lambda r: r.min_margin)
 
     def total_penalty(self, include_hard: bool = True, include_soft: bool = True) -> float:
         tot = 0.0
@@ -136,16 +165,15 @@ class ConstraintReport:
             "hard_pass": self.hard_pass,
             "soft_pass": self.soft_pass,
             "total_penalty": self.total_penalty(),
-            "worst_hard": None if worst_hard is None else {
-                "name": worst_hard.name,
-                "min_margin": worst_hard.min_margin,
-                "max_violation": worst_hard.max_violation,
-            },
-            "worst_soft": None if worst_soft is None else {
-                "name": worst_soft.name,
-                "min_margin": worst_soft.min_margin,
-                "max_violation": worst_soft.max_violation,
-            },
+            "worst_hard": None if worst_hard is None else worst_hard.to_dict(),
+            "worst_soft": None if worst_soft is None else worst_soft.to_dict(),
+        }
+
+    def to_jsonable(self) -> Dict[str, Any]:
+        """Full JSON-friendly report (for /outputs/constraint_report.json)."""
+        return {
+            "summary": self.summary(),
+            "results": [r.to_dict() for r in self.results],
         }
 
 
@@ -155,9 +183,7 @@ class ConstraintReport:
 
 class Constraint:
     """
-    Base constraint.
-
-    Implementations must define evaluate(sim) -> np.ndarray margins.
+    Base constraint. Implementations must define evaluate(sim) -> np.ndarray margins.
     """
     name: str
     severity: Severity
@@ -180,7 +206,6 @@ class Constraint:
         self.metadata = metadata or {}
 
     def evaluate(self, sim: Any) -> np.ndarray:
-        """Return margin array. Must be overridden."""
         raise NotImplementedError
 
     def __call__(self, sim: Any) -> ConstraintResult:
@@ -196,15 +221,7 @@ class Constraint:
 
 
 class FunctionalConstraint(Constraint):
-    """
-    Convenience wrapper: define a constraint with a callable(sim) -> margin(s).
-
-    Example:
-        c = FunctionalConstraint(
-            "battery_nonnegative",
-            fn=lambda sim: sim.battery_Wh,   # margin = battery_Wh >= 0
-        )
-    """
+    """Define a constraint with a callable(sim) -> margin(s)."""
     def __init__(
         self,
         name: str,
@@ -223,12 +240,8 @@ class FunctionalConstraint(Constraint):
 
 class ConstraintSet(Constraint):
     """
-    Groups multiple constraints together (for organization only).
-
-    evaluate(sim) returns a concatenated margin vector.
-
-    Note: A ConstraintSet produces ONE ConstraintResult with combined margins.
-    If you want individual results, pass the children directly into evaluate_constraints.
+    Backwards-compatible: groups multiple constraints into ONE combined margin vector.
+    Good for “single score”, bad for audits (use ConstraintGroup for audits).
     """
     def __init__(
         self,
@@ -250,18 +263,67 @@ class ConstraintSet(Constraint):
         return np.concatenate(parts) if parts else np.array([], dtype=float)
 
 
+class ConstraintGroup:
+    """
+    Audit-friendly container: preserves child results (does NOT merge them).
+    Evaluate via evaluate_constraints(...), which flattens groups automatically.
+    """
+    def __init__(self, name: str, constraints: Sequence[Union[Constraint, "ConstraintGroup"]]):
+        self.name = name
+        self.constraints = list(constraints)
+
+
+# ---------------------------
+# Registry (presets)
+# ---------------------------
+
+class ConstraintRegistry:
+    """
+    Simple registry for reproducible constraint bundles.
+    Use this to expose 'aircraft_baseline', 'spacecraft_baseline', etc.
+    """
+    def __init__(self):
+        self._builders: Dict[str, Callable[..., Sequence[Union[Constraint, ConstraintGroup]]]] = {}
+
+    def register(self, key: str, builder: Callable[..., Sequence[Union[Constraint, ConstraintGroup]]]) -> None:
+        if key in self._builders:
+            raise KeyError(f"Constraint preset already registered: {key}")
+        self._builders[key] = builder
+
+    def build(self, key: str, **kwargs: Any) -> List[Union[Constraint, ConstraintGroup]]:
+        if key not in self._builders:
+            raise KeyError(f"Unknown constraint preset: {key}. Available: {sorted(self._builders.keys())}")
+        built = self._builders[key](**kwargs)
+        return list(built)
+
+    def keys(self) -> List[str]:
+        return sorted(self._builders.keys())
+
+
 # ---------------------------
 # Evaluation helpers
 # ---------------------------
 
-def evaluate_constraints(sim: Any, constraints: Sequence[Constraint]) -> ConstraintReport:
+def _flatten_constraints(items: Sequence[Union[Constraint, ConstraintGroup]]) -> List[Constraint]:
+    flat: List[Constraint] = []
+    for it in items:
+        if isinstance(it, Constraint):
+            flat.append(it)
+        elif isinstance(it, ConstraintGroup):
+            flat.extend(_flatten_constraints(it.constraints))
+        else:
+            raise TypeError(f"Unknown constraint container type: {type(it)}")
+    return flat
+
+
+def evaluate_constraints(sim: Any, constraints: Sequence[Union[Constraint, ConstraintGroup]]) -> ConstraintReport:
     """
     Evaluate all constraints on the simulation output/context.
-
-    Returns a ConstraintReport with one ConstraintResult per constraint in the list.
+    Flattens nested ConstraintGroup containers automatically.
+    Returns one ConstraintResult per *Constraint* (groups are just containers).
     """
     results: List[ConstraintResult] = []
-    for c in constraints:
+    for c in _flatten_constraints(constraints):
         results.append(c(sim))
     return ConstraintReport(results=results)
 
@@ -275,7 +337,8 @@ def require_hard_feasible(report: ConstraintReport, error_prefix: str = "Infeasi
         raise ValueError(f"{error_prefix}: hard constraints failed (unknown worst).")
     raise ValueError(
         f"{error_prefix}: hard constraint '{worst.name}' violated. "
-        f"min_margin={worst.min_margin:.6g}, max_violation={worst.max_violation:.6g}"
+        f"min_margin={worst.min_margin:.6g}, max_violation={worst.max_violation:.6g}, "
+        f"worst_index={worst.worst_index}, worst_time={worst.worst_time()}"
     )
 
 
