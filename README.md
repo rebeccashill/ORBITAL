@@ -9,6 +9,7 @@ ORBITAL is a domain-agnostic mission planning framework that supports:
 - 🔁 Simulation-based optimization with constraints
 - 📊 Monte Carlo robustness analysis
 - 📁 Structured reporting (JSON, CSV exports)
+- 📈 Automated visualization (flight paths, timelines, performance plots)
 
 ## The Core Idea
 
@@ -57,6 +58,10 @@ mission_framework/
 │   ├── schedule_output.py
 │   ├── constraint_report.py
 │   └── summary_metrics.py
+│
+├── visualization/
+│   ├── aircraft_plots.py
+│   └── spacecraft_plots.py
 │
 ├── examples/
 │   ├── aircraft_uav_demo.yaml
@@ -117,6 +122,7 @@ ORBITAL separates four key concerns:
 - Geofence constraint
 - Mission completion constraint
 - Time + energy weighted objective
+- Automated flight path and battery visualization
 
 ### Run
 
@@ -138,6 +144,7 @@ python -m mission_framework.cli examples/aircraft_uav_demo.yaml
 - Cooldown constraints
 - Science value maximization
 - Monte Carlo robustness
+- Automated mission timeline and operations visualization
 
 ### Run
 
@@ -265,7 +272,7 @@ Results are saved to `runs/<scenario_name>/`:
 - **score.json** - Objective breakdown and penalty terms
 - **robustness.json** - Monte Carlo statistics (CVaR, pass rates)
 - **waypoints.csv** (aircraft) or **schedule.csv** (spacecraft)
-- **Plots** (NEW):
+- **Plots**:
   - Aircraft: flight_path.png, battery_state.png, mission_overview.png
   - Spacecraft: mission_timeline.png, operations_summary.png, daily_activity.png
 
@@ -294,7 +301,7 @@ Pre-generated outputs are also available in `outputs/` for reference.
 - Multi-satellite constellation planning
 - Parallelized Monte Carlo
 - More advanced search algorithms (CEM, GA, etc.)
-- Visualization dashboards
+- Interactive visualization dashboards
 
 ---
 
