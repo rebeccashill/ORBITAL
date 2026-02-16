@@ -39,12 +39,15 @@ def test_aircraft_pipeline_runs_end_to_end():
     problem = build_problem_from_config(cfg)
 
     # Keep runtime small for CI; increase for real runs
+    from mission_framework.core.objective import ScoreConfig
     planner_cfg = PlannerConfig(
         iterations=50,
         restarts=1,
         seed=0,
         keep_history=False,
-        penalty_weight=float(cfg.get("planner", {}).get("penalty_weight", 1000.0)),
+        scoring=ScoreConfig(
+            penalty_weight=float(cfg.get("planner", {}).get("penalty_weight", 1000.0)),
+        ),
         hard_infeasible_penalty=float(cfg.get("planner", {}).get("hard_infeasible_penalty", 1e6)),
     )
 
@@ -56,7 +59,7 @@ def test_aircraft_pipeline_runs_end_to_end():
     assert result.plan is not None
     assert result.sim_result is not None
     assert result.constraints is not None
-    assert result.objective is not None
+    assert result.score_report is not None
 
     # Hard feasibility should generally be achievable for the demo scenario
     # If you're still implementing constraints/dynamics, you can temporarily relax this.
@@ -66,7 +69,7 @@ def test_aircraft_pipeline_runs_end_to_end():
     assert len(result.constraints.results) > 0
 
     # Check we have sensible objective breakdown
-    summary = result.objective.summary()
+    summary = result.score_report.objective.summary()
     assert "total_cost" in summary
     assert summary["total_cost"] is not None
 
