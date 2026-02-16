@@ -99,9 +99,14 @@ def _aircraft_constraints_from_cfg(cfg: Dict[str, Any]) -> List[Constraint | Con
 
     # Battery must never drop below 0
     def battery_margin(sim: SimResult) -> np.ndarray:
-        # trajectory state order: [x,y,z,heading,v_air,battery_Wh]
-        batt = np.asarray(sim.trajectory.state[:, 5], dtype=float).reshape(-1)
-        return margin_geq(batt, 0.0)  # batt >= 0
+        batt = np.asarray(sim.resources.get("battery_Wh", []), dtype=float).reshape(-1)
+
+        if batt.size == 0:
+            # Defensive fallback so planner penalizes
+            return np.array([-1.0], dtype=float)
+
+        return margin_geq(batt, 0.0)
+
 
     c_batt = FunctionalConstraint(
         name="battery_nonnegative",
@@ -156,10 +161,15 @@ def _aircraft_constraints_from_cfg(cfg: Dict[str, Any]) -> List[Constraint | Con
 
     def yaw_rate_margin(sim: SimResult) -> np.ndarray:
         yaw_rate = np.asarray(sim.resources.get("yaw_rate_radps", []), dtype=float).reshape(-1)
-        v_air = np.asarray(sim.trajectory.state[:, 4], dtype=float).reshape(-1)
+        v_air = np.asarray(sim.resources.get("v_air_mps", []), dtype=float).reshape(-1)
+
+        if yaw_rate.size == 0 or v_air.size == 0:
+            # fail-safe: return a single negative margin so planner penalizes
+            return np.array([-1.0], dtype=float)
+
         v_air = np.maximum(v_air, 1e-3)
-        yaw_rate_lim = (G0 * math.tan(bank_max_rad)) / v_air  # array
-        # margin >= 0 when |yaw_rate| <= yaw_rate_lim
+        yaw_rate_lim = (G0 * math.tan(bank_max_rad)) / v_air
+
         return yaw_rate_lim - np.abs(yaw_rate)
 
     c_turn = FunctionalConstraint(

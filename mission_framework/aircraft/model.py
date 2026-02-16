@@ -199,6 +199,7 @@ class AircraftSim:
         wind_arr = np.array(wind_hist, dtype=float)
         vground_arr = np.array(vground_hist, dtype=float)
         yawrate_arr = np.array(yawrate_hist, dtype=float)
+        v_air_arr = state_arr[:, 4]
 
         traj = Trajectory(
             t=t_arr,
@@ -252,6 +253,7 @@ class AircraftSim:
                 "geofence_violated": np.array([nfz_viol], dtype=float),
                 "geofence_min_clearance_m": np.array([min_clear], dtype=float),
                 "waypoint_reached_flag": np.array(reached_hist, dtype=float),
+                "v_air_mps": v_air_arr,
             },
             scalars={
                 "t_end_s": t_end,
