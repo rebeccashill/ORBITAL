@@ -40,6 +40,9 @@ def run_monte_carlo_aircraft(iterations: int = 500, restarts: int = 2, robustnes
     for f in runs_dir.glob("*.csv"):
         import shutil
         shutil.copy(f, val_dir / f.name)
+    for f in runs_dir.glob("*.png"):
+        import shutil
+        shutil.copy(f, val_dir / f.name)
     
     # Extract key metrics
     robustness_file = runs_dir / "robustness.json"
@@ -85,6 +88,9 @@ def run_monte_carlo_spacecraft(iterations: int = 300, restarts: int = 2, robustn
         import shutil
         shutil.copy(f, val_dir / f.name)
     for f in runs_dir.glob("*.csv"):
+        import shutil
+        shutil.copy(f, val_dir / f.name)
+    for f in runs_dir.glob("*.png"):
         import shutil
         shutil.copy(f, val_dir / f.name)
     
