@@ -22,6 +22,9 @@ outputs/
 - **robustness.json** - Monte Carlo robustness statistics
 - **plan.json** - Complete plan representation
 - **history.json** - Search algorithm iteration history
+- **flight_path.png** - 2D visualization of the flight trajectory with waypoints ✨
+- **battery_state.png** - Battery energy over time plot ✨
+- **mission_overview.png** - Combined dashboard with path and battery ✨
 
 ### Key Metrics:
 - **Mission Time:** 122 seconds
@@ -53,6 +56,9 @@ outputs/
 - **robustness.json** - Monte Carlo robustness statistics
 - **plan.json** - Complete schedule representation
 - **history.json** - Search algorithm iteration history
+- **mission_timeline.png** - Gantt chart showing all scheduled events over 7 days ✨
+- **operations_summary.png** - Bar charts of event counts and durations by type ✨
+- **daily_activity.png** - Daily distribution of observations and downlinks ✨
 
 ### Key Metrics:
 - **Mission Duration:** 7 days (604,800 seconds)

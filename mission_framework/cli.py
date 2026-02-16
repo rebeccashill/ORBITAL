@@ -181,6 +181,18 @@ def main() -> None:
             export_waypoints_csv(result.plan, outdir / "waypoints.csv")
         except Exception as e:
             print(f"(flight reporting skipped: {e})")
+        
+        # Generate plots
+        try:
+            from mission_framework.visualization.aircraft_plots import plot_aircraft_mission
+            mission_name = cfg.get('scenario', {}).get('name', 'Aircraft Mission')
+            plot_files = plot_aircraft_mission(result.plan, result.sim_result, outdir, mission_name)
+            if plot_files:
+                print(f"\n--- Plots Generated ---")
+                for plot_name, plot_path in plot_files.items():
+                    print(f"  {plot_name}: {plot_path.name}")
+        except Exception as e:
+            print(f"(plot generation skipped: {e})")
 
     elif scenario_type == "spacecraft":
         try:
@@ -190,6 +202,18 @@ def main() -> None:
             export_schedule_csv(result.plan, outdir / "schedule.csv")
         except Exception as e:
             print(f"(schedule reporting skipped: {e})")
+        
+        # Generate plots
+        try:
+            from mission_framework.visualization.spacecraft_plots import plot_spacecraft_mission
+            mission_name = cfg.get('scenario', {}).get('name', 'Spacecraft Mission')
+            plot_files = plot_spacecraft_mission(result.plan, result.sim_result, outdir, mission_name)
+            if plot_files:
+                print(f"\n--- Plots Generated ---")
+                for plot_name, plot_path in plot_files.items():
+                    print(f"  {plot_name}: {plot_path.name}")
+        except Exception as e:
+            print(f"(plot generation skipped: {e})")
 
     # Core JSON artifacts (judge-friendly)
     _write_json(outdir / "score.json", result.score_report.to_jsonable())

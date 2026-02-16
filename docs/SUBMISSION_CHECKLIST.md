@@ -32,6 +32,9 @@
 - ✅ `score.json` - Performance metrics (time, energy)
 - ✅ `robustness.json` - Monte Carlo summary
 - ✅ `run_log.txt` - Console output
+- ✅ `flight_path.png` - 2D flight trajectory visualization ✨
+- ✅ `battery_state.png` - Battery energy over time plot ✨
+- ✅ `mission_overview.png` - Combined mission dashboard ✨
 
 **Key Metrics:**
 - Mission time: 122 s
@@ -45,6 +48,9 @@
 - ✅ `score.json` - Science value accounting
 - ✅ `robustness.json` - Monte Carlo summary
 - ✅ `run_log.txt` - Console output
+- ✅ `mission_timeline.png` - 7-day Gantt chart visualization ✨
+- ✅ `operations_summary.png` - Event type statistics ✨
+- ✅ `daily_activity.png` - Daily operations distribution ✨
 
 **Key Metrics:**
 - Observations: 3 targets captured
