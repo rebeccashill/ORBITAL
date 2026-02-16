@@ -265,6 +265,9 @@ Results are saved to `runs/<scenario_name>/`:
 - **score.json** - Objective breakdown and penalty terms
 - **robustness.json** - Monte Carlo statistics (CVaR, pass rates)
 - **waypoints.csv** (aircraft) or **schedule.csv** (spacecraft)
+- **Plots** (NEW):
+  - Aircraft: flight_path.png, battery_state.png, mission_overview.png
+  - Spacecraft: mission_timeline.png, operations_summary.png, daily_activity.png
 
 Pre-generated outputs are also available in `outputs/` for reference.
 
