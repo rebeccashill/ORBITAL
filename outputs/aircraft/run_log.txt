@@ -1,0 +1,86 @@
+
+=== ORBITAL: Planning Complete ===
+Scenario: UAV Multi-Waypoint Mission Demo
+Type:     aircraft
+Score:    8124.23
+Feasible: False
+Worst HARD margin: -2 (all_waypoints_reached)
+
+--- Constraint Report (top worst first) ---
+HARD pass: False | SOFT pass: True | total_penalty: 4
+[FAIL] HARD  all_waypoints_reached           min_margin=-2  max_violation=2  penalty=4
+[PASS] HARD  bank_angle_turn_limit           min_margin=+0.212683  max_violation=0  penalty=0
+[PASS] HARD  geofence_no_entry               min_margin=+0.5  max_violation=0  penalty=0
+[PASS] HARD  battery_nonnegative             min_margin=+792.551  max_violation=0  penalty=0
+[PASS] HARD  geofence_clearance              min_margin=+2500  max_violation=0  penalty=0
+
+--- Score Breakdown ---
+{
+  "total_score": 8124.234693602741,
+  "objective_cost": 124.23469360273869,
+  "constraint_penalty": 4.0,
+  "constraint_margin_reward": 0.0,
+  "objective": {
+    "total_cost": 124.23469360273869,
+    "terms": [
+      {
+        "name": "time",
+        "raw": 122.0,
+        "weighted_cost": 122.0,
+        "weight": 1.0
+      },
+      {
+        "name": "energy",
+        "raw": 7.448978675795615,
+        "weighted_cost": 2.2346936027386843,
+        "weight": 0.3
+      }
+    ]
+  },
+  "constraint_summary": {
+    "hard_pass": false,
+    "soft_pass": true,
+    "total_penalty": 4.0,
+    "worst_hard": {
+      "name": "all_waypoints_reached",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": false,
+      "min_margin": -2.0,
+      "max_violation": 2.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": []
+    },
+    "worst_soft": null
+  },
+  "metadata": {
+    "extras": 0.0,
+    "penalty_weight": 2000.0,
+    "robust_aggregated_score": 8124.234693602741
+  }
+}
+
+--- Robustness Summary ---
+{
+  "cases": 20,
+  "hard_pass_rate": 0.0,
+  "worst_hard_margin_min": -2.0,
+  "robust_aggregation": "cvar",
+  "cvar_alpha": 0.8,
+  "robust_score": 8124.234693602741,
+  "mean_score": 8124.234693602741,
+  "p50_score": 8124.234693602739,
+  "p90_score": 8124.234693602739
+}
+
+--- Flight Plan ---
+seq | id    | eta_s   | x_m      | y_m      | z_m  
+----+-------+---------+----------+----------+------
+0   | START | 0.000   | 0.000    | 0.000    | 0.000
+1   | WP2   | 294.628 | 3500.000 | -500.000 | 0.000
+2   | WP3   | 537.584 | 5000.000 | 2000.000 | 0.000
+3   | WP1   | 801.107 | 2000.000 | 1000.000 | 0.000
+
+Wrote outputs to: /home/runner/work/ORBITAL/ORBITAL/runs/aircraft_uav_demo
