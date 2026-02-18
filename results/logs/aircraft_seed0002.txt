@@ -1,0 +1,79 @@
+
+=== ORBITAL: Planning Complete ===
+Scenario: UAV Multi-Waypoint Mission Demo
+Type:     aircraft
+Score:    311.891
+Feasible: True
+Worst HARD margin: +0.0922964 (bank_angle_turn_limit)
+
+--- Constraint Report (top worst first) ---
+HARD pass: True | SOFT pass: True | total_penalty: 0
+[PASS] HARD  bank_angle_turn_limit           min_margin=+0.0922964  max_violation=0  penalty=0
+[PASS] HARD  geofence_no_entry               min_margin=+0.5  max_violation=0  penalty=0
+[PASS] HARD  all_waypoints_reached           min_margin=+1  max_violation=0  penalty=0
+[PASS] HARD  geofence_clearance              min_margin=+352.382  max_violation=0  penalty=0
+[PASS] HARD  battery_nonnegative             min_margin=+727.031  max_violation=0  penalty=0
+
+--- Score Breakdown ---
+{
+  "total_score": 311.89078260106595,
+  "objective_cost": 311.89078260106595,
+  "constraint_penalty": 0.0,
+  "constraint_margin_reward": 0.0,
+  "objective": {
+    "total_cost": 311.89078260106595,
+    "terms": [
+      {
+        "name": "time",
+        "raw": 290.0,
+        "weighted_cost": 290.0,
+        "weight": 1.0
+      },
+      {
+        "name": "energy",
+        "raw": 72.96927533688654,
+        "weighted_cost": 21.89078260106596,
+        "weight": 0.3
+      }
+    ]
+  },
+  "constraint_summary": {
+    "hard_pass": true,
+    "soft_pass": true,
+    "total_penalty": 0.0,
+    "worst_hard": {
+      "name": "bank_angle_turn_limit",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 0.09229639939172707,
+      "max_violation": 0.0,
+      "worst_index": 39,
+      "worst_time": null,
+      "metadata_keys": [
+        "bank_max_deg"
+      ]
+    },
+    "worst_soft": null
+  },
+  "metadata": {
+    "extras": 0.0,
+    "penalty_weight": 2000.0
+  }
+}
+
+--- Flight Plan ---
+seq | id    | eta_s   | x_m      | y_m      | z_m  
+----+-------+---------+----------+----------+------
+0   | START | 0.000   | 0.000    | 0.000    | 0.000
+1   | WP1   | 75.944  | 2000.000 | 1000.000 | 0.000
+2   | WP3   | 183.346 | 5000.000 | 2000.000 | 0.000
+3   | WP2   | 282.366 | 3500.000 | -500.000 | 0.000
+
+--- Plots Generated ---
+  flight_path: flight_path.png
+  battery_state: battery_state.png
+  mission_overview: mission_overview.png
+
+Wrote outputs to: C:\Users\shill\OneDrive\Desktop\ORBITAL\runs\aircraft_uav_demo

@@ -1,0 +1,12 @@
+{
+  "runs": 40,
+  "scenarios": [
+    "aircraft",
+    "spacecraft"
+  ],
+  "notes": [
+    "feasible indicates whether hard constraints passed (as reported by CLI).",
+    "worst_hard_margin is the minimum hard constraint margin (>=0 is feasible).",
+    "logs saved in results/logs/ for reproducibility."
+  ]
+}

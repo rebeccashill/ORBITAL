@@ -100,8 +100,18 @@ def main() -> None:
     ap.add_argument("--iterations", type=int, default=None, help="Override planner.iterations")
     ap.add_argument("--restarts", type=int, default=None, help="Override planner.restarts")
     ap.add_argument("--robustness", type=int, default=None, help="Override robustness.cases")
+    ap.add_argument("--seed", type=int, default=None, help="Random seed for reproducible runs")
+
 
     args = ap.parse_args()
+    if args.seed is not None:
+        import random
+        random.seed(args.seed)
+        try:
+            import numpy as np
+            np.random.seed(args.seed)
+        except Exception:
+            pass
 
     scenario_path = Path(args.scenario_yaml).resolve()
     cfg = _load_yaml(scenario_path)
@@ -119,6 +129,11 @@ def main() -> None:
         cfg.setdefault("robustness", {})
         cfg["robustness"]["cases"] = int(args.robustness)
 
+    if args.seed is not None:
+        cfg.setdefault("planner", {})
+        cfg["planner"]["seed"] = int(args.seed)
+
+        
     # Build problem
     problem = _build_problem(cfg)
 

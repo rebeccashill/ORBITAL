@@ -1,0 +1,99 @@
+
+=== ORBITAL: Planning Complete ===
+Scenario: CubeSat 7-Day Earth Observation Demo
+Type:     spacecraft
+Score:    -33
+Feasible: True
+Worst HARD margin: +0 (battery_nonnegative)
+
+--- Constraint Report (top worst first) ---
+HARD pass: True | SOFT pass: True | total_penalty: 0
+[PASS] HARD  battery_nonnegative             min_margin=+0  max_violation=0  penalty=0
+[PASS] HARD  slew_feasible                   min_margin=+1.18403  max_violation=0  penalty=0
+[PASS] SOFT  max_ops_per_orbit               min_margin=+inf  max_violation=0  penalty=0
+[PASS] SOFT  cooldown_between_observations   min_margin=+inf  max_violation=0  penalty=0
+
+--- Score Breakdown ---
+{
+  "total_score": -33.0,
+  "objective_cost": -33.0,
+  "constraint_penalty": 0.0,
+  "constraint_margin_reward": 0.0,
+  "objective": {
+    "total_cost": -33.0,
+    "terms": [
+      {
+        "name": "value",
+        "raw": 33.0,
+        "weighted_cost": -33.0,
+        "weight": 1.0
+      }
+    ]
+  },
+  "constraint_summary": {
+    "hard_pass": true,
+    "soft_pass": true,
+    "total_penalty": 0.0,
+    "worst_hard": {
+      "name": "battery_nonnegative",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 0.0,
+      "max_violation": 0.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": [
+        "key",
+        "meaning"
+      ]
+    },
+    "worst_soft": {
+      "name": "max_ops_per_orbit",
+      "severity": "soft",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": Infinity,
+      "max_violation": 0.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": [
+        "key",
+        "max_ops",
+        "orbit_period_s"
+      ]
+    }
+  },
+  "metadata": {
+    "extras": 0.0,
+    "penalty_weight": 3000.0
+  }
+}
+
+--- 7-Day Schedule ---
+seq | etype       | label    | target_id | t_start_s | t_end_s   | duration_s | lat_deg | lon_deg | station_id | data_duration_s | value
+----+-------------+----------+-----------+-----------+-----------+------------+---------+---------+------------+-----------------+------
+0   | downlink    | DL_GS2   |           | 744.00    | 924.00    | 180.00     | 48.86   | 2.35    | GS2        | 180.00          |      
+1   | observation | OBS_TGT3 | TGT3      | 3350.46   | 3380.46   | 30.00      | -33.86  | 151.21  |            | 30.00           | 8.00 
+2   | observation | OBS_TGT2 | TGT2      | 8093.22   | 8123.22   | 30.00      | 35.68   | 139.69  |            | 30.00           | 15.00
+3   | observation | OBS_TGT1 | TGT1      | 23535.79  | 23565.79  | 30.00      | 34.05   | -118.25 |            | 30.00           | 10.00
+4   | downlink    | DL_GS1   |           | 23574.00  | 23754.00  | 180.00     | 37.77   | -122.42 | GS1        | 180.00          |      
+5   | downlink    | DL_GS1   |           | 29286.00  | 29466.00  | 180.00     | 37.77   | -122.42 | GS1        | 180.00          |      
+6   | downlink    | DL_GS2   |           | 42276.00  | 42456.00  | 180.00     | 48.86   | 2.35    | GS2        | 180.00          |      
+7   | downlink    | DL_GS2   |           | 47928.00  | 48108.00  | 180.00     | 48.86   | 2.35    | GS2        | 180.00          |      
+8   | downlink    | DL_GS1   |           | 71148.00  | 71328.00  | 180.00     | 37.77   | -122.42 | GS1        | 180.00          |      
+9   | downlink    | DL_GS1   |           | 76794.00  | 76974.00  | 180.00     | 37.77   | -122.42 | GS1        | 180.00          |      
+10  | downlink    | DL_GS2   |           | 81162.00  | 81342.00  | 180.00     | 48.86   | 2.35    | GS2        | 180.00          |      
+11  | downlink    | DL_GS2   |           | 86838.00  | 87018.00  | 180.00     | 48.86   | 2.35    | GS2        | 180.00          |      
+12  | downlink    | DL_GS1   |           | 109650.00 | 109830.00 | 180.00     | 37.77   | -122.42 | GS1        | 180.00          |      
+13  | downlink    | DL_GS1   |           | 115386.00 | 115566.00 | 180.00     | 37.77   | -122.42 | GS1        | 180.00          |      
+14  | downlink    | DL_GS2   |           | 128352.00 | 128532.00 | 180.00     | 48.86   | 2.35    | GS2        | 180.00          |      
+
+--- Plots Generated ---
+  mission_timeline: mission_timeline.png
+  operations_summary: operations_summary.png
+  daily_activity: daily_activity.png
+
+Wrote outputs to: C:\Users\shill\OneDrive\Desktop\ORBITAL\runs\cubesat_leo_demo
