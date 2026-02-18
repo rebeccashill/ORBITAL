@@ -265,6 +265,22 @@ python -m mission_framework.cli examples/cubesat_leo_demo.yaml \
 python scripts/run_validation.py
 ```
 
+Multi-Seed Stability Analysis
+
+Then paste:
+
+# Seed runs (20 seeds each)
+```bash
+python experiments/run_seed_experiments.py \
+  --aircraft examples/aircraft_uav_demo.yaml \
+  --spacecraft examples/cubesat_leo_demo.yaml \
+  --seeds 20 \
+  --iterations 200 \
+  --restarts 1 \
+  --robustness 0 \
+  --out results/seed_runs.csv
+```
+
 ### Output Locations
 
 Results are saved to `runs/<scenario_name>/`:
