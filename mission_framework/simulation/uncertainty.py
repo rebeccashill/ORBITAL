@@ -37,14 +37,14 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import numpy as np
 
-from mission_framework.core.types import Plan, SimResult
 from mission_framework.core.constraints import (
     Constraint,
     ConstraintReport,
-    evaluate_constraints,
     Severity,
+    evaluate_constraints,
 )
 from mission_framework.core.objective import Objective, ObjectiveReport
+from mission_framework.core.types import Plan, SimResult
 
 # ---------------------------
 # Case definition

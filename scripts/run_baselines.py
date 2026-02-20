@@ -26,9 +26,9 @@ from typing import Any, Dict
 
 import yaml
 
-from mission_framework.core.planner import Planner, PlannerConfig, Severity
-from mission_framework.core.objective import RobustAggregation
 from mission_framework.aircraft.mission import build_problem_from_config as build_aircraft
+from mission_framework.core.objective import RobustAggregation
+from mission_framework.core.planner import Planner, PlannerConfig, Severity
 from mission_framework.spacecraft.mission import build_problem_from_config as build_spacecraft
 
 

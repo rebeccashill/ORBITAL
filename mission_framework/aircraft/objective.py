@@ -27,10 +27,9 @@ If you want feasibility-aware shaping, combine with:
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Tuple
-
-import math
 
 # ============================================================
 # Simulation extraction helpers

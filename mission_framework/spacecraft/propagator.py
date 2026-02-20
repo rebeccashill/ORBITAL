@@ -6,8 +6,8 @@ from typing import Tuple
 
 import numpy as np
 
-from mission_framework.spacecraft.frames import julian_date_from_unix, eci_to_ecef
 from mission_framework.spacecraft.dynamics import DynamicsConfig, dynamics_eci, rk4_step
+from mission_framework.spacecraft.frames import eci_to_ecef, julian_date_from_unix
 
 
 @dataclass(frozen=True)

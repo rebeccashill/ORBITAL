@@ -6,8 +6,8 @@ Generates visualizations for mission schedules, timelines, and operations.
 from pathlib import Path
 from typing import Dict
 
-import numpy as np
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")  # Non-interactive backend for server environments
 import matplotlib.pyplot as plt

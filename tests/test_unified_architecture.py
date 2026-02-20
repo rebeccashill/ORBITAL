@@ -25,10 +25,10 @@ from typing import Any, Dict
 
 import yaml
 
-from mission_framework.core.planner import Planner, PlannerConfig, Problem
-from mission_framework.core.decision_variables import DecisionSpace
 from mission_framework.core.constraints import Constraint, ConstraintGroup
+from mission_framework.core.decision_variables import DecisionSpace
 from mission_framework.core.objective import Objective
+from mission_framework.core.planner import Planner, PlannerConfig, Problem
 
 EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples"
 

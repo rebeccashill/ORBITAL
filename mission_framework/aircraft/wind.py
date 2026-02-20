@@ -1,9 +1,10 @@
 # mission_framework/aircraft/wind.py
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
-from typing import Tuple, Optional
+from dataclasses import dataclass
+from typing import Optional, Tuple
+
 import numpy as np
 
 

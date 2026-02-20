@@ -33,25 +33,24 @@ from mission_framework.core.decision_variables import (
 )
 from mission_framework.core.objective import Objective, term_maximize_value
 from mission_framework.core.planner import Problem
-from mission_framework.core.types import Plan, Schedule, Event, EventType, SimResult, Trajectory
-
+from mission_framework.core.types import Event, EventType, Plan, Schedule, SimResult, Trajectory
+from mission_framework.spacecraft.attitude import (
+    PointingTask,
+    SlewConfig,
+    sequence_feasibility_margin,
+)
+from mission_framework.spacecraft.constraints import default_spacecraft_constraints
 from mission_framework.spacecraft.orbit_compat import (
     KeplerianElements,
     propagate_ecef_trajectory,
 )
-from mission_framework.spacecraft.visibility_core import GroundSite, compute_access_windows
-from mission_framework.spacecraft.attitude import (
-    SlewConfig,
-    PointingTask,
-    sequence_feasibility_margin,
-)
 from mission_framework.spacecraft.power import (
     BatteryConfig,
-    PowerLoads,
     BatteryModel,
+    PowerLoads,
     make_steps_from_schedule,
 )
-from mission_framework.spacecraft.constraints import default_spacecraft_constraints
+from mission_framework.spacecraft.visibility_core import GroundSite, compute_access_windows
 
 R_EARTH_KM = 6378.137
 
@@ -505,6 +504,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
 
     # Explicitly cast constraints to the correct type
     from typing import cast
+
     from mission_framework.core.constraints import Constraint, ConstraintGroup
 
     return Problem(

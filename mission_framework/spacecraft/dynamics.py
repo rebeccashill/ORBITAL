@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import numpy as np
 
 MU_EARTH = 3.986004418e14  # m^3/s^2

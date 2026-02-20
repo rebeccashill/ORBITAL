@@ -7,8 +7,8 @@ from typing import Tuple
 
 import numpy as np
 
-from mission_framework.spacecraft.frames import julian_date_from_unix, eci_to_ecef
-from mission_framework.spacecraft.dynamics import rk4_step, dynamics_eci
+from mission_framework.spacecraft.dynamics import dynamics_eci, rk4_step
+from mission_framework.spacecraft.frames import eci_to_ecef, julian_date_from_unix
 
 R_EARTH_KM = 6378.137
 MU_EARTH = 3.986004418e14  # m^3/s^2

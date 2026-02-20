@@ -7,8 +7,8 @@ from mission_framework.core.constraints import (
     Constraint,
     FunctionalConstraint,
     Severity,
-    margin_nonnegative,
     margin_leq,
+    margin_nonnegative,
 )
 
 

@@ -14,12 +14,31 @@ Coordinates:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, Tuple, List, Union
-
 import math
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Tuple, Union
+
 import numpy as np
 
+from mission_framework.aircraft.battery_model import BatteryParams
+from mission_framework.aircraft.dynamics import G0
+from mission_framework.aircraft.dynamics import AircraftParams as DynParams
+from mission_framework.aircraft.geofence import GeofenceMap, NoFlyZone
+from mission_framework.aircraft.model import AircraftSim, AircraftSimParams
+from mission_framework.aircraft.wind_model import (
+    SinusoidalWind,
+    StochasticWind,
+    UniformWind,
+    VortexFieldWind,
+    ZeroWind,
+)
+from mission_framework.core.constraints import (
+    Constraint,
+    ConstraintGroup,
+    FunctionalConstraint,
+    Severity,
+    margin_geq,
+)
 from mission_framework.core.decision_variables import (
     Bounds,
     ContinuousVar,
@@ -30,25 +49,6 @@ from mission_framework.core.decision_variables import (
 from mission_framework.core.objective import Objective, term_minimize_energy, term_minimize_time
 from mission_framework.core.planner import Problem
 from mission_framework.core.types import Plan, SimResult
-from mission_framework.core.constraints import (
-    Constraint,
-    ConstraintGroup,
-    FunctionalConstraint,
-    Severity,
-    margin_geq,
-)
-
-from mission_framework.aircraft.model import AircraftSim, AircraftSimParams
-from mission_framework.aircraft.dynamics import AircraftParams as DynParams, G0
-from mission_framework.aircraft.wind_model import (
-    ZeroWind,
-    UniformWind,
-    SinusoidalWind,
-    VortexFieldWind,
-    StochasticWind,
-)
-from mission_framework.aircraft.battery_model import BatteryParams
-from mission_framework.aircraft.geofence import GeofenceMap, NoFlyZone
 
 # ============================================================
 # Helpers

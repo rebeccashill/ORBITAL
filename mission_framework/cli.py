@@ -29,7 +29,7 @@ import yaml  # PyYAML
 
 from mission_framework.core.constraints import Severity
 from mission_framework.core.decision_variables import MutationConfig
-from mission_framework.core.objective import ScoreConfig, RobustAggregation
+from mission_framework.core.objective import RobustAggregation, ScoreConfig
 from mission_framework.core.planner import Planner, PlannerConfig, Problem
 from mission_framework.simulation.feasibility import format_feasibility_report
 
@@ -197,8 +197,8 @@ def main() -> None:
         # Optional human-readable output
         try:
             from mission_framework.reporting.flight_output import (
-                print_flight_plan,
                 export_waypoints_csv,
+                print_flight_plan,
             )
 
             print("\n--- Flight Plan ---")
@@ -223,8 +223,8 @@ def main() -> None:
     elif scenario_type == "spacecraft":
         try:
             from mission_framework.reporting.schedule_output import (
-                print_schedule,
                 export_schedule_csv,
+                print_schedule,
             )
 
             print("\n--- 7-Day Schedule ---")

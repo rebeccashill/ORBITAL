@@ -19,8 +19,8 @@ from typing import Any, Dict
 
 import yaml
 
-from mission_framework.core.planner import Planner, PlannerConfig
 from mission_framework.core.constraints import Severity
+from mission_framework.core.planner import Planner, PlannerConfig
 
 EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples"
 

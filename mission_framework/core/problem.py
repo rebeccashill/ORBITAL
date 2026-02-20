@@ -27,8 +27,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 
-from mission_framework.core.decision_variables import DecisionAssignment, DecisionSpace
 from mission_framework.core.constraints import Constraint
+from mission_framework.core.decision_variables import DecisionAssignment, DecisionSpace
 from mission_framework.core.objective import Objective
 
 

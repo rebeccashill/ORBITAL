@@ -1,23 +1,24 @@
 # mission_framework/aircraft/model.py
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from mission_framework.core.types import SimResult, Trajectory, Plan
-
-from mission_framework.aircraft.wind_model import WindModel, ZeroWind, StochasticWind
 from mission_framework.aircraft.battery_model import BatteryModel, BatteryParams
 from mission_framework.aircraft.dynamics import (
     AircraftKinematics,
-    AircraftParams as DynParams,
     AircraftState,
     wrap_angle_rad,
 )
+from mission_framework.aircraft.dynamics import (
+    AircraftParams as DynParams,
+)
 from mission_framework.aircraft.geofence import GeofenceMap
+from mission_framework.aircraft.wind_model import StochasticWind, WindModel, ZeroWind
+from mission_framework.core.types import Plan, SimResult, Trajectory
 
 
 @dataclass(frozen=True)

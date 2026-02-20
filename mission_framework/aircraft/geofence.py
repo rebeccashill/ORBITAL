@@ -1,10 +1,9 @@
 # mission_framework/aircraft/geofence.py
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import List, Optional, Sequence, Tuple, Dict, Any
-
 import math
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 Point = Tuple[float, float]
 Segment = Tuple[Point, Point]

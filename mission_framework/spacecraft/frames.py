@@ -1,5 +1,6 @@
 # mission_framework/spacecraft/frames.py
 from __future__ import annotations
+
 import numpy as np
 
 W_EARTH = 7.2921150e-5  # rad/s

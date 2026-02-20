@@ -5,7 +5,8 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 
-from .visibility_core import GroundSite, compute_access_windows as compute_access_windows_core
+from .visibility_core import GroundSite
+from .visibility_core import compute_access_windows as compute_access_windows_core
 
 
 def compute_access_windows(*args: Any, **kwargs: Any) -> Dict[str, List[Tuple[float, float]]]:

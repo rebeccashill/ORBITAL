@@ -25,11 +25,6 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
 
-from mission_framework.core.decision_variables import (
-    DecisionAssignment,
-    DecisionSpace,
-    MutationConfig,
-)
 from mission_framework.core.constraints import (
     Constraint,
     ConstraintGroup,
@@ -37,14 +32,19 @@ from mission_framework.core.constraints import (
     Severity,
     evaluate_constraints,
 )
+from mission_framework.core.decision_variables import (
+    DecisionAssignment,
+    DecisionSpace,
+    MutationConfig,
+)
 from mission_framework.core.objective import (
     Objective,
+    RobustAggregation,
+    RobustScoreReport,
     ScoreConfig,
     ScoreReport,
-    RobustScoreReport,
     score_plan,
     score_robust,
-    RobustAggregation,
 )
 
 # ---------------------------
