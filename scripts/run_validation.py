@@ -135,11 +135,13 @@ def run_case(
 
 
 def main() -> int:
-    print("""
+    print(
+        """
 ╔══════════════════════════════════════════════════════════╗
 ║          AEROHACK VALIDATION - ROBUST + STRESS           ║
 ╚══════════════════════════════════════════════════════════╝
-""")
+"""
+    )
 
     summary: Dict[str, Any] = {"cases": []}
 
