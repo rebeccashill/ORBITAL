@@ -172,7 +172,8 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     # Precompute contact windows for stations
     station_windows: Dict[str, List[Tuple[float, float]]] = {}
     for s in stations:
-        gs_yaml = next((g for g in gs_list if str(g.get("id", "")) == s.site_id), {})
+        site_key = str(s.site_id or s.name or "GS")
+        gs_yaml = next((g for g in gs_list if str(g.get("id", "")) == site_key), {})
         min_el_deg = float(gs_yaml.get("min_elevation_deg", default_min_el))
 
         wins_dict = compute_access_windows(
@@ -181,8 +182,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
             sites=[s],
             min_elevation_deg=min_el_deg,
         )
-        site_key = str(s.site_id or s.name or "GS")
-        station_windows[s.site_id] = wins_dict.get(site_key, [])
+        station_windows[site_key] = wins_dict.get(site_key, [])
 
     # Precompute target visibility windows (treat target as a ground site)
     target_windows: Dict[str, List[Tuple[float, float]]] = {}
@@ -256,7 +256,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                 start = float(w0 + frac * ((w1 - w0) - dl_dur))
                 end = float(start + dl_dur)
 
-                st = next((s for s in stations if s.site_id == sid), None)
+                st = next((s for s in stations if str(s.site_id or s.name or "GS") == sid), None)
                 loc = (float(st.lat_deg), float(st.lon_deg)) if st is not None else None
 
                 events.append(Event(
@@ -302,7 +302,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                 d = _ecef_direction_to_site(lat_deg, lon_deg)
             elif e.etype == EventType.DOWNLINK:
                 sid = str(e.data.get("station_id", ""))
-                st = next((s for s in stations if s.site_id == sid), None)
+                st = next((s for s in stations if str(s.site_id or s.name or "GS") == sid), None)
                 if st is None:
                     continue
                 d = _ecef_direction_to_site(st.lat_deg, st.lon_deg)
