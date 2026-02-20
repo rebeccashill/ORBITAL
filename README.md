@@ -82,8 +82,15 @@ runs/cubesat_leo_demo/
 
 # 🧠 Architecture Overview
 
-mission_framework/ ├── core/ ├── simulation/ ├── aircraft/ ├──
-spacecraft/ ├── reporting/ ├── visualization/ ├── examples/ └── tests/
+mission_framework/
+├── core/
+├── simulation/
+├── aircraft/
+├── spacecraft/
+├── reporting/
+├── visualization/
+├── examples/
+└── tests/
 
 ------------------------------------------------------------------------
 
