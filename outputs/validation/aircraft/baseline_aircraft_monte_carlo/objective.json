@@ -1,0 +1,17 @@
+{
+  "total_cost": 359.2378240087993,
+  "terms": [
+    {
+      "name": "time",
+      "raw": 308.0,
+      "weighted_cost": 308.0,
+      "weight": 1.0
+    },
+    {
+      "name": "energy",
+      "raw": 170.79274669599772,
+      "weighted_cost": 51.237824008799315,
+      "weight": 0.3
+    }
+  ]
+}

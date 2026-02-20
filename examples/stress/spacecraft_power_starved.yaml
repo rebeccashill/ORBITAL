@@ -1,0 +1,112 @@
+# Stress Case A (Spacecraft): Power-starved bus (low initial battery + low charge + higher loads)
+scenario:
+  name: "CubeSat Stress - Power Starved"
+  type: "spacecraft"
+
+orbit:
+  altitude_km: 550.0
+  inclination_deg: 97.6
+  raan_deg: 0.0
+  true_anomaly_deg: 0.0
+  epoch_utc: "2026-01-01T00:00:00Z"
+  duration_days: 7
+  time_step_s: 30.0
+
+mission:
+  targets:
+    - id: "TGT1"
+      lat_deg: 34.05
+      lon_deg: -118.25
+      value: 10.0
+      time_windows:
+        - start_utc: "2026-01-01T00:00:00Z"
+          end_utc: "2026-01-03T23:59:59Z"
+    - id: "TGT2"
+      lat_deg: 35.68
+      lon_deg: 139.69
+      value: 15.0
+      time_windows:
+        - start_utc: "2026-01-02T00:00:00Z"
+          end_utc: "2026-01-07T23:59:59Z"
+    - id: "TGT3"
+      lat_deg: -33.86
+      lon_deg: 151.21
+      value: 8.0
+      time_windows:
+        - start_utc: "2026-01-01T00:00:00Z"
+          end_utc: "2026-01-07T23:59:59Z"
+
+ground_stations:
+  - id: "GS1"
+    lat_deg: 37.7749
+    lon_deg: -122.4194
+    min_elevation_deg: 10.0
+  - id: "GS2"
+    lat_deg: 48.8566
+    lon_deg: 2.3522
+    min_elevation_deg: 10.0
+
+spacecraft:
+  battery_capacity_Wh: 120.0
+  initial_battery_Wh: 45.0
+  charge_rate_W: 18.0
+  base_load_W: 26.0
+  payload_power_W: 55.0
+  downlink_power_W: 38.0
+  max_slew_rate_deg_per_s: 1.0
+  min_cooldown_s: 120.0
+  max_ops_per_orbit: 4
+  data_storage_capacity_Gb: 32.0
+  data_rate_downlink_Mbps: 50.0
+  data_rate_observation_Mbps: 25.0
+
+constraints:
+  enforce_visibility: true
+  enforce_slew_limits: true
+  enforce_power_nonnegative: true
+  enforce_data_storage_limit: true
+  enforce_cooldown: true
+  enforce_max_ops_per_orbit: true
+
+objective:
+  type: "weighted_sum"
+  terms:
+    - name: "science_value_delivered"
+      weight: 1.0
+      mode: "maximize"
+    - name: "missed_downlink_penalty"
+      weight: 0.7
+      mode: "minimize"
+    - name: "power_violation_penalty"
+      weight: 0.8
+      mode: "minimize"
+
+planner:
+  iterations: 500
+  restarts: 3
+  penalty_weight: 4000.0
+  hard_infeasible_penalty: 1000000.0
+  mutation:
+    cont_sigma: 0.10
+    int_step: 1
+    p_flip: 0.05
+    p_perm_swap: 0.4
+    perm_swaps: 2
+  seed: 123
+  downlink:
+    duration_s: 180
+    max_windows_per_station: 6
+
+robustness:
+  cases: 20
+  battery_variation_pct: 0.15
+  slew_rate_variation_pct: 0.10
+  contact_timing_jitter_s: 30
+  report_percentiles: [50, 90]
+
+output:
+  export_schedule: true
+  export_constraint_report: true
+  export_summary_metrics: true
+  save_history: true
+  verbose: true

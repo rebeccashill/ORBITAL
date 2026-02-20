@@ -1,145 +1,178 @@
 #!/usr/bin/env python3
 """
 AeroHack Validation Script
-Runs Monte Carlo analysis for both aircraft and spacecraft missions
-to demonstrate robustness under uncertainty.
+
+Runs:
+- Monte Carlo robustness on baseline aircraft/spacecraft demos
+- Stress-case YAMLs for both domains
+- Saves logs and preserves failure cases (nonzero exit or Feasible: False)
+
+Outputs:
+outputs/validation/
+  aircraft/<case_name>/*
+  spacecraft/<case_name>/*
+  logs/<case_name>.txt
+  validation_summary.json
 """
+
 import subprocess
 import json
 import sys
+import re
 from pathlib import Path
+import shutil
+from typing import Dict, Any, Tuple, Optional
 
-def run_monte_carlo_aircraft(iterations: int = 500, restarts: int = 2, robustness_cases: int = 50):
-    """Run aircraft demo with Monte Carlo wind uncertainty"""
-    print(f"\n{'='*60}")
-    print("AIRCRAFT VALIDATION - Monte Carlo Wind Uncertainty")
-    print(f"{'='*60}\n")
-    
+
+FEASIBLE_RE = re.compile(r"^\s*Feasible:\s*(True|False)\s*$", re.MULTILINE)
+
+
+def parse_feasible(stdout: str) -> Optional[bool]:
+    m = FEASIBLE_RE.search(stdout or "")
+    if not m:
+        return None
+    return m.group(1) == "True"
+
+
+def copy_run_artifacts(run_dir: Path, dest_dir: Path) -> None:
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    if not run_dir.exists():
+        return
+    for ext in ("*.json", "*.csv", "*.png"):
+        for f in run_dir.glob(ext):
+            shutil.copy(f, dest_dir / f.name)
+
+
+def run_case(case_name: str, yaml_path: str, *, iterations: int, restarts: int, robustness: int, seed: int) -> Dict[str, Any]:
+    """
+    Runs a single case, captures logs, copies artifacts, and labels failures.
+    Uses --outdir runs so per-yaml stem maps to runs/<stem>/.
+    """
+    print(f"\n{'='*70}")
+    print(f"RUN CASE: {case_name}")
+    print(f"YAML: {yaml_path}")
+    print(f"{'='*70}\n")
+
     cmd = [
-        sys.executable, "-m", "mission_framework.cli",
-        "examples/aircraft_uav_demo.yaml",
+        sys.executable, "-m", "mission_framework.cli", yaml_path,
         "--iterations", str(iterations),
         "--restarts", str(restarts),
-        "--robustness", str(robustness_cases),
+        "--robustness", str(robustness),
+        "--seed", str(seed),
+        "--outdir", "runs",
     ]
-    
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    print(result.stdout)
-    if result.returncode != 0:
-        print(f"ERROR: {result.stderr}", file=sys.stderr)
-        return False
-    
-    # Copy results to validation folder
-    runs_dir = Path("runs/aircraft_uav_demo")
-    val_dir = Path("outputs/validation/aircraft")
-    val_dir.mkdir(parents=True, exist_ok=True)
-    
-    for f in runs_dir.glob("*.json"):
-        import shutil
-        shutil.copy(f, val_dir / f.name)
-    for f in runs_dir.glob("*.csv"):
-        import shutil
-        shutil.copy(f, val_dir / f.name)
-    for f in runs_dir.glob("*.png"):
-        import shutil
-        shutil.copy(f, val_dir / f.name)
-    
-    # Extract key metrics
-    robustness_file = runs_dir / "robustness.json"
-    if robustness_file.exists():
-        with open(robustness_file) as f:
-            rob_data = json.load(f)
-        print(f"\n🎯 Aircraft Robustness Results:")
-        print(f"   Cases tested: {rob_data['cases']}")
-        print(f"   Hard pass rate: {rob_data['hard_pass_rate']*100:.1f}%")
-        print(f"   Robust score (CVaR α=0.8): {rob_data['robust_score']:.2f}")
-        print(f"   Mean score: {rob_data['mean_score']:.2f}")
-        print(f"   Median score: {rob_data['p50_score']:.2f}")
-        print(f"   P90 score: {rob_data['p90_score']:.2f}")
-    
-    return True
 
-def run_monte_carlo_spacecraft(iterations: int = 300, restarts: int = 2, robustness_cases: int = 30):
-    """Run spacecraft demo with Monte Carlo parameter uncertainty"""
-    print(f"\n{'='*60}")
-    print("SPACECRAFT VALIDATION - Monte Carlo Parameter Uncertainty")
-    print(f"{'='*60}\n")
-    
-    cmd = [
-        sys.executable, "-m", "mission_framework.cli",
-        "examples/cubesat_leo_demo.yaml",
-        "--iterations", str(iterations),
-        "--restarts", str(restarts),
-        "--robustness", str(robustness_cases),
-    ]
-    
     result = subprocess.run(cmd, capture_output=True, text=True)
-    print(result.stdout)
-    if result.returncode != 0:
-        print(f"ERROR: {result.stderr}", file=sys.stderr)
-        return False
-    
-    # Copy results to validation folder
-    runs_dir = Path("runs/cubesat_leo_demo")
-    val_dir = Path("outputs/validation/spacecraft")
-    val_dir.mkdir(parents=True, exist_ok=True)
-    
-    for f in runs_dir.glob("*.json"):
-        import shutil
-        shutil.copy(f, val_dir / f.name)
-    for f in runs_dir.glob("*.csv"):
-        import shutil
-        shutil.copy(f, val_dir / f.name)
-    for f in runs_dir.glob("*.png"):
-        import shutil
-        shutil.copy(f, val_dir / f.name)
-    
-    # Extract key metrics
-    robustness_file = runs_dir / "robustness.json"
-    if robustness_file.exists():
-        with open(robustness_file) as f:
-            rob_data = json.load(f)
-        print(f"\n🎯 Spacecraft Robustness Results:")
-        print(f"   Cases tested: {rob_data['cases']}")
-        print(f"   Hard pass rate: {rob_data['hard_pass_rate']*100:.1f}%")
-        print(f"   Robust score (CVaR α=0.8): {rob_data['robust_score']:.2f}")
-        print(f"   Mean score: {rob_data['mean_score']:.2f}")
-        print(f"   Median score: {rob_data['p50_score']:.2f}")
-        print(f"   P90 score: {rob_data['p90_score']:.2f}")
-    
-    return True
+    stdout = result.stdout or ""
+    stderr = result.stderr or ""
 
-def main():
+    # Always save a combined log
+    logs_dir = Path("outputs/validation/logs")
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    log_path = logs_dir / f"{case_name}.txt"
+    log_path.write_text(
+        f"CMD: {' '.join(cmd)}\n\n--- STDOUT ---\n{stdout}\n\n--- STDERR ---\n{stderr}\n",
+        encoding="utf-8"
+    )
+
+    print(stdout)
+    if result.returncode != 0:
+        print(f"ERROR (nonzero exit): {stderr}", file=sys.stderr)
+
+    feasible = parse_feasible(stdout)
+
+    yaml_stem = Path(yaml_path).stem
+    run_dir = Path("runs") / yaml_stem
+
+    # Decide output folder: keep failures in a dedicated subdir
+    domain = "aircraft" if "aircraft" in yaml_path or "UAV" in stdout else "spacecraft"
+    base_out = Path("outputs/validation") / domain / case_name
+
+    copy_run_artifacts(run_dir, base_out)
+
+    is_failure = (result.returncode != 0) or (feasible is False)
+
+    # Preserve failure case snapshot (same artifacts + log reference)
+    failure_dir = None
+    if is_failure:
+        failure_dir = Path("outputs/validation") / "failures" / domain / case_name
+        copy_run_artifacts(run_dir, failure_dir)
+        # also copy log
+        shutil.copy(log_path, failure_dir / "run_log.txt")
+
+    return {
+        "case_name": case_name,
+        "yaml": yaml_path,
+        "domain": domain,
+        "iterations": iterations,
+        "restarts": restarts,
+        "robustness_cases": robustness,
+        "seed": seed,
+        "returncode": result.returncode,
+        "feasible": feasible,
+        "log_path": str(log_path),
+        "artifacts_dir": str(base_out),
+        "failure_dir": str(failure_dir) if failure_dir else None,
+    }
+
+
+def main() -> int:
     print("""
 ╔══════════════════════════════════════════════════════════╗
-║         AEROHACK VALIDATION - MONTE CARLO ANALYSIS        ║
+║          AEROHACK VALIDATION - ROBUST + STRESS           ║
 ╚══════════════════════════════════════════════════════════╝
-    """)
-    
-    # Run aircraft validation
-    success_aircraft = run_monte_carlo_aircraft(
-        iterations=500,
-        restarts=2,
-        robustness_cases=50
-    )
-    
-    # Run spacecraft validation
-    success_spacecraft = run_monte_carlo_spacecraft(
-        iterations=300,
-        restarts=2,
-        robustness_cases=30
-    )
-    
-    # Summary
-    print(f"\n{'='*60}")
-    print("VALIDATION SUMMARY")
-    print(f"{'='*60}")
-    print(f"Aircraft:   {'✓ PASS' if success_aircraft else '✗ FAIL'}")
-    print(f"Spacecraft: {'✓ PASS' if success_spacecraft else '✗ FAIL'}")
-    print(f"\nResults saved to: outputs/validation/")
-    print(f"{'='*60}\n")
-    
-    return 0 if (success_aircraft and success_spacecraft) else 1
+""")
+
+    summary = {"cases": []}
+
+    # Baseline Monte Carlo runs (as before, but now as cases)
+    summary["cases"].append(run_case(
+        "baseline_aircraft_monte_carlo",
+        "examples/aircraft_uav_demo.yaml",
+        iterations=500, restarts=2, robustness=50, seed=0
+    ))
+
+    summary["cases"].append(run_case(
+        "baseline_spacecraft_monte_carlo",
+        "examples/cubesat_leo_demo.yaml",
+        iterations=300, restarts=2, robustness=30, seed=0
+    ))
+
+    # Stress cases (2 per domain)
+    summary["cases"].append(run_case(
+        "stress_aircraft_high_wind",
+        "examples/stress/aircraft_high_wind.yaml",
+        iterations=600, restarts=3, robustness=30, seed=0
+    ))
+
+    summary["cases"].append(run_case(
+        "stress_aircraft_low_battery_tight_nfzs",
+        "examples/stress/aircraft_low_battery_tight_nfzs.yaml",
+        iterations=800, restarts=3, robustness=20, seed=0
+    ))
+
+    summary["cases"].append(run_case(
+        "stress_spacecraft_power_starved",
+        "examples/stress/spacecraft_power_starved.yaml",
+        iterations=600, restarts=3, robustness=20, seed=0
+    ))
+
+    summary["cases"].append(run_case(
+        "stress_spacecraft_slew_constrained",
+        "examples/stress/spacecraft_slew_constrained.yaml",
+        iterations=800, restarts=3, robustness=20, seed=0
+    ))
+
+    # Write summary JSON
+    out = Path("outputs/validation/validation_summary.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    print(f"\nWrote summary: {out}")
+
+    # Exit code: fail if any case hard-failed (nonzero exit)
+    hard_fail = any(c["returncode"] != 0 for c in summary["cases"])
+    return 1 if hard_fail else 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

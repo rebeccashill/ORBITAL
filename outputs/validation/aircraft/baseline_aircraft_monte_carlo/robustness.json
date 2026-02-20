@@ -1,0 +1,11 @@
+{
+  "cases": 50,
+  "hard_pass_rate": 1.0,
+  "worst_hard_margin_min": 0.09251095516679553,
+  "robust_aggregation": "cvar",
+  "cvar_alpha": 0.8,
+  "robust_score": 311.84794135143625,
+  "mean_score": 311.84794135143625,
+  "p50_score": 311.8479413514363,
+  "p90_score": 311.8479413514363
+}

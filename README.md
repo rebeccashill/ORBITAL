@@ -1,330 +1,142 @@
 # 🚀 ORBITAL
 
+**Operational Reusable Backend for Integrated Trajectory and
+Logistics**\
 Unified Mission Planning Framework for Aircraft & Spacecraft
 
 ORBITAL is a domain-agnostic mission planning framework that supports:
 
-- ✈️ Aircraft multi-waypoint optimization
-- 🛰️ Spacecraft 7-day scheduling & operations planning
-- 🔁 Simulation-based optimization with constraints
-- 📊 Monte Carlo robustness analysis
-- 📁 Structured reporting (JSON, CSV exports)
-- 📈 Automated visualization (flight paths, timelines, performance plots)
+-   ✈️ Aircraft multi-waypoint optimization\
+-   🛰️ Spacecraft 7-day scheduling & operations planning\
+-   🔁 Simulation-based optimization with constraints\
+-   📊 Monte Carlo robustness analysis\
+-   📁 Structured reporting (JSON, CSV exports)\
+-   📈 Automated visualization (flight paths, timelines, performance
+    plots)
 
-## The Core Idea
+------------------------------------------------------------------------
 
-- One unified planning architecture
-- Two different mission domains
-- Zero domain duplication in the optimization engine
+# 🧪 Judge Quick Start (Reproducible in 3 Commands)
 
----
+## 1️⃣ Install
 
-## 🧠 Architecture Overview
-
-```
-mission_framework/
-│
-├── core/                # Unified domain-agnostic layer
-│   ├── decision_variables.py
-│   ├── constraints.py
-│   ├── objective.py
-│   ├── planner.py
-│   ├── problem.py
-│   ├── solution.py
-│   └── types.py
-│
-├── simulation/          # Generic simulation utilities
-│   ├── simulator.py
-│   ├── feasibility.py
-│   └── uncertainty.py
-│
-├── aircraft/            # MODULE A
-│   ├── mission.py
-│   ├── constraints.py
-│   ├── objective.py
-│   └── dynamics.py
-│
-├── spacecraft/          # MODULE B
-│   ├── orbit.py
-│   ├── visibility.py
-│   ├── power.py
-│   ├── attitude.py
-│   ├── mission.py
-│   ├── constraints.py
-│   └── objective.py
-│
-├── reporting/
-│   ├── flight_output.py
-│   ├── schedule_output.py
-│   ├── constraint_report.py
-│   └── summary_metrics.py
-│
-├── visualization/
-│   ├── aircraft_plots.py
-│   └── spacecraft_plots.py
-│
-├── examples/
-│   ├── aircraft_uav_demo.yaml
-│   └── cubesat_leo_demo.yaml
-│
-└── tests/
-    ├── test_unified_architecture.py
-    ├── test_aircraft_end_to_end.py
-    └── test_spacecraft_end_to_end.py
-```
-
----
-
-## 🔬 Core Philosophy
-
-ORBITAL separates four key concerns:
-
-### 1️⃣ Decision Space
-
-**What can change?**
-- Continuous variables
-- Integer variables
-- Binary selections
-- Discrete options
-- Permutations
-
-### 2️⃣ Simulation
-
-**What actually happens when we try it?**
-- Aircraft dynamics propagation
-- Spacecraft orbit propagation
-- Battery simulation
-- Slew feasibility
-- Resource tracking
-
-### 3️⃣ Constraints
-
-**What must not break?**
-- Hard constraints (must pass)
-- Soft constraints (penalized)
-
-### 4️⃣ Objective
-
-**What are we optimizing?**
-- Minimize time
-- Minimize energy
-- Maximize science value
-- Minimize penalties
-
----
-
-## ✈️ Aircraft Module
-
-### Features
-
-- Multi-waypoint route optimization
-- Battery tracking
-- Geofence constraint
-- Mission completion constraint
-- Time + energy weighted objective
-- Automated flight path and battery visualization
-
-### Run
-
-```bash
-python -m mission_framework.cli examples/aircraft_uav_demo.yaml
-```
-
----
-
-## 🛰️ Spacecraft Module
-
-### 7-Day CubeSat Earth Observation Scenario
-
-- Two-body orbit propagation
-- Ground target visibility windows
-- Ground station contact windows
-- Battery charge/discharge model
-- Slew-rate feasibility check
-- Cooldown constraints
-- Science value maximization
-- Monte Carlo robustness
-- Automated mission timeline and operations visualization
-
-### Run
-
-```bash
-python -m mission_framework.cli examples/cubesat_leo_demo.yaml
-```
-
-### Faster Test Run
-
-```bash
-python -m mission_framework.cli examples/cubesat_leo_demo.yaml --iterations 200 --restarts 1 --robustness 0
-```
-
----
-
-## 🧪 Testing
-
-### Run All Tests
-
-```bash
-pytest -q
-```
-
-### Tests Include
-
-- Unified architecture validation
-- Aircraft end-to-end pipeline
-- Spacecraft end-to-end pipeline
-- Shared planner enforcement
-
----
-
-## 📊 Example Output
-
-### Spacecraft Summary Example
-
-```
-=== ORBITAL: Planning Complete ===
-Scenario: CubeSat 7-Day Earth Observation Demo
-Type:     spacecraft
-Score:    -33
-Feasible: True
-```
-
-### Schedule Export
-
-```
-seq | etype       | label    | target_id | t_start_s | t_end_s
-0   | observation | OBS_TGT1 | TGT1      | ...
-1   | downlink    | DL_GS1   |           | ...
-```
-
----
-
-## ⚙️ Installation
-
-### Clone the Repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/orbital.git
-cd orbital
-```
-
-### Create Virtual Environment
-
-```bash
+``` bash
+git clone https://github.com/rebeccashill/ORBITAL.git
+cd ORBITAL
 python -m venv .venv
-source .venv/bin/activate   # macOS/Linux
-.venv\Scripts\activate      # Windows
-```
-
-### Install Dependencies
-
-```bash
+source .venv/bin/activate        # macOS/Linux
+.venv\Scripts\activate           # Windows (PowerShell)
 pip install -r requirements.txt
 ```
 
----
+------------------------------------------------------------------------
 
-## 🧩 Why This Project Matters
+## 2️⃣ Aircraft Demo (200 iterations)
 
-### ORBITAL Demonstrates
-
-- Simulation-based optimization
-- Mixed discrete/continuous search
-- Domain abstraction architecture
-- Aerospace mission systems thinking
-- Robustness evaluation under uncertainty
-
-### It is Structured For
-
-- Aerospace systems roles
-- Mission analysis engineering
-- Technical product roles
-- Advanced planning systems research
-- Enterprise aerospace account strategy understanding
-
----
-
-## 🔬 Reproduce Results (AeroHack Submission)
-
-### Quick Start (Baseline Runs)
-
-```bash
-# Aircraft UAV Demo (200 iterations)
-python -m mission_framework.cli examples/aircraft_uav_demo.yaml \
-  --iterations 200 --restarts 1 --robustness 20
-
-# Spacecraft CubeSat Demo (200 iterations)
-python -m mission_framework.cli examples/cubesat_leo_demo.yaml \
-  --iterations 200 --restarts 1 --robustness 10
+``` bash
+python -m mission_framework.cli examples/aircraft_uav_demo.yaml --iterations 200 --restarts 1 --robustness 20 --seed 0
 ```
 
-### Full Validation (Monte Carlo Analysis)
+Outputs saved to:
 
-```bash
-# Run complete validation suite with 50+ robustness cases
+    runs/aircraft_uav_demo/
+
+------------------------------------------------------------------------
+
+## 3️⃣ Spacecraft Demo (200 iterations)
+
+``` bash
+python -m mission_framework.cli examples/cubesat_leo_demo.yaml --iterations 200 --restarts 1 --robustness 10 --seed 0
+```
+
+Outputs saved to:
+
+    runs/cubesat_leo_demo/
+
+------------------------------------------------------------------------
+
+# 🧠 Architecture Overview
+
+    mission_framework/
+    ├── core/
+    ├── simulation/
+    ├── aircraft/
+    ├── spacecraft/
+    ├── reporting/
+    ├── visualization/
+    ├── examples/
+    └── tests/
+
+------------------------------------------------------------------------
+
+# 🔬 Core Philosophy
+
+ORBITAL separates four key concerns:
+
+## Decision Space
+
+Continuous, integer, binary, discrete, permutation variables.
+
+## Simulation
+
+Aircraft dynamics, orbit propagation, battery models, slew feasibility.
+
+## Constraints
+
+Hard constraints (must pass) and soft constraints (penalized via margin
+discipline).
+
+## Objective
+
+Minimize time/energy or maximize science value in unified cost space.
+
+------------------------------------------------------------------------
+
+# 📊 Baseline Comparisons
+
+``` bash
+python scripts/run_baselines.py --aircraft examples/aircraft_uav_demo.yaml --spacecraft examples/cubesat_leo_demo.yaml
+```
+
+Outputs:
+
+    outputs/validation/baselines/
+
+------------------------------------------------------------------------
+
+# 🔥 Stress Tests
+
+``` bash
 python scripts/run_validation.py
 ```
 
-Multi-Seed Stability Analysis
+Outputs:
 
-Then paste:
+    outputs/validation/
 
-# Seed runs (20 seeds each)
-```bash
-python experiments/run_seed_experiments.py \
-  --aircraft examples/aircraft_uav_demo.yaml \
-  --spacecraft examples/cubesat_leo_demo.yaml \
-  --seeds 20 \
-  --iterations 200 \
-  --restarts 1 \
-  --robustness 0 \
-  --out results/seed_runs.csv
+Failure cases are automatically preserved.
+
+------------------------------------------------------------------------
+
+# 🌱 Multi-Seed Stability
+
+``` bash
+python experiments/run_seed_experiments.py --aircraft examples/aircraft_uav_demo.yaml --spacecraft examples/cubesat_leo_demo.yaml --seeds 20 --iterations 200 --restarts 1 --robustness 0 --out results/seed_runs.csv
 ```
 
-### Output Locations
+------------------------------------------------------------------------
 
-Results are saved to `runs/<scenario_name>/`:
-- **constraints.json** - Constraint evaluation with margins
-- **score.json** - Objective breakdown and penalty terms
-- **robustness.json** - Monte Carlo statistics (CVaR, pass rates)
-- **waypoints.csv** (aircraft) or **schedule.csv** (spacecraft)
-- **Plots**:
-  - Aircraft: flight_path.png, battery_state.png, mission_overview.png
-  - Spacecraft: mission_timeline.png, operations_summary.png, daily_activity.png
+# ⏱ Expected Runtime
 
-Pre-generated outputs are also available in `outputs/` for reference.
+-   Aircraft demo: \~30--60 seconds\
+-   Spacecraft demo: \~60--120 seconds\
+-   Full validation suite: \~10--15 minutes
 
-### Expected Runtime
+------------------------------------------------------------------------
 
-- Aircraft demo: ~30-60 seconds (200 iterations)
-- Spacecraft demo: ~60-120 seconds (200 iterations)  
-- Full validation: ~10-15 minutes (both domains with Monte Carlo)
+# 📄 License
 
-### Reproducibility Notes
-
-- Results vary slightly due to random initialization and Monte Carlo sampling
-- Constraint feasibility and score ranges should be consistent
-- For deterministic results, set a fixed random seed in the YAML config
-
----
-
-## 🔮 Roadmap
-
-### Planned Extensions
-
-- Eclipse modeling
-- Data storage + volume tracking
-- Multi-satellite constellation planning
-- Parallelized Monte Carlo
-- More advanced search algorithms (CEM, GA, etc.)
-- Interactive visualization dashboards
-
----
-
-## 📄 License
-
-MIT License
-
+MIT License\
 Copyright (c) 2026 Rebecca Shillingford
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
