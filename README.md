@@ -6,11 +6,11 @@ Unified Mission Planning Framework for Aircraft & Spacecraft
 
 ORBITAL is a domain-agnostic mission planning framework that supports:
 
--   ✈️ Aircraft multi-waypoint optimization\
--   🛰️ Spacecraft 7-day scheduling & operations planning\
--   🔁 Simulation-based optimization with constraints\
--   📊 Monte Carlo robustness analysis\
--   📁 Structured reporting (JSON, CSV exports)\
+-   ✈️ Aircraft multi-waypoint optimization
+-   🛰️ Spacecraft 7-day scheduling & operations planning
+-   🔁 Simulation-based optimization with constraints
+-   📊 Monte Carlo robustness analysis
+-   📁 Structured reporting (JSON, CSV exports)
 -   📈 Automated visualization (flight paths, timelines, performance
     plots)
 
