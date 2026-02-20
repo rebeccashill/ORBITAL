@@ -35,7 +35,7 @@ from mission_framework.core.objective import Objective, term_maximize_value
 from mission_framework.core.planner import Problem
 from mission_framework.core.types import Plan, Schedule, Event, EventType, SimResult, Trajectory
 
-from mission_framework.spacecraft.orbit import KeplerianElements, OrbitConfig, R_EARTH_KM
+from mission_framework.spacecraft.orbit import KeplerianElements, OrbitConfig, R_EARTH_KM, propagate_ecef_trajectory
 from mission_framework.spacecraft.visibility import GroundSite, compute_access_windows
 from mission_framework.spacecraft.attitude import SlewConfig, PointingTask, sequence_feasibility_margin
 from mission_framework.spacecraft.power import BatteryConfig, PowerLoads, BatteryModel, make_steps_from_schedule
@@ -166,37 +166,36 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     step_s = float((cfg.get("orbit", {}) or {}).get("time_step_s", 30.0))
     default_min_el = 10.0
 
+    # Precompute orbit trajectory once (used for all visibility checks below)
+    t_arr, r_ecef_arr = propagate_ecef_trajectory(el, 0.0, t_horizon, step_s)
+
     # Precompute contact windows for stations
     station_windows: Dict[str, List[Tuple[float, float]]] = {}
     for s in stations:
         gs_yaml = next((g for g in gs_list if str(g.get("id", "")) == s.site_id), {})
         min_el_deg = float(gs_yaml.get("min_elevation_deg", default_min_el))
 
-        wins = compute_access_windows(
-            el,
-            s,
-            t_start_s=0.0,
-            t_end_s=t_horizon,
-            step_s=step_s,
-            cfg=ocfg,
+        wins_dict = compute_access_windows(
+            t=t_arr,
+            r_ecef=r_ecef_arr,
+            sites=[s],
             min_elevation_deg=min_el_deg,
         )
-        station_windows[s.site_id] = [(w.start_s, w.end_s) for w in wins]
+        site_key = str(s.site_id or s.name or "GS")
+        station_windows[s.site_id] = wins_dict.get(site_key, [])
 
     # Precompute target visibility windows (treat target as a ground site)
     target_windows: Dict[str, List[Tuple[float, float]]] = {}
     for t in targets:
         pseudo = GroundSite(site_id=t.target_id, lat_deg=t.lat_deg, lon_deg=t.lon_deg, alt_km=0.0)
-        wins = compute_access_windows(
-            el,
-            pseudo,
-            t_start_s=0.0,
-            t_end_s=t_horizon,
-            step_s=step_s,
-            cfg=ocfg,
+        wins_dict = compute_access_windows(
+            t=t_arr,
+            r_ecef=r_ecef_arr,
+            sites=[pseudo],
             min_elevation_deg=default_min_el,
         )
-        target_windows[t.target_id] = [(w.start_s, w.end_s) for w in wins]
+        target_key = str(t.target_id)
+        target_windows[t.target_id] = wins_dict.get(target_key, [])
 
     # -------------------------
     # Decision space

@@ -1,7 +1,8 @@
 # mission_framework/spacecraft/orbit.py
 from __future__ import annotations
 
-from typing import Optional, Dict, Any, List, Any
+import math
+from typing import Optional, Dict, Any, List, Tuple
 import numpy as np
 
 from mission_framework.core.types import SimResult, Plan
@@ -62,7 +63,106 @@ class OrbitConfig:
     cd: float = 2.2
     mass_kg: float = 0.0
 
-def simulate(plan: Plan, rng: Optional[np.random.Generator]) -> SimResult:
+
+def _parse_epoch_unix(epoch_utc: str) -> Optional[float]:
+    """
+    Parse an ISO 8601 UTC string to a Unix timestamp.
+    Returns None if the string is empty or cannot be parsed.
+    """
+    if not epoch_utc:
+        return None
+    try:
+        from datetime import datetime, timezone
+        s = epoch_utc.rstrip("Z")
+        fmt = "%Y-%m-%dT%H:%M:%S.%f" if "." in s else "%Y-%m-%dT%H:%M:%S"
+        dt = datetime.strptime(s, fmt).replace(tzinfo=timezone.utc)
+        return dt.timestamp()
+    except Exception:
+        return None
+
+
+def keplerian_to_eci_state(el: KeplerianElements) -> np.ndarray:
+    """
+    Convert KeplerianElements to an initial ECI Cartesian state vector
+    [rx, ry, rz, vx, vy, vz] in metres and m/s.
+    """
+    MU = 3.986004418e14  # m^3/s^2
+    a = el.a_km * 1000.0
+    e = el.e
+    i = el.i_rad
+    raan = el.raan_rad
+    argp = el.argp_rad
+    M0 = el.M0_rad
+
+    # Solve Kepler's equation M = E - e*sin(E) via Newton-Raphson
+    E = M0
+    for _ in range(50):
+        dE = (M0 - E + e * math.sin(E)) / (1.0 - e * math.cos(E))
+        E += dE
+        if abs(dE) < 1e-12:
+            break
+
+    nu = 2.0 * math.atan2(
+        math.sqrt(1.0 + e) * math.sin(E / 2.0),
+        math.sqrt(1.0 - e) * math.cos(E / 2.0),
+    )
+
+    p = a * (1.0 - e * e)
+    r = p / (1.0 + e * math.cos(nu))
+
+    r_pf = np.array([r * math.cos(nu), r * math.sin(nu), 0.0], dtype=float)
+    v_pf = np.array([
+        -math.sqrt(MU / p) * math.sin(nu),
+        math.sqrt(MU / p) * (e + math.cos(nu)),
+        0.0,
+    ], dtype=float)
+
+    # Rotation from perifocal to ECI (Rz(-raan) · Rx(-i) · Rz(-argp))
+    co, so = math.cos(argp), math.sin(argp)
+    ci, si = math.cos(i), math.sin(i)
+    cr, sr = math.cos(raan), math.sin(raan)
+
+    Q = np.array([
+        [cr*co - sr*so*ci, -cr*so - sr*co*ci,  sr*si],
+        [sr*co + cr*so*ci, -sr*so + cr*co*ci, -cr*si],
+        [so*si,             co*si,              ci   ],
+    ], dtype=float)
+
+    return np.hstack([Q @ r_pf, Q @ v_pf])
+
+
+def propagate_ecef_trajectory(
+    el: KeplerianElements,
+    t_start_s: float,
+    t_end_s: float,
+    dt_s: float,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Propagate *el* from its epoch and return (t_rel, r_ecef).
+
+    t_rel : 1-D array of seconds relative to epoch, shape (N,)
+    r_ecef: satellite ECEF positions in metres, shape (N, 3)
+    """
+    epoch_unix = _parse_epoch_unix(el.epoch_utc)
+    if epoch_unix is None:
+        epoch_unix = 0.0
+    n = max(1, int(math.floor((t_end_s - t_start_s) / dt_s)) + 1)
+    t_rel = t_start_s + dt_s * np.arange(n, dtype=float)
+    n = t_rel.shape[0]
+
+    x = keplerian_to_eci_state(el)
+    r_ecef_arr = np.zeros((n, 3), dtype=float)
+
+    for k in range(n):
+        jd = julian_date_from_unix(epoch_unix + float(t_rel[k]))
+        re, _ = eci_to_ecef(x[:3], x[3:], jd)
+        r_ecef_arr[k] = re
+        if k < n - 1:
+            x = rk4_step(dynamics_eci, x, float(dt_s))
+
+    return t_rel, r_ecef_arr
+
+
     """
     Spacecraft domain simulation:
     - propagate in ECI with two-body + J2 (RK4)
