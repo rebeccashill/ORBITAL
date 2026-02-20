@@ -35,7 +35,7 @@ pip install -r requirements-dev.txt
 
 ## Deliverables (judge quick links)
 
-- **technical report (pdf, 4–8 pages):** `docs/<your_report_filename>.pdf`
+- **technical report (pdf, 4–8 pages):** `docs/AEROHACK_TECHNICAL_REPORT.pdf`
 - **results bundle:** `outputs/` (aircraft + spacecraft artifacts)
 - **reproduce results:** see **reproduce results** section below
 ------------------------------------------------------------------------
