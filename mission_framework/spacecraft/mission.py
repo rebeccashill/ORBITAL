@@ -35,8 +35,8 @@ from mission_framework.core.objective import Objective, term_maximize_value
 from mission_framework.core.planner import Problem
 from mission_framework.core.types import Plan, Schedule, Event, EventType, SimResult, Trajectory
 
-from mission_framework.spacecraft.orbit import KeplerianElements, OrbitConfig, R_EARTH_KM, propagate_ecef_trajectory
-from mission_framework.spacecraft.visibility import GroundSite, compute_access_windows
+from mission_framework.spacecraft.orbit_compat import KeplerianElements, OrbitConfig, R_EARTH_KM, propagate_ecef_trajectory
+from mission_framework.spacecraft.visibility_core import GroundSite, compute_access_windows
 from mission_framework.spacecraft.attitude import SlewConfig, PointingTask, sequence_feasibility_margin
 from mission_framework.spacecraft.power import BatteryConfig, PowerLoads, BatteryModel, make_steps_from_schedule
 from mission_framework.spacecraft.constraints import default_spacecraft_constraints
@@ -154,11 +154,12 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     stations: List[GroundSite] = []
     for gs in gs_list:
         stations.append(
-            GroundSite(
+            GroundSite.from_km(
                 site_id=str(gs.get("id", "")),
                 lat_deg=float(gs.get("lat_deg")),
                 lon_deg=float(gs.get("lon_deg")),
                 alt_km=float(gs.get("alt_km", 0.0)),
+                min_elev_deg=float(gs.get("min_elevation_deg", 10.0)),
             )
         )
 
