@@ -6,17 +6,17 @@ Unified Mission Planning Framework for Aircraft & Spacecraft
 
 ORBITAL is a domain-agnostic mission planning framework that supports:
 
--   ✈️ Aircraft multi-waypoint optimization
--   🛰️ Spacecraft 7-day scheduling & operations planning
--   🔁 Simulation-based optimization with constraints
--   📊 Monte Carlo robustness analysis
--   📁 Structured reporting (JSON, CSV exports)
+-   ✈️ Aircraft multi-waypoint optimization\
+-   🛰️ Spacecraft 7-day scheduling & operations planning\
+-   🔁 Simulation-based optimization with constraints\
+-   📊 Monte Carlo robustness analysis\
+-   📁 Structured reporting (JSON, CSV exports)\
 -   📈 Automated visualization (flight paths, timelines, performance
     plots)
 
 ------------------------------------------------------------------------
 
-# 🧪 Judge Quick Start (Reproducible in 3 Commands)
+# 🧪 Judge Quick Start (Reproducible in ONE Command)
 
 ## 1️⃣ Install
 
@@ -26,21 +26,37 @@ cd ORBITAL
 python -m venv .venv
 source .venv/bin/activate        # macOS/Linux
 .venv\Scripts\activate           # Windows (PowerShell)
-# install runtime dependencies
 pip install -r requirements.txt
-
-# install dev dependencies (linting, tests)
 pip install -r requirements-dev.txt
 ```
 
-## Deliverables (judge quick links)
-
-- **technical report (pdf, 4–8 pages):** `docs/AEROHACK_TECHNICAL_REPORT.pdf`
-- **results bundle:** `outputs/` (aircraft + spacecraft artifacts)
-- **reproduce results:** see **reproduce results** section below
 ------------------------------------------------------------------------
 
-## 2️⃣ Aircraft Demo (200 iterations)
+## 🚀 Run BOTH Domains (Primary Command)
+
+``` bash
+python run_all.py
+```
+
+Outputs saved to:
+
+runs/aircraft_uav_demo/\
+runs/cubesat_leo_demo/
+
+------------------------------------------------------------------------
+
+## 📦 Deliverables (Judge Quick Links)
+
+-   **technical report (pdf, 4--8 pages):**
+    `docs/AEROHACK_TECHNICAL_REPORT.pdf`
+-   **results bundle:** `outputs/` (aircraft + spacecraft artifacts)
+-   **reproduce results:** see sections below
+
+------------------------------------------------------------------------
+
+## 🔁 Individual Demo Commands (Optional)
+
+### Aircraft Demo
 
 ``` bash
 python -m mission_framework.cli examples/aircraft_uav_demo.yaml --iterations 200 --restarts 1 --robustness 20 --seed 0
@@ -48,11 +64,11 @@ python -m mission_framework.cli examples/aircraft_uav_demo.yaml --iterations 200
 
 Outputs saved to:
 
-    runs/aircraft_uav_demo/
+runs/aircraft_uav_demo/
 
 ------------------------------------------------------------------------
 
-## 3️⃣ Spacecraft Demo (200 iterations)
+### Spacecraft Demo
 
 ``` bash
 python -m mission_framework.cli examples/cubesat_leo_demo.yaml --iterations 200 --restarts 1 --robustness 10 --seed 0
@@ -60,21 +76,14 @@ python -m mission_framework.cli examples/cubesat_leo_demo.yaml --iterations 200 
 
 Outputs saved to:
 
-    runs/cubesat_leo_demo/
+runs/cubesat_leo_demo/
 
 ------------------------------------------------------------------------
 
 # 🧠 Architecture Overview
 
-    mission_framework/
-    ├── core/
-    ├── simulation/
-    ├── aircraft/
-    ├── spacecraft/
-    ├── reporting/
-    ├── visualization/
-    ├── examples/
-    └── tests/
+mission_framework/ ├── core/ ├── simulation/ ├── aircraft/ ├──
+spacecraft/ ├── reporting/ ├── visualization/ ├── examples/ └── tests/
 
 ------------------------------------------------------------------------
 
@@ -109,7 +118,7 @@ python scripts/run_baselines.py --aircraft examples/aircraft_uav_demo.yaml --spa
 
 Outputs:
 
-    outputs/validation/baselines/
+outputs/validation/baselines/
 
 ------------------------------------------------------------------------
 
@@ -121,7 +130,7 @@ python scripts/run_validation.py
 
 Outputs:
 
-    outputs/validation/
+outputs/validation/
 
 Failure cases are automatically preserved.
 
@@ -145,12 +154,11 @@ python experiments/run_seed_experiments.py --aircraft examples/aircraft_uav_demo
 
 # 🧪 Development & Quality Checks
 
-Run local CI checks: 
-
 ``` bash
 ruff check .
 black --check .
-mypy mission_framework pytest
+mypy mission_framework
+pytest
 ```
 
 ------------------------------------------------------------------------
@@ -159,21 +167,3 @@ mypy mission_framework pytest
 
 MIT License\
 Copyright (c) 2026 Rebecca Shillingford
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
