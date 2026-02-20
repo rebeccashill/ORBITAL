@@ -45,6 +45,44 @@ from mission_framework.spacecraft.attitude import SlewConfig, PointingTask, sequ
 from mission_framework.spacecraft.power import BatteryConfig, PowerLoads, BatteryModel, make_steps_from_schedule
 from mission_framework.spacecraft.constraints import default_spacecraft_constraints
 
+def _compute_ops_per_orbit_max(events: List[Event], orbit_period_s: float) -> int:
+    """
+    Return the maximum number of "ops" (OBS+DL) that occur in any orbit-length bucket.
+    Simple proxy for ops-per-orbit constraints.
+    """
+    if orbit_period_s <= 0:
+        return 0
+    ops_times = [float(e.t_start) for e in events if e.etype in (EventType.OBSERVATION, EventType.DOWNLINK)]
+    if not ops_times:
+        return 0
+
+    # Bucket by orbit index
+    buckets: Dict[int, int] = {}
+    for t in ops_times:
+        k = int(np.floor(t / orbit_period_s))
+        buckets[k] = buckets.get(k, 0) + 1
+    return int(max(buckets.values()))
+
+
+def _compute_cooldown_violation_s(events: List[Event]) -> float:
+    """
+    Sum cooldown violations across observations.
+    Uses per-observation cooldown_s stored in event.data (or 0 if absent).
+    """
+    obs = [e for e in events if e.etype == EventType.OBSERVATION]
+    if len(obs) < 2:
+        return 0.0
+    obs.sort(key=lambda e: e.t_start)
+
+    total_violation = 0.0
+    for i in range(1, len(obs)):
+        prev = obs[i - 1]
+        cur = obs[i]
+        cooldown = float(prev.data.get("cooldown_s", 0.0))
+        required_start = float(prev.t_end) + cooldown
+        if float(cur.t_start) < required_start:
+            total_violation += (required_start - float(cur.t_start))
+    return float(total_violation)
 
 # ============================================================
 # Data models
@@ -242,7 +280,11 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                     label=f"OBS_{tgt.target_id}",
                     target_id=tgt.target_id,
                     location=(float(tgt.lat_deg), float(tgt.lon_deg)),
-                    data={"value": float(tgt.value), "duration_s": float(tgt.obs_duration_s)},
+                    data={
+                        "value": float(tgt.value),
+                        "duration_s": float(tgt.obs_duration_s),
+                        "cooldown_s": float(tgt.cooldown_s),
+                    },
                 )
             )
 
@@ -332,13 +374,15 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
         slew_margin_s = sequence_feasibility_margin(tasks, cfg=slew_cfg)
 
         # Power proxy
+        power_cfg = cfg.get("power", {}) or {}
+        min_Wh = float(power_cfg.get("min_Wh", 0.0))
         bcfg = BatteryConfig(
             capacity_Wh=float(sc.get("battery_capacity_Wh", 120.0)),
             initial_Wh=float(sc.get("initial_battery_Wh", 100.0)),
             charge_power_W=float(sc.get("charge_rate_W", 35.0)),
             charge_eff=0.95,
             discharge_eff=1.0,
-            min_Wh=0.0,
+            min_Wh=min_Wh,
         )
         loads = PowerLoads(
             bus_W=float(sc.get("base_load_W", 20.0)),
@@ -399,6 +443,12 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
             metadata={"dummy": True},
         )
 
+        ops_cfg = (cfg.get("ops", {}) or {})
+        orbit_period_s = float(ops_cfg.get("orbit_period_s", 5400.0))
+
+        ops_per_orbit_max = _compute_ops_per_orbit_max(events, orbit_period_s=orbit_period_s)
+        cooldown_violation_s = _compute_cooldown_violation_s(events)
+
         return SimResult(
             t=trace.t_s if getattr(trace, "t_s", np.array([])).size else np.array([0.0], dtype=float),
             trajectory=dummy_traj,
@@ -411,6 +461,8 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                 "slew_margin_s": float(slew_margin_s),
                 "min_battery_Wh": float(trace.min_battery_Wh()),
                 "final_battery_Wh": float(trace.final_battery_Wh()),
+                "ops_per_orbit_max": float(ops_per_orbit_max),
+                "cooldown_violation_s": float(cooldown_violation_s),
             },
             metadata={
                 "station_windows": station_windows,
