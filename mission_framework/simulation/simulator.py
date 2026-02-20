@@ -28,7 +28,6 @@ import numpy as np
 
 from mission_framework.core.types import SimResult, Plan
 
-
 SimulateFn = Callable[[Plan, Optional[np.random.Generator]], SimResult]
 
 
@@ -39,6 +38,7 @@ class SimulatorConfig:
 
     - validate: run basic checks on SimResult contents
     """
+
     validate: bool = True
 
 
@@ -56,7 +56,9 @@ class Simulator:
         self.simulate_fn = simulate_fn
         self.cfg = cfg
 
-    def run(self, plan: Plan, seed: Optional[int] = None, rng: Optional[np.random.Generator] = None) -> SimResult:
+    def run(
+        self, plan: Plan, seed: Optional[int] = None, rng: Optional[np.random.Generator] = None
+    ) -> SimResult:
         """
         Run a single simulation.
 
@@ -159,6 +161,7 @@ class Simulator:
 # ---------------------------
 # Functional helpers (optional)
 # ---------------------------
+
 
 def simulate_once(simulate_fn: SimulateFn, plan: Plan, seed: Optional[int] = None) -> SimResult:
     """One-off helper without constructing a Simulator object."""

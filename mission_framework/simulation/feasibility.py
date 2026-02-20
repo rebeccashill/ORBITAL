@@ -25,14 +25,15 @@ from mission_framework.core.constraints import (
     evaluate_constraints,
 )
 
-
 # ============================================================
 # Summary structures
 # ============================================================
 
+
 @dataclass(frozen=True)
 class FeasibilitySummary:
     """Compact feasibility view that’s easy to print/log."""
+
     hard_pass: bool
     soft_pass: bool
     min_hard_margin: float
@@ -54,6 +55,7 @@ class FeasibilitySummary:
 # ============================================================
 # Core helpers
 # ============================================================
+
 
 def is_feasible(
     sim: Any,
@@ -83,12 +85,10 @@ def feasibility_summary(report: ConstraintReport) -> FeasibilitySummary:
     worst_soft = report.worst(Severity.SOFT)
 
     violated_hard = [
-        r.name for r in report.results
-        if r.severity == Severity.HARD and not r.is_satisfied
+        r.name for r in report.results if r.severity == Severity.HARD and not r.is_satisfied
     ]
     violated_soft = [
-        r.name for r in report.results
-        if r.severity == Severity.SOFT and not r.is_satisfied
+        r.name for r in report.results if r.severity == Severity.SOFT and not r.is_satisfied
     ]
 
     return FeasibilitySummary(
@@ -117,6 +117,7 @@ def soft_feasibility_margin(report: ConstraintReport) -> float:
 # Scoring helpers
 # ============================================================
 
+
 def shaped_score(
     objective_cost: float,
     report: ConstraintReport,
@@ -135,7 +136,9 @@ def shaped_score(
 
     Use this if your search benefits from "gradient-ish" penalty guidance even when infeasible.
     """
-    penalty = report.total_penalty(include_hard=include_hard_penalty, include_soft=include_soft_penalty)
+    penalty = report.total_penalty(
+        include_hard=include_hard_penalty, include_soft=include_soft_penalty
+    )
     shaped = float(objective_cost + penalty_weight * penalty)
     if not report.hard_pass:
         shaped += float(hard_infeasible_penalty)
@@ -161,6 +164,7 @@ def rank_by_feasibility_then_score(
 
     keyed_sorted = sorted(keyed, key=lambda t: (-t[1], -t[2], t[3]))
     return [t[0] for t in keyed_sorted]
+
 
 def format_feasibility_report(report: ConstraintReport, max_lines: int = 50) -> str:
     """

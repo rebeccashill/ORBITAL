@@ -16,10 +16,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-
 # ============================================================
 # Dataclasses
 # ============================================================
+
 
 @dataclass(frozen=True)
 class TimeMetrics:
@@ -64,4 +64,10 @@ class ValueMetrics:
                 total += float(v)
         return total
 
-    def to_di_
+    def to_dict(self) -> Dict[str, Optional[float]]:
+        return {
+            "science_value": None if self.science_value is None else float(self.science_value),
+            "revenue_value": None if self.revenue_value is None else float(self.revenue_value),
+            "coverage_score": None if self.coverage_score is None else float(self.coverage_score),
+            "total": self.total(),
+        }

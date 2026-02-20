@@ -41,6 +41,7 @@ class UniformWind(WindModel):
     Constant wind in ENU.
     Example: w_east=3 m/s, w_north=-1 m/s.
     """
+
     w_enu_mps: np.ndarray  # shape (3,)
 
     def __post_init__(self) -> None:
@@ -56,9 +57,10 @@ class SinusoidalWind(WindModel):
     Smooth time-varying wind about a mean.
     Useful for "time-varying wind" requirement without external data files.
     """
-    mean_enu_mps: np.ndarray     # (3,)
-    amp_enu_mps: np.ndarray      # (3,)
-    period_s: float = 600.0      # 10 minutes default
+
+    mean_enu_mps: np.ndarray  # (3,)
+    amp_enu_mps: np.ndarray  # (3,)
+    period_s: float = 600.0  # 10 minutes default
     phase_s: float = 0.0
 
     def __post_init__(self) -> None:
@@ -80,11 +82,12 @@ class VortexFieldWind(WindModel):
 
     w = mean + swirl_strength * [-dy, dx] / (r^2 + r0^2)
     """
-    mean_enu_mps: np.ndarray           # (3,)
+
+    mean_enu_mps: np.ndarray  # (3,)
     center_xy_m: Tuple[float, float] = (0.0, 0.0)
-    swirl_strength: float = 1500.0     # tune for difficulty
-    core_radius_m: float = 250.0       # avoids singularity
-    vertical_shear: float = 0.0        # optional: wz = shear * z
+    swirl_strength: float = 1500.0  # tune for difficulty
+    core_radius_m: float = 250.0  # avoids singularity
+    vertical_shear: float = 0.0  # optional: wz = shear * z
 
     def __post_init__(self) -> None:
         self.mean_enu_mps = np.asarray(self.mean_enu_mps, dtype=float).reshape(3)
@@ -116,17 +119,18 @@ class StochasticWind(WindModel):
 
     Use one instance per simulation run with its own rng.
     """
+
     base: WindModel
-    sigma_bias_mps: float = 1.0        # std dev of bias (per run)
-    sigma_gust_mps: float = 0.8        # std dev of gust process
-    tau_gust_s: float = 60.0           # correlation time
-    dt_s: float = 1.0                  # expected sim timestep (for stability)
+    sigma_bias_mps: float = 1.0  # std dev of bias (per run)
+    sigma_gust_mps: float = 0.8  # std dev of gust process
+    tau_gust_s: float = 60.0  # correlation time
+    dt_s: float = 1.0  # expected sim timestep (for stability)
 
     rng: Optional[np.random.Generator] = None
 
     # internal state
-    _bias: Optional[np.ndarray] = None           # (3,)
-    _gust: Optional[np.ndarray] = None           # (3,)
+    _bias: Optional[np.ndarray] = None  # (3,)
+    _gust: Optional[np.ndarray] = None  # (3,)
     _t_last: Optional[float] = None
 
     def reset(self, rng: Optional[np.random.Generator] = None) -> None:

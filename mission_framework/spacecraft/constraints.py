@@ -58,6 +58,7 @@ def _get_resource(sim: Any, key: str) -> np.ndarray:
 # Individual constraint constructors
 # ============================================================
 
+
 def constraint_battery_nonnegative(
     *,
     key_min_batt: str = "min_battery_Wh",
@@ -67,6 +68,7 @@ def constraint_battery_nonnegative(
     HARD constraint: minimum battery must be >= 0.
     Margin = min_battery_Wh.
     """
+
     def margin(sim: Any) -> float:
         return float(_get_scalar(sim, key_min_batt))
 
@@ -87,6 +89,7 @@ def constraint_slew_feasible(
     HARD constraint: slew margin must be >= 0 seconds.
     Margin = slew_margin_s (min gap - required slew+settle).
     """
+
     def margin(sim: Any) -> float:
         return float(_get_scalar(sim, key_margin))
 
@@ -119,6 +122,7 @@ def constraint_max_ops_per_orbit_soft(
 
     Margin = max_ops - ops_per_orbit_max
     """
+
     def margin(sim: Any) -> float:
         # If sim provides it, enforce; otherwise no-op (pass).
         try:
@@ -147,6 +151,7 @@ def constraint_observation_cooldown_soft(
     margin = -cooldown_violation_s (>=0 means no violation).
     If scalar missing, constraint is permissive (pass).
     """
+
     def margin(sim: Any) -> float:
         try:
             v = float(_get_scalar(sim, cooldown_violation_key))
@@ -165,6 +170,7 @@ def constraint_observation_cooldown_soft(
 # ============================================================
 # Default set
 # ============================================================
+
 
 def default_spacecraft_constraints(cfg: Optional[Dict[str, Any]] = None) -> List[Constraint]:
     """

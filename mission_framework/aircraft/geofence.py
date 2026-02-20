@@ -80,7 +80,7 @@ def polygon_edges(poly: Sequence[Point]) -> List[Segment]:
 
 def point_to_segment_distance(p: Point, seg: Segment) -> float:
     """Euclidean distance from point to segment."""
-    (x, y) = p
+    x, y = p
     (x1, y1), (x2, y2) = seg
     dx = x2 - x1
     dy = y2 - y1
@@ -184,7 +184,9 @@ class GeofenceMap:
             for z in self.zones:
                 for edge in polygon_edges(z.polygon):
                     if segments_intersect(s, edge):
-                        hits.append(GeofenceHit(zone_id=z.zone_id, index=i, point=s[0], kind="crossing"))
+                        hits.append(
+                            GeofenceHit(zone_id=z.zone_id, index=i, point=s[0], kind="crossing")
+                        )
                         break
 
         violated = len(hits) > 0 or (min_clear < float(clearance_m))

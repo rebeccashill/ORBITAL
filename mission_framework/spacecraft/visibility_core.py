@@ -13,6 +13,7 @@ R_EARTH_M = 6378137.0  # spherical Earth proxy (m)
 # Geometry helpers
 # -------------------------
 
+
 def geodetic_to_ecef(lat_rad: float, lon_rad: float, alt_m: float) -> np.ndarray:
     clat, slat = np.cos(lat_rad), np.sin(lat_rad)
     clon, slon = np.cos(lon_rad), np.sin(lon_rad)
@@ -41,6 +42,7 @@ def elevation_angle_rad(r_sat_ecef: np.ndarray, r_gs_ecef: np.ndarray) -> float:
 # Typed domain objects
 # -------------------------
 
+
 @dataclass(frozen=True)
 class GroundSite:
     """
@@ -48,6 +50,7 @@ class GroundSite:
 
     Canonical altitude is meters.
     """
+
     name: str
     lat_deg: float
     lon_deg: float
@@ -91,6 +94,7 @@ class GroundSite:
 # -------------------------
 # Strict, typed API
 # -------------------------
+
 
 def compute_access_windows(
     t: np.ndarray,

@@ -39,8 +39,8 @@ class CombineMode(str, Enum):
 @dataclass(frozen=True)
 class ObjectiveTermResult:
     name: str
-    raw: float                 # raw term output (cost if is_cost else value)
-    cost: float                # converted to weighted cost space (always minimized)
+    raw: float  # raw term output (cost if is_cost else value)
+    cost: float  # converted to weighted cost space (always minimized)
     weight: float
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -57,6 +57,7 @@ class ObjectiveTerm:
     If is_cost=False:
         term is a value; higher is better; we negate it into cost space.
     """
+
     name: str
     weight: float = 1.0
     is_cost: bool = True
@@ -80,6 +81,7 @@ class ObjectiveTerm:
 
 class FunctionalObjectiveTerm(ObjectiveTerm):
     """Convenience wrapper: term via a callable(sim)->float."""
+
     def __init__(
         self,
         name: str,
@@ -98,6 +100,7 @@ class FunctionalObjectiveTerm(ObjectiveTerm):
 @dataclass(frozen=True)
 class ObjectiveReport:
     """Breakdown of objective term contributions."""
+
     terms: List[ObjectiveTermResult]
 
     def total_cost(self) -> float:
@@ -127,6 +130,7 @@ class Objective:
     For spacecraft "maximize science value":
         use terms with is_cost=False (value terms) so they are negated into cost space.
     """
+
     terms: List[ObjectiveTerm] = field(default_factory=list)
     combine_mode: CombineMode = CombineMode.SUM
 
@@ -149,6 +153,7 @@ class Objective:
 # Scoring: objective + constraints + robustness
 # ---------------------------
 
+
 class RobustAggregation(str, Enum):
     MEAN = "mean"
     WORST = "worst"
@@ -160,9 +165,10 @@ class ScoreConfig:
     """
     Defines how to compute a single scalar score the planner minimizes.
     """
-    penalty_weight: float = 1000.0   # multiply constraint penalty
-    include_hard: bool = True        # include HARD penalties
-    include_soft: bool = True        # include SOFT penalties
+
+    penalty_weight: float = 1000.0  # multiply constraint penalty
+    include_hard: bool = True  # include HARD penalties
+    include_soft: bool = True  # include SOFT penalties
 
     # Optional: discourage "barely feasible" solutions by rewarding margins.
     # Example: if margin_reward_weight > 0, then larger min margins reduce score slightly.
@@ -178,6 +184,7 @@ class ScoreReport:
     """
     Single-run score breakdown (objective + constraints + extras).
     """
+
     objective: ObjectiveReport
     objective_cost: float
     constraint_penalty: float
@@ -223,7 +230,11 @@ def score_plan(
         # Your ConstraintReport already exposes total_penalty() and summary() in the upgraded version.
         # If you're using the earlier version, implement those or adapt here.
         if hasattr(constraint_report, "total_penalty"):
-            c_pen = float(constraint_report.total_penalty(include_hard=config.include_hard, include_soft=config.include_soft))
+            c_pen = float(
+                constraint_report.total_penalty(
+                    include_hard=config.include_hard, include_soft=config.include_soft
+                )
+            )
         else:
             # fallback: try generic attribute
             c_pen = float(getattr(constraint_report, "penalty", 0.0))
@@ -265,6 +276,7 @@ class RobustScoreReport:
     """
     Robust aggregation over multiple simulations (Monte-Carlo seeds / uncertainty draws).
     """
+
     aggregated_score: float
     per_run_scores: List[float]
     aggregation: RobustAggregation
@@ -359,6 +371,7 @@ def score_robust(
 # Internal scalar getter
 # ---------------------------
 
+
 def _get_scalar(sim: Any, key: str) -> Optional[float]:
     """
     Try to read a scalar value from common locations:
@@ -388,41 +401,54 @@ def _get_scalar(sim: Any, key: str) -> Optional[float]:
 # Common helper terms (optional convenience)
 # ---------------------------
 
-def term_minimize_time(name: str = "time", weight: float = 1.0, key: str = "t_end_s") -> FunctionalObjectiveTerm:
+
+def term_minimize_time(
+    name: str = "time", weight: float = 1.0, key: str = "t_end_s"
+) -> FunctionalObjectiveTerm:
     """
     Assumes sim exposes total time in seconds.
     Supports SimResult.scalars[key] (preferred), attribute, or dict.
     """
+
     def _get(sim: Any) -> float:
         v = _get_scalar(sim, key)
         if v is None:
             raise AttributeError(f"Simulation result missing '{key}' for time objective.")
         return v
+
     return FunctionalObjectiveTerm(name=name, fn=_get, weight=weight, is_cost=True)
 
 
-def term_minimize_energy(name: str = "energy", weight: float = 1.0, key: str = "energy_used_Wh") -> FunctionalObjectiveTerm:
+def term_minimize_energy(
+    name: str = "energy", weight: float = 1.0, key: str = "energy_used_Wh"
+) -> FunctionalObjectiveTerm:
     """
     Assumes sim exposes total energy used (Wh).
     Supports SimResult.scalars[key] (preferred), attribute, or dict.
     """
+
     def _get(sim: Any) -> float:
         v = _get_scalar(sim, key)
         if v is None:
             raise AttributeError(f"Simulation result missing '{key}' for energy objective.")
         return v
+
     return FunctionalObjectiveTerm(name=name, fn=_get, weight=weight, is_cost=True)
 
 
-def term_maximize_value(name: str = "value", weight: float = 1.0, key: str = "mission_value") -> FunctionalObjectiveTerm:
+def term_maximize_value(
+    name: str = "value", weight: float = 1.0, key: str = "mission_value"
+) -> FunctionalObjectiveTerm:
     """
     Assumes sim exposes mission value (higher is better).
     Supports SimResult.scalars[key] (preferred), attribute, or dict.
     Negated into cost space.
     """
+
     def _get(sim: Any) -> float:
         v = _get_scalar(sim, key)
         if v is None:
             raise AttributeError(f"Simulation result missing '{key}' for value objective.")
         return v
+
     return FunctionalObjectiveTerm(name=name, fn=_get, weight=weight, is_cost=False)

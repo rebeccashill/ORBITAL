@@ -42,7 +42,6 @@ import numpy as np
 
 from mission_framework.core.types import SimResult
 
-
 DEFAULT_KEYS = [
     # Common
     "t_end_s",
@@ -61,7 +60,9 @@ DEFAULT_KEYS = [
 ]
 
 
-def compute_summary_metrics(sim: SimResult, extra: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def compute_summary_metrics(
+    sim: SimResult, extra: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     Extract a compact metrics dict from SimResult.
 
@@ -82,7 +83,9 @@ def compute_summary_metrics(sim: SimResult, extra: Optional[Dict[str, Any]] = No
 
     # Derived: final battery from a resource trace, if present
     if "final_battery_Wh" not in metrics and "battery_Wh" in sim.resources:
-        metrics["final_battery_Wh"] = float(np.asarray(sim.resources["battery_Wh"], dtype=float)[-1])
+        metrics["final_battery_Wh"] = float(
+            np.asarray(sim.resources["battery_Wh"], dtype=float)[-1]
+        )
 
     # Derived: energy used if have battery trace and capacity info in metadata
     # (Optional heuristic; domains should set energy_used_Wh explicitly when possible.)
@@ -101,7 +104,9 @@ def compute_summary_metrics(sim: SimResult, extra: Optional[Dict[str, Any]] = No
     return metrics
 
 
-def export_summary_metrics_json(sim: SimResult, out_path: Optional[Path] = None, extra: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def export_summary_metrics_json(
+    sim: SimResult, out_path: Optional[Path] = None, extra: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     payload = compute_summary_metrics(sim, extra=extra)
     if out_path is not None:
         out_path.parent.mkdir(parents=True, exist_ok=True)

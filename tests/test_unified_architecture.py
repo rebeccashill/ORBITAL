@@ -30,7 +30,6 @@ from mission_framework.core.decision_variables import DecisionSpace
 from mission_framework.core.constraints import Constraint, ConstraintGroup
 from mission_framework.core.objective import Objective
 
-
 EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples"
 
 
@@ -44,6 +43,7 @@ def test_aircraft_problem_builds_with_unified_core_types():
     assert cfg["scenario"]["type"].lower() == "aircraft"
 
     from mission_framework.aircraft.mission import build_problem_from_config
+
     problem = build_problem_from_config(cfg)
 
     assert isinstance(problem, Problem)
@@ -58,6 +58,7 @@ def test_spacecraft_problem_builds_with_unified_core_types():
     assert cfg["scenario"]["type"].lower() == "spacecraft"
 
     from mission_framework.spacecraft.mission import build_problem_from_config
+
     problem = build_problem_from_config(cfg)
 
     assert isinstance(problem, Problem)

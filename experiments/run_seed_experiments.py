@@ -30,7 +30,6 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Optional, Tuple, List
 
-
 # ----------------------------
 # Parsing helpers
 # ----------------------------
@@ -62,7 +61,9 @@ class RunResult:
     log_path: str
 
 
-def parse_cli_output(stdout: str) -> Tuple[Optional[float], Optional[bool], Optional[float], Optional[str]]:
+def parse_cli_output(
+    stdout: str,
+) -> Tuple[Optional[float], Optional[bool], Optional[float], Optional[str]]:
     """
     Extract key metrics from ORBITAL CLI output.
     Expected lines (based on your CLI printout):
@@ -83,7 +84,7 @@ def parse_cli_output(stdout: str) -> Tuple[Optional[float], Optional[bool], Opti
 
         m = FEAS_RE.match(line)
         if m:
-            feasible = (m.group(1).lower() == "true")
+            feasible = m.group(1).lower() == "true"
             continue
 
         m = WORST_RE.match(line)
@@ -99,6 +100,7 @@ def parse_cli_output(stdout: str) -> Tuple[Optional[float], Optional[bool], Opti
 # Runner
 # ----------------------------
 
+
 def run_one(
     scenario_label: str,
     scenario_path: Path,
@@ -112,12 +114,18 @@ def run_one(
     log_path = logs_dir / f"{scenario_label}_seed{seed:04d}.txt"
 
     cmd: List[str] = [
-        sys.executable, "-m", "mission_framework.cli",
+        sys.executable,
+        "-m",
+        "mission_framework.cli",
         str(scenario_path),
-        "--iterations", str(iterations),
-        "--restarts", str(restarts),
-        "--robustness", str(robustness),
-        "--seed", str(seed),  # IMPORTANT: assumes your CLI supports --seed
+        "--iterations",
+        str(iterations),
+        "--restarts",
+        str(restarts),
+        "--robustness",
+        str(robustness),
+        "--seed",
+        str(seed),  # IMPORTANT: assumes your CLI supports --seed
     ]
 
     t0 = time.perf_counter()
@@ -209,7 +217,9 @@ def main() -> int:
 
             # quick console feedback if parsing failed
             if rr.score is None or rr.feasible is None or rr.worst_hard_margin is None:
-                print(f"  WARN: Could not parse one or more metrics from stdout. See log: {rr.log_path}")
+                print(
+                    f"  WARN: Could not parse one or more metrics from stdout. See log: {rr.log_path}"
+                )
 
     # Write CSV
     fieldnames = list(asdict(all_rows[0]).keys()) if all_rows else []

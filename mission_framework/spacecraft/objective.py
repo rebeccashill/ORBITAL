@@ -51,6 +51,7 @@ def _get_scalar(sim: Any, key: str, default: Optional[float] = None) -> float:
 # Primary value terms
 # ============================================================
 
+
 def term_maximize_delivered_value(
     name: str = "delivered_value",
     weight: float = 1.0,
@@ -59,8 +60,10 @@ def term_maximize_delivered_value(
     """
     Maximize delivered mission value (higher is better).
     """
+
     def fn(sim: Any) -> float:
         return float(_get_scalar(sim, key))
+
     return FunctionalObjectiveTerm(name=name, fn=fn, weight=weight, is_cost=False)
 
 
@@ -75,16 +78,19 @@ def term_penalize_undelivered_observations(
 
     cost = max(0, scheduled - delivered)
     """
+
     def fn(sim: Any) -> float:
         scheduled = float(_get_scalar(sim, scheduled_key, 0.0))
         delivered = float(_get_scalar(sim, delivered_key, 0.0))
         return float(max(0.0, scheduled - delivered))
+
     return FunctionalObjectiveTerm(name=name, fn=fn, weight=weight, is_cost=True)
 
 
 # ============================================================
 # Risk / proxy penalty terms
 # ============================================================
+
 
 def term_penalize_low_battery(
     name: str = "battery_risk",
@@ -97,9 +103,11 @@ def term_penalize_low_battery(
 
     cost = max(0, threshold - min_battery_Wh)
     """
+
     def fn(sim: Any) -> float:
         min_batt = float(_get_scalar(sim, min_batt_key, 0.0))
         return float(max(0.0, float(threshold_Wh) - min_batt))
+
     return FunctionalObjectiveTerm(name=name, fn=fn, weight=weight, is_cost=True)
 
 
@@ -114,7 +122,9 @@ def term_penalize_tight_slew_margin(
 
     cost = max(0, reserve - slew_margin_s)
     """
+
     def fn(sim: Any) -> float:
         m = float(_get_scalar(sim, slew_margin_key, 0.0))
         return float(max(0.0, float(reserve_s) - m))
+
     return FunctionalObjectiveTerm(name=name, fn=fn, weight=weight, is_cost=True)

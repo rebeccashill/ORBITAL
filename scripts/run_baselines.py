@@ -39,7 +39,9 @@ def load_yaml(path: Path) -> Dict[str, Any]:
         return yaml.safe_load(f)
 
 
-def ensure_cfg_overrides(cfg: Dict[str, Any], *, iterations: int, restarts: int, robustness_cases: int, seed: int) -> Dict[str, Any]:
+def ensure_cfg_overrides(
+    cfg: Dict[str, Any], *, iterations: int, restarts: int, robustness_cases: int, seed: int
+) -> Dict[str, Any]:
     cfg = deepcopy(cfg)
     cfg.setdefault("planner", {})
     cfg["planner"]["iterations"] = int(iterations)
@@ -118,8 +120,12 @@ def main() -> int:
     ap.add_argument("--orbital_restarts", default=1, type=int)
     ap.add_argument("--orbital_robustness", default=0, type=int)
 
-    ap.add_argument("--spacecraft_baseline_restarts", default=50, type=int,
-                    help="Best-of-K sampling for spacecraft baseline (iterations=0, restarts=K)")
+    ap.add_argument(
+        "--spacecraft_baseline_restarts",
+        default=50,
+        type=int,
+        help="Best-of-K sampling for spacecraft baseline (iterations=0, restarts=K)",
+    )
     args = ap.parse_args()
 
     out_csv = Path(args.out)
@@ -132,52 +138,60 @@ def main() -> int:
     rows = []
 
     # ORBITAL (aircraft)
-    rows.append(run_once(
-        "ORBITAL (aircraft)",
-        ensure_cfg_overrides(
-            aircraft_cfg0,
-            iterations=args.orbital_iterations,
-            restarts=args.orbital_restarts,
-            robustness_cases=args.orbital_robustness,
-            seed=args.seed,
+    rows.append(
+        run_once(
+            "ORBITAL (aircraft)",
+            ensure_cfg_overrides(
+                aircraft_cfg0,
+                iterations=args.orbital_iterations,
+                restarts=args.orbital_restarts,
+                robustness_cases=args.orbital_robustness,
+                seed=args.seed,
+            ),
         )
-    ))
+    )
 
     # Aircraft baseline: single random feasible (no optimization)
-    rows.append(run_once(
-        "Baseline: Random feasible (aircraft)",
-        ensure_cfg_overrides(
-            aircraft_cfg0,
-            iterations=0,
-            restarts=1,
-            robustness_cases=0,
-            seed=args.seed,
+    rows.append(
+        run_once(
+            "Baseline: Random feasible (aircraft)",
+            ensure_cfg_overrides(
+                aircraft_cfg0,
+                iterations=0,
+                restarts=1,
+                robustness_cases=0,
+                seed=args.seed,
+            ),
         )
-    ))
+    )
 
     # ORBITAL (spacecraft)
-    rows.append(run_once(
-        "ORBITAL (spacecraft)",
-        ensure_cfg_overrides(
-            spacecraft_cfg0,
-            iterations=args.orbital_iterations,
-            restarts=args.orbital_restarts,
-            robustness_cases=args.orbital_robustness,
-            seed=args.seed,
+    rows.append(
+        run_once(
+            "ORBITAL (spacecraft)",
+            ensure_cfg_overrides(
+                spacecraft_cfg0,
+                iterations=args.orbital_iterations,
+                restarts=args.orbital_restarts,
+                robustness_cases=args.orbital_robustness,
+                seed=args.seed,
+            ),
         )
-    ))
+    )
 
     # Spacecraft baseline: best-of-K sampling (iterations=0, restarts=K)
-    rows.append(run_once(
-        f"Baseline: Best-of-{args.spacecraft_baseline_restarts} sampling (spacecraft)",
-        ensure_cfg_overrides(
-            spacecraft_cfg0,
-            iterations=0,
-            restarts=args.spacecraft_baseline_restarts,
-            robustness_cases=0,
-            seed=args.seed,
+    rows.append(
+        run_once(
+            f"Baseline: Best-of-{args.spacecraft_baseline_restarts} sampling (spacecraft)",
+            ensure_cfg_overrides(
+                spacecraft_cfg0,
+                iterations=0,
+                restarts=args.spacecraft_baseline_restarts,
+                robustness_cases=0,
+                seed=args.seed,
+            ),
         )
-    ))
+    )
 
     # Write CSV
     fieldnames = list(rows[0].keys())
@@ -194,7 +208,7 @@ def main() -> int:
         f"orbital_iterations={args.orbital_iterations}\norbital_restarts={args.orbital_restarts}\n"
         f"orbital_robustness={args.orbital_robustness}\nseed={args.seed}\n"
         f"spacecraft_baseline_restarts={args.spacecraft_baseline_restarts}\n",
-        encoding="utf-8"
+        encoding="utf-8",
     )
 
     print(f"Wrote: {out_csv}")

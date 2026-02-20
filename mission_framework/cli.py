@@ -78,10 +78,12 @@ def _build_problem(cfg: Dict[str, Any]) -> Problem:
 
     if stype == "aircraft":
         from mission_framework.aircraft.mission import build_problem_from_config
+
         return build_problem_from_config(cfg)
 
     if stype == "spacecraft":
         from mission_framework.spacecraft.mission import build_problem_from_config
+
         return build_problem_from_config(cfg)
 
     raise ValueError(f"Unknown scenario.type '{stype}'. Expected 'aircraft' or 'spacecraft'.")
@@ -95,20 +97,25 @@ def _write_json(out_path: Path, obj: Any) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Run ORBITAL unified mission planning scenarios.")
-    ap.add_argument("scenario_yaml", type=str, help="Path to scenario YAML (aircraft or spacecraft).")
-    ap.add_argument("--outdir", type=str, default="runs", help="Output directory for reports/artifacts.")
+    ap.add_argument(
+        "scenario_yaml", type=str, help="Path to scenario YAML (aircraft or spacecraft)."
+    )
+    ap.add_argument(
+        "--outdir", type=str, default="runs", help="Output directory for reports/artifacts."
+    )
     ap.add_argument("--iterations", type=int, default=None, help="Override planner.iterations")
     ap.add_argument("--restarts", type=int, default=None, help="Override planner.restarts")
     ap.add_argument("--robustness", type=int, default=None, help="Override robustness.cases")
     ap.add_argument("--seed", type=int, default=None, help="Random seed for reproducible runs")
 
-
     args = ap.parse_args()
     if args.seed is not None:
         import random
+
         random.seed(args.seed)
         try:
             import numpy as np
+
             np.random.seed(args.seed)
         except Exception:
             pass
@@ -133,7 +140,6 @@ def main() -> None:
         cfg.setdefault("planner", {})
         cfg["planner"]["seed"] = int(args.seed)
 
-        
     # Build problem
     problem = _build_problem(cfg)
 
@@ -190,17 +196,22 @@ def main() -> None:
     if scenario_type == "aircraft":
         # Optional human-readable output
         try:
-            from mission_framework.reporting.flight_output import print_flight_plan, export_waypoints_csv
+            from mission_framework.reporting.flight_output import (
+                print_flight_plan,
+                export_waypoints_csv,
+            )
+
             print("\n--- Flight Plan ---")
             print(print_flight_plan(result.plan))
             export_waypoints_csv(result.plan, outdir / "waypoints.csv")
         except Exception as e:
             print(f"(flight reporting skipped: {e})")
-        
+
         # Generate plots
         try:
             from mission_framework.visualization.aircraft_plots import plot_aircraft_mission
-            mission_name = cfg.get('scenario', {}).get('name', 'Aircraft Mission')
+
+            mission_name = cfg.get("scenario", {}).get("name", "Aircraft Mission")
             plot_files = plot_aircraft_mission(result.plan, result.sim_result, outdir, mission_name)
             if plot_files:
                 print(f"\n--- Plots Generated ---")
@@ -211,18 +222,25 @@ def main() -> None:
 
     elif scenario_type == "spacecraft":
         try:
-            from mission_framework.reporting.schedule_output import print_schedule, export_schedule_csv
+            from mission_framework.reporting.schedule_output import (
+                print_schedule,
+                export_schedule_csv,
+            )
+
             print("\n--- 7-Day Schedule ---")
             print(print_schedule(result.plan))
             export_schedule_csv(result.plan, outdir / "schedule.csv")
         except Exception as e:
             print(f"(schedule reporting skipped: {e})")
-        
+
         # Generate plots
         try:
             from mission_framework.visualization.spacecraft_plots import plot_spacecraft_mission
-            mission_name = cfg.get('scenario', {}).get('name', 'Spacecraft Mission')
-            plot_files = plot_spacecraft_mission(result.plan, result.sim_result, outdir, mission_name)
+
+            mission_name = cfg.get("scenario", {}).get("name", "Spacecraft Mission")
+            plot_files = plot_spacecraft_mission(
+                result.plan, result.sim_result, outdir, mission_name
+            )
             if plot_files:
                 print(f"\n--- Plots Generated ---")
                 for plot_name, plot_path in plot_files.items():
@@ -232,7 +250,14 @@ def main() -> None:
 
     # Core JSON artifacts (judge-friendly)
     _write_json(outdir / "score.json", result.score_report.to_jsonable())
-    _write_json(outdir / "constraints.json", result.constraints.to_jsonable() if hasattr(result.constraints, "to_jsonable") else result.constraints.summary())
+    _write_json(
+        outdir / "constraints.json",
+        (
+            result.constraints.to_jsonable()
+            if hasattr(result.constraints, "to_jsonable")
+            else result.constraints.summary()
+        ),
+    )
     if result.robustness is not None:
         _write_json(outdir / "robustness.json", result.robustness)
 

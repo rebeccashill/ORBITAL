@@ -17,10 +17,7 @@ def gmst_iau82_rad(jd_ut1: float) -> float:
     """
     T = (float(jd_ut1) - 2451545.0) / 36525.0
     gmst_sec = (
-        67310.54841
-        + (876600.0 * 3600.0 + 8640184.812866) * T
-        + 0.093104 * T**2
-        - 6.2e-6 * T**3
+        67310.54841 + (876600.0 * 3600.0 + 8640184.812866) * T + 0.093104 * T**2 - 6.2e-6 * T**3
     )
     gmst_sec = gmst_sec % 86400.0
     return float(gmst_sec * (2.0 * np.pi / 86400.0))
@@ -28,9 +25,7 @@ def gmst_iau82_rad(jd_ut1: float) -> float:
 
 def R3(theta: float) -> np.ndarray:
     c, s = np.cos(theta), np.sin(theta)
-    return np.array([[ c,  s, 0.0],
-                     [-s,  c, 0.0],
-                     [0.0, 0.0, 1.0]], dtype=float)
+    return np.array([[c, s, 0.0], [-s, c, 0.0], [0.0, 0.0, 1.0]], dtype=float)
 
 
 def eci_to_ecef(r_eci: np.ndarray, v_eci: np.ndarray, jd_ut1: float):

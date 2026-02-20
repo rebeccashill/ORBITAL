@@ -25,7 +25,11 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 
-from mission_framework.core.decision_variables import DecisionAssignment, DecisionSpace, MutationConfig
+from mission_framework.core.decision_variables import (
+    DecisionAssignment,
+    DecisionSpace,
+    MutationConfig,
+)
 from mission_framework.core.constraints import (
     Constraint,
     ConstraintGroup,
@@ -43,10 +47,10 @@ from mission_framework.core.objective import (
     RobustAggregation,
 )
 
-
 # ---------------------------
 # Problem / Solution interfaces
 # ---------------------------
+
 
 @dataclass
 class Problem:
@@ -57,9 +61,10 @@ class Problem:
     - simulation of that plan
     - constraints and objective
     """
+
     decision_space: DecisionSpace
-    build_plan: Callable[[DecisionAssignment], Any]                 # decisions -> plan object
-    simulate: Callable[[Any, Optional[np.random.Generator]], Any]   # (plan, rng) -> sim_result
+    build_plan: Callable[[DecisionAssignment], Any]  # decisions -> plan object
+    simulate: Callable[[Any, Optional[np.random.Generator]], Any]  # (plan, rng) -> sim_result
     constraints: List[Union[Constraint, ConstraintGroup]]
     objective: Objective
 
@@ -80,6 +85,7 @@ class PlanResult:
     What the planner returns.
     Report-heavy, hackathon friendly.
     """
+
     assignment: DecisionAssignment
     plan: Any
     sim_result: Any
@@ -96,6 +102,7 @@ class PlanResult:
 # Planner config
 # ---------------------------
 
+
 @dataclass
 class PlannerConfig:
     iterations: int = 2000
@@ -107,14 +114,16 @@ class PlannerConfig:
     intensity_end: float = 0.2  # anneal mutation magnitude over time
 
     # Scoring config (unified with objective.py)
-    scoring: ScoreConfig = field(default_factory=lambda: ScoreConfig(
-        penalty_weight=1000.0,
-        include_hard=True,
-        include_soft=True,
-        margin_reward_weight=0.0,
-        robust_aggregation=RobustAggregation.MEAN,  # overridden per-problem if robustness enabled
-        cvar_alpha=0.8,
-    ))
+    scoring: ScoreConfig = field(
+        default_factory=lambda: ScoreConfig(
+            penalty_weight=1000.0,
+            include_hard=True,
+            include_soft=True,
+            margin_reward_weight=0.0,
+            robust_aggregation=RobustAggregation.MEAN,  # overridden per-problem if robustness enabled
+            cvar_alpha=0.8,
+        )
+    )
 
     # Extra penalty if any hard constraint fails (useful for guiding search)
     hard_infeasible_penalty: float = 1e6
@@ -138,6 +147,7 @@ class PlannerConfig:
 # Core planner
 # ---------------------------
 
+
 class Planner:
     def __init__(self, cfg: PlannerConfig = PlannerConfig()):
         self.cfg = cfg
@@ -158,7 +168,9 @@ class Planner:
             feasible_streak = 0
 
             for it in range(self.cfg.iterations):
-                intensity = self._anneal(it, self.cfg.iterations, self.cfg.intensity_start, self.cfg.intensity_end)
+                intensity = self._anneal(
+                    it, self.cfg.iterations, self.cfg.intensity_start, self.cfg.intensity_end
+                )
                 cand = problem.decision_space.mutate(
                     best_local.assignment, rng=rng, cfg=self.cfg.mutation, intensity=intensity
                 )
@@ -175,17 +187,24 @@ class Planner:
 
                 if self.cfg.keep_history and (it % max(1, self.cfg.history_stride) == 0):
                     worst_h = best_local.constraints.worst(Severity.HARD)
-                    history.append({
-                        "restart": r,
-                        "iter": it,
-                        "best_score": float(best_local.score),
-                        "hard_pass": bool(best_local.constraints.hard_pass),
-                        "min_hard_margin": float(worst_h.min_margin) if worst_h is not None else None,
-                        "total_penalty": float(best_local.score_report.constraint_penalty),
-                        "objective_cost": float(best_local.score_report.objective_cost),
-                    })
+                    history.append(
+                        {
+                            "restart": r,
+                            "iter": it,
+                            "best_score": float(best_local.score),
+                            "hard_pass": bool(best_local.constraints.hard_pass),
+                            "min_hard_margin": (
+                                float(worst_h.min_margin) if worst_h is not None else None
+                            ),
+                            "total_penalty": float(best_local.score_report.constraint_penalty),
+                            "objective_cost": float(best_local.score_report.objective_cost),
+                        }
+                    )
 
-                if self.cfg.stop_if_feasible_for > 0 and feasible_streak >= self.cfg.stop_if_feasible_for:
+                if (
+                    self.cfg.stop_if_feasible_for > 0
+                    and feasible_streak >= self.cfg.stop_if_feasible_for
+                ):
                     break
 
             best_local.history = history if self.cfg.keep_history else None
@@ -201,7 +220,9 @@ class Planner:
     # Evaluation
     # -------------------------
 
-    def _evaluate(self, problem: Problem, a: DecisionAssignment, rng: np.random.Generator) -> PlanResult:
+    def _evaluate(
+        self, problem: Problem, a: DecisionAssignment, rng: np.random.Generator
+    ) -> PlanResult:
         """
         Evaluate a candidate decision assignment.
 
@@ -255,7 +276,10 @@ class Planner:
         )
 
     def _robustness_enabled(self, problem: Problem) -> bool:
-        return bool(problem.robustness_cases > 0 or (problem.robustness_seeds is not None and len(problem.robustness_seeds) > 0))
+        return bool(
+            problem.robustness_cases > 0
+            or (problem.robustness_seeds is not None and len(problem.robustness_seeds) > 0)
+        )
 
     def _score_config_for_problem(self, problem: Problem, robust: bool) -> ScoreConfig:
         """
@@ -314,7 +338,11 @@ class Planner:
         # Add hard infeasible penalty on a per-run basis conceptually via constraint penalty,
         # but we also expose feasibility rate explicitly for AeroHack reporting.
         pass_rate = float(np.mean(np.array(hard_pass, dtype=float))) if hard_pass else 0.0
-        worst_margin_min = float(np.min(np.array(worst_hard_margins, dtype=float))) if worst_hard_margins else float("inf")
+        worst_margin_min = (
+            float(np.min(np.array(worst_hard_margins, dtype=float)))
+            if worst_hard_margins
+            else float("inf")
+        )
 
         # Helpful stats for validation bundle
         scores_np = np.asarray(rrep.per_run_scores, dtype=float)
@@ -327,7 +355,11 @@ class Planner:
             "hard_pass_rate": pass_rate,
             "worst_hard_margin_min": worst_margin_min,
             "robust_aggregation": str(problem.robust_aggregation.value),
-            "cvar_alpha": float(problem.cvar_alpha) if problem.robust_aggregation == RobustAggregation.CVAR else None,
+            "cvar_alpha": (
+                float(problem.cvar_alpha)
+                if problem.robust_aggregation == RobustAggregation.CVAR
+                else None
+            ),
             "robust_score": float(rrep.aggregated_score),
             "mean_score": float(np.mean(scores_np)) if scores_np.size else float("inf"),
             "p50_score": _pct(scores_np, 50),

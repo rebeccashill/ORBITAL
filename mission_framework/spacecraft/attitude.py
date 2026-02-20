@@ -55,6 +55,7 @@ class SlewConfig:
     """
     Simplified slew model config.
     """
+
     max_slew_rate_deg_s: float = 2.0
     settle_time_s: float = 2.0  # time after a slew before task can start
 
@@ -70,6 +71,7 @@ class PointingTask:
 
     direction_ecef: a 3D direction vector to point the boresight (unit not required)
     """
+
     t_start: float
     t_end: float
     direction_ecef: np.ndarray

@@ -23,7 +23,6 @@ from pathlib import Path
 import shutil
 from typing import Dict, Any, Tuple, Optional
 
-
 FEASIBLE_RE = re.compile(r"^\s*Feasible:\s*(True|False)\s*$", re.MULTILINE)
 
 
@@ -43,7 +42,9 @@ def copy_run_artifacts(run_dir: Path, dest_dir: Path) -> None:
             shutil.copy(f, dest_dir / f.name)
 
 
-def run_case(case_name: str, yaml_path: str, *, iterations: int, restarts: int, robustness: int, seed: int) -> Dict[str, Any]:
+def run_case(
+    case_name: str, yaml_path: str, *, iterations: int, restarts: int, robustness: int, seed: int
+) -> Dict[str, Any]:
     """
     Runs a single case, captures logs, copies artifacts, and labels failures.
     Uses --outdir runs so per-yaml stem maps to runs/<stem>/.
@@ -54,12 +55,20 @@ def run_case(case_name: str, yaml_path: str, *, iterations: int, restarts: int, 
     print(f"{'='*70}\n")
 
     cmd = [
-        sys.executable, "-m", "mission_framework.cli", yaml_path,
-        "--iterations", str(iterations),
-        "--restarts", str(restarts),
-        "--robustness", str(robustness),
-        "--seed", str(seed),
-        "--outdir", "runs",
+        sys.executable,
+        "-m",
+        "mission_framework.cli",
+        yaml_path,
+        "--iterations",
+        str(iterations),
+        "--restarts",
+        str(restarts),
+        "--robustness",
+        str(robustness),
+        "--seed",
+        str(seed),
+        "--outdir",
+        "runs",
     ]
 
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -72,7 +81,7 @@ def run_case(case_name: str, yaml_path: str, *, iterations: int, restarts: int, 
     log_path = logs_dir / f"{case_name}.txt"
     log_path.write_text(
         f"CMD: {' '.join(cmd)}\n\n--- STDOUT ---\n{stdout}\n\n--- STDERR ---\n{stderr}\n",
-        encoding="utf-8"
+        encoding="utf-8",
     )
 
     print(stdout)
@@ -126,42 +135,72 @@ def main() -> int:
     summary = {"cases": []}
 
     # Baseline Monte Carlo runs (as before, but now as cases)
-    summary["cases"].append(run_case(
-        "baseline_aircraft_monte_carlo",
-        "examples/aircraft_uav_demo.yaml",
-        iterations=500, restarts=2, robustness=50, seed=0
-    ))
+    summary["cases"].append(
+        run_case(
+            "baseline_aircraft_monte_carlo",
+            "examples/aircraft_uav_demo.yaml",
+            iterations=500,
+            restarts=2,
+            robustness=50,
+            seed=0,
+        )
+    )
 
-    summary["cases"].append(run_case(
-        "baseline_spacecraft_monte_carlo",
-        "examples/cubesat_leo_demo.yaml",
-        iterations=300, restarts=2, robustness=30, seed=0
-    ))
+    summary["cases"].append(
+        run_case(
+            "baseline_spacecraft_monte_carlo",
+            "examples/cubesat_leo_demo.yaml",
+            iterations=300,
+            restarts=2,
+            robustness=30,
+            seed=0,
+        )
+    )
 
     # Stress cases (2 per domain)
-    summary["cases"].append(run_case(
-        "stress_aircraft_high_wind",
-        "examples/stress/aircraft_high_wind.yaml",
-        iterations=600, restarts=3, robustness=30, seed=0
-    ))
+    summary["cases"].append(
+        run_case(
+            "stress_aircraft_high_wind",
+            "examples/stress/aircraft_high_wind.yaml",
+            iterations=600,
+            restarts=3,
+            robustness=30,
+            seed=0,
+        )
+    )
 
-    summary["cases"].append(run_case(
-        "stress_aircraft_low_battery_tight_nfzs",
-        "examples/stress/aircraft_low_battery_tight_nfzs.yaml",
-        iterations=800, restarts=3, robustness=20, seed=0
-    ))
+    summary["cases"].append(
+        run_case(
+            "stress_aircraft_low_battery_tight_nfzs",
+            "examples/stress/aircraft_low_battery_tight_nfzs.yaml",
+            iterations=800,
+            restarts=3,
+            robustness=20,
+            seed=0,
+        )
+    )
 
-    summary["cases"].append(run_case(
-        "stress_spacecraft_power_starved",
-        "examples/stress/spacecraft_power_starved.yaml",
-        iterations=600, restarts=3, robustness=20, seed=0
-    ))
+    summary["cases"].append(
+        run_case(
+            "stress_spacecraft_power_starved",
+            "examples/stress/spacecraft_power_starved.yaml",
+            iterations=600,
+            restarts=3,
+            robustness=20,
+            seed=0,
+        )
+    )
 
-    summary["cases"].append(run_case(
-        "stress_spacecraft_slew_constrained",
-        "examples/stress/spacecraft_slew_constrained.yaml",
-        iterations=800, restarts=3, robustness=20, seed=0
-    ))
+    summary["cases"].append(
+        run_case(
+            "stress_spacecraft_slew_constrained",
+            "examples/stress/spacecraft_slew_constrained.yaml",
+            iterations=800,
+            restarts=3,
+            robustness=20,
+            seed=0,
+        )
+    )
 
     # Write summary JSON
     out = Path("outputs/validation/validation_summary.json")

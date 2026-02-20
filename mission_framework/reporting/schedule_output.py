@@ -111,7 +111,9 @@ def export_schedule_json(
         if sched is not None:
             payload["executed_schedule"] = schedule_rows(sched, epoch_utc=epoch_utc)
 
-        payload["resources"] = {k: np.asarray(v, dtype=float).tolist() for k, v in sim.resources.items()}
+        payload["resources"] = {
+            k: np.asarray(v, dtype=float).tolist() for k, v in sim.resources.items()
+        }
         payload["scalars"] = dict(sim.scalars)
         payload["sim_metadata"] = dict(sim.metadata)
 
@@ -145,33 +147,39 @@ def export_schedule_csv(plan: Plan, out_path: Path, epoch_utc: Optional[str] = N
         for r in rows:
             w.writerow(r)
 
+
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from mission_framework.core.types import Plan, Event
 
+
 def schedule_table(plan: Plan) -> List[Dict[str, Any]]:
     if plan.kind != "spacecraft" or plan.schedule is None:
-        raise ValueError(f"schedule_table expects plan.kind='spacecraft' with schedule, got '{plan.kind}'")
+        raise ValueError(
+            f"schedule_table expects plan.kind='spacecraft' with schedule, got '{plan.kind}'"
+        )
 
     rows: List[Dict[str, Any]] = []
     for i, e in enumerate(plan.schedule.events):
         loc = e.location
         data = e.data or {}
-        rows.append({
-            "seq": i,
-            "etype": str(e.etype),
-            "label": e.label,
-            "target_id": e.target_id or "",
-            "t_start_s": float(e.t_start),
-            "t_end_s": float(e.t_end),
-            "duration_s": float(e.t_end - e.t_start),
-            "lat_deg": loc[0] if loc is not None else "",
-            "lon_deg": loc[1] if loc is not None else "",
-            "station_id": "",
-            "data_duration_s": data.get("duration_s", ""),
-            "value": data.get("value", ""),
-        })
+        rows.append(
+            {
+                "seq": i,
+                "etype": str(e.etype),
+                "label": e.label,
+                "target_id": e.target_id or "",
+                "t_start_s": float(e.t_start),
+                "t_end_s": float(e.t_end),
+                "duration_s": float(e.t_end - e.t_start),
+                "lat_deg": loc[0] if loc is not None else "",
+                "lon_deg": loc[1] if loc is not None else "",
+                "station_id": "",
+                "data_duration_s": data.get("duration_s", ""),
+                "value": data.get("value", ""),
+            }
+        )
     return rows
 
 

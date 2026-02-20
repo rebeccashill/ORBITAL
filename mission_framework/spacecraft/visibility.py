@@ -7,6 +7,7 @@ Backwards-compatible visibility API.
 
 Importing from mission_framework.spacecraft.visibility keeps old callers working.
 """
+
 from .visibility_core import GroundSite, geodetic_to_ecef, elevation_angle_rad, R_EARTH_M
 from .visibility_compat import compute_access_windows
 

@@ -24,27 +24,29 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Unio
 
 import numpy as np
 
-
 # ---------------------------
 # Core types
 # ---------------------------
 
+
 class Severity(str, Enum):
-    HARD = "hard"   # must satisfy (feasibility)
-    SOFT = "soft"   # may violate but penalized
+    HARD = "hard"  # must satisfy (feasibility)
+    SOFT = "soft"  # may violate but penalized
 
 
 class ReduceMode(str, Enum):
     """How to reduce an array of margins to a single scalar summary."""
-    MIN = "min"           # most common for safety constraints
+
+    MIN = "min"  # most common for safety constraints
     MEAN = "mean"
-    SUM_NEG = "sum_neg"   # sum of violations only (useful for penalties)
+    SUM_NEG = "sum_neg"  # sum of violations only (useful for penalties)
     COUNT_NEG = "count_neg"
 
 
 @dataclass(frozen=True)
 class ConstraintResult:
     """Result of evaluating a single constraint."""
+
     name: str
     severity: Severity
     margins: np.ndarray  # shape (K,) or (1,)
@@ -132,6 +134,7 @@ class ConstraintResult:
 @dataclass(frozen=True)
 class ConstraintReport:
     """Aggregated constraint evaluation results."""
+
     results: List[ConstraintResult]
 
     @property
@@ -146,7 +149,11 @@ class ConstraintReport:
         return {r.name: r for r in self.results}
 
     def worst(self, severity: Optional[Severity] = None) -> Optional[ConstraintResult]:
-        candidates = self.results if severity is None else [r for r in self.results if r.severity == severity]
+        candidates = (
+            self.results
+            if severity is None
+            else [r for r in self.results if r.severity == severity]
+        )
         if not candidates:
             return None
         return min(candidates, key=lambda r: r.min_margin)
@@ -184,10 +191,12 @@ class ConstraintReport:
 # Constraint interface
 # ---------------------------
 
+
 class Constraint:
     """
     Base constraint. Implementations must define evaluate(sim) -> np.ndarray margins.
     """
+
     name: str
     severity: Severity
     weight: float
@@ -225,6 +234,7 @@ class Constraint:
 
 class FunctionalConstraint(Constraint):
     """Define a constraint with a callable(sim) -> margin(s)."""
+
     def __init__(
         self,
         name: str,
@@ -234,7 +244,9 @@ class FunctionalConstraint(Constraint):
         reduce_mode: ReduceMode = ReduceMode.MIN,
         metadata: Optional[Dict[str, Any]] = None,
     ):
-        super().__init__(name, severity=severity, weight=weight, reduce_mode=reduce_mode, metadata=metadata)
+        super().__init__(
+            name, severity=severity, weight=weight, reduce_mode=reduce_mode, metadata=metadata
+        )
         self._fn = fn
 
     def evaluate(self, sim: Any) -> np.ndarray:
@@ -246,6 +258,7 @@ class ConstraintSet(Constraint):
     Backwards-compatible: groups multiple constraints into ONE combined margin vector.
     Good for “single score”, bad for audits (use ConstraintGroup for audits).
     """
+
     def __init__(
         self,
         name: str,
@@ -255,7 +268,9 @@ class ConstraintSet(Constraint):
         reduce_mode: ReduceMode = ReduceMode.MIN,
         metadata: Optional[Dict[str, Any]] = None,
     ):
-        super().__init__(name, severity=severity, weight=weight, reduce_mode=reduce_mode, metadata=metadata)
+        super().__init__(
+            name, severity=severity, weight=weight, reduce_mode=reduce_mode, metadata=metadata
+        )
         self.constraints = list(constraints)
 
     def evaluate(self, sim: Any) -> np.ndarray:
@@ -271,6 +286,7 @@ class ConstraintGroup:
     Audit-friendly container: preserves child results (does NOT merge them).
     Evaluate via evaluate_constraints(...), which flattens groups automatically.
     """
+
     def __init__(self, name: str, constraints: Sequence[Union[Constraint, "ConstraintGroup"]]):
         self.name = name
         self.constraints = list(constraints)
@@ -280,22 +296,28 @@ class ConstraintGroup:
 # Registry (presets)
 # ---------------------------
 
+
 class ConstraintRegistry:
     """
     Simple registry for reproducible constraint bundles.
     Use this to expose 'aircraft_baseline', 'spacecraft_baseline', etc.
     """
+
     def __init__(self):
         self._builders: Dict[str, Callable[..., Sequence[Union[Constraint, ConstraintGroup]]]] = {}
 
-    def register(self, key: str, builder: Callable[..., Sequence[Union[Constraint, ConstraintGroup]]]) -> None:
+    def register(
+        self, key: str, builder: Callable[..., Sequence[Union[Constraint, ConstraintGroup]]]
+    ) -> None:
         if key in self._builders:
             raise KeyError(f"Constraint preset already registered: {key}")
         self._builders[key] = builder
 
     def build(self, key: str, **kwargs: Any) -> List[Union[Constraint, ConstraintGroup]]:
         if key not in self._builders:
-            raise KeyError(f"Unknown constraint preset: {key}. Available: {sorted(self._builders.keys())}")
+            raise KeyError(
+                f"Unknown constraint preset: {key}. Available: {sorted(self._builders.keys())}"
+            )
         built = self._builders[key](**kwargs)
         return list(built)
 
@@ -306,6 +328,7 @@ class ConstraintRegistry:
 # ---------------------------
 # Evaluation helpers
 # ---------------------------
+
 
 def _flatten_constraints(items: Sequence[Union[Constraint, ConstraintGroup]]) -> List[Constraint]:
     flat: List[Constraint] = []
@@ -319,7 +342,9 @@ def _flatten_constraints(items: Sequence[Union[Constraint, ConstraintGroup]]) ->
     return flat
 
 
-def evaluate_constraints(sim: Any, constraints: Sequence[Union[Constraint, ConstraintGroup]]) -> ConstraintReport:
+def evaluate_constraints(
+    sim: Any, constraints: Sequence[Union[Constraint, ConstraintGroup]]
+) -> ConstraintReport:
     """
     Evaluate all constraints on the simulation output/context.
     Flattens nested ConstraintGroup containers automatically.
@@ -349,18 +374,22 @@ def require_hard_feasible(report: ConstraintReport, error_prefix: str = "Infeasi
 # Common margin utilities
 # ---------------------------
 
+
 def margin_leq(x: Union[float, np.ndarray], limit: float) -> np.ndarray:
     """Constraint x <= limit  => margin = limit - x."""
     return np.array(limit - np.array(x, dtype=float), dtype=float)
+
 
 def margin_geq(x: Union[float, np.ndarray], limit: float) -> np.ndarray:
     """Constraint x >= limit  => margin = x - limit."""
     return np.array(np.array(x, dtype=float) - limit, dtype=float)
 
+
 def margin_in_range(x: Union[float, np.ndarray], low: float, high: float) -> np.ndarray:
     """Constraint low <= x <= high => margins for both sides concatenated."""
     xarr = np.array(x, dtype=float)
     return np.concatenate([margin_geq(xarr, low).reshape(-1), margin_leq(xarr, high).reshape(-1)])
+
 
 def margin_nonnegative(x: Union[float, np.ndarray]) -> np.ndarray:
     """Constraint x >= 0 => margin = x."""

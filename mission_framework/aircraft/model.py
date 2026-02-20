@@ -25,6 +25,7 @@ class AircraftSimParams:
     """
     High-level sim settings + guidance settings for a waypoint-following demo.
     """
+
     # simulation
     t_max_s: float = 10_000.0
     reach_radius_m: float = 15.0
@@ -44,6 +45,7 @@ class AircraftSim:
     """
     Aircraft simulator (point-mass + heading dynamics + wind + battery).
     """
+
     dyn: Optional[DynParams] = None
     sim: Optional[AircraftSimParams] = None
 
@@ -101,7 +103,9 @@ class AircraftSim:
         z0 = float(wps[0].get("z_m", 0.0))
 
         psi0 = float(plan.metadata.get("heading_rad", 0.0))
-        v0 = float(plan.metadata.get("speed_mps", (self.dyn.v_air_min_mps + self.dyn.v_air_max_mps) / 2.0))
+        v0 = float(
+            plan.metadata.get("speed_mps", (self.dyn.v_air_min_mps + self.dyn.v_air_max_mps) / 2.0)
+        )
         v0 = float(np.clip(v0, self.dyn.v_air_min_mps, self.dyn.v_air_max_mps))
 
         # battery initial from plan (optional)
@@ -171,7 +175,11 @@ class AircraftSim:
             # speed command with small per-step changes (stability)
             v_err = v_cmd - s.v_air_mps
             v_air_cmd = s.v_air_mps + float(
-                np.clip(self.sim.k_speed * v_err, -self.sim.max_speed_step_mps, self.sim.max_speed_step_mps)
+                np.clip(
+                    self.sim.k_speed * v_err,
+                    -self.sim.max_speed_step_mps,
+                    self.sim.max_speed_step_mps,
+                )
             )
             v_air_cmd = float(np.clip(v_air_cmd, self.dyn.v_air_min_mps, self.dyn.v_air_max_mps))
 
@@ -198,16 +206,28 @@ class AircraftSim:
             t += dt
             t_hist.append(t)
             state_hist.append([s.x_m, s.y_m, s.z_m, s.psi_rad, s.v_air_mps, batt.state.energy_Wh])
-            wind_hist.append([float(step.wind_enu_mps[0]), float(step.wind_enu_mps[1]), float(step.wind_enu_mps[2])])
-            vground_hist.append([float(step.v_ground_enu_mps[0]), float(step.v_ground_enu_mps[1]), float(step.v_ground_enu_mps[2])])
+            wind_hist.append(
+                [
+                    float(step.wind_enu_mps[0]),
+                    float(step.wind_enu_mps[1]),
+                    float(step.wind_enu_mps[2]),
+                ]
+            )
+            vground_hist.append(
+                [
+                    float(step.v_ground_enu_mps[0]),
+                    float(step.v_ground_enu_mps[1]),
+                    float(step.v_ground_enu_mps[2]),
+                ]
+            )
             yawrate_hist.append(float(step.yaw_rate_radps))
             reached_hist.append(0.0)
 
         # arrays
         t_arr = np.asarray(t_hist, dtype=float)
         state_arr = np.asarray(state_hist, dtype=float)
-        wind_arr = np.asarray(wind_hist, dtype=float)       # (T,3)
-        vground_arr = np.asarray(vground_hist, dtype=float) # (T,3)
+        wind_arr = np.asarray(wind_hist, dtype=float)  # (T,3)
+        vground_arr = np.asarray(vground_hist, dtype=float)  # (T,3)
         yawrate_arr = np.asarray(yawrate_hist, dtype=float).reshape(-1)
 
         # unpack 1D traces (constraint-safe)
@@ -228,7 +248,9 @@ class AircraftSim:
             state=state_arr,
             control=None,
             frame="ENU",
-            metadata={"state_order": ["x_m", "y_m", "z_m", "heading_rad", "v_air_mps", "battery_Wh"]},
+            metadata={
+                "state_order": ["x_m", "y_m", "z_m", "heading_rad", "v_air_mps", "battery_Wh"]
+            },
         )
 
         # geofence audit (trajectory-level)
@@ -278,7 +300,6 @@ class AircraftSim:
         else:
             t_end = float(t_arr[-1])
 
-
         sim = SimResult(
             t=t_arr,
             trajectory=traj,  # keep for plotting, but constraints should use resources
@@ -292,7 +313,6 @@ class AircraftSim:
                 "battery_Wh": battery_arr,
                 "energy_used_Wh": energy_used_arr,
                 "yaw_rate_radps": yawrate_arr,
-
                 # wind and ground speed components (1D)
                 "wind_east_mps": wind_e,
                 "wind_north_mps": wind_n,
@@ -300,7 +320,6 @@ class AircraftSim:
                 "v_ground_east_mps": vg_e,
                 "v_ground_north_mps": vg_n,
                 "v_ground_up_mps": vg_u,
-
                 # geofence / mission progress (1D)
                 "geofence_violated": geofence_violated_arr,
                 "geofence_min_clearance_m": geofence_min_clearance_arr,

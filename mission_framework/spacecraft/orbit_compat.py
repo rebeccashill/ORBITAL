@@ -13,11 +13,13 @@ from mission_framework.spacecraft.orbit_core import (
     propagate_ecef_trajectory_from_kepler,
 )
 
+
 def _parse_epoch_unix(epoch_utc: str) -> Optional[float]:
     if not epoch_utc:
         return None
     try:
         from datetime import datetime, timezone
+
         s = epoch_utc.rstrip("Z")
         fmt = "%Y-%m-%dT%H:%M:%S.%f" if "." in s else "%Y-%m-%dT%H:%M:%S"
         dt = datetime.strptime(s, fmt).replace(tzinfo=timezone.utc)
@@ -35,6 +37,7 @@ class KeplerianElements:
       a_km, e, i_rad, raan_rad, argp_rad, M0_rad are expected by your mission.py.
       epoch_utc is an ISO string.
     """
+
     a_km: float
     e: float
     i_rad: float
@@ -50,6 +53,7 @@ class OrbitConfig:
     """
     Backwards-compatible config object for mission.py.
     """
+
     elements: Optional[KeplerianElements] = None
     dt_s: float = 10.0
     j2: bool = True
@@ -85,4 +89,6 @@ def propagate_ecef_trajectory(
         epoch_unix_s=float(epoch_unix),
     )
 
-    return propagate_ecef_trajectory_from_kepler(core, float(t_start_s), float(t_end_s), float(dt_s))
+    return propagate_ecef_trajectory_from_kepler(
+        core, float(t_start_s), float(t_end_s), float(dt_s)
+    )

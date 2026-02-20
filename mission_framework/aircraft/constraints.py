@@ -33,7 +33,9 @@ def complete_all_waypoints() -> Constraint:
     # require completed == total
     return FunctionalConstraint(
         "complete_all_waypoints",
-        fn=lambda sim: margin_nonnegative(sim.scalar("waypoints_completed") - sim.scalar("waypoints_total")),
+        fn=lambda sim: margin_nonnegative(
+            sim.scalar("waypoints_completed") - sim.scalar("waypoints_total")
+        ),
         severity=Severity.HARD,
     )
 

@@ -72,29 +72,39 @@ def compute_access_windows(*args: Any, **kwargs: Any) -> Dict[str, List[Tuple[fl
                 # best-effort for dict-like / older objects
                 sid = getattr(s, "site_id", None) if not isinstance(s, dict) else s.get("site_id")
                 name = getattr(s, "name", "") if not isinstance(s, dict) else s.get("name", "")
-                lat = getattr(s, "lat_deg", 0.0) if not isinstance(s, dict) else s.get("lat_deg", 0.0)
-                lon = getattr(s, "lon_deg", 0.0) if not isinstance(s, dict) else s.get("lon_deg", 0.0)
+                lat = (
+                    getattr(s, "lat_deg", 0.0) if not isinstance(s, dict) else s.get("lat_deg", 0.0)
+                )
+                lon = (
+                    getattr(s, "lon_deg", 0.0) if not isinstance(s, dict) else s.get("lon_deg", 0.0)
+                )
                 alt_m = getattr(s, "alt_m", 0.0) if not isinstance(s, dict) else s.get("alt_m", 0.0)
-                alt_km = getattr(s, "alt_km", None) if not isinstance(s, dict) else s.get("alt_km", None)
+                alt_km = (
+                    getattr(s, "alt_km", None) if not isinstance(s, dict) else s.get("alt_km", None)
+                )
 
                 if alt_km is not None:
-                    new_sites.append(GroundSite.from_km(
-                        site_id=sid,
-                        lat_deg=float(lat),
-                        lon_deg=float(lon),
-                        alt_km=float(alt_km),
-                        min_elev_deg=float(min_elevation_deg),
-                        name=str(name or "") or str(sid or "GS"),
-                    ))
+                    new_sites.append(
+                        GroundSite.from_km(
+                            site_id=sid,
+                            lat_deg=float(lat),
+                            lon_deg=float(lon),
+                            alt_km=float(alt_km),
+                            min_elev_deg=float(min_elevation_deg),
+                            name=str(name or "") or str(sid or "GS"),
+                        )
+                    )
                 else:
-                    new_sites.append(GroundSite(
-                        name=str(name or "") or str(sid or "GS"),
-                        lat_deg=float(lat),
-                        lon_deg=float(lon),
-                        alt_m=float(alt_m),
-                        min_elev_deg=float(min_elevation_deg),
-                        site_id=sid,
-                    ))
+                    new_sites.append(
+                        GroundSite(
+                            name=str(name or "") or str(sid or "GS"),
+                            lat_deg=float(lat),
+                            lon_deg=float(lon),
+                            alt_m=float(alt_m),
+                            min_elev_deg=float(min_elevation_deg),
+                            site_id=sid,
+                        )
+                    )
         sites = new_sites
 
     # normalize sites to core GroundSite
@@ -111,11 +121,27 @@ def compute_access_windows(*args: Any, **kwargs: Any) -> Dict[str, List[Tuple[fl
             lat = float(s.get("lat_deg", 0.0))
             lon = float(s.get("lon_deg", 0.0))
             if "alt_km" in s:
-                core_sites.append(GroundSite.from_km(site_id=sid, name=str(name), lat_deg=lat, lon_deg=lon, alt_km=float(s.get("alt_km", 0.0)),
-                                                     min_elev_deg=float(s.get("min_elev_deg", 10.0))))
+                core_sites.append(
+                    GroundSite.from_km(
+                        site_id=sid,
+                        name=str(name),
+                        lat_deg=lat,
+                        lon_deg=lon,
+                        alt_km=float(s.get("alt_km", 0.0)),
+                        min_elev_deg=float(s.get("min_elev_deg", 10.0)),
+                    )
+                )
             else:
-                core_sites.append(GroundSite(name=str(name), lat_deg=lat, lon_deg=lon, alt_m=float(s.get("alt_m", 0.0)),
-                                             min_elev_deg=float(s.get("min_elev_deg", 10.0)), site_id=sid))
+                core_sites.append(
+                    GroundSite(
+                        name=str(name),
+                        lat_deg=lat,
+                        lon_deg=lon,
+                        alt_m=float(s.get("alt_m", 0.0)),
+                        min_elev_deg=float(s.get("min_elev_deg", 10.0)),
+                        site_id=sid,
+                    )
+                )
             continue
 
         # object with attributes
@@ -125,20 +151,40 @@ def compute_access_windows(*args: Any, **kwargs: Any) -> Dict[str, List[Tuple[fl
         lon = float(getattr(s, "lon_deg", 0.0))
         alt_km = getattr(s, "alt_km", None)
         if alt_km is not None:
-            core_sites.append(GroundSite.from_km(site_id=sid, name=str(name), lat_deg=lat, lon_deg=lon, alt_km=float(alt_km),
-                                                 min_elev_deg=float(getattr(s, "min_elev_deg", 10.0))))
+            core_sites.append(
+                GroundSite.from_km(
+                    site_id=sid,
+                    name=str(name),
+                    lat_deg=lat,
+                    lon_deg=lon,
+                    alt_km=float(alt_km),
+                    min_elev_deg=float(getattr(s, "min_elev_deg", 10.0)),
+                )
+            )
         else:
-            core_sites.append(GroundSite(name=str(name), lat_deg=lat, lon_deg=lon, alt_m=float(getattr(s, "alt_m", 0.0)),
-                                         min_elev_deg=float(getattr(s, "min_elev_deg", 10.0)), site_id=sid))
+            core_sites.append(
+                GroundSite(
+                    name=str(name),
+                    lat_deg=lat,
+                    lon_deg=lon,
+                    alt_m=float(getattr(s, "alt_m", 0.0)),
+                    min_elev_deg=float(getattr(s, "min_elev_deg", 10.0)),
+                    site_id=sid,
+                )
+            )
 
     # build time grid if t not provided
     if t is None:
         if t_start_s is None or t_end_s is None or dt_s is None:
-            raise TypeError("compute_access_windows compat requires either (t=..., r_ecef=...) or (t_start_s, t_end_s, dt_s/step_s) plus r_ecef.")
+            raise TypeError(
+                "compute_access_windows compat requires either (t=..., r_ecef=...) or (t_start_s, t_end_s, dt_s/step_s) plus r_ecef."
+            )
         t = np.arange(float(t_start_s), float(t_end_s) + 1e-9, float(dt_s), dtype=float)
 
     if r_ecef is None:
         raise TypeError("compute_access_windows: r_ecef is required.")
 
     # ignore any remaining unknown kwargs (compat behavior)
-    return compute_access_windows_core(t=np.asarray(t, dtype=float), r_ecef=np.asarray(r_ecef, dtype=float), sites=core_sites)
+    return compute_access_windows_core(
+        t=np.asarray(t, dtype=float), r_ecef=np.asarray(r_ecef, dtype=float), sites=core_sites
+    )

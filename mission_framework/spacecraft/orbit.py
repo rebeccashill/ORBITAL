@@ -7,6 +7,7 @@ Backwards-compatible orbit API.
 
 Importing from mission_framework.spacecraft.orbit keeps old callers working.
 """
+
 from .orbit_core import R_EARTH_KM  # keep constant name stable
 from .orbit_compat import KeplerianElements, OrbitConfig, propagate_ecef_trajectory
 

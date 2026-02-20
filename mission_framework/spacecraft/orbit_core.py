@@ -26,6 +26,7 @@ class KeplerianElementsCore:
       raan_rad, argp_rad, M0_rad : radians
       epoch_unix_s : seconds since Unix epoch (UTC)
     """
+
     a_m: float
     e: float
     i_rad: float
@@ -67,22 +68,28 @@ def keplerian_to_eci_state(el: KeplerianElementsCore) -> np.ndarray:
     r = p / (1.0 + e * math.cos(nu))
 
     r_pf = np.array([r * math.cos(nu), r * math.sin(nu), 0.0], dtype=float)
-    v_pf = np.array([
-        -math.sqrt(MU_EARTH / p) * math.sin(nu),
-        math.sqrt(MU_EARTH / p) * (e + math.cos(nu)),
-        0.0,
-    ], dtype=float)
+    v_pf = np.array(
+        [
+            -math.sqrt(MU_EARTH / p) * math.sin(nu),
+            math.sqrt(MU_EARTH / p) * (e + math.cos(nu)),
+            0.0,
+        ],
+        dtype=float,
+    )
 
     # Rotation perifocal -> ECI (3-1-3): Rz(raan) Rx(i) Rz(argp)
     co, so = math.cos(argp), math.sin(argp)
     ci, si = math.cos(i), math.sin(i)
     cr, sr = math.cos(raan), math.sin(raan)
 
-    Q = np.array([
-        [cr*co - sr*so*ci, -cr*so - sr*co*ci,  sr*si],
-        [sr*co + cr*so*ci, -sr*so + cr*co*ci, -cr*si],
-        [so*si,             co*si,              ci   ],
-    ], dtype=float)
+    Q = np.array(
+        [
+            [cr * co - sr * so * ci, -cr * so - sr * co * ci, sr * si],
+            [sr * co + cr * so * ci, -sr * so + cr * co * ci, -cr * si],
+            [so * si, co * si, ci],
+        ],
+        dtype=float,
+    )
 
     r_eci = Q @ r_pf
     v_eci = Q @ v_pf

@@ -22,7 +22,6 @@ import yaml
 from mission_framework.core.planner import Planner, PlannerConfig
 from mission_framework.core.constraints import Severity
 
-
 EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples"
 
 
@@ -36,10 +35,12 @@ def test_aircraft_pipeline_runs_end_to_end():
     assert cfg["scenario"]["type"].lower() == "aircraft"
 
     from mission_framework.aircraft.mission import build_problem_from_config
+
     problem = build_problem_from_config(cfg)
 
     # Keep runtime small for CI; increase for real runs
     from mission_framework.core.objective import ScoreConfig
+
     planner_cfg = PlannerConfig(
         iterations=50,
         restarts=1,

@@ -37,21 +37,22 @@ import numpy as np
 @dataclass(frozen=True)
 class PowerLoads:
     """Power loads in Watts."""
-    bus_W: float = 8.0               # always-on avionics + ADCS + compute
-    payload_obs_W: float = 18.0      # during observation
-    radio_downlink_W: float = 22.0   # during downlink
-    slew_W: float = 12.0             # during slews (optional)
+
+    bus_W: float = 8.0  # always-on avionics + ADCS + compute
+    payload_obs_W: float = 18.0  # during observation
+    radio_downlink_W: float = 22.0  # during downlink
+    slew_W: float = 12.0  # during slews (optional)
 
 
 @dataclass(frozen=True)
 class BatteryConfig:
     capacity_Wh: float = 30.0
     initial_Wh: float = 25.0
-    charge_power_W: float = 12.0     # effective net charge power while in sun
+    charge_power_W: float = 12.0  # effective net charge power while in sun
     charge_eff: float = 0.95
-    discharge_eff: float = 1.00      # keep at 1.0 unless you want losses
-    min_Wh: float = 0.0              # hard minimum
-    max_Wh: Optional[float] = None   # if None, uses capacity_Wh
+    discharge_eff: float = 1.00  # keep at 1.0 unless you want losses
+    min_Wh: float = 0.0  # hard minimum
+    max_Wh: Optional[float] = None  # if None, uses capacity_Wh
 
 
 @dataclass(frozen=True)
@@ -63,6 +64,7 @@ class PowerStep:
     in_sun: whether in sunlight for this interval
     mode: high-level activity mode (e.g., "idle", "observe", "downlink", "slew")
     """
+
     start_s: float
     end_s: float
     in_sun: bool
@@ -72,9 +74,10 @@ class PowerStep:
 @dataclass(frozen=True)
 class PowerTrace:
     """Battery time trace."""
-    t_s: np.ndarray           # time stamps (seconds)
-    battery_Wh: np.ndarray    # SOC in Wh
-    net_power_W: np.ndarray   # positive = charging, negative = discharging
+
+    t_s: np.ndarray  # time stamps (seconds)
+    battery_Wh: np.ndarray  # SOC in Wh
+    net_power_W: np.ndarray  # positive = charging, negative = discharging
 
     def min_battery_Wh(self) -> float:
         return float(np.min(self.battery_Wh)) if self.battery_Wh.size else float("inf")
@@ -127,7 +130,9 @@ class BatteryModel:
         net_power_W: +charge, -discharge (effective)
         """
         dt_h = float(dt_s) / 3600.0
-        max_Wh = float(self.cfg.max_Wh) if self.cfg.max_Wh is not None else float(self.cfg.capacity_Wh)
+        max_Wh = (
+            float(self.cfg.max_Wh) if self.cfg.max_Wh is not None else float(self.cfg.capacity_Wh)
+        )
 
         load_W = self.load_W_for_mode(mode)
         discharge_W = load_W / max(1e-9, float(self.cfg.discharge_eff))
@@ -161,7 +166,9 @@ class BatteryModel:
             raise ValueError("dt_internal_s must be > 0")
 
         batt = float(self.cfg.initial_Wh)
-        max_Wh = float(self.cfg.max_Wh) if self.cfg.max_Wh is not None else float(self.cfg.capacity_Wh)
+        max_Wh = (
+            float(self.cfg.max_Wh) if self.cfg.max_Wh is not None else float(self.cfg.capacity_Wh)
+        )
         batt = float(np.clip(batt, float(self.cfg.min_Wh), max_Wh))
 
         t_list: List[float] = []
@@ -214,6 +221,7 @@ class BatteryModel:
 # Simple helpers (scheduler-friendly)
 # ============================================================
 
+
 def make_steps_from_schedule(
     events: Sequence[Tuple[float, float, str]],
     *,
@@ -227,7 +235,7 @@ def make_steps_from_schedule(
     If not provided, uses default_in_sun.
     """
     steps: List[PowerStep] = []
-    for (t0, t1, mode) in events:
+    for t0, t1, mode in events:
         t0f = float(t0)
         t1f = float(t1)
         if t1f <= t0f:

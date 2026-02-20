@@ -24,22 +24,28 @@ def constraint_rows(report: ConstraintReport) -> List[Dict[str, Any]]:
     """One row per constraint (summary, not per-sample margin)."""
     rows: List[Dict[str, Any]] = []
     for r in report.results:
-        rows.append({
-            "name": r.name,
-            "severity": r.severity.value if hasattr(r.severity, "value") else str(r.severity),
-            "status": "PASS" if r.is_satisfied else "FAIL",
-            "min_margin": float(r.min_margin),
-            "max_violation": float(r.max_violation),
-            "penalty": float(r.penalty()),
-            "reduce_mode": r.reduce_mode.value if hasattr(r.reduce_mode, "value") else str(r.reduce_mode),
-            "weight": float(r.weight),
-        })
+        rows.append(
+            {
+                "name": r.name,
+                "severity": r.severity.value if hasattr(r.severity, "value") else str(r.severity),
+                "status": "PASS" if r.is_satisfied else "FAIL",
+                "min_margin": float(r.min_margin),
+                "max_violation": float(r.max_violation),
+                "penalty": float(r.penalty()),
+                "reduce_mode": (
+                    r.reduce_mode.value if hasattr(r.reduce_mode, "value") else str(r.reduce_mode)
+                ),
+                "weight": float(r.weight),
+            }
+        )
     # Sort worst first (lowest min_margin)
     rows.sort(key=lambda x: x["min_margin"])
     return rows
 
 
-def export_constraint_report_json(report: ConstraintReport, out_path: Optional[Path] = None) -> Dict[str, Any]:
+def export_constraint_report_json(
+    report: ConstraintReport, out_path: Optional[Path] = None
+) -> Dict[str, Any]:
     payload: Dict[str, Any] = {
         "summary": report.summary(),
         "constraints": constraint_rows(report),
@@ -53,7 +59,11 @@ def export_constraint_report_json(report: ConstraintReport, out_path: Optional[P
 def export_constraint_report_csv(report: ConstraintReport, out_path: Path) -> None:
     rows = constraint_rows(report)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    keys = list(rows[0].keys()) if rows else ["name", "severity", "status", "min_margin", "max_violation", "penalty"]
+    keys = (
+        list(rows[0].keys())
+        if rows
+        else ["name", "severity", "status", "min_margin", "max_violation", "penalty"]
+    )
 
     with out_path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=keys)
@@ -82,7 +92,9 @@ def print_constraint_report(report: ConstraintReport, max_rows: int = 60) -> str
     widths = {c: max(len(c), *(len(_fmt(r.get(c, ""))) for r in rows)) for c in cols}
 
     lines: List[str] = []
-    lines.append(f"HARD pass: {report.hard_pass} | SOFT pass: {report.soft_pass} | total_penalty: {report.total_penalty():.6g}")
+    lines.append(
+        f"HARD pass: {report.hard_pass} | SOFT pass: {report.soft_pass} | total_penalty: {report.total_penalty():.6g}"
+    )
 
     header = " | ".join(c.ljust(widths[c]) for c in cols)
     sep = "-+-".join("-" * widths[c] for c in cols)
@@ -98,6 +110,8 @@ def print_constraint_report(report: ConstraintReport, max_rows: int = 60) -> str
     return "\n".join(lines)
 
 
-def worst_constraint(report: ConstraintReport, severity: Optional[Severity] = None) -> Optional[ConstraintResult]:
+def worst_constraint(
+    report: ConstraintReport, severity: Optional[Severity] = None
+) -> Optional[ConstraintResult]:
     """Return the worst (lowest min margin) constraint optionally filtered by severity."""
     return report.worst(severity=severity)

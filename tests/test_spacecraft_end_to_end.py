@@ -8,7 +8,6 @@ import yaml
 
 from mission_framework.core.planner import Planner, PlannerConfig
 
-
 EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples"
 
 
@@ -34,7 +33,6 @@ def test_spacecraft_pipeline_runs_end_to_end():
         keep_history=False,
         hard_infeasible_penalty=1e6,
     )
-
 
     planner = Planner(planner_cfg)
     result = planner.solve(problem)

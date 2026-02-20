@@ -32,10 +32,10 @@ from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import math
 
-
 # ============================================================
 # Simulation extraction helpers
 # ============================================================
+
 
 def _times(sim) -> List[float]:
     t = getattr(sim, "times", None)
@@ -97,6 +97,7 @@ class Objective:
     name: identifier
     fn: function(sim) -> cost
     """
+
     name: str
     fn: ObjectiveFn
 
@@ -108,36 +109,45 @@ class Objective:
 # Objective factories
 # ============================================================
 
+
 def min_time(*, name: str = "min_time") -> Objective:
     """Minimize total mission duration."""
+
     def _fn(sim) -> float:
         ts = _times(sim)
         if not ts:
             return 0.0
         return float(ts[-1] - ts[0])
+
     return Objective(name=name, fn=_fn)
 
 
 def min_fuel(*, fallback_cost: float = 1e6, name: str = "min_fuel") -> Objective:
     """Minimize fuel used (requires sim to track fuel info)."""
+
     def _fn(sim) -> float:
         used = _fuel_used(sim)
         return float(used) if used is not None else float(fallback_cost)
+
     return Objective(name=name, fn=_fn)
 
 
 def min_energy(*, fallback_cost: float = 1e6, name: str = "min_energy") -> Objective:
     """Minimize battery energy used (requires sim to track energy info)."""
+
     def _fn(sim) -> float:
         used = _energy_used(sim)
         return float(used) if used is not None else float(fallback_cost)
+
     return Objective(name=name, fn=_fn)
 
 
 def min_distance(*, name: str = "min_distance") -> Objective:
     """Minimize ground-track distance."""
+
     def _fn(sim) -> float:
         return _ground_distance(sim)
+
     return Objective(name=name, fn=_fn)
 
 
@@ -145,11 +155,13 @@ def min_distance(*, name: str = "min_distance") -> Objective:
 # Weighted blends
 # ============================================================
 
+
 @dataclass(frozen=True)
 class WeightedObjective(Objective):
     """
     Weighted blend of multiple objective terms.
     """
+
     terms: Tuple[Tuple[str, ObjectiveFn, float], ...]  # (term_name, fn, weight)
 
     def __call__(self, sim) -> float:

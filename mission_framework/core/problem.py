@@ -40,6 +40,7 @@ class Problem:
     The planner treats this as a black box:
       decisions -> plan -> simulation -> {constraints, objective} -> score
     """
+
     # What the optimizer can choose
     decision_space: DecisionSpace
 
@@ -103,9 +104,7 @@ class Problem:
 
         for c in self.constraints:
             if not isinstance(c, Constraint):
-                raise ValueError(
-                    f"All constraints must be instances of Constraint. Got: {type(c)}"
-                )
+                raise ValueError(f"All constraints must be instances of Constraint. Got: {type(c)}")
 
         if not isinstance(self.objective, Objective):
             raise ValueError("Problem.objective must be an Objective instance.")

@@ -20,7 +20,13 @@ from typing import Any, Dict, Optional, Tuple, Sequence, List
 import math
 import numpy as np
 
-from mission_framework.core.decision_variables import Bounds, ContinuousVar, DecisionAssignment, DecisionSpace, PermutationVar
+from mission_framework.core.decision_variables import (
+    Bounds,
+    ContinuousVar,
+    DecisionAssignment,
+    DecisionSpace,
+    PermutationVar,
+)
 from mission_framework.core.objective import Objective, term_minimize_energy, term_minimize_time
 from mission_framework.core.planner import Problem
 from mission_framework.core.types import Plan, SimResult
@@ -45,10 +51,10 @@ from mission_framework.aircraft.wind_model import (
 from mission_framework.aircraft.battery_model import BatteryParams
 from mission_framework.aircraft.geofence import GeofenceMap, NoFlyZone
 
-
 # ============================================================
 # Helpers
 # ============================================================
+
 
 def _dist2(a: Tuple[float, float], b: Tuple[float, float]) -> float:
     dx = a[0] - b[0]
@@ -59,6 +65,7 @@ def _dist2(a: Tuple[float, float], b: Tuple[float, float]) -> float:
 # ============================================================
 # Waypoints / Missions (declarative)
 # ============================================================
+
 
 @dataclass(frozen=True)
 class Waypoint:
@@ -84,6 +91,7 @@ class Mission:
 # Constraint constructors (aircraft-specific, core-compatible)
 # ============================================================
 
+
 def _aircraft_constraints_from_cfg(cfg: Dict[str, Any]) -> List[Constraint | ConstraintGroup]:
     """
     Build AeroHack-visible constraints with clear, auditable margins.
@@ -107,12 +115,13 @@ def _aircraft_constraints_from_cfg(cfg: Dict[str, Any]) -> List[Constraint | Con
 
         return margin_geq(batt, 0.0)
 
-
     c_batt = FunctionalConstraint(
         name="battery_nonnegative",
         fn=battery_margin,
         severity=Severity.HARD,
-        metadata={"t": lambda sim: sim.t},  # lightweight hint; constraints system may ignore callables
+        metadata={
+            "t": lambda sim: sim.t
+        },  # lightweight hint; constraints system may ignore callables
     )
 
     # Must reach all waypoints
@@ -190,6 +199,7 @@ def _aircraft_constraints_from_cfg(cfg: Dict[str, Any]) -> List[Constraint | Con
 # YAML -> Problem builder (realistic point-mass sim)
 # ============================================================
 
+
 def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     """
     Build a unified-core Problem for the aircraft scenario.
@@ -246,20 +256,26 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
 
     elif wtype in ("uniform", "constant"):
         wind = UniformWind(
-            w_enu_mps=np.array([
-                float(wcfg.get("w_east_mps", 0.0)),
-                float(wcfg.get("w_north_mps", 0.0)),
-                float(wcfg.get("w_up_mps", 0.0)),
-            ], dtype=float)
+            w_enu_mps=np.array(
+                [
+                    float(wcfg.get("w_east_mps", 0.0)),
+                    float(wcfg.get("w_north_mps", 0.0)),
+                    float(wcfg.get("w_up_mps", 0.0)),
+                ],
+                dtype=float,
+            )
         )
 
     elif wtype in ("vortex", "swirl"):
         wind = VortexFieldWind(
-            mean_enu_mps=np.array([
-                float(wcfg.get("mean_east_mps", 0.0)),
-                float(wcfg.get("mean_north_mps", 0.0)),
-                float(wcfg.get("mean_up_mps", 0.0)),
-            ], dtype=float),
+            mean_enu_mps=np.array(
+                [
+                    float(wcfg.get("mean_east_mps", 0.0)),
+                    float(wcfg.get("mean_north_mps", 0.0)),
+                    float(wcfg.get("mean_up_mps", 0.0)),
+                ],
+                dtype=float,
+            ),
             center_xy_m=(float(wcfg.get("center_x_m", 0.0)), float(wcfg.get("center_y_m", 0.0))),
             swirl_strength=float(wcfg.get("swirl_strength", 1500.0)),
             core_radius_m=float(wcfg.get("core_radius_m", 250.0)),
@@ -269,16 +285,22 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     else:
         # default sinusoidal time-varying wind
         wind = SinusoidalWind(
-            mean_enu_mps=np.array([
-                float(wcfg.get("mean_east_mps", 2.0)),
-                float(wcfg.get("mean_north_mps", 0.0)),
-                float(wcfg.get("mean_up_mps", 0.0)),
-            ], dtype=float),
-            amp_enu_mps=np.array([
-                float(wcfg.get("amp_east_mps", 1.0)),
-                float(wcfg.get("amp_north_mps", 1.0)),
-                float(wcfg.get("amp_up_mps", 0.0)),
-            ], dtype=float),
+            mean_enu_mps=np.array(
+                [
+                    float(wcfg.get("mean_east_mps", 2.0)),
+                    float(wcfg.get("mean_north_mps", 0.0)),
+                    float(wcfg.get("mean_up_mps", 0.0)),
+                ],
+                dtype=float,
+            ),
+            amp_enu_mps=np.array(
+                [
+                    float(wcfg.get("amp_east_mps", 1.0)),
+                    float(wcfg.get("amp_north_mps", 1.0)),
+                    float(wcfg.get("amp_up_mps", 0.0)),
+                ],
+                dtype=float,
+            ),
             period_s=float(wcfg.get("period_s", 600.0)),
             phase_s=float(wcfg.get("phase_s", 0.0)),
         )
@@ -320,7 +342,9 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
         v_air_min_mps=min_v,
         v_air_max_mps=max_v,
         bank_max_rad=math.radians(bank_max_deg),
-        yaw_rate_max_radps=float(vcfg["yaw_rate_max_radps"]) if "yaw_rate_max_radps" in vcfg else None,
+        yaw_rate_max_radps=(
+            float(vcfg["yaw_rate_max_radps"]) if "yaw_rate_max_radps" in vcfg else None
+        ),
         climb_rate_max_mps=climb_rate_max_mps,
         descent_rate_max_mps=descent_rate_max_mps,
         dt_s=dt_s,
@@ -328,7 +352,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
         z_max_m=float(vcfg["z_max_m"]) if "z_max_m" in vcfg else None,
     )
 
-    simcfg = (cfg.get("simulation", {}) or {})
+    simcfg = cfg.get("simulation", {}) or {}
     sim_params = AircraftSimParams(
         t_max_s=float(simcfg.get("t_max_s", 10_000.0)),
         reach_radius_m=float(vcfg.get("reach_radius_m", 15.0)),
@@ -373,7 +397,15 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
             d = _dist2((x, y), (wp.x, wp.y))
             dt = d / max(1e-6, cruise_speed)
             t_eta += dt
-            rows.append({"id": wp.name, "x_m": float(wp.x), "y_m": float(wp.y), "z_m": float(wp.z), "eta_s": float(t_eta)})
+            rows.append(
+                {
+                    "id": wp.name,
+                    "x_m": float(wp.x),
+                    "y_m": float(wp.y),
+                    "z_m": float(wp.z),
+                    "eta_s": float(t_eta),
+                }
+            )
             x, y = wp.x, wp.y
 
         return Plan(
@@ -407,7 +439,9 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
             if tname in ("total_time", "time", "t_end_s"):
                 objective.add(term_minimize_time(name="time", weight=weight, key="t_end_s"))
             elif tname in ("energy_used", "energy", "energy_used_wh"):
-                objective.add(term_minimize_energy(name="energy", weight=weight, key="energy_used_Wh"))
+                objective.add(
+                    term_minimize_energy(name="energy", weight=weight, key="energy_used_Wh")
+                )
     else:
         # Default: minimize time (AeroHack objective option)
         objective.add(term_minimize_time(name="time", weight=1.0, key="t_end_s"))

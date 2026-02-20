@@ -33,7 +33,6 @@ import numpy as np
 
 from mission_framework.aircraft.wind_model import WindModel, ZeroWind
 
-
 G0 = 9.80665  # m/s^2
 
 
@@ -55,7 +54,7 @@ class AircraftParams:
     v_air_tau_s: float = 5.0  # first-order lag if v_air_cmd is used
 
     # Maneuver limits
-    bank_max_rad: float = np.deg2rad(30.0)   # max bank angle
+    bank_max_rad: float = np.deg2rad(30.0)  # max bank angle
     yaw_rate_max_radps: Optional[float] = None  # if set, also clamp yaw rate
     climb_rate_max_mps: float = 3.0
     descent_rate_max_mps: float = 3.0
@@ -81,8 +80,8 @@ class AircraftState:
 class AircraftStepResult:
     state: AircraftState
     v_ground_enu_mps: np.ndarray  # (3,)
-    v_air_enu_mps: np.ndarray     # (3,)
-    wind_enu_mps: np.ndarray      # (3,)
+    v_air_enu_mps: np.ndarray  # (3,)
+    wind_enu_mps: np.ndarray  # (3,)
     yaw_rate_radps: float
     climb_rate_mps: float
 
@@ -138,7 +137,9 @@ class AircraftKinematics:
         psi_next = wrap_angle_rad(float(s.psi_rad) + yaw_rate * dt)
 
         # --- climb rate command + clamp ---
-        vz = clamp(float(vz_cmd_mps), -float(self.p.descent_rate_max_mps), float(self.p.climb_rate_max_mps))
+        vz = clamp(
+            float(vz_cmd_mps), -float(self.p.descent_rate_max_mps), float(self.p.climb_rate_max_mps)
+        )
 
         # --- altitude optional clamp (soft, better enforced as constraints) ---
         z_next = float(s.z_m + vz * dt)
@@ -151,7 +152,9 @@ class AircraftKinematics:
         v_air_enu = np.array([v_air * np.sin(psi_next), v_air * np.cos(psi_next), vz], dtype=float)
 
         # --- wind ---
-        w = np.asarray(self.wind.wind_enu(float(s.x_m), float(s.y_m), float(s.z_m), float(t_s)), dtype=float).reshape(3)
+        w = np.asarray(
+            self.wind.wind_enu(float(s.x_m), float(s.y_m), float(s.z_m), float(t_s)), dtype=float
+        ).reshape(3)
 
         # --- ground velocity ---
         v_ground = v_air_enu + w

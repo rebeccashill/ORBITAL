@@ -41,9 +41,19 @@ from mission_framework.spacecraft.orbit_compat import (
     propagate_ecef_trajectory,
 )
 from mission_framework.spacecraft.visibility_core import GroundSite, compute_access_windows
-from mission_framework.spacecraft.attitude import SlewConfig, PointingTask, sequence_feasibility_margin
-from mission_framework.spacecraft.power import BatteryConfig, PowerLoads, BatteryModel, make_steps_from_schedule
+from mission_framework.spacecraft.attitude import (
+    SlewConfig,
+    PointingTask,
+    sequence_feasibility_margin,
+)
+from mission_framework.spacecraft.power import (
+    BatteryConfig,
+    PowerLoads,
+    BatteryModel,
+    make_steps_from_schedule,
+)
 from mission_framework.spacecraft.constraints import default_spacecraft_constraints
+
 
 def _compute_ops_per_orbit_max(events: List[Event], orbit_period_s: float) -> int:
     """
@@ -52,7 +62,9 @@ def _compute_ops_per_orbit_max(events: List[Event], orbit_period_s: float) -> in
     """
     if orbit_period_s <= 0:
         return 0
-    ops_times = [float(e.t_start) for e in events if e.etype in (EventType.OBSERVATION, EventType.DOWNLINK)]
+    ops_times = [
+        float(e.t_start) for e in events if e.etype in (EventType.OBSERVATION, EventType.DOWNLINK)
+    ]
     if not ops_times:
         return 0
 
@@ -81,12 +93,14 @@ def _compute_cooldown_violation_s(events: List[Event]) -> float:
         cooldown = float(prev.data.get("cooldown_s", 0.0))
         required_start = float(prev.t_end) + cooldown
         if float(cur.t_start) < required_start:
-            total_violation += (required_start - float(cur.t_start))
+            total_violation += required_start - float(cur.t_start)
     return float(total_violation)
+
 
 # ============================================================
 # Data models
 # ============================================================
+
 
 @dataclass(frozen=True)
 class GroundTarget:
@@ -96,11 +110,14 @@ class GroundTarget:
     value: float = 1.0
     obs_duration_s: float = 30.0
     cooldown_s: float = 0.0
-    time_windows: Tuple[Dict[str, Any], ...] = ()  # stored as provided (UTC strings), not enforced yet
+    time_windows: Tuple[
+        Dict[str, Any], ...
+    ] = ()  # stored as provided (UTC strings), not enforced yet
 
 
 def _deg2rad(d: float) -> float:
     import math
+
     return float(math.radians(float(d)))
 
 
@@ -110,6 +127,7 @@ def _ecef_direction_to_site(lat_deg: float, lon_deg: float) -> np.ndarray:
     unit vector from Earth center to that lat/lon (ECEF-ish).
     """
     import math
+
     lat = _deg2rad(lat_deg)
     lon = _deg2rad(lon_deg)
     cl = math.cos(lat)
@@ -157,6 +175,7 @@ def _horizon_seconds(cfg: Dict[str, Any]) -> float:
 # ============================================================
 # Problem builder
 # ============================================================
+
 
 def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     scenario = cfg.get("scenario", {}) or {}
@@ -297,7 +316,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
 
         for station_name, wins in station_windows.items():
             wins = list(wins)[:max_dl_windows]
-            for (w0, w1) in wins:
+            for w0, w1 in wins:
                 if (w1 - w0) < dl_dur:
                     continue
 
@@ -325,7 +344,10 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
         return Plan(
             kind="spacecraft",
             schedule=sched,
-            metadata={"scenario": scenario.get("name", "spacecraft_demo"), "horizon_s": float(t_horizon)},
+            metadata={
+                "scenario": scenario.get("name", "spacecraft_demo"),
+                "horizon_s": float(t_horizon),
+            },
         )
 
     # -------------------------
@@ -409,7 +431,9 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
             return "idle"
 
         simple_events = [(float(e.t_start), float(e.t_end), mode_for_event(e)) for e in events]
-        steps = make_steps_from_schedule(simple_events, sunlight_fn=sunlight_fn, default_in_sun=True)
+        steps = make_steps_from_schedule(
+            simple_events, sunlight_fn=sunlight_fn, default_in_sun=True
+        )
 
         batt_model = BatteryModel(bcfg, loads=loads)
         trace = batt_model.simulate(
@@ -443,14 +467,18 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
             metadata={"dummy": True},
         )
 
-        ops_cfg = (cfg.get("ops", {}) or {})
+        ops_cfg = cfg.get("ops", {}) or {}
         orbit_period_s = float(ops_cfg.get("orbit_period_s", 5400.0))
 
         ops_per_orbit_max = _compute_ops_per_orbit_max(events, orbit_period_s=orbit_period_s)
         cooldown_violation_s = _compute_cooldown_violation_s(events)
 
         return SimResult(
-            t=trace.t_s if getattr(trace, "t_s", np.array([])).size else np.array([0.0], dtype=float),
+            t=(
+                trace.t_s
+                if getattr(trace, "t_s", np.array([])).size
+                else np.array([0.0], dtype=float)
+            ),
             trajectory=dummy_traj,
             schedule=sched,
             resources={"battery_Wh": trace.battery_Wh, "net_power_W": trace.net_power_W},

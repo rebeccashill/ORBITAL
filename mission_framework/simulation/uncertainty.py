@@ -38,13 +38,18 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tupl
 import numpy as np
 
 from mission_framework.core.types import Plan, SimResult
-from mission_framework.core.constraints import Constraint, ConstraintReport, evaluate_constraints, Severity
+from mission_framework.core.constraints import (
+    Constraint,
+    ConstraintReport,
+    evaluate_constraints,
+    Severity,
+)
 from mission_framework.core.objective import Objective, ObjectiveReport
-
 
 # ---------------------------
 # Case definition
 # ---------------------------
+
 
 @dataclass(frozen=True)
 class UncertaintyCase:
@@ -54,6 +59,7 @@ class UncertaintyCase:
     - seed: RNG seed for stochastic elements (wind draw, noise, jitter)
     - params: optional parameter overrides (domain-defined)
     """
+
     seed: int
     params: Dict[str, Any] = field(default_factory=dict)
 
@@ -81,6 +87,7 @@ class UncertaintyRunner:
     - apply_case_fn(plan, params) -> Plan    (domain hook to override params)
         If you don't need param overrides, you can omit apply_case_fn and only use seeds.
     """
+
     simulate_fn: SimulateFn
     apply_case_fn: Optional[ApplyCaseFn] = None
 
@@ -100,13 +107,16 @@ class UncertaintyRunner:
 # Evaluation (constraints + objective) across cases
 # ---------------------------
 
+
 @dataclass(frozen=True)
 class CaseEvaluation:
     case: UncertaintyCase
     sim: SimResult
     constraints: Optional[ConstraintReport] = None
     objective: Optional[ObjectiveReport] = None
-    score: Optional[float] = None  # objective_cost + penalty_weight*penalty (+ optional hard fail penalty)
+    score: Optional[float] = (
+        None  # objective_cost + penalty_weight*penalty (+ optional hard fail penalty)
+    )
 
 
 def evaluate_cases(
@@ -148,6 +158,7 @@ def evaluate_cases(
 # Summary statistics
 # ---------------------------
 
+
 def summarize_uncertainty(evals: Sequence[CaseEvaluation]) -> Dict[str, Any]:
     """
     Summarize feasibility + score distribution.
@@ -170,17 +181,21 @@ def summarize_uncertainty(evals: Sequence[CaseEvaluation]) -> Dict[str, Any]:
     out: Dict[str, Any] = {
         "cases": len(evals),
         "hard_pass_rate": hard_pass_rate,
-        "worst_hard_margin_min": float(np.min(np.array(worst_hard_margins, dtype=float))) if worst_hard_margins else None,
+        "worst_hard_margin_min": (
+            float(np.min(np.array(worst_hard_margins, dtype=float))) if worst_hard_margins else None
+        ),
     }
 
     if scores_np is not None and scores_np.size > 0:
-        out.update({
-            "mean_score": float(np.mean(scores_np)),
-            "p50_score": float(np.percentile(scores_np, 50)),
-            "p90_score": float(np.percentile(scores_np, 90)),
-            "min_score": float(np.min(scores_np)),
-            "max_score": float(np.max(scores_np)),
-        })
+        out.update(
+            {
+                "mean_score": float(np.mean(scores_np)),
+                "p50_score": float(np.percentile(scores_np, 50)),
+                "p90_score": float(np.percentile(scores_np, 90)),
+                "min_score": float(np.min(scores_np)),
+                "max_score": float(np.max(scores_np)),
+            }
+        )
 
     return out
 
@@ -188,6 +203,7 @@ def summarize_uncertainty(evals: Sequence[CaseEvaluation]) -> Dict[str, Any]:
 # ---------------------------
 # Parameter sweep helper
 # ---------------------------
+
 
 def make_param_sweep(
     base_seed: int,

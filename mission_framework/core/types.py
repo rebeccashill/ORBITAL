@@ -18,10 +18,10 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
-
 # ---------------------------
 # Time handling
 # ---------------------------
+
 
 @dataclass(frozen=True)
 class TimeGrid:
@@ -31,6 +31,7 @@ class TimeGrid:
     - dt: step size in seconds
     - steps: number of steps (N), producing N+1 time points including t0
     """
+
     t0: float
     dt: float
     steps: int
@@ -46,6 +47,7 @@ class TimeGrid:
 # ---------------------------
 # Basic geometric primitives (optional convenience)
 # ---------------------------
+
 
 @dataclass(frozen=True)
 class Vec2:
@@ -64,6 +66,7 @@ class Vec3:
 # Trajectory container (aircraft-friendly, but domain-agnostic)
 # ---------------------------
 
+
 @dataclass
 class Trajectory:
     """
@@ -75,10 +78,11 @@ class Trajectory:
     The simulator decides what each dimension means; constraints/objectives
     read fields by name or via metadata.
     """
-    t: np.ndarray                      # shape (T,)
-    state: np.ndarray                  # shape (T, D)
+
+    t: np.ndarray  # shape (T,)
+    state: np.ndarray  # shape (T, D)
     control: Optional[np.ndarray] = None  # shape (T, U) or (T-1, U)
-    frame: str = "unspecified"         # e.g., "ENU", "NED", "ECI", "LVLH"
+    frame: str = "unspecified"  # e.g., "ENU", "NED", "ECI", "LVLH"
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
@@ -111,6 +115,7 @@ class Trajectory:
 # Schedule container (spacecraft-friendly, but domain-agnostic)
 # ---------------------------
 
+
 class EventType(str, Enum):
     OBSERVATION = "observation"
     DOWNLINK = "downlink"
@@ -127,6 +132,7 @@ class Event:
 
     Times are seconds since some reference epoch (kept consistent within a scenario).
     """
+
     t_start: float
     t_end: float
     etype: EventType
@@ -143,11 +149,14 @@ class Event:
 @dataclass
 class Schedule:
     """A list of events in time order."""
+
     events: List[Event] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def sorted(self) -> "Schedule":
-        return Schedule(events=sorted(self.events, key=lambda e: e.t_start), metadata=dict(self.metadata))
+        return Schedule(
+            events=sorted(self.events, key=lambda e: e.t_start), metadata=dict(self.metadata)
+        )
 
     def validate_non_overlapping(self) -> None:
         ev = self.sorted().events
@@ -163,6 +172,7 @@ class Schedule:
 # Plan object (unified "what to execute")
 # ---------------------------
 
+
 @dataclass
 class Plan:
     """
@@ -176,8 +186,11 @@ class Plan:
     For aircraft, you might fill `waypoints` + optional `segments`.
     For spacecraft, you might fill `schedule`.
     """
+
     kind: str  # "aircraft" or "spacecraft" (or other)
-    waypoints: Optional[List[Dict[str, Any]]] = None  # each dict can contain x/y/z, lat/lon/alt, eta, etc.
+    waypoints: Optional[List[Dict[str, Any]]] = (
+        None  # each dict can contain x/y/z, lat/lon/alt, eta, etc.
+    )
     schedule: Optional[Schedule] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -185,6 +198,7 @@ class Plan:
 # ---------------------------
 # Simulation output (unified "what happened")
 # ---------------------------
+
 
 @dataclass
 class SimResult:
@@ -199,6 +213,7 @@ class SimResult:
 
     Constraints/Objectives should rely on these fields (and metadata) so they remain domain-agnostic.
     """
+
     t: np.ndarray  # shape (T,) time points for any time series fields
     trajectory: Optional[Trajectory] = None
     schedule: Optional[Schedule] = None

@@ -36,6 +36,7 @@ class ConstraintEvaluation:
     `hard_pass` is True only if all HARD constraints are satisfied.
     `soft_pass` is True only if all SOFT constraints are satisfied.
     """
+
     margins: Dict[str, float] = field(default_factory=dict)
     hard_pass: bool = True
     soft_pass: bool = True
@@ -72,6 +73,7 @@ class RobustnessStats:
 
     Planner may leave this as None if robustness was disabled.
     """
+
     cases: int
     hard_pass_rate: float
     soft_pass_rate: float
@@ -86,7 +88,9 @@ class RobustnessStats:
             "soft_pass_rate": float(self.soft_pass_rate),
             "mean_objective_cost": float(self.mean_objective_cost),
             "max_objective_cost": float(self.max_objective_cost),
-            "worst_case_index": None if self.worst_case_index is None else int(self.worst_case_index),
+            "worst_case_index": (
+                None if self.worst_case_index is None else int(self.worst_case_index)
+            ),
         }
 
 
@@ -105,6 +109,7 @@ class Solution:
     - robustness: optional aggregate stats across robustness cases
     - debug: optional diagnostics (iteration found, runtime, etc.)
     """
+
     decisions: Dict[str, Any]
     plan: Any
     sim_result: Any
@@ -126,7 +131,11 @@ class Solution:
             "plan": self.plan,
             "sim_result": self.sim_result,
             "constraints": self.constraints.to_dict(),
-            "objective_total_cost": float(self.objective.total_cost()) if hasattr(self.objective, "total_cost") else None,
+            "objective_total_cost": (
+                float(self.objective.total_cost())
+                if hasattr(self.objective, "total_cost")
+                else None
+            ),
             "score": float(self.score),
             "robustness": None if self.robustness is None else self.robustness.to_dict(),
             "debug": dict(self.debug),

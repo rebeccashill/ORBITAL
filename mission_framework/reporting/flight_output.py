@@ -107,7 +107,9 @@ def export_flight_json(
 
     if sim is not None:
         payload["trajectory"] = trajectory_export(sim)
-        payload["resources"] = {k: np.asarray(v, dtype=float).tolist() for k, v in sim.resources.items()}
+        payload["resources"] = {
+            k: np.asarray(v, dtype=float).tolist() for k, v in sim.resources.items()
+        }
         payload["scalars"] = dict(sim.scalars)
         payload["sim_metadata"] = dict(sim.metadata)
 

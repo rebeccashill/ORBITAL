@@ -4,9 +4,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
 
-MU_EARTH = 3.986004418e14   # m^3/s^2
-R_EARTH  = 6378137.0        # m
-J2       = 1.08262668e-3    # -
+MU_EARTH = 3.986004418e14  # m^3/s^2
+R_EARTH = 6378137.0  # m
+J2 = 1.08262668e-3  # -
 
 
 @dataclass(frozen=True)
@@ -28,7 +28,7 @@ def accel_j2(r: np.ndarray) -> np.ndarray:
     Standard J2 acceleration in inertial frame.
     """
     x, y, z = float(r[0]), float(r[1]), float(r[2])
-    r2 = x*x + y*y + z*z
+    r2 = x * x + y * y + z * z
     r1 = float(np.sqrt(r2))
     if r1 <= 0.0:
         return np.zeros(3, dtype=float)
@@ -36,9 +36,9 @@ def accel_j2(r: np.ndarray) -> np.ndarray:
     zx = z / r1
     factor = 1.5 * J2 * MU_EARTH * (R_EARTH**2) / (r1**5)
 
-    ax = factor * x * (5.0 * zx*zx - 1.0)
-    ay = factor * y * (5.0 * zx*zx - 1.0)
-    az = factor * z * (5.0 * zx*zx - 3.0)
+    ax = factor * x * (5.0 * zx * zx - 1.0)
+    ay = factor * y * (5.0 * zx * zx - 1.0)
+    az = factor * z * (5.0 * zx * zx - 3.0)
     return np.array([ax, ay, az], dtype=float)
 
 
@@ -65,4 +65,4 @@ def rk4_step(f, x: np.ndarray, dt: float) -> np.ndarray:
     k2 = f(x + 0.5 * dt * k1)
     k3 = f(x + 0.5 * dt * k2)
     k4 = f(x + dt * k3)
-    return x + (dt / 6.0) * (k1 + 2*k2 + 2*k3 + k4)
+    return x + (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)

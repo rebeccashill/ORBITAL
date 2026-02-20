@@ -21,17 +21,17 @@ import numpy as np
 
 @dataclass
 class BatteryParams:
-    capacity_Wh: float = 200.0          # total energy
+    capacity_Wh: float = 200.0  # total energy
     initial_Wh: Optional[float] = None  # defaults to capacity
 
     # Simple power model: P = P0 + k_v * v^2 + k_climb * max(0, climb_rate)
     # (These are proxy coefficients; tune for your demo.)
-    p_idle_W: float = 60.0              # avionics + baseline propulsion
-    k_v_W_per_m2s2: float = 1.0         # scales with v_air^2
-    k_climb_W_per_mps: float = 120.0    # extra power per m/s climb (proxy)
+    p_idle_W: float = 60.0  # avionics + baseline propulsion
+    k_v_W_per_m2s2: float = 1.0  # scales with v_air^2
+    k_climb_W_per_mps: float = 120.0  # extra power per m/s climb (proxy)
 
     # Optional: penalize aggressive turning a bit (banking induced drag proxy)
-    k_turn_W_per_radps: float = 30.0    # extra power per |yaw_rate|
+    k_turn_W_per_radps: float = 30.0  # extra power per |yaw_rate|
 
 
 @dataclass
@@ -127,8 +127,16 @@ def integrate_battery_trace(
     t = np.asarray(t_s, dtype=float).reshape(-1)
     v = np.asarray(v_air_mps, dtype=float).reshape(-1)
 
-    cr = np.zeros_like(v) if climb_rate_mps is None else np.asarray(climb_rate_mps, dtype=float).reshape(-1)
-    yr = np.zeros_like(v) if yaw_rate_radps is None else np.asarray(yaw_rate_radps, dtype=float).reshape(-1)
+    cr = (
+        np.zeros_like(v)
+        if climb_rate_mps is None
+        else np.asarray(climb_rate_mps, dtype=float).reshape(-1)
+    )
+    yr = (
+        np.zeros_like(v)
+        if yaw_rate_radps is None
+        else np.asarray(yaw_rate_radps, dtype=float).reshape(-1)
+    )
 
     if not (t.size == v.size == cr.size == yr.size):
         raise ValueError("All input arrays must have the same length.")

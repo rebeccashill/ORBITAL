@@ -31,6 +31,7 @@ class VarType(str, Enum):
 @dataclass(frozen=True)
 class Bounds:
     """Numeric bounds for continuous/integer variables (broadcastable)."""
+
     low: Union[float, int, np.ndarray]
     high: Union[float, int, np.ndarray]
 
@@ -49,6 +50,7 @@ class DecisionVar:
     - For PERMUTATION, use PermutationVar (items list; bounds unused).
     - For BINARY, bounds are implicitly [0,1].
     """
+
     name: str
     vtype: VarType
     shape: Tuple[int, ...] = (1,)
@@ -65,22 +67,38 @@ class DecisionVar:
 @dataclass
 class ContinuousVar(DecisionVar):
     def __init__(self, name: str, shape=(1,), bounds: Optional[Bounds] = None, metadata=None):
-        super().__init__(name=name, vtype=VarType.CONTINUOUS, shape=tuple(shape),
-                         bounds=bounds, metadata=metadata or {})
+        super().__init__(
+            name=name,
+            vtype=VarType.CONTINUOUS,
+            shape=tuple(shape),
+            bounds=bounds,
+            metadata=metadata or {},
+        )
 
 
 @dataclass
 class IntegerVar(DecisionVar):
     def __init__(self, name: str, shape=(1,), bounds: Optional[Bounds] = None, metadata=None):
-        super().__init__(name=name, vtype=VarType.INTEGER, shape=tuple(shape),
-                         bounds=bounds, metadata=metadata or {})
+        super().__init__(
+            name=name,
+            vtype=VarType.INTEGER,
+            shape=tuple(shape),
+            bounds=bounds,
+            metadata=metadata or {},
+        )
 
 
 @dataclass
 class BinaryVar(DecisionVar):
     def __init__(self, name: str, shape=(1,), metadata=None):
-        super().__init__(name=name, vtype=VarType.BINARY, shape=tuple(shape),
-                         bounds=Bounds(0, 1), metadata=metadata or {})
+        super().__init__(
+            name=name,
+            vtype=VarType.BINARY,
+            shape=tuple(shape),
+            bounds=Bounds(0, 1),
+            metadata=metadata or {},
+        )
+
 
 @dataclass
 class DiscreteVar(DecisionVar):
@@ -98,6 +116,7 @@ class DiscreteVar(DecisionVar):
       DiscreteVar("downlink_policy", items=[0,1,2])
       DiscreteVar("mode", items=["eco","nominal","burst"])
     """
+
     items: Sequence[Any] = field(default_factory=list)
 
     def __init__(self, name: str, items: Sequence[Any], metadata=None):
@@ -112,6 +131,7 @@ class DiscreteVar(DecisionVar):
         )
         self.items = list(items)
 
+
 @dataclass
 class PermutationVar(DecisionVar):
     """
@@ -119,17 +139,24 @@ class PermutationVar(DecisionVar):
 
     Stored assignment value is a list of those items in some order.
     """
+
     items: Sequence[Any] = field(default_factory=list)
 
     def __init__(self, name: str, items: Sequence[Any], metadata=None):
-        super().__init__(name=name, vtype=VarType.PERMUTATION, shape=(len(items),),
-                         bounds=None, metadata=metadata or {})
+        super().__init__(
+            name=name,
+            vtype=VarType.PERMUTATION,
+            shape=(len(items),),
+            bounds=None,
+            metadata=metadata or {},
+        )
         self.items = list(items)
 
 
 @dataclass
 class DecisionAssignment:
     """Concrete values for all decision variables."""
+
     values: Dict[str, Any]
 
     def __getitem__(self, key: str) -> Any:
@@ -161,6 +188,7 @@ class MutationConfig:
     - p_perm_swap: probability to apply a permutation swap.
     - perm_swaps: number of swap operations if permutation swap occurs.
     """
+
     cont_sigma: float = 0.10
     cont_sigma_is_frac: bool = True
     int_step: int = 1
@@ -179,6 +207,7 @@ class DecisionSpace:
     - crossover (optional)
     - flatten/unflatten for numeric-only optimizers
     """
+
     variables: List[DecisionVar]
 
     def names(self) -> List[str]:
@@ -197,7 +226,6 @@ class DecisionSpace:
         items = list(getattr(v, "items"))
         idx = int(a[name])
         return items[idx]
-
 
     # -------------------------
     # Validation / coercion
@@ -266,7 +294,6 @@ class DecisionSpace:
                     out[v.name] = idx
                 continue
 
-
             arr = np.array(out[v.name], dtype=float).reshape(v.shape)
 
             if v.bounds is not None:
@@ -315,7 +342,6 @@ class DecisionSpace:
                 vals[v.name] = int(rng.integers(0, len(items)))
                 continue
 
-
         a = DecisionAssignment(vals)
         self.validate(a)
         return a
@@ -341,7 +367,9 @@ class DecisionSpace:
         for v in self.variables:
             if v.vtype == VarType.PERMUTATION:
                 if rng.random() < (cfg.p_perm_swap * intensity):
-                    out[v.name] = self._mutate_permutation(out[v.name], rng, swaps=max(1, cfg.perm_swaps))
+                    out[v.name] = self._mutate_permutation(
+                        out[v.name], rng, swaps=max(1, cfg.perm_swaps)
+                    )
                 continue
 
             arr = np.array(out[v.name], dtype=float).reshape(v.shape)
@@ -362,7 +390,6 @@ class DecisionSpace:
                 cur = int(np.clip(cur, 0, len(items) - 1))
                 out[v.name] = cur
                 continue
-
 
             if v.bounds is None:
                 raise ValueError(f"Numeric var '{v.name}' missing bounds (needed for mutation).")
@@ -398,10 +425,10 @@ class DecisionSpace:
         p_swap: float = 0.50,
     ) -> DecisionAssignment:
         """
-        Simple crossover:
-        - Numeric vars: element-wise pick from A or B
-        - Permutation vars: take A then apply small repair by swapping towards B (cheap heuristic)
-This is optional; you can ignore crossover and just mutate.
+                Simple crossover:
+                - Numeric vars: element-wise pick from A or B
+                - Permutation vars: take A then apply small repair by swapping towards B (cheap heuristic)
+        This is optional; you can ignore crossover and just mutate.
         """
         child = parent_a.copy()
 
@@ -417,7 +444,6 @@ This is optional; you can ignore crossover and just mutate.
                 # keep as int index
                 child[v.name] = int(round(float(child[v.name])))
                 continue
-
 
             a_arr = np.array(parent_a[v.name], dtype=float).reshape(v.shape)
             b_arr = np.array(parent_b[v.name], dtype=float).reshape(v.shape)
@@ -455,7 +481,9 @@ This is optional; you can ignore crossover and just mutate.
             chunks.append(arr)
         return np.concatenate(chunks) if chunks else np.array([], dtype=float)
 
-    def from_flat(self, x: np.ndarray, template: Optional[DecisionAssignment] = None) -> DecisionAssignment:
+    def from_flat(
+        self, x: np.ndarray, template: Optional[DecisionAssignment] = None
+    ) -> DecisionAssignment:
         """
         Build an assignment from a flat numeric vector.
         - If template provided, permutations are copied from it.
@@ -474,7 +502,7 @@ This is optional; you can ignore crossover and just mutate.
                 vals[v.name] = _deepcopy_value(template[v.name])
                 continue
             n = v.size()
-            vals[v.name] = np.array(x[i:i + n], dtype=float).reshape(v.shape)
+            vals[v.name] = np.array(x[i : i + n], dtype=float).reshape(v.shape)
             i += n
 
         a = DecisionAssignment(vals)
@@ -494,7 +522,9 @@ This is optional; you can ignore crossover and just mutate.
             raise ValueError(f"Permutation var '{v.name}' must be a permutation of items.")
 
     @staticmethod
-    def _mutate_permutation(order: Sequence[Any], rng: np.random.Generator, swaps: int = 2) -> List[Any]:
+    def _mutate_permutation(
+        order: Sequence[Any], rng: np.random.Generator, swaps: int = 2
+    ) -> List[Any]:
         arr = list(order)
         n = len(arr)
         if n < 2:
@@ -506,7 +536,9 @@ This is optional; you can ignore crossover and just mutate.
         return arr
 
     @staticmethod
-    def _perm_nudge_towards(order_a: Sequence[Any], order_b: Sequence[Any], rng: np.random.Generator) -> List[Any]:
+    def _perm_nudge_towards(
+        order_a: Sequence[Any], order_b: Sequence[Any], rng: np.random.Generator
+    ) -> List[Any]:
         """
         Very lightweight nudge:
         - Pick a random item and move it in A closer to its index in B.
