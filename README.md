@@ -26,7 +26,11 @@ cd ORBITAL
 python -m venv .venv
 source .venv/bin/activate        # macOS/Linux
 .venv\Scripts\activate           # Windows (PowerShell)
+# install runtime dependencies
 pip install -r requirements.txt
+
+# install dev dependencies (linting, tests)
+pip install -r requirements-dev.txt
 ```
 
 ------------------------------------------------------------------------
