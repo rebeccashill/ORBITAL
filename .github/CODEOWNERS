@@ -1,0 +1,12 @@
+# Default owner
+* @rebeccashill
+
+# Core planning kernel
+/mission_framework/core/ @rebeccashill
+
+# Simulation layer
+/mission_framework/simulation/ @rebeccashill
+
+# CLI and scripts
+/mission_framework/cli.py @rebeccashill
+/scripts/ @rebeccashill
