@@ -1,11 +1,15 @@
 import subprocess
 import sys
+import time
 
-def run(cmd: list[str]):
+def run(cmd: list[str], label: str):
     print("\n" + "=" * 60)
-    print("Running:", " ".join(cmd))
+    print(f"Starting {label}")
     print("=" * 60)
+    start = time.time()
     result = subprocess.run(cmd)
+    elapsed = time.time() - start
+    print(f"Finished {label} in {elapsed:.2f}s")
     if result.returncode != 0:
         sys.exit(result.returncode)
 
