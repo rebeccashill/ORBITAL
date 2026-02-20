@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=65", "wheel"]
+requires = ["setuptools>=69,<71", "wheel>=0.41,<1"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,32 +7,35 @@ name = "orbital-mission-framework"
 version = "0.1.0"
 description = "Unified mission planning and simulation framework for UAV and CubeSat operations."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 license = { file = "LICENSE" }
 authors = [{ name = "Rebecca Shillingford" }]
 keywords = ["mission-planning", "optimization", "aerospace", "uav", "cubesat", "simulation"]
 classifiers = [
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
 
 # Runtime deps (canonical list; keep aligned with requirements.txt)
 dependencies = [
-  "numpy>=1.24",
-  "scipy>=1.10",
-  "matplotlib>=3.7",
-  "PyYAML>=6.0",
+  "numpy>=1.24,<3",
+  "scipy>=1.10,<2",
+  "matplotlib>=3.7,<4",
+  "PyYAML>=6.0.1,<7",
+  "typing-extensions>=4.8,<5; python_version<'3.11'",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=7.4",
-  "pytest-cov>=4.1",
-  "black>=24.0",
-  "ruff>=0.3.0",
-  "mypy>=1.8",
-  "pre-commit>=3.6",
+  "pytest>=7.4,<9",
+  "pytest-cov>=4.1,<6",
+  "black>=24.0,<26",
+  "ruff>=0.3.0,<1.0",
+  "mypy>=1.8,<2",
+  "types-PyYAML>=6.0.12.20240808,<7",
+  "pre-commit>=3.6,<5",
 ]
 
 [project.urls]
@@ -53,12 +56,17 @@ target-version = ["py310"]
 line-length = 100
 target-version = "py310"
 
+[tool.ruff.lint]
+# Keep it lightweight; expand later if you want stricter gates.
+select = ["E", "F", "I"]
+ignore = []
+
 [tool.mypy]
 python_version = "3.10"
 warn_unused_ignores = true
 warn_redundant_casts = true
 no_implicit_optional = true
-# Start lenient; tighten later once you add annotations
+# You can remove this later once you're fully typed.
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
