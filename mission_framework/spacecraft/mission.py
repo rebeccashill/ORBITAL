@@ -2,16 +2,16 @@
 """
 7-day CubeSat-style mission definition (MODULE B / spacecraft).
 
-This file is aligned with:
-- mission_framework/core/types.py (Event, EventType, Schedule, Plan, SimResult)
-and with your YAML:
-- orbit.altitude_km, inclination_deg, raan_deg, true_anomaly_deg, duration_days, time_step_s
-- mission.targets (with optional time_windows in UTC strings; stored but not enforced yet)
-- top-level ground_stations
-- spacecraft bus parameters (battery/power/slew/proxies)
+Aligned with:
+- mission_framework/core/types.py (Event, EventType, Schedule, Plan, SimResult, Trajectory)
+- YAML keys:
+    orbit.altitude_km, inclination_deg, raan_deg, true_anomaly_deg, duration_days, time_step_s, epoch_utc
+    mission.targets
+    top-level ground_stations
+    spacecraft bus parameters (battery/power/slew proxies)
 
 Planning-grade demo:
-- Targets visible when elevation >= threshold (proxy via visibility.py)
+- Targets "visible" when elevation >= threshold (via visibility_core.py)
 - Downlinks scheduled during ground station access windows
 - Battery proxy (charge/discharge) + slew feasibility proxy
 - Objective: maximize delivered mission_value
@@ -35,7 +35,11 @@ from mission_framework.core.objective import Objective, term_maximize_value
 from mission_framework.core.planner import Problem
 from mission_framework.core.types import Plan, Schedule, Event, EventType, SimResult, Trajectory
 
-from mission_framework.spacecraft.orbit_compat import KeplerianElements, OrbitConfig, R_EARTH_KM, propagate_ecef_trajectory
+from mission_framework.spacecraft.orbit_compat import (
+    KeplerianElements,
+    R_EARTH_KM,
+    propagate_ecef_trajectory,
+)
 from mission_framework.spacecraft.visibility_core import GroundSite, compute_access_windows
 from mission_framework.spacecraft.attitude import SlewConfig, PointingTask, sequence_feasibility_margin
 from mission_framework.spacecraft.power import BatteryConfig, PowerLoads, BatteryModel, make_steps_from_schedule
@@ -54,7 +58,7 @@ class GroundTarget:
     value: float = 1.0
     obs_duration_s: float = 30.0
     cooldown_s: float = 0.0
-    time_windows: Tuple[Dict[str, Any], ...] = ()  # store as provided (UTC strings)
+    time_windows: Tuple[Dict[str, Any], ...] = ()  # stored as provided (UTC strings), not enforced yet
 
 
 def _deg2rad(d: float) -> float:
@@ -76,21 +80,21 @@ def _ecef_direction_to_site(lat_deg: float, lon_deg: float) -> np.ndarray:
 
 def _parse_kepler_from_yaml(cfg: Dict[str, Any]) -> KeplerianElements:
     """
-    Accepts your YAML orbit fields:
+    Accepts YAML orbit fields:
       altitude_km, inclination_deg, raan_deg, true_anomaly_deg, epoch_utc
-    Produces KeplerianElements used by orbit.py.
+    Produces KeplerianElements used by orbit_compat.py.
     """
     o = cfg.get("orbit", {}) or {}
 
     alt_km = float(o.get("altitude_km", 550.0))
-    a_km = float(R_EARTH_KM + alt_km)  # circular-ish
+    a_km = float(R_EARTH_KM + alt_km)  # circular-ish SMA proxy
     e = float(o.get("e", 0.001))
 
     i_rad = _deg2rad(float(o.get("inclination_deg", 97.6)))
     raan_rad = _deg2rad(float(o.get("raan_deg", 0.0)))
-    argp_rad = _deg2rad(float(o.get("argp_deg", 0.0)))  # not present in YAML, default 0
+    argp_rad = _deg2rad(float(o.get("argp_deg", 0.0)))  # optional
 
-    # YAML gives "true_anomaly_deg" not mean anomaly; good enough for demo -> treat as M0
+    # YAML gives true anomaly; for demo, treat as mean anomaly seed
     M0_rad = _deg2rad(float(o.get("true_anomaly_deg", 0.0)))
 
     epoch_utc = str(o.get("epoch_utc", "2026-01-01T00:00:00Z"))
@@ -122,10 +126,11 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
         raise ValueError("build_problem_from_config called with non-spacecraft scenario")
 
     el = _parse_kepler_from_yaml(cfg)
-    ocfg = OrbitConfig()
     t_horizon = _horizon_seconds(cfg)
 
+    # -------------------------
     # Targets
+    # -------------------------
     mission_cfg = cfg.get("mission", {}) or {}
     tlist = mission_cfg.get("targets", []) or []
     if not tlist:
@@ -139,14 +144,15 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                 lat_deg=float(t.get("lat_deg")),
                 lon_deg=float(t.get("lon_deg")),
                 value=float(t.get("value", 1.0)),
-                # your YAML doesn't provide obs duration; default to 30s
                 obs_duration_s=float(t.get("obs_duration_s", 30.0)),
                 cooldown_s=float(t.get("cooldown_s", 0.0)),
                 time_windows=tuple((t.get("time_windows", []) or [])),
             )
         )
 
-    # Ground stations (YOUR YAML: top-level key)
+    # -------------------------
+    # Ground stations (top-level YAML key)
+    # -------------------------
     gs_list = cfg.get("ground_stations", []) or []
     if not gs_list:
         raise ValueError("spacecraft scenario requires top-level ground_stations")
@@ -156,6 +162,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
         stations.append(
             GroundSite.from_km(
                 site_id=str(gs.get("id", "")),
+                name=str(gs.get("name", "")),  # optional; defaults to site_id in from_km if blank
                 lat_deg=float(gs.get("lat_deg")),
                 lon_deg=float(gs.get("lon_deg")),
                 alt_km=float(gs.get("alt_km", 0.0)),
@@ -163,51 +170,48 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
             )
         )
 
-    # Visibility settings (use station min_elevation if present, else default)
+    # -------------------------
+    # Visibility precompute
+    # -------------------------
     step_s = float((cfg.get("orbit", {}) or {}).get("time_step_s", 30.0))
     default_min_el = 10.0
 
-    # Precompute orbit trajectory once (used for all visibility checks below)
+    # Propagate once (ECEF positions)
     t_arr, r_ecef_arr = propagate_ecef_trajectory(el, 0.0, t_horizon, step_s)
 
-    # Precompute contact windows for stations
+    # Station access windows
     station_windows: Dict[str, List[Tuple[float, float]]] = {}
     for s in stations:
-        site_key = str(s.site_id or s.name or "GS")
-        gs_yaml = next((g for g in gs_list if str(g.get("id", "")) == site_key), {})
-        min_el_deg = float(gs_yaml.get("min_elevation_deg", default_min_el))
+        # compute_access_windows keys by site.name (strict core behavior)
+        wins_dict = compute_access_windows(t=t_arr, r_ecef=r_ecef_arr, sites=[s])
+        station_windows[s.name] = wins_dict.get(s.name, [])
 
-        wins_dict = compute_access_windows(
-            t=t_arr,
-            r_ecef=r_ecef_arr,
-            sites=[s],
-            min_elevation_deg=min_el_deg,
-        )
-        station_windows[site_key] = wins_dict.get(site_key, [])
-
-    # Precompute target visibility windows (treat target as a ground site)
+    # Target access windows: treat targets as pseudo-sites
     target_windows: Dict[str, List[Tuple[float, float]]] = {}
-    for t in targets:
-        pseudo = GroundSite(site_id=t.target_id, lat_deg=t.lat_deg, lon_deg=t.lon_deg, alt_km=0.0)
-        wins_dict = compute_access_windows(
-            t=t_arr,
-            r_ecef=r_ecef_arr,
-            sites=[pseudo],
-            min_elevation_deg=default_min_el,
+    for tgt in targets:
+        pseudo = GroundSite.from_km(
+            site_id=str(tgt.target_id),
+            name=str(tgt.target_id),
+            lat_deg=float(tgt.lat_deg),
+            lon_deg=float(tgt.lon_deg),
+            alt_km=0.0,
+            min_elev_deg=default_min_el,
         )
-        target_key = str(t.target_id)
-        target_windows[t.target_id] = wins_dict.get(target_key, [])
+        wins_dict = compute_access_windows(t=t_arr, r_ecef=r_ecef_arr, sites=[pseudo])
+        target_windows[tgt.target_id] = wins_dict.get(pseudo.name, [])
 
     # -------------------------
     # Decision space
     # -------------------------
     target_ids = [t.target_id for t in targets]
 
-    ds = DecisionSpace(variables=[
-        *[DiscreteVar(f"select_{tid}", items=[0, 1]) for tid in target_ids],
-        *[ContinuousVar(f"obs_offset_{tid}", bounds=Bounds(0.0, 1.0)) for tid in target_ids],
-        DiscreteVar("downlink_policy", items=[0, 1, 2]),
-    ])
+    ds = DecisionSpace(
+        variables=[
+            *[DiscreteVar(f"select_{tid}", items=[0, 1]) for tid in target_ids],
+            *[ContinuousVar(f"obs_offset_{tid}", bounds=Bounds(0.0, 1.0)) for tid in target_ids],
+            DiscreteVar("downlink_policy", items=[0, 1, 2]),
+        ]
+    )
 
     # -------------------------
     # Build plan from assignment
@@ -215,60 +219,63 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     def build_plan(a: DecisionAssignment) -> Plan:
         events: List[Event] = []
 
-        # Observations (use first available visibility window, simple demo)
-        for t in targets:
-            sel = int(a[f"select_{t.target_id}"])
+        # Observations (demo: first available visibility window)
+        for tgt in targets:
+            sel = int(a[f"select_{tgt.target_id}"])
             if sel <= 0:
                 continue
 
-            wins = target_windows.get(t.target_id, [])
+            wins = target_windows.get(tgt.target_id, [])
             if not wins:
                 continue
 
             w0, w1 = wins[0]
-            offset = float(np.array(a[f"obs_offset_{t.target_id}"]).reshape(-1)[0])
-            start = float(w0 + offset * max(0.0, (w1 - w0) - t.obs_duration_s))
-            end = float(start + t.obs_duration_s)
+            offset = float(np.array(a[f"obs_offset_{tgt.target_id}"]).reshape(-1)[0])
+            start = float(w0 + offset * max(0.0, (w1 - w0) - tgt.obs_duration_s))
+            end = float(start + tgt.obs_duration_s)
 
-            events.append(Event(
-                t_start=start,
-                t_end=end,
-                etype=EventType.OBSERVATION,
-                label=f"OBS_{t.target_id}",
-                target_id=t.target_id,
-                location=(float(t.lat_deg), float(t.lon_deg)),
-                data={"value": float(t.value), "duration_s": float(t.obs_duration_s)},
-            ))
+            events.append(
+                Event(
+                    t_start=start,
+                    t_end=end,
+                    etype=EventType.OBSERVATION,
+                    label=f"OBS_{tgt.target_id}",
+                    target_id=tgt.target_id,
+                    location=(float(tgt.lat_deg), float(tgt.lon_deg)),
+                    data={"value": float(tgt.value), "duration_s": float(tgt.obs_duration_s)},
+                )
+            )
 
-        # Downlinks
+        # Downlinks (simple policy controlling where inside each access window we place the downlink)
         policy = int(a["downlink_policy"])
         frac = 0.2 if policy == 0 else (0.5 if policy == 1 else 0.8)
 
-        # Use downlink duration proxy from YAML spacecraft.data_rate... later; for now fixed duration
-        dl_dur = 180.0
-
+        dl_dur = 180.0  # proxy duration
         max_dl_windows = int((cfg.get("downlink", {}) or {}).get("max_windows_per_station", 6))
 
-        for sid, wins in station_windows.items():
+        for station_name, wins in station_windows.items():
             wins = list(wins)[:max_dl_windows]
             for (w0, w1) in wins:
                 if (w1 - w0) < dl_dur:
                     continue
+
                 start = float(w0 + frac * ((w1 - w0) - dl_dur))
                 end = float(start + dl_dur)
 
-                st = next((s for s in stations if str(s.site_id or s.name or "GS") == sid), None)
+                st = next((s for s in stations if s.name == station_name), None)
                 loc = (float(st.lat_deg), float(st.lon_deg)) if st is not None else None
 
-                events.append(Event(
-                    t_start=start,
-                    t_end=end,
-                    etype=EventType.DOWNLINK,
-                    label=f"DL_{sid}",
-                    target_id=None,
-                    location=loc,
-                    data={"station_id": sid, "duration_s": float(dl_dur)},
-                ))
+                events.append(
+                    Event(
+                        t_start=start,
+                        t_end=end,
+                        etype=EventType.DOWNLINK,
+                        label=f"DL_{station_name}",
+                        target_id=None,
+                        location=loc,
+                        data={"station_id": station_name, "duration_s": float(dl_dur)},
+                    )
+                )
 
         events.sort(key=lambda e: e.t_start)
         sched = Schedule(events=events, metadata={"horizon_s": float(t_horizon)})
@@ -301,26 +308,30 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                     continue
                 lat_deg, lon_deg = float(e.location[0]), float(e.location[1])
                 d = _ecef_direction_to_site(lat_deg, lon_deg)
+
             elif e.etype == EventType.DOWNLINK:
-                sid = str(e.data.get("station_id", ""))
-                st = next((s for s in stations if str(s.site_id or s.name or "GS") == sid), None)
+                station_name = str(e.data.get("station_id", ""))
+                st = next((s for s in stations if s.name == station_name), None)
                 if st is None:
                     continue
                 d = _ecef_direction_to_site(st.lat_deg, st.lon_deg)
+
             else:
                 continue
 
-            tasks.append(PointingTask(
-                t_start=float(e.t_start),
-                t_end=float(e.t_end),
-                direction_ecef=d,
-                label=str(e.label),
-            ))
+            tasks.append(
+                PointingTask(
+                    t_start=float(e.t_start),
+                    t_end=float(e.t_end),
+                    direction_ecef=d,
+                    label=str(e.label),
+                )
+            )
 
         tasks.sort(key=lambda t: t.t_start)
         slew_margin_s = sequence_feasibility_margin(tasks, cfg=slew_cfg)
 
-        # Power proxy from YAML spacecraft block
+        # Power proxy
         bcfg = BatteryConfig(
             capacity_Wh=float(sc.get("battery_capacity_Wh", 120.0)),
             initial_Wh=float(sc.get("initial_battery_Wh", 100.0)),
@@ -336,7 +347,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
             slew_W=10.0,
         )
 
-        # simple sunlight proxy
+        # Simple sunlight proxy
         sun_frac = 0.6
 
         def sunlight_fn(tmid: float) -> bool:
@@ -357,20 +368,25 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
         steps = make_steps_from_schedule(simple_events, sunlight_fn=sunlight_fn, default_in_sun=True)
 
         batt_model = BatteryModel(bcfg, loads=loads)
-        trace = batt_model.simulate(steps, dt_internal_s=float((cfg.get("orbit", {}) or {}).get("time_step_s", 30.0)))
+        trace = batt_model.simulate(
+            steps,
+            dt_internal_s=float((cfg.get("orbit", {}) or {}).get("time_step_s", 30.0)),
+        )
 
         # Delivered value proxy: observation counts only if any downlink occurs after it
-        dl_times = [float(e.t_start) for e in events if e.etype == EventType.DOWNLINK]
-        dl_times.sort()
+        dl_times = sorted(float(e.t_start) for e in events if e.etype == EventType.DOWNLINK)
 
         delivered_value = 0.0
         obs_scheduled = 0
         obs_delivered = 0
+
         for e in events:
             if e.etype != EventType.OBSERVATION:
                 continue
+
             obs_scheduled += 1
             val = float(e.data.get("value", 0.0))
+
             if any(tdl >= float(e.t_end) for tdl in dl_times):
                 delivered_value += val
                 obs_delivered += 1
@@ -379,13 +395,12 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
         dummy_traj = Trajectory(
             t=np.array([0.0, horizon], dtype=float),
             state=np.zeros((2, 1), dtype=float),
-            control=None,
             frame="time",
             metadata={"dummy": True},
         )
 
         return SimResult(
-            t=trace.t_s if trace.t_s.size else np.array([0.0], dtype=float),
+            t=trace.t_s if getattr(trace, "t_s", np.array([])).size else np.array([0.0], dtype=float),
             trajectory=dummy_traj,
             schedule=sched,
             resources={"battery_Wh": trace.battery_Wh, "net_power_W": trace.net_power_W},
