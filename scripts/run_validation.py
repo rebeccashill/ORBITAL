@@ -15,13 +15,15 @@ outputs/validation/
   validation_summary.json
 """
 
-import subprocess
+from __future__ import annotations
+
 import json
-import sys
 import re
-from pathlib import Path
 import shutil
-from typing import Dict, Any, Optional
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 FEASIBLE_RE = re.compile(r"^\s*Feasible:\s*(True|False)\s*$", re.MULTILINE)
 
@@ -37,22 +39,30 @@ def copy_run_artifacts(run_dir: Path, dest_dir: Path) -> None:
     dest_dir.mkdir(parents=True, exist_ok=True)
     if not run_dir.exists():
         return
+
     for ext in ("*.json", "*.csv", "*.png"):
         for f in run_dir.glob(ext):
             shutil.copy(f, dest_dir / f.name)
 
 
 def run_case(
-    case_name: str, yaml_path: str, *, iterations: int, restarts: int, robustness: int, seed: int
+    case_name: str,
+    yaml_path: str,
+    *,
+    iterations: int,
+    restarts: int,
+    robustness: int,
+    seed: int,
 ) -> Dict[str, Any]:
     """
     Runs a single case, captures logs, copies artifacts, and labels failures.
     Uses --outdir runs so per-yaml stem maps to runs/<stem>/.
     """
-    print(f"\n{'='*70}")
+    banner = "=" * 70
+    print(f"\n{banner}")
     print(f"RUN CASE: {case_name}")
     print(f"YAML: {yaml_path}")
-    print(f"{'='*70}\n")
+    print(f"{banner}\n")
 
     cmd = [
         sys.executable,
@@ -94,7 +104,7 @@ def run_case(
     run_dir = Path("runs") / yaml_stem
 
     # Decide output folder: keep failures in a dedicated subdir
-    domain = "aircraft" if "aircraft" in yaml_path or "UAV" in stdout else "spacecraft"
+    domain = "aircraft" if ("aircraft" in yaml_path or "UAV" in stdout) else "spacecraft"
     base_out = Path("outputs/validation") / domain / case_name
 
     copy_run_artifacts(run_dir, base_out)
@@ -102,11 +112,10 @@ def run_case(
     is_failure = (result.returncode != 0) or (feasible is False)
 
     # Preserve failure case snapshot (same artifacts + log reference)
-    failure_dir = None
+    failure_dir: Optional[Path] = None
     if is_failure:
         failure_dir = Path("outputs/validation") / "failures" / domain / case_name
         copy_run_artifacts(run_dir, failure_dir)
-        # also copy log
         shutil.copy(log_path, failure_dir / "run_log.txt")
 
     return {
@@ -132,7 +141,7 @@ def main() -> int:
 ╚══════════════════════════════════════════════════════════╝
 """)
 
-    summary = {"cases": []}
+    summary: Dict[str, Any] = {"cases": []}
 
     # Baseline Monte Carlo runs (as before, but now as cases)
     summary["cases"].append(
@@ -214,4 +223,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
