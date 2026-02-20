@@ -1,5 +1,4 @@
-# mission_framework/simulation/simulator.py
-"""
+"""mission_framework/simulation/simulator.py
 Domain-agnostic simulation harness.
 
 This module is intentionally lightweight.

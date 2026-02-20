@@ -1,245 +1,232 @@
 # mission_framework/spacecraft/visibility.py
-"""
-Visibility / access geometry (MODULE B / spacecraft).
-
-Simple, consistent planning-grade model:
-- Spacecraft position in ECEF (km) from orbit.py
-- Spherical Earth
-- Ground site ECEF from lat/lon/alt
-- Visibility via elevation angle >= min_elevation_deg
-- Window generation via time sampling
-
-Units:
-- lat/lon in degrees in GroundSite, converted internally to radians
-- km distances, seconds times
-"""
-
 from __future__ import annotations
-
-from dataclasses import dataclass
-from typing import List, Optional, Sequence, Tuple
-
-import math
 import numpy as np
 
-from mission_framework.spacecraft.orbit import (
-    KeplerianElements,
-    OrbitConfig,
-    R_EARTH_KM,
-    spacecraft_ecef_km,
-)
+from dataclasses import dataclass
+from typing import Dict, List, Tuple, Optional
+import numpy as np
 
+R_EARTH = 6378137.0  # m
 
-# ============================================================
-# Ground site / target definitions
-# ============================================================
+# -------------------------
+# Existing helpers (keep yours)
+# -------------------------
+
+def geodetic_to_ecef(lat_rad: float, lon_rad: float, alt_m: float) -> np.ndarray:
+    clat, slat = np.cos(lat_rad), np.sin(lat_rad)
+    clon, slon = np.cos(lon_rad), np.sin(lon_rad)
+    r = R_EARTH + float(alt_m)
+    return np.array([r * clat * clon, r * clat * slon, r * slat], dtype=float)
+
+def elevation_angle_rad(r_sat_ecef: np.ndarray, r_gs_ecef: np.ndarray) -> float:
+    rho = r_sat_ecef - r_gs_ecef
+    rho_hat = rho / np.linalg.norm(rho)
+    zenith_hat = r_gs_ecef / np.linalg.norm(r_gs_ecef)
+    return float(np.arcsin(np.clip(np.dot(rho_hat, zenith_hat), -1.0, 1.0)))
+
+def ecef_to_latlon(r_ecef: np.ndarray):
+    x, y, z = float(r_ecef[0]), float(r_ecef[1]), float(r_ecef[2])
+    lon = np.arctan2(y, x)
+    hyp = np.sqrt(x*x + y*y)
+    lat = np.arctan2(z, hyp)
+    return float(lat), float(lon)
+
+# -------------------------
+# Compatibility layer for mission.py
+# -------------------------
 
 @dataclass(frozen=True)
 class GroundSite:
-    site_id: str
-    lat_deg: float
-    lon_deg: float
-    alt_km: float = 0.0
-
-    @property
-    def lat_rad(self) -> float:
-        return float(math.radians(float(self.lat_deg)))
-
-    @property
-    def lon_rad(self) -> float:
-        return float(math.radians(float(self.lon_deg)))
-
-
-def ground_ecef_km(
-    lat_rad: float,
-    lon_rad: float,
-    alt_km: float = 0.0,
-    r_earth_km: float = R_EARTH_KM,
-) -> np.ndarray:
     """
-    Spherical Earth conversion (ECEF):
-      r = (R + alt) [cos lat cos lon, cos lat sin lon, sin lat]
+    Compatibility GroundSite that can be constructed even if mission.py omits 'name'.
     """
-    R = float(r_earth_km) + float(alt_km)
-    clat = math.cos(float(lat_rad))
-    slat = math.sin(float(lat_rad))
-    clon = math.cos(float(lon_rad))
-    slon = math.sin(float(lon_rad))
-    return np.array([R * clat * clon, R * clat * slon, R * slat], dtype=float)
+    # Make name optional/defaultable
+    name: str = ""
+    lat_deg: float = 0.0
+    lon_deg: float = 0.0
 
+    alt_m: float = 0.0
+    alt_km: Optional[float] = None
+    min_elev_deg: float = 10.0
+    site_id: Optional[str] = None
 
-# ============================================================
-# Visibility math
-# ============================================================
+    def __post_init__(self):
+        # Convert alt_km -> alt_m if provided
+        if self.alt_km is not None:
+            object.__setattr__(self, "alt_m", float(self.alt_km) * 1000.0)
 
-def elevation_angle_rad(r_site_ecef: np.ndarray, r_sc_ecef: np.ndarray) -> float:
-    """
-    Elevation at ground site to spacecraft.
+        # If no name was provided, use site_id or a generic label
+        if (self.name is None) or (str(self.name).strip() == ""):
+            fallback = self.site_id if self.site_id else "GS"
+            object.__setattr__(self, "name", str(fallback))
 
-    up_hat ~ normalized site radius vector
-    los_hat = (r_sc - r_site) / ||r_sc - r_site||
-    elevation = asin( dot(los_hat, up_hat) )
-    """
-    r_site = np.asarray(r_site_ecef, dtype=float).reshape(3)
-    r_sc = np.asarray(r_sc_ecef, dtype=float).reshape(3)
-
-    los = r_sc - r_site
-    los_norm = float(np.linalg.norm(los))
-    if los_norm < 1e-12:
-        return float(math.pi / 2.0)
-
-    los_hat = los / los_norm
-    up_norm = float(np.linalg.norm(r_site))
-    if up_norm < 1e-12:
-        return float(-math.pi / 2.0)
-    up_hat = r_site / up_norm
-
-    s = float(np.clip(np.dot(los_hat, up_hat), -1.0, 1.0))
-    return float(math.asin(s))
-
-
-def is_visible(
-    el: KeplerianElements,
-    site: GroundSite,
-    t_s: float,
-    *,
-    cfg: Optional[OrbitConfig] = None,
-    min_elevation_deg: float = 10.0,
-    max_range_km: Optional[float] = None,
-) -> bool:
-    """
-    True if spacecraft elevation >= min_elevation_deg at time t.
-    Optionally enforce a max slant range.
-    """
-    cfg = cfg or OrbitConfig()
-
-    r_sc = spacecraft_ecef_km(el, float(t_s), cfg=cfg)
-    r_site = ground_ecef_km(site.lat_rad, site.lon_rad, site.alt_km, r_earth_km=cfg.r_earth_km)
-
-    elev = elevation_angle_rad(r_site, r_sc)
-    if elev < math.radians(float(min_elevation_deg)):
-        return False
-
-    if max_range_km is not None:
-        rng_km = float(np.linalg.norm(r_sc - r_site))
-        if rng_km > float(max_range_km):
-            return False
-
-    return True
-
-
-# ============================================================
-# Window generation
-# ============================================================
-
-@dataclass(frozen=True)
-class AccessWindow:
-    start_s: float
-    end_s: float
-
-    @property
-    def duration_s(self) -> float:
-        return float(self.end_s - self.start_s)
-
-def compute_access_windows(
-    el: KeplerianElements,
-    site: GroundSite,
-    *,
-    t_start_s: Optional[float],
-    t_end_s: Optional[float],
-    step_s: float = 30.0,
-    cfg: Optional[OrbitConfig] = None,
-    min_elevation_deg: float = 10.0,
-    max_range_km: Optional[float] = None,
-    merge_gap_s: float = 120.0,
-) -> List[AccessWindow]:
-    cfg = cfg or OrbitConfig()
-
-    if t_start_s is None or t_end_s is None:
-        raise ValueError("compute_access_windows requires t_start_s and t_end_s (got None).")
-
-    t0 = float(t_start_s)
-    t1 = float(t_end_s)
-    dt = float(step_s)
-    if dt <= 0:
-        raise ValueError("step_s must be > 0")
-    if t1 <= t0:
-        return []
-
-    times = np.arange(t0, t1 + 1e-9, dt, dtype=float)
-
-    def vis(t: float) -> bool:
-        return is_visible(
-            el,
-            site,
-            t,
-            cfg=cfg,
-            min_elevation_deg=min_elevation_deg,
-            max_range_km=max_range_km,
+    def ecef(self) -> np.ndarray:
+        return geodetic_to_ecef(
+            np.deg2rad(self.lat_deg),
+            np.deg2rad(self.lon_deg),
+            self.alt_m,
         )
 
-    flags = [vis(float(t)) for t in times]
+    @property
+    def min_elev_rad(self) -> float:
+        return float(np.deg2rad(self.min_elev_deg))
 
-    windows: List[AccessWindow] = []
-    in_win = False
-    start: Optional[float] = None
+from typing import Dict, List, Tuple, Optional
+import numpy as np
 
-    for i, t in enumerate(times):
-        if flags[i] and not in_win:
-            in_win = True
-            start = float(t)
-        elif (not flags[i]) and in_win:
-            in_win = False
-            end = float(t)
-            if start is not None:
-                windows.append(AccessWindow(start_s=float(start), end_s=end))
-            start = None
+from typing import Dict, List, Tuple, Optional, Any
+import numpy as np
 
-    if in_win and start is not None:
-        windows.append(AccessWindow(start_s=float(start), end_s=float(times[-1])))
+def compute_access_windows(*args, **kwargs) -> Dict[str, List[Tuple[float, float]]]:
+    """
+    Ultra-compatible access window function.
 
-    if not windows:
-        return []
+    Supports:
+      - mission.py style: compute_access_windows(<something>, <something>, t_start_s=..., step_s=..., cfg=..., ...)
+      - direct style: compute_access_windows(t=<array>, r_ecef=<T,3>, sites=[...])
 
-    # Merge gaps
-    merged: List[AccessWindow] = [windows[0]]
-    for w in windows[1:]:
-        prev = merged[-1]
-        if float(w.start_s - prev.end_s) <= float(merge_gap_s):
-            merged[-1] = AccessWindow(start_s=prev.start_s, end_s=max(prev.end_s, w.end_s))
-        else:
-            merged.append(w)
+    We accept positional args because mission.py is passing them.
+    """
+    # -------------------------
+    # Pull common kwargs (with aliases)
+    # -------------------------
+    t = kwargs.pop("t", None)
+    r_ecef = kwargs.pop("r_ecef", None)
+    sites = kwargs.pop("sites", None)
 
-    return merged
+    t_start_s = kwargs.pop("t_start_s", None)
+    t_end_s   = kwargs.pop("t_end_s", None)
 
+    dt_s   = kwargs.pop("dt_s", None)
+    step_s = kwargs.pop("step_s", None)
+    if dt_s is None and step_s is not None:
+        dt_s = step_s
 
-def compute_multi_site_windows(
-    el: KeplerianElements,
-    sites: Sequence[GroundSite],
-    *,
-    t_start_s: Optional[float],
-    t_end_s: Optional[float],
-    step_s: float = 30.0,
-    cfg: Optional[OrbitConfig] = None,
-    min_elevation_deg: float = 10.0,
-    max_range_km: Optional[float] = None,
-) -> List[Tuple[str, List[AccessWindow]]]:
-    cfg = cfg or OrbitConfig()
+    # accepted but optional/ignored by the math right now
+    _cfg = kwargs.pop("cfg", None)
+    min_elevation_deg = kwargs.pop("min_elevation_deg", None)
 
-    if t_start_s is None or t_end_s is None:
-        raise ValueError("compute_multi_site_windows requires t_start_s and t_end_s (got None).")
+    # If mission.py passed extra stuff, ignore it safely
+    # (prevents future whack-a-mole)
+    # kwargs now contains only truly unknown extras
+    # -------------------------
 
-    out: List[Tuple[str, List[AccessWindow]]] = []
-    for s in sites:
-        wins = compute_access_windows(
-            el,
-            s,
-            t_start_s=t_start_s,
-            t_end_s=t_end_s,
-            step_s=step_s,
-            cfg=cfg,
-            min_elevation_deg=min_elevation_deg,
-            max_range_km=max_range_km,
-        )
-        out.append((s.site_id, wins))
+    # -------------------------
+    # Handle positional arguments (mission.py is doing this)
+    # Common patterns:
+    #   compute_access_windows(sites, r_ecef, t_start_s=..., ...)
+    #   compute_access_windows(r_ecef, sites, t_start_s=..., ...)
+    #   compute_access_windows(r_ecef, wins_cfg, ..., sites=...)
+    # We’ll try to infer:
+    #   - r_ecef: first array-like with shape (T,3)
+    #   - sites: first list-like of GroundSite
+    # -------------------------
+    if args:
+        for a in args:
+            # infer r_ecef
+            if r_ecef is None:
+                try:
+                    arr = np.array(a, dtype=float)
+                    if arr.ndim == 2 and arr.shape[1] == 3:
+                        r_ecef = arr
+                        continue
+                except Exception:
+                    pass
+
+            # infer sites
+            if sites is None and isinstance(a, list):
+                sites = a
+                continue
+
+        # If after inference we still don't have sites, but one arg is a dict with 'sites'
+        if sites is None:
+            for a in args:
+                if isinstance(a, dict) and "sites" in a:
+                    sites = a["sites"]
+
+    if sites is None:
+        sites = []
+
+    # Apply global minimum elevation if provided and a site lacks a min_elev_deg
+    if min_elevation_deg is not None:
+        new_sites = []
+        for s in sites:
+            # If site has attribute min_elev_deg already, keep it
+            if getattr(s, "min_elev_deg", None) is None:
+                # rebuild with a default
+                new_sites.append(
+                    GroundSite(
+                        name=getattr(s, "name", "") or getattr(s, "site_id", None) or "GS",
+                        lat_deg=float(getattr(s, "lat_deg", 0.0)),
+                        lon_deg=float(getattr(s, "lon_deg", 0.0)),
+                        alt_m=float(getattr(s, "alt_m", 0.0)),
+                        alt_km=getattr(s, "alt_km", None),
+                        min_elev_deg=float(min_elevation_deg),
+                        site_id=getattr(s, "site_id", None),
+                    )
+                )
+            else:
+                new_sites.append(s)
+        sites = new_sites
+
+    # -------------------------
+    # Build time grid if not given
+    # -------------------------
+    if t is None:
+        if t_start_s is None or t_end_s is None or dt_s is None:
+            raise TypeError(
+                "compute_access_windows needs either (t, r_ecef) or (t_start_s, t_end_s, dt/step, r_ecef). "
+                "Got positional args + kwargs that did not include enough info."
+            )
+        t = np.arange(float(t_start_s), float(t_end_s) + 1e-9, float(dt_s), dtype=float)
+    else:
+        t = np.array(t, dtype=float).reshape(-1)
+
+    if r_ecef is None:
+        raise TypeError("compute_access_windows: r_ecef is required (either positional or keyword).")
+
+    r_ecef = np.array(r_ecef, dtype=float)
+    if r_ecef.ndim != 2 or r_ecef.shape[1] != 3:
+        raise ValueError("r_ecef must be shape (T,3).")
+    if r_ecef.shape[0] != t.shape[0]:
+        raise ValueError("r_ecef must have same length as t.")
+
+    # -------------------------
+    # Compute access windows
+    # -------------------------
+    out: Dict[str, List[Tuple[float, float]]] = {}
+
+    for site in sites:
+        name = getattr(site, "name", "") or getattr(site, "site_id", None) or "GS"
+        r_gs = site.ecef()
+        min_el = site.min_elev_rad
+
+        mask = np.zeros(t.shape[0], dtype=bool)
+        for k in range(t.shape[0]):
+            el = elevation_angle_rad(r_ecef[k], r_gs)
+            mask[k] = (el >= min_el)
+
+        windows: List[Tuple[float, float]] = []
+        in_win = False
+        t0 = 0.0
+
+        for k in range(t.shape[0]):
+            if mask[k] and not in_win:
+                in_win = True
+                t0 = float(t[k])
+            if in_win and (not mask[k]):
+                t1 = float(t[k])
+                if t1 > t0:
+                    windows.append((t0, t1))
+                in_win = False
+
+        if in_win:
+            t1 = float(t[-1])
+            if t1 > t0:
+                windows.append((t0, t1))
+
+        out[str(name)] = windows
+
     return out
+
+R_EARTH = 6378137.0  # m
