@@ -33,6 +33,11 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
+## deliverables (judge quick links)
+
+- **technical report (pdf, 4–8 pages):** `docs/<your_report_filename>.pdf`
+- **results bundle:** `outputs/` (aircraft + spacecraft artifacts)
+- **reproduce results:** see **reproduce results** section below
 ------------------------------------------------------------------------
 
 ## 2️⃣ Aircraft Demo (200 iterations)
