@@ -31,7 +31,8 @@ def main():
             "1",
             "--robustness",
             "0",
-        ]
+        ],
+        "Aircraft demo",
     )
 
     # Spacecraft demo
@@ -47,7 +48,8 @@ def main():
             "1",
             "--robustness",
             "0",
-        ]
+        ],
+        "Spacecraft demo",
     )
 
     print("\n✅ All domains completed successfully.")
