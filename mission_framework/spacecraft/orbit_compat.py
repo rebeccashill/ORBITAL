@@ -1,14 +1,12 @@
 # mission_framework/spacecraft/orbit_compat.py
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
 import numpy as np
 
 from mission_framework.spacecraft.orbit_core import (
-    R_EARTH_KM,
     KeplerianElementsCore,
     propagate_ecef_trajectory_from_kepler,
 )

@@ -22,7 +22,7 @@ Domain-specific propagation lives in:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Callable, List, Optional, Sequence
 
 import numpy as np
 

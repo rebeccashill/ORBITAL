@@ -214,7 +214,7 @@ def main() -> None:
             mission_name = cfg.get("scenario", {}).get("name", "Aircraft Mission")
             plot_files = plot_aircraft_mission(result.plan, result.sim_result, outdir, mission_name)
             if plot_files:
-                print(f"\n--- Plots Generated ---")
+                print("\n--- Plots Generated ---")
                 for plot_name, plot_path in plot_files.items():
                     print(f"  {plot_name}: {plot_path.name}")
         except Exception as e:
@@ -242,7 +242,7 @@ def main() -> None:
                 result.plan, result.sim_result, outdir, mission_name
             )
             if plot_files:
-                print(f"\n--- Plots Generated ---")
+                print("\n--- Plots Generated ---")
                 for plot_name, plot_path in plot_files.items():
                     print(f"  {plot_name}: {plot_path.name}")
         except Exception as e:

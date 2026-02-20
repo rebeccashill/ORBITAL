@@ -37,7 +37,6 @@ from mission_framework.core.types import Plan, Schedule, Event, EventType, SimRe
 
 from mission_framework.spacecraft.orbit_compat import (
     KeplerianElements,
-    R_EARTH_KM,
     propagate_ecef_trajectory,
 )
 from mission_framework.spacecraft.visibility_core import GroundSite, compute_access_windows
@@ -53,6 +52,8 @@ from mission_framework.spacecraft.power import (
     make_steps_from_schedule,
 )
 from mission_framework.spacecraft.constraints import default_spacecraft_constraints
+
+R_EARTH_KM = 6378.137
 
 
 def _compute_ops_per_orbit_max(events: List[Event], orbit_period_s: float) -> int:

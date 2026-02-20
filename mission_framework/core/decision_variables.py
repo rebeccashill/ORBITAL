@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
@@ -489,7 +489,6 @@ class DecisionSpace:
         - If template provided, permutations are copied from it.
         - Otherwise, permutations are sampled randomly.
         """
-        rng = np.random.default_rng(0)
         vals: Dict[str, Any] = {}
 
         if template is None:

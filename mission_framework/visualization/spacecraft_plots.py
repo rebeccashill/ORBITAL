@@ -4,8 +4,7 @@ Generates visualizations for mission schedules, timelines, and operations.
 """
 
 from pathlib import Path
-from typing import Dict, Any, Optional, List
-import json
+from typing import Dict
 
 import numpy as np
 import matplotlib

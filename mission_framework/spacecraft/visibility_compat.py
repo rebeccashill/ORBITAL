@@ -1,7 +1,7 @@
 # mission_framework/spacecraft/visibility_compat.py
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 

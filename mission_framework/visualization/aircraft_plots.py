@@ -4,10 +4,8 @@ Generates visualizations for flight paths, battery state, and mission performanc
 """
 
 from pathlib import Path
-from typing import Dict, Any, Optional
-import json
+from typing import Dict
 
-import numpy as np
 import matplotlib
 
 matplotlib.use("Agg")  # Non-interactive backend for server environments

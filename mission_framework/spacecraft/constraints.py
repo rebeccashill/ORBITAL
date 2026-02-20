@@ -16,7 +16,7 @@ This module returns constraints as core.Constraint objects so the same Planner w
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -183,7 +183,6 @@ def default_spacecraft_constraints(cfg: Optional[Dict[str, Any]] = None) -> List
       ops.orbit_period_s
     """
     cfg = cfg or {}
-    power_cfg = cfg.get("power", {}) or {}
     ops_cfg = cfg.get("ops", {}) or {}
 
     max_ops = int(ops_cfg.get("max_ops_per_orbit", 6))

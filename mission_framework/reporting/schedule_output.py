@@ -24,7 +24,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from mission_framework.core.types import Event, EventType, Plan, Schedule, SimResult
+from mission_framework.core.types import Plan, Schedule, SimResult
 
 
 def _to_iso_utc(epoch_utc: Optional[str], t_s: float) -> Optional[str]:
@@ -148,10 +148,7 @@ def export_schedule_csv(plan: Plan, out_path: Path, epoch_utc: Optional[str] = N
             w.writerow(r)
 
 
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 
-from mission_framework.core.types import Plan, Event
 
 
 def schedule_table(plan: Plan) -> List[Dict[str, Any]]:

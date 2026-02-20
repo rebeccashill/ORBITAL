@@ -15,7 +15,7 @@ Coordinates:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Tuple, Sequence, List
+from typing import Any, Dict, Tuple, List
 
 import math
 import numpy as np
@@ -36,7 +36,6 @@ from mission_framework.core.constraints import (
     FunctionalConstraint,
     Severity,
     margin_geq,
-    margin_leq,
 )
 
 from mission_framework.aircraft.model import AircraftSim, AircraftSimParams

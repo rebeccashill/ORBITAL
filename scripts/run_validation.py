@@ -21,7 +21,7 @@ import sys
 import re
 from pathlib import Path
 import shutil
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Optional
 
 FEASIBLE_RE = re.compile(r"^\s*Feasible:\s*(True|False)\s*$", re.MULTILINE)
 
