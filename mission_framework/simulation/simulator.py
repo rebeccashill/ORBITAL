@@ -23,11 +23,11 @@ Domain-specific propagation lives in:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, List, Optional, Sequence, cast
+from typing import Callable, List, Optional, Sequence
 
 import numpy as np
 
-from mission_framework.core.types import Plan, SimResult, Scalar
+from mission_framework.core.types import Plan, SimResult
 
 SimulateFn = Callable[[Plan, Optional[np.random.Generator]], SimResult]
 
