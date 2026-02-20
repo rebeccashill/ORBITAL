@@ -143,7 +143,9 @@ python experiments/run_seed_experiments.py --aircraft examples/aircraft_uav_demo
 Run local CI checks: 
 
 ``` bash
-ruff check . black --check . mypy mission_framework pytest
+ruff check .
+black --check .
+mypy mission_framework pytest
 ```
 
 ------------------------------------------------------------------------
