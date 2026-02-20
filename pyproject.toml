@@ -8,24 +8,38 @@ version = "0.1.0"
 description = "Unified mission planning and simulation framework for UAV and CubeSat operations."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
-authors = [
-  { name = "Rebecca Shillingford" }
+license = { file = "LICENSE" }
+authors = [{ name = "Rebecca Shillingford" }]
+keywords = ["mission-planning", "optimization", "aerospace", "uav", "cubesat", "simulation"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
 ]
 
+# Runtime deps (canonical list; keep aligned with requirements.txt)
 dependencies = [
   "numpy>=1.24",
+  "scipy>=1.10",
+  "matplotlib>=3.7",
   "PyYAML>=6.0",
-  "matplotlib>=3.0"
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=7.0",
-  "black>=23.0",
-  "ruff>=0.1.0",
-  "mypy>=1.5"
+  "pytest>=7.4",
+  "pytest-cov>=4.1",
+  "black>=24.0",
+  "ruff>=0.3.0",
+  "mypy>=1.8",
+  "pre-commit>=3.6",
 ]
+
+[project.urls]
+Repository = "https://github.com/rebeccashill/ORBITAL"
+
+[project.scripts]
+orbital = "mission_framework.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -39,6 +53,14 @@ target-version = ["py310"]
 line-length = 100
 target-version = "py310"
 
+[tool.mypy]
+python_version = "3.10"
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+# Start lenient; tighten later once you add annotations
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q --disable-warnings --maxfail=1"
