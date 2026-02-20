@@ -407,11 +407,15 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     constraints = default_spacecraft_constraints(cfg=cfg)
     objective = Objective().add(term_maximize_value(name="value", weight=1.0, key="mission_value"))
 
+    # Explicitly cast constraints to the correct type
+    from typing import cast
+    from mission_framework.core.constraints import Constraint, ConstraintGroup
+
     return Problem(
         decision_space=ds,
         build_plan=build_plan,
         simulate=simulate,
-        constraints=constraints,
+        constraints=cast(list[Constraint | ConstraintGroup], constraints),
         objective=objective,
         robustness_cases=int((cfg.get("robustness", {}) or {}).get("cases", 0)),
         metadata={"domain": "spacecraft"},

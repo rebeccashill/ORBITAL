@@ -1,0 +1,5 @@
+label,scenario_name,scenario_type,iterations,restarts,robustness_cases,seed,score,feasible,worst_hard_margin,worst_hard_constraint,runtime_sec
+ORBITAL (aircraft),UAV Multi-Waypoint Mission Demo,aircraft,200,1,0,0,311.8601330983917,True,0.09244982425907003,bank_angle_turn_limit,0.6893474999815226
+Baseline: Random feasible (aircraft),UAV Multi-Waypoint Mission Demo,aircraft,0,1,0,0,1000711.9147205311,False,-0.5,geofence_no_entry,0.003173300065100193
+ORBITAL (spacecraft),CubeSat 7-Day Earth Observation Demo,spacecraft,200,1,0,0,-23.0,True,0.0,battery_nonnegative,3.903560600243509
+Baseline: Best-of-50 sampling (spacecraft),CubeSat 7-Day Earth Observation Demo,spacecraft,0,50,0,0,-33.0,True,0.0,battery_nonnegative,0.9094456997700036
