@@ -30,7 +30,8 @@ def plot_aircraft_mission(
         Dictionary mapping plot names to file paths
     """
     output_dir.mkdir(parents=True, exist_ok=True)
-    plot_files = {}
+
+    plot_files: Dict[str, Path] = {}
 
     # Extract trajectory data
     traj = sim_result.trajectory

@@ -54,6 +54,8 @@ from mission_framework.aircraft.geofence import GeofenceMap, NoFlyZone
 # Helpers
 # ============================================================
 
+WindModel = Union[ZeroWind, UniformWind, SinusoidalWind, VortexFieldWind, StochasticWind]
+
 
 def _dist2(a: Tuple[float, float], b: Tuple[float, float]) -> float:
     dx = a[0] - b[0]
@@ -249,6 +251,8 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     # --- Wind model ---
     wcfg = cfg.get("wind", {}) or {}
     wtype = str(wcfg.get("type", "sinusoidal")).strip().lower()
+
+    wind: WindModel
 
     if wtype in ("none", "no_wind", "zero"):
         wind = ZeroWind()

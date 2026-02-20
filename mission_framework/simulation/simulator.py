@@ -1,4 +1,5 @@
-"""mission_framework/simulation/simulator.py
+"""
+mission_framework/simulation/simulator.py
 Domain-agnostic simulation harness.
 
 This module is intentionally lightweight.
@@ -22,11 +23,11 @@ Domain-specific propagation lives in:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, List, Optional, Sequence
+from typing import Callable, List, Optional, Sequence, cast
 
 import numpy as np
 
-from mission_framework.core.types import SimResult, Plan
+from mission_framework.core.types import Plan, SimResult, Scalar
 
 SimulateFn = Callable[[Plan, Optional[np.random.Generator]], SimResult]
 
@@ -119,34 +120,34 @@ class Simulator:
         if sim is None:
             raise ValueError("simulate_fn returned None; expected SimResult.")
 
-        t = np.array(sim.t, dtype=float).reshape(-1)
-        if t.ndim != 1 or t.size < 1:
+        t_arr = np.array(sim.t, dtype=float).reshape(-1)
+        if t_arr.ndim != 1 or t_arr.size < 1:
             raise ValueError("SimResult.t must be a non-empty 1D array.")
-        if np.any(~np.isfinite(t)):
+        if np.any(~np.isfinite(t_arr)):
             raise ValueError("SimResult.t contains non-finite values.")
 
         # Ensure time is non-decreasing
-        if np.any(np.diff(t) < -1e-12):
+        if np.any(np.diff(t_arr) < -1e-12):
             raise ValueError("SimResult.t must be non-decreasing.")
 
         # Resource traces
-        for k, v in sim.resources.items():
-            arr = np.array(v, dtype=float).reshape(-1)
-            if arr.shape[0] != t.shape[0]:
-                raise ValueError(f"SimResult.resources['{k}'] length must match len(t).")
+        for r_key, r_val in sim.resources.items():
+            arr = np.array(r_val, dtype=float).reshape(-1)
+            if arr.shape[0] != t_arr.shape[0]:
+                raise ValueError(f"SimResult.resources['{r_key}'] length must match len(t).")
             if np.any(~np.isfinite(arr)):
-                raise ValueError(f"SimResult.resources['{k}'] contains non-finite values.")
+                raise ValueError(f"SimResult.resources['{r_key}'] contains non-finite values.")
 
         # Trajectory alignment (if used)
         if sim.trajectory is not None:
             tt = np.array(sim.trajectory.t, dtype=float).reshape(-1)
-            if tt.shape[0] != t.shape[0]:
+            if tt.shape[0] != t_arr.shape[0]:
                 raise ValueError("SimResult.trajectory.t length must match SimResult.t length.")
 
         # Scalars must be finite numbers
-        for k, v in sim.scalars.items():
-            if not np.isfinite(float(v)):
-                raise ValueError(f"SimResult.scalars['{k}'] is not finite.")
+        for s_key, s_val in sim.scalars.items():
+            if not np.isfinite(float(s_val)):
+                raise ValueError(f"SimResult.scalars['{s_key}'] is not finite.")
 
     # -------------------------
     # Utility

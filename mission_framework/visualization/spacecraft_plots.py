@@ -13,7 +13,7 @@ matplotlib.use("Agg")  # Non-interactive backend for server environments
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
-from mission_framework.core.types import Plan, SimResult
+from mission_framework.core.types import Event, Plan, Schedule, SimResult
 
 
 def plot_spacecraft_mission(
@@ -32,49 +32,34 @@ def plot_spacecraft_mission(
         Dictionary mapping plot names to file paths
     """
     output_dir.mkdir(parents=True, exist_ok=True)
-    plot_files = {}
+    plot_files: Dict[str, Path] = {}
 
     # Extract schedule from plan
-    if not plan.schedule:
+    # Extract schedule from plan (core uses Schedule/Event dataclasses)
+    schedule_obj: Schedule | None = plan.schedule
+    if schedule_obj is None or not hasattr(schedule_obj, "events") or len(schedule_obj.events) == 0:
         return plot_files
 
-    # Handle both Schedule objects and lists
-    if hasattr(plan.schedule, "events"):
-        schedule = plan.schedule.events
-    else:
-        schedule = plan.schedule
-
-    if not schedule or len(schedule) == 0:
-        return plot_files
+    events: list[Event] = schedule_obj.sorted().events  # time-ordered
 
     # Convert schedule to lists for plotting
-    event_labels = []
-    event_types = []
-    start_times = []
-    end_times = []
-    durations = []
+    event_labels: list[str] = []
+    event_types: list[str] = []
+    start_times: list[float] = []
+    end_times: list[float] = []
+    durations: list[float] = []
 
-    for event in schedule:
-        # Handle both Event objects and dictionaries
-        if hasattr(event, "label"):
-            label = event.label or "Unknown"
-            etype = event.etype
-            t_start = float(event.t_start)
-            t_end = float(event.t_end)
-        else:
-            label = event.get("label", "Unknown")
-            etype = event.get("etype", "unknown")
-            t_start = float(event.get("t_start", 0))
-            t_end = float(event.get("t_end", t_start))
+    for e in events:
+        label = e.label or "Unknown"
+        t_start = float(e.t_start)
+        t_end = float(e.t_end)
 
-        # Clean up event type string
-        if "EventType." in str(etype):
-            etype = str(etype).replace("EventType.", "").lower()
-        else:
-            etype = str(etype).lower()
+        # Normalize event type to a simple lowercase string
+        raw = e.etype.value if hasattr(e.etype, "value") else str(e.etype)
+        etype_str = str(raw).replace("EventType.", "").lower()
 
         event_labels.append(label)
-        event_types.append(etype)
+        event_types.append(etype_str)
         start_times.append(t_start)
         end_times.append(t_end)
         durations.append(t_end - t_start)
@@ -167,8 +152,8 @@ def plot_spacecraft_mission(
     fig2, (ax2a, ax2b) = plt.subplots(1, 2, figsize=(14, 6))
 
     # Count events by type
-    type_counts = {}
-    type_durations = {}
+    type_counts: Dict[str, int] = {}
+    type_durations: Dict[str, float] = {}
     for etype, duration in zip(event_types, durations):
         type_counts[etype] = type_counts.get(etype, 0) + 1
         type_durations[etype] = type_durations.get(etype, 0) + duration

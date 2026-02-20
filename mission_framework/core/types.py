@@ -14,9 +14,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+
+Scalar = Union[int, float]
+Resources = Dict[str, np.ndarray]
 
 # ---------------------------
 # Time handling
@@ -200,6 +203,11 @@ class Plan:
 # ---------------------------
 
 
+# ---------------------------
+# Simulation output (unified "what happened")
+# ---------------------------
+
+
 @dataclass
 class SimResult:
     """
@@ -219,16 +227,18 @@ class SimResult:
     schedule: Optional[Schedule] = None
 
     # Resource traces (each should be shape (T,))
-    resources: Dict[str, np.ndarray] = field(default_factory=dict)
+    resources: Resources = field(default_factory=dict)
 
     # Scalars for convenience (objective terms often read these)
-    scalars: Dict[str, float] = field(default_factory=dict)
+    scalars: Dict[str, Scalar] = field(default_factory=dict)
 
     # Rich domain-specific artifacts
     metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.t = np.array(self.t, dtype=float).reshape(-1)
+
+        # Normalize and validate resource arrays
         for k, v in list(self.resources.items()):
             arr = np.array(v, dtype=float).reshape(-1)
             if arr.shape[0] != self.t.shape[0]:
