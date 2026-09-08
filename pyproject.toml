@@ -48,6 +48,9 @@ orbital = "mission_framework.cli:main"
 where = ["."]
 include = ["mission_framework*"]
 
+[tool.setuptools.package-data]
+mission_framework = ["py.typed"]
+
 [tool.black]
 line-length = 100
 target-version = ["py310"]

@@ -35,7 +35,6 @@ from mission_framework.core.decision_variables import (
     MutationConfig,
 )
 from mission_framework.core.objective import (
-    Objective,
     RobustAggregation,
     RobustScoreReport,
     ScoreConfig,
@@ -45,7 +44,6 @@ from mission_framework.core.objective import (
 )
 from mission_framework.core.problem import Problem
 from mission_framework.core.solutions import PlanResult
-
 
 # ---------------------------
 # Planner config

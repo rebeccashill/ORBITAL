@@ -71,9 +71,21 @@ python run_all.py --fast --no-plots
 
 ## Deliverables
 
+<<<<<<< HEAD
 - Technical report PDF: `docs/AEROHACK_TECHNICAL_REPORT.pdf`
 - Results bundle: `outputs/`
 - Reproducible outputs: `runs/` after executing `python run_all.py`
+=======
+mission_framework/
+├── core/
+├── simulation/
+├── aircraft/
+├── spacecraft/
+├── reporting/
+├── visualization/
+├── examples/
+└── tests/
+>>>>>>> 9a6c1c4627dcf63cacbde52a8f3f9b0d0c99ccdd
 
 ---
 
