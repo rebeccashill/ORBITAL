@@ -52,6 +52,7 @@ orbital_mission_framework.egg-info/entry_points.txt
 orbital_mission_framework.egg-info/requires.txt
 orbital_mission_framework.egg-info/top_level.txt
 tests/test_aircraft_end_to_end.py
+tests/test_cli_contract.py
 tests/test_frames.py
 tests/test_spacecraft_end_to_end.py
 tests/test_unified_architecture.py

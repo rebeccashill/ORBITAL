@@ -62,17 +62,35 @@ def test_aircraft_pipeline_runs_end_to_end():
     assert result.constraints is not None
     assert result.score_report is not None
 
-    # Hard feasibility should generally be achievable for the demo scenario
-    # If you're still implementing constraints/dynamics, you can temporarily relax this.
-    assert isinstance(result.constraints.hard_pass, bool)
+    assert result.plan.kind == "aircraft"
+    assert result.constraints.hard_pass is True
 
     # Constraint report should contain at least one constraint
     assert len(result.constraints.results) > 0
+    assert set(result.constraints.by_name()) >= {
+        "all_waypoints_reached",
+        "bank_angle_turn_limit",
+        "battery_nonnegative",
+        "geofence_clearance",
+        "geofence_no_entry",
+    }
+
+    scalars = result.sim_result.scalars
+    assert scalars["waypoints_completed"] == scalars["waypoints_total"] == 3.0
+    assert scalars["geofence_violated"] == 0.0
+    assert scalars["final_battery_Wh"] > 0.0
+    assert scalars["energy_used_Wh"] > 0.0
+    assert scalars["t_end_s"] > 0.0
+
+    waypoint_ids = [wp["id"] for wp in result.plan.waypoints or []]
+    assert waypoint_ids[0] == "START"
+    assert set(waypoint_ids[1:]) == {"WP1", "WP2", "WP3"}
 
     # Check we have sensible objective breakdown
     summary = result.score_report.objective.summary()
     assert "total_cost" in summary
     assert summary["total_cost"] is not None
+    assert summary["total_cost"] > 0.0
 
     # Optional: ensure worst hard margin is finite if hard constraints exist
     worst_hard = result.constraints.worst(Severity.HARD)

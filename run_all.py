@@ -6,12 +6,18 @@ from datetime import datetime
 from pathlib import Path
 
 
+def safe_print(message: str = "") -> None:
+    """Print safely when the active console encoding is not UTF-8."""
+    encoding = sys.stdout.encoding or "utf-8"
+    print(message.encode(encoding, errors="replace").decode(encoding))
+
+
 def run(cmd: list[str], label: str, log_path: Path) -> None:
-    print("\n" + "=" * 72)
-    print(f"Starting {label}")
-    print("=" * 72)
-    print("Command:", " ".join(cmd))
-    print("Log:", str(log_path))
+    safe_print("\n" + "=" * 72)
+    safe_print(f"Starting {label}")
+    safe_print("=" * 72)
+    safe_print("Command: " + " ".join(cmd))
+    safe_print("Log: " + str(log_path))
 
     start = time.time()
 
@@ -21,15 +27,15 @@ def run(cmd: list[str], label: str, log_path: Path) -> None:
         f.write("Command: " + " ".join(cmd) + "\n\n")
         f.flush()
 
-        # Stream stdout/stderr to console AND file for judge-friendly debugging.
+        # Stream stdout/stderr to a UTF-8 log for judge-friendly debugging.
         result = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT)
 
     elapsed = time.time() - start
     status = "OK" if result.returncode == 0 else f"FAIL (code {result.returncode})"
-    print(f"Finished {label}: {status} in {elapsed:.2f}s")
+    safe_print(f"Finished {label}: {status} in {elapsed:.2f}s")
 
     if result.returncode != 0:
-        print(f"\n❌ {label} failed. See log: {log_path}")
+        safe_print(f"\nERROR: {label} failed. See log: {log_path}")
         sys.exit(result.returncode)
 
 
@@ -65,7 +71,7 @@ def parse_args() -> argparse.Namespace:
         description="Run ORBITAL end-to-end (aircraft + spacecraft) with one command."
     )
 
-    # Defaults match your README “optional individual demo” commands.
+    # Defaults match the README optional individual demo commands.
     p.add_argument("--aircraft", default="examples/aircraft_uav_demo.yaml")
     p.add_argument("--spacecraft", default="examples/cubesat_leo_demo.yaml")
 
@@ -85,10 +91,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--no-plots",
         action="store_true",
-        help="Pass through a no-plots flag if your CLI supports it.",
+        help="Skip plot generation and write JSON/CSV artifacts only.",
     )
 
-    # Anything after `--` is forwarded to both CLI calls
+    # Anything after `--` is forwarded to both CLI calls.
     p.add_argument(
         "passthrough",
         nargs=argparse.REMAINDER,
@@ -109,7 +115,7 @@ def main() -> None:
     if args.no_plots:
         extra = ["--no-plots"] + extra
 
-    # Fast mode overrides (judge-friendly sanity check).
+    # Fast mode overrides for quick sanity checks.
     iterations = args.iterations
     a_rob = args.aircraft_robustness
     s_rob = args.spacecraft_robustness
@@ -123,7 +129,6 @@ def main() -> None:
 
     total_start = time.time()
 
-    # Aircraft demo
     aircraft_cmd = build_cli_cmd(
         python=python,
         yaml_path=args.aircraft,
@@ -139,7 +144,7 @@ def main() -> None:
         logs_dir / f"{ts}_aircraft.log",
     )
 
-    # Spacecraft demo (offset seed so both runs are deterministic but not identical)
+    # Offset the spacecraft seed so both runs are deterministic but not identical.
     spacecraft_cmd = build_cli_cmd(
         python=python,
         yaml_path=args.spacecraft,
@@ -156,15 +161,15 @@ def main() -> None:
     )
 
     total_elapsed = time.time() - total_start
-    print("\n" + "=" * 72)
-    print("✅ All domains completed successfully.")
-    print(f"Total runtime: {total_elapsed:.2f}s")
-    print("Outputs:")
-    print("  - runs/aircraft_uav_demo/")
-    print("  - runs/cubesat_leo_demo/")
-    print("Logs:")
-    print(f"  - {logs_dir}/")
-    print("=" * 72)
+    safe_print("\n" + "=" * 72)
+    safe_print("All domains completed successfully.")
+    safe_print(f"Total runtime: {total_elapsed:.2f}s")
+    safe_print("Outputs:")
+    safe_print("  - runs/aircraft_uav_demo/")
+    safe_print("  - runs/cubesat_leo_demo/")
+    safe_print("Logs:")
+    safe_print(f"  - {logs_dir}/")
+    safe_print("=" * 72)
 
 
 if __name__ == "__main__":

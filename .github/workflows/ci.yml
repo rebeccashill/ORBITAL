@@ -37,7 +37,7 @@ jobs:
         run: ruff check .
 
       - name: Mypy (type check)
-        run: mypy mission_framework || true
+        run: mypy mission_framework
 
       - name: Pytest
         run: pytest -q --disable-warnings --maxfail=1 --cov=mission_framework --cov-report=term-missing

@@ -1,169 +1,164 @@
-# 🚀 ORBITAL
+# ORBITAL
 
-**Operational Reusable Backend for Integrated Trajectory and
-Logistics**\
-Unified Mission Planning Framework for Aircraft & Spacecraft
+**Operational Reusable Backend for Integrated Trajectory and Logistics**  
+Unified Mission Planning Framework for Aircraft and Spacecraft
 
 ORBITAL is a domain-agnostic mission planning framework that supports:
 
--   ✈️ Aircraft multi-waypoint optimization\
--   🛰️ Spacecraft 7-day scheduling & operations planning\
--   🔁 Simulation-based optimization with constraints\
--   📊 Monte Carlo robustness analysis\
--   📁 Structured reporting (JSON, CSV exports)\
--   📈 Automated visualization (flight paths, timelines, performance
-    plots)
+- Aircraft multi-waypoint optimization
+- Spacecraft 7-day scheduling and operations planning
+- Simulation-based optimization with constraints
+- Monte Carlo robustness analysis
+- Structured reporting with JSON and CSV exports
+- Automated visualization for flight paths, timelines, and performance plots
 
-------------------------------------------------------------------------
+---
 
-# 🧪 Judge Quick Start (Reproducible in ONE Command)
+## Judge Quick Start
 
-## 1️⃣ Install
+### 1. Install
 
-``` bash
+```bash
 git clone https://github.com/rebeccashill/ORBITAL.git
 cd ORBITAL
 python -m venv .venv
 source .venv/bin/activate        # macOS/Linux
-.venv\Scripts\activate           # Windows (PowerShell)
+.venv\Scripts\activate           # Windows PowerShell
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
-------------------------------------------------------------------------
+### 2. Run Both Domains
 
-## 🚀 Run BOTH Domains (Primary Command)
-
-``` bash
+```bash
 python run_all.py
 ```
 
-Outputs saved to:
+For a quick smoke run:
 
-runs/aircraft_uav_demo/\
+```bash
+python run_all.py --fast
+```
+
+Outputs are saved to:
+
+```text
+runs/aircraft_uav_demo/
 runs/cubesat_leo_demo/
+```
 
-------------------------------------------------------------------------
+### 3. Optional Individual Demo Commands
 
-## 📦 Deliverables (Judge Quick Links)
+Aircraft:
 
--   **technical report (pdf, 4--8 pages):**
-    `docs/AEROHACK_TECHNICAL_REPORT.pdf`
--   **results bundle:** `outputs/` (aircraft + spacecraft artifacts)
--   **reproduce results:** see sections below
-
-------------------------------------------------------------------------
-
-## 🔁 Individual Demo Commands (Optional)
-
-### Aircraft Demo
-
-``` bash
+```bash
 python -m mission_framework.cli examples/aircraft_uav_demo.yaml --iterations 200 --restarts 1 --robustness 20 --seed 0
 ```
 
-Outputs saved to:
+Spacecraft:
 
-runs/aircraft_uav_demo/
-
-------------------------------------------------------------------------
-
-### Spacecraft Demo
-
-``` bash
+```bash
 python -m mission_framework.cli examples/cubesat_leo_demo.yaml --iterations 200 --restarts 1 --robustness 10 --seed 0
 ```
 
-Outputs saved to:
+Use `--no-plots` when you only want JSON/CSV artifacts:
 
-runs/cubesat_leo_demo/
+```bash
+python run_all.py --fast --no-plots
+```
 
-------------------------------------------------------------------------
+---
 
-# 🧠 Architecture Overview
+## Deliverables
 
-mission_framework/ ├── core/ ├── simulation/ ├── aircraft/ ├──
-spacecraft/ ├── reporting/ ├── visualization/ ├── examples/ └── tests/
+- Technical report PDF: `docs/AEROHACK_TECHNICAL_REPORT.pdf`
+- Results bundle: `outputs/`
+- Reproducible outputs: `runs/` after executing `python run_all.py`
 
-------------------------------------------------------------------------
+---
 
-# 🔬 Core Philosophy
+## Architecture Overview
 
-ORBITAL separates four key concerns:
+```text
+mission_framework/
+  core/            Shared decision variables, constraints, objectives, planner
+  simulation/      Feasibility, metrics, uncertainty utilities
+  aircraft/        UAV mission model, dynamics, energy, wind, geofence checks
+  spacecraft/      CubeSat orbit, visibility, attitude, power, scheduling
+  reporting/       CSV and text output helpers
+  visualization/   Aircraft and spacecraft plots
+examples/          Demo YAML scenarios
+tests/             Architecture, frame, and end-to-end tests
+```
 
-## Decision Space
+ORBITAL separates four concerns:
 
-Continuous, integer, binary, discrete, permutation variables.
+- Decision space: continuous, integer, binary, discrete, and permutation variables
+- Simulation: aircraft dynamics, orbit propagation, battery models, and slew feasibility
+- Constraints: hard constraints for feasibility and soft constraints for penalties
+- Objective: minimize time/energy or maximize science value in a unified score space
 
-## Simulation
+---
 
-Aircraft dynamics, orbit propagation, battery models, slew feasibility.
+## Baseline Comparisons
 
-## Constraints
-
-Hard constraints (must pass) and soft constraints (penalized via margin
-discipline).
-
-## Objective
-
-Minimize time/energy or maximize science value in unified cost space.
-
-------------------------------------------------------------------------
-
-# 📊 Baseline Comparisons
-
-``` bash
+```bash
 python scripts/run_baselines.py --aircraft examples/aircraft_uav_demo.yaml --spacecraft examples/cubesat_leo_demo.yaml
 ```
 
 Outputs:
 
+```text
 outputs/validation/baselines/
+```
 
-------------------------------------------------------------------------
+---
 
-# 🔥 Stress Tests
+## Stress Tests
 
-``` bash
+```bash
 python scripts/run_validation.py
 ```
 
 Outputs:
 
+```text
 outputs/validation/
+```
 
-Failure cases are automatically preserved.
+Failure cases are preserved for review.
 
-------------------------------------------------------------------------
+---
 
-# 🌱 Multi-Seed Stability
+## Multi-Seed Stability
 
-``` bash
+```bash
 python experiments/run_seed_experiments.py --aircraft examples/aircraft_uav_demo.yaml --spacecraft examples/cubesat_leo_demo.yaml --seeds 20 --iterations 200 --restarts 1 --robustness 0 --out results/seed_runs.csv
 ```
 
-------------------------------------------------------------------------
+---
 
-# ⏱ Expected Runtime
+## Expected Runtime
 
--   Aircraft demo: \~30--60 seconds\
--   Spacecraft demo: \~60--120 seconds\
--   Full validation suite: \~10--15 minutes
+- Aircraft demo: about 30-60 seconds
+- Spacecraft demo: about 60-120 seconds
+- Full validation suite: about 10-15 minutes
 
-------------------------------------------------------------------------
+---
 
-# 🧪 Development & Quality Checks
+## Development Checks
 
-``` bash
+```bash
 ruff check .
 black --check .
 mypy mission_framework
 pytest
+python run_all.py --fast --no-plots
 ```
 
-------------------------------------------------------------------------
+---
 
-# 📄 License
+## License
 
-MIT License\
+MIT License  
 Copyright (c) 2026 Rebecca Shillingford

@@ -7,6 +7,7 @@ from typing import Any, Dict
 import yaml
 
 from mission_framework.core.planner import Planner, PlannerConfig
+from mission_framework.core.types import EventType
 
 EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples"
 
@@ -37,21 +38,35 @@ def test_spacecraft_pipeline_runs_end_to_end():
     planner = Planner(planner_cfg)
     result = planner.solve(problem)
 
-    # Basic sanity checks
     assert result is not None
     assert result.plan is not None
     assert result.plan.kind == "spacecraft"
     assert result.plan.schedule is not None
-    assert len(result.plan.schedule.events) >= 0  # may be 0 if no windows found with extreme params
+    assert len(result.plan.schedule.events) > 0
 
-    # Must be a numeric score
     assert isinstance(result.score, float)
+    assert result.constraints.hard_pass is True
 
-    # Ensure objective report exists and is well-formed
-    # If PlanResult does not have 'objective', use 'plan.objective' or remove these assertions
-    # assert result.objective is not None
-    # summary = result.objective.summary()
-    # assert "total_cost" in summary
+    scalars = result.sim_result.scalars
+    assert scalars["obs_delivered"] >= 2.0
+    assert scalars["mission_value"] >= 20.0
+    assert scalars["cooldown_violation_s"] == 0.0
+    assert scalars["min_battery_Wh"] >= 0.0
+
+    summary = result.score_report.objective.summary()
+    assert summary["total_cost"] == -scalars["mission_value"]
+
+    event_types = [event.etype for event in result.plan.schedule.events]
+    assert EventType.OBSERVATION in event_types
+    assert EventType.DOWNLINK in event_types
+
+    observed_targets = {
+        event.target_id
+        for event in result.plan.schedule.events
+        if event.etype == EventType.OBSERVATION
+    }
+    assert observed_targets <= {"TGT1", "TGT2", "TGT3"}
+    assert len(observed_targets) == int(scalars["obs_delivered"])
 
     # Robustness: in CI we disable it, so only assert when enabled on the Problem
     if getattr(problem, "robustness_cases", 0) > 0:
@@ -60,9 +75,13 @@ def test_spacecraft_pipeline_runs_end_to_end():
     else:
         assert result.robustness is None
 
-    # Constraint report should exist and contain hard_pass boolean
     assert result.constraints is not None
-    assert isinstance(result.constraints.hard_pass, bool)
+    assert set(result.constraints.by_name()) >= {
+        "battery_nonnegative",
+        "cooldown_between_observations",
+        "max_ops_per_orbit",
+        "slew_feasible",
+    }
 
     # Schedule should be non-overlapping if present
     if result.plan.schedule is not None:

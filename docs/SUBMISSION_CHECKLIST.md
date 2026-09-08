@@ -1,146 +1,159 @@
 # AeroHack 2026 Submission Checklist
 
-## ✅ Required Components Status
+## Required Components Status
 
-### 1. Runnable Code ✅
-- **Location:** GitHub repository
-- **Language:** Python 3.10+
-- **Structure:**
-  - `/mission_framework` - Core planning engine + domain modules
-  - `/examples` - Aircraft and spacecraft demo configs
-  - `/tests` - Unit and integration tests
-  - `/scripts` - Validation and helper scripts
+### 1. Runnable Code
 
-### 2. Reproducible Run Steps ✅
-- **Location:** `README.md` (Section: "Reproduce Results")
-- **Exact Commands:**
-  ```bash
-  pip install -r requirements.txt
-  python -m mission_framework.cli examples/aircraft_uav_demo.yaml
-  python -m mission_framework.cli examples/cubesat_leo_demo.yaml
-  python scripts/run_validation.py
-  ```
-- **Expected Runtime:** 2-15 minutes total
-- **Output Locations:** `runs/<scenario>/` and `outputs/`
+- Location: GitHub repository
+- Language: Python 3.10+
+- Structure:
+  - `/mission_framework` - core planning engine and domain modules
+  - `/examples` - aircraft and spacecraft demo configs
+  - `/tests` - unit, architecture, and end-to-end tests
+  - `/scripts` - validation and helper scripts
 
-### 3. Results Bundle ✅
-**Location:** `/outputs` folder
+### 2. Reproducible Run Steps
 
-#### Aircraft Results (`outputs/aircraft/`):
-- ✅ `waypoints.csv` - Planned route with ETAs
-- ✅ `constraints.json` - Constraint check summary
-- ✅ `score.json` - Performance metrics (time, energy)
-- ✅ `robustness.json` - Monte Carlo summary
-- ✅ `run_log.txt` - Console output
-- ✅ `flight_path.png` - 2D flight trajectory visualization ✨
-- ✅ `battery_state.png` - Battery energy over time plot ✨
-- ✅ `mission_overview.png` - Combined mission dashboard ✨
+- Location: `README.md`
+- Exact commands:
 
-**Key Metrics:**
+```bash
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+python run_all.py --fast --no-plots
+python -m mission_framework.cli examples/aircraft_uav_demo.yaml
+python -m mission_framework.cli examples/cubesat_leo_demo.yaml
+python scripts/run_validation.py
+```
+
+- Expected runtime: 2-15 minutes total, depending on robustness settings
+- Output locations: `runs/<scenario>/` and `outputs/`
+
+### 3. Results Bundle
+
+Location: `/outputs`
+
+Aircraft results in `outputs/aircraft/`:
+
+- `waypoints.csv` - planned route with ETAs
+- `constraints.json` - constraint check summary
+- `score.json` - performance metrics
+- `robustness.json` - Monte Carlo summary
+- `run_log.txt` - console output
+- `flight_path.png` - 2D flight trajectory visualization
+- `battery_state.png` - battery energy plot
+- `mission_overview.png` - combined mission dashboard
+
+Key aircraft metrics:
+
 - Mission time: 122 s
 - Energy used: 7.45 Wh
 - Geofence violations: 0
 - Battery violations: 0
 
-#### Spacecraft Results (`outputs/spacecraft/`):
-- ✅ `schedule.csv` - 7-day activity timeline
-- ✅ `constraints.json` - Constraint validation
-- ✅ `score.json` - Science value accounting
-- ✅ `robustness.json` - Monte Carlo summary
-- ✅ `run_log.txt` - Console output
-- ✅ `mission_timeline.png` - 7-day Gantt chart visualization ✨
-- ✅ `operations_summary.png` - Event type statistics ✨
-- ✅ `daily_activity.png` - Daily operations distribution ✨
+Spacecraft results in `outputs/spacecraft/`:
 
-**Key Metrics:**
+- `schedule.csv` - 7-day activity timeline
+- `constraints.json` - constraint validation
+- `score.json` - science value accounting
+- `robustness.json` - Monte Carlo summary
+- `run_log.txt` - console output
+- `mission_timeline.png` - 7-day timeline visualization
+- `operations_summary.png` - event type statistics
+- `daily_activity.png` - daily operations distribution
+
+Key spacecraft metrics:
+
 - Observations: 3 targets captured
 - Downlinks: 11 ground station contacts
 - Science value: 33 points
 - Hard pass rate: 100%
 
-### 4. Technical Report PDF ✅
-- **Location:** `docs/AEROHACK_TECHNICAL_REPORT.md` (Markdown, convertible to PDF)
-- **Length:** 8 pages (equivalent)
-- **Contents:**
-  - Problem statement (both domains)
+### 4. Technical Report PDF
+
+- Location: `docs/AEROHACK_TECHNICAL_REPORT.md`
+- PDF: `docs/AEROHACK_TECHNICAL_REPORT.pdf`
+- Length: 8 pages equivalent
+- Contents:
+  - Problem statement for both domains
   - Modeling assumptions and equations
   - Constraints and objectives
   - Planning approach and justification
   - Validation method and results
   - Limitations and future work
 
-### 5. Validation Evidence ✅
-**Location:** `scripts/run_validation.py`
+### 5. Validation Evidence
 
-#### Aircraft Validation:
-- **Method:** Monte Carlo wind uncertainty (50 cases)
-- **Aggregation:** CVaR α=0.8 (robust tail risk)
-- **Results:**
-  - Test cases: 50
-  - Robust score: 8124.23
-  - Variation: Consistent across wind seeds
+Location: `scripts/run_validation.py`
 
-#### Spacecraft Validation:
-- **Method:** Monte Carlo parameter perturbations (30 cases)
-- **Results:**
-  - Test cases: 30
-  - Hard pass rate: 100%
-  - Robust score: -33.0
-  - Consistency: High (all runs find feasible solutions)
+Aircraft validation:
+
+- Method: Monte Carlo wind uncertainty with 50 cases
+- Aggregation: CVaR alpha=0.8 robust tail risk
+- Result: consistent feasible solutions across wind seeds
+
+Spacecraft validation:
+
+- Method: Monte Carlo parameter perturbations with 30 cases
+- Result: 100% hard pass rate in the baseline validation bundle
+- Consistency: high, with feasible solutions found across validation runs
 
 ---
 
-## 📋 Additional Artifacts
+## Additional Artifacts
 
-### Documentation
-- ✅ `README.md` - Project overview and quick start
-- ✅ `docs/AEROHACK_TECHNICAL_REPORT.md` - Full technical report
-- ✅ `docs/SUBMISSION_CHECKLIST.md` - This file
+Documentation:
 
-### Code Quality
-- ✅ Unified architecture (same planner for both domains)
-- ✅ Clean separation of concerns (core/aircraft/spacecraft)
-- ✅ Type hints and docstrings
-- ✅ MIT License
+- `README.md` - project overview and quick start
+- `docs/AEROHACK_TECHNICAL_REPORT.md` - full technical report
+- `docs/SUBMISSION_CHECKLIST.md` - this checklist
 
-### Examples
-- ✅ `examples/aircraft_uav_demo.yaml` - UAV mission config
-- ✅ `examples/cubesat_leo_demo.yaml` - CubeSat mission config
+Code quality:
+
+- Unified architecture using the same planner for both domains
+- Clean separation of concerns across `core`, `aircraft`, and `spacecraft`
+- Type hints and docstrings
+- MIT License
+
+Examples:
+
+- `examples/aircraft_uav_demo.yaml` - UAV mission config
+- `examples/cubesat_leo_demo.yaml` - CubeSat mission config
 
 ---
 
-## 🎯 AeroHack Requirements Coverage
+## AeroHack Requirements Coverage
 
 | Requirement | Status | Evidence |
 |-------------|--------|----------|
-| Unified planning architecture | ✅ | `mission_framework/core/planner.py` |
-| Aircraft with wind | ✅ | Stochastic wind model in `aircraft/model.py` |
-| Aircraft with energy limits | ✅ | Battery model in `aircraft/battery_model.py` |
-| Aircraft with maneuver limits | ✅ | Bank angle constraints in `aircraft/dynamics.py` |
-| Aircraft with geofencing | ✅ | Geofence validation in `aircraft/model.py` |
-| Spacecraft orbit propagation | ✅ | Two-body dynamics in `spacecraft/orbit.py` |
-| Spacecraft visibility windows | ✅ | Ground target visibility in `spacecraft/visibility.py` |
-| Spacecraft slew feasibility | ✅ | Attitude constraints in `spacecraft/attitude.py` |
-| Spacecraft power budget | ✅ | Battery model in `spacecraft/power.py` |
-| Robustness validation | ✅ | Monte Carlo in `scripts/run_validation.py` |
-| Reproducible results | ✅ | Exact commands in README |
-| Technical documentation | ✅ | Report in `docs/` |
+| Unified planning architecture | Complete | `mission_framework/core/planner.py` |
+| Aircraft with wind | Complete | Stochastic wind model in `aircraft/model.py` |
+| Aircraft with energy limits | Complete | Battery model in `aircraft/battery_model.py` |
+| Aircraft with maneuver limits | Complete | Bank angle constraints in `aircraft/dynamics.py` |
+| Aircraft with geofencing | Complete | Geofence validation in `aircraft/model.py` |
+| Spacecraft orbit propagation | Complete | Two-body dynamics in `spacecraft/orbit.py` |
+| Spacecraft visibility windows | Complete | Ground target visibility in `spacecraft/visibility.py` |
+| Spacecraft slew feasibility | Complete | Attitude constraints in `spacecraft/attitude.py` |
+| Spacecraft power budget | Complete | Battery model in `spacecraft/power.py` |
+| Robustness validation | Complete | Monte Carlo in `scripts/run_validation.py` |
+| Reproducible results | Complete | Exact commands in `README.md` |
+| Technical documentation | Complete | Report in `docs/` |
 
 ---
 
-## ✨ Submission Summary
+## Submission Summary
 
-**Project Name:** ORBITAL - Unified Mission Planning Framework  
-**Team:** Rebecca Shillingford  
-**Repository:** https://github.com/rebeccashill/ORBITAL  
-**License:** MIT  
-**Submission Date:** February 16, 2026
+Project name: ORBITAL - Unified Mission Planning Framework  
+Team: Rebecca Shillingford  
+Repository: https://github.com/rebeccashill/ORBITAL  
+License: MIT  
+Submission date: February 16, 2026
 
-**Unique Value:**
+Unique value:
+
 - Single planning engine handles both aircraft and spacecraft
-- Demonstrates advanced aerospace systems thinking
-- Production-quality code with proper architecture
-- Comprehensive validation and robustness analysis
-- Fully reproducible results
+- Demonstrates aerospace systems thinking across two operational domains
+- Includes reproducible outputs, validation, plots, and documentation
+- Provides a clear path from demo scenarios to stronger mission-planning experiments
 
-**Completeness:** All AeroHack requirements met ✅
+Completeness: all listed AeroHack requirements are represented in the repository.
