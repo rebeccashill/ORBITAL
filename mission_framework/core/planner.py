@@ -21,20 +21,17 @@ This file is intentionally domain-agnostic:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
 from mission_framework.core.constraints import (
-    Constraint,
-    ConstraintGroup,
     ConstraintReport,
     Severity,
     evaluate_constraints,
 )
 from mission_framework.core.decision_variables import (
     DecisionAssignment,
-    DecisionSpace,
     MutationConfig,
 )
 from mission_framework.core.objective import (
@@ -46,56 +43,8 @@ from mission_framework.core.objective import (
     score_plan,
     score_robust,
 )
-
-# ---------------------------
-# Problem / Solution interfaces
-# ---------------------------
-
-
-@dataclass
-class Problem:
-    """
-    Domain-agnostic wrapper that connects:
-    - decision space
-    - decoding decisions -> executable plan
-    - simulation of that plan
-    - constraints and objective
-    """
-
-    decision_space: DecisionSpace
-    build_plan: Callable[[DecisionAssignment], Any]  # decisions -> plan object
-    simulate: Callable[[Any, Optional[np.random.Generator]], Any]  # (plan, rng) -> sim_result
-    constraints: List[Union[Constraint, ConstraintGroup]]
-    objective: Objective
-
-    # Robustness evaluation (optional)
-    robustness_cases: int = 0
-    robustness_seeds: Optional[List[int]] = None
-
-    # Optional: robust aggregation selection (defaults chosen to look strong in AeroHack)
-    robust_aggregation: RobustAggregation = RobustAggregation.CVAR
-    cvar_alpha: float = 0.8  # worst 20%
-
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass
-class PlanResult:
-    """
-    What the planner returns.
-    Report-heavy, hackathon friendly.
-    """
-
-    assignment: DecisionAssignment
-    plan: Any
-    sim_result: Any
-    constraints: ConstraintReport
-    score_report: ScoreReport
-    score: float
-
-    # Robustness summary (if used)
-    robustness: Optional[Dict[str, Any]] = None
-    history: Optional[List[Dict[str, Any]]] = None
+from mission_framework.core.problem import Problem
+from mission_framework.core.solutions import PlanResult
 
 
 # ---------------------------
@@ -149,10 +98,11 @@ class PlannerConfig:
 
 
 class Planner:
-    def __init__(self, cfg: PlannerConfig = PlannerConfig()):
-        self.cfg = cfg
+    def __init__(self, cfg: Optional[PlannerConfig] = None):
+        self.cfg = cfg or PlannerConfig()
 
     def solve(self, problem: Problem) -> PlanResult:
+        problem.validate()
         rng_master = np.random.default_rng(self.cfg.seed)
         best_global: Optional[PlanResult] = None
 
@@ -162,28 +112,31 @@ class Planner:
 
             # Initial candidate
             current = problem.decision_space.random_feasible(seed=int(rng.integers(0, 2**31 - 1)))
-            best_local = self._evaluate(problem, current, rng)
+            current_eval = self._evaluate(problem, current, rng)
+            best_local = current_eval
 
             history: List[Dict[str, Any]] = []
-            feasible_streak = 0
+            iterations_since_improvement = 0
 
             for it in range(self.cfg.iterations):
                 intensity = self._anneal(
                     it, self.cfg.iterations, self.cfg.intensity_start, self.cfg.intensity_end
                 )
                 cand = problem.decision_space.mutate(
-                    best_local.assignment, rng=rng, cfg=self.cfg.mutation, intensity=intensity
+                    current_eval.assignment, rng=rng, cfg=self.cfg.mutation, intensity=intensity
                 )
 
                 cand_eval = self._evaluate(problem, cand, rng)
 
-                if self._accept(cand_eval.score, best_local.score, rng):
-                    best_local = cand_eval
+                if self._accept(cand_eval.score, current_eval.score, rng):
+                    current_eval = cand_eval
 
-                if best_local.constraints.hard_pass:
-                    feasible_streak += 1
+                if current_eval.score < best_local.score:
+                    best_local = current_eval
+                    iterations_since_improvement = 0
                 else:
-                    feasible_streak = 0
+                    iterations_since_improvement += 1
+
 
                 if self.cfg.keep_history and (it % max(1, self.cfg.history_stride) == 0):
                     worst_h = best_local.constraints.worst(Severity.HARD)
@@ -203,7 +156,8 @@ class Planner:
 
                 if (
                     self.cfg.stop_if_feasible_for > 0
-                    and feasible_streak >= self.cfg.stop_if_feasible_for
+                    and best_local.constraints.hard_pass
+                    and iterations_since_improvement >= self.cfg.stop_if_feasible_for
                 ):
                     break
 

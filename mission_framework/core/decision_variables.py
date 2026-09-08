@@ -2,7 +2,7 @@
 """
 Domain-agnostic decision variable system.
 
-Designed for hackathon speed + systems clarity:
+Designed for fast iteration and systems clarity:
 - Supports mixed variables: continuous, integer, binary, permutation.
 - Provides sampling + mutation operators suitable for simulation-based planning
   (random-restart hillclimb / CEM / evolutionary search).
@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 import numpy as np
 
 ArrayLike = Union[float, int, List[float], List[int], np.ndarray]
+ShapeLike = Union[int, Sequence[int]]
 
 
 class VarType(str, Enum):
@@ -38,6 +39,8 @@ class Bounds:
     def as_arrays(self, shape: Tuple[int, ...]) -> Tuple[np.ndarray, np.ndarray]:
         lo = np.broadcast_to(np.array(self.low, dtype=float), shape).copy()
         hi = np.broadcast_to(np.array(self.high, dtype=float), shape).copy()
+        if np.any(lo > hi):
+            raise ValueError("Bounds.low must be less than or equal to Bounds.high.")
         return lo, hi
 
 
@@ -66,11 +69,13 @@ class DecisionVar:
 
 @dataclass
 class ContinuousVar(DecisionVar):
-    def __init__(self, name: str, shape=(1,), bounds: Optional[Bounds] = None, metadata=None):
+    def __init__(
+        self, name: str, shape: ShapeLike = (1,), bounds: Optional[Bounds] = None, metadata=None
+    ):
         super().__init__(
             name=name,
             vtype=VarType.CONTINUOUS,
-            shape=tuple(shape),
+            shape=_normalize_shape(shape),
             bounds=bounds,
             metadata=metadata or {},
         )
@@ -78,11 +83,13 @@ class ContinuousVar(DecisionVar):
 
 @dataclass
 class IntegerVar(DecisionVar):
-    def __init__(self, name: str, shape=(1,), bounds: Optional[Bounds] = None, metadata=None):
+    def __init__(
+        self, name: str, shape: ShapeLike = (1,), bounds: Optional[Bounds] = None, metadata=None
+    ):
         super().__init__(
             name=name,
             vtype=VarType.INTEGER,
-            shape=tuple(shape),
+            shape=_normalize_shape(shape),
             bounds=bounds,
             metadata=metadata or {},
         )
@@ -90,11 +97,11 @@ class IntegerVar(DecisionVar):
 
 @dataclass
 class BinaryVar(DecisionVar):
-    def __init__(self, name: str, shape=(1,), metadata=None):
+    def __init__(self, name: str, shape: ShapeLike = (1,), metadata=None):
         super().__init__(
             name=name,
             vtype=VarType.BINARY,
-            shape=tuple(shape),
+            shape=_normalize_shape(shape),
             bounds=Bounds(0, 1),
             metadata=metadata or {},
         )
@@ -122,6 +129,8 @@ class DiscreteVar(DecisionVar):
     def __init__(self, name: str, items: Sequence[Any], metadata=None):
         if len(items) < 1:
             raise ValueError("DiscreteVar requires at least one item.")
+        if len(set(items)) != len(items):
+            raise ValueError(f"Discrete var '{name}' items must be unique.")
         super().__init__(
             name=name,
             vtype=VarType.DISCRETE,
@@ -143,6 +152,8 @@ class PermutationVar(DecisionVar):
     items: Sequence[Any] = field(default_factory=list)
 
     def __init__(self, name: str, items: Sequence[Any], metadata=None):
+        if len(set(items)) != len(items):
+            raise ValueError(f"Permutation var '{name}' items must be unique.")
         super().__init__(
             name=name,
             vtype=VarType.PERMUTATION,
@@ -177,6 +188,12 @@ def _deepcopy_value(v: Any) -> Any:
     return v
 
 
+def _normalize_shape(shape: ShapeLike) -> Tuple[int, ...]:
+    if isinstance(shape, int):
+        return (shape,)
+    return tuple(shape)
+
+
 @dataclass
 class MutationConfig:
     """
@@ -209,6 +226,17 @@ class DecisionSpace:
     """
 
     variables: List[DecisionVar]
+
+    def __post_init__(self) -> None:
+        names = [v.name for v in self.variables]
+        if any(not name for name in names):
+            raise ValueError("Decision variable names cannot be empty.")
+        duplicates = sorted({name for name in names if names.count(name) > 1})
+        if duplicates:
+            raise ValueError(f"Decision variable names must be unique. Duplicates: {duplicates}")
+        for v in self.variables:
+            if not isinstance(v, DecisionVar):
+                raise ValueError(f"DecisionSpace entries must be DecisionVar instances. Got: {type(v)}")
 
     def names(self) -> List[str]:
         return [v.name for v in self.variables]
@@ -347,7 +375,7 @@ class DecisionSpace:
         return a
 
     # -------------------------
-    # Mutation / crossover (for hackathon-friendly planners)
+    # Mutation / crossover
     # -------------------------
 
     def mutate(

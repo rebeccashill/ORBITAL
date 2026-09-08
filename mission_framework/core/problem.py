@@ -23,13 +23,13 @@ Notes:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
 
-from mission_framework.core.constraints import Constraint
+from mission_framework.core.constraints import Constraint, ConstraintGroup
 from mission_framework.core.decision_variables import DecisionAssignment, DecisionSpace
-from mission_framework.core.objective import Objective
+from mission_framework.core.objective import Objective, RobustAggregation
 
 
 @dataclass
@@ -51,12 +51,14 @@ class Problem:
     simulate: Callable[[Any, Optional[np.random.Generator]], Any]
 
     # Domain-agnostic evaluators
-    constraints: List[Constraint]
+    constraints: List[Union[Constraint, ConstraintGroup]]
     objective: Objective
 
     # Robustness / uncertainty evaluation
     robustness_cases: int = 0
     robustness_seeds: Optional[List[int]] = None
+    robust_aggregation: RobustAggregation = RobustAggregation.CVAR
+    cvar_alpha: float = 0.8
 
     # Optional metadata (scenario name, units, description, etc.)
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -100,10 +102,10 @@ class Problem:
             raise ValueError("Problem.constraints must be a list (can be empty).")
 
         if not isinstance(self.constraints, list):
-            raise ValueError("Problem.constraints must be a list of Constraint objects.")
+            raise ValueError("Problem.constraints must be a list of Constraint or ConstraintGroup objects.")
 
         for c in self.constraints:
-            if not isinstance(c, Constraint):
+            if not isinstance(c, (Constraint, ConstraintGroup)):
                 raise ValueError(f"All constraints must be instances of Constraint. Got: {type(c)}")
 
         if not isinstance(self.objective, Objective):
@@ -114,3 +116,9 @@ class Problem:
 
         if self.robustness_seeds is not None and len(self.robustness_seeds) == 0:
             raise ValueError("Problem.robustness_seeds was provided but is empty.")
+
+        if not isinstance(self.robust_aggregation, RobustAggregation):
+            raise ValueError("Problem.robust_aggregation must be a RobustAggregation value.")
+
+        if not 0.0 < float(self.cvar_alpha) < 1.0:
+            raise ValueError("Problem.cvar_alpha must be in (0, 1).")

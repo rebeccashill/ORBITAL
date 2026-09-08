@@ -1,158 +1,99 @@
-# mission_framework/core/solutions.py
-"""
-Solution containers (domain-agnostic).
-
-This file defines lightweight data structures for returning results from the planner.
-
-Design goals:
-- Domain-agnostic: works for aircraft missions AND spacecraft schedules.
-- Easy to inspect/print: good for hackathon demos and debugging.
-- Minimal coupling: does NOT assume any specific simulation state type.
-
-Typical usage (as in your `main.py`):
-    result = planner.solve(problem)
-
-    result.sim_result["t_end_s"]
-    result.constraints.hard_pass
-    result.objective.total_cost()
-    result.score
-"""
+"""Solution containers for Orbital planners."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Tuple
+from dataclasses import asdict, dataclass, field, is_dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+
+from mission_framework.core.constraints import ConstraintReport, Severity
+from mission_framework.core.decision_variables import DecisionAssignment
+from mission_framework.core.objective import ObjectiveReport, ScoreReport
 
 
-@dataclass(frozen=True)
-class ConstraintEvaluation:
-    """
-    Summary of constraint checking for one simulation run.
+@dataclass
+class PlanResult:
+    """Canonical output returned by planners."""
 
-    `margins` stores the numeric margin per constraint:
-      margin >= 0  -> satisfied
-      margin <  0  -> violated (magnitude indicates severity)
-
-    `hard_pass` is True only if all HARD constraints are satisfied.
-    `soft_pass` is True only if all SOFT constraints are satisfied.
-    """
-
-    margins: Dict[str, float] = field(default_factory=dict)
-    hard_pass: bool = True
-    soft_pass: bool = True
-
-    hard_violations: Tuple[str, ...] = ()
-    soft_violations: Tuple[str, ...] = ()
-
-    def violated(self) -> bool:
-        """True if any constraint is violated (hard or soft)."""
-        return not (self.hard_pass and self.soft_pass)
-
-    def worst_margin(self) -> Optional[Tuple[str, float]]:
-        """Returns (name, margin) for the most negative margin, if any exist."""
-        if not self.margins:
-            return None
-        name, margin = min(self.margins.items(), key=lambda kv: kv[1])
-        return (name, float(margin))
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "margins": dict(self.margins),
-            "hard_pass": bool(self.hard_pass),
-            "soft_pass": bool(self.soft_pass),
-            "hard_violations": list(self.hard_violations),
-            "soft_violations": list(self.soft_violations),
-        }
-
-
-@dataclass(frozen=True)
-class RobustnessStats:
-    """
-    Optional aggregate statistics if you evaluate a candidate across multiple
-    robustness/uncertainty cases.
-
-    Planner may leave this as None if robustness was disabled.
-    """
-
-    cases: int
-    hard_pass_rate: float
-    soft_pass_rate: float
-    mean_objective_cost: float
-    max_objective_cost: float
-    worst_case_index: Optional[int] = None
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "cases": int(self.cases),
-            "hard_pass_rate": float(self.hard_pass_rate),
-            "soft_pass_rate": float(self.soft_pass_rate),
-            "mean_objective_cost": float(self.mean_objective_cost),
-            "max_objective_cost": float(self.max_objective_cost),
-            "worst_case_index": (
-                None if self.worst_case_index is None else int(self.worst_case_index)
-            ),
-        }
-
-
-@dataclass(frozen=True)
-class Solution:
-    """
-    A planner output for a single best candidate.
-
-    Fields:
-    - decisions: the chosen decision variable assignment
-    - plan: the constructed plan/schedule (domain-defined)
-    - sim_result: the simulation output for the nominal run (domain-defined)
-    - constraints: constraint evaluation summary (nominal run)
-    - objective: the Objective object after evaluation (contains per-term costs)
-    - score: overall scalar score used for comparison/ranking
-    - robustness: optional aggregate stats across robustness cases
-    - debug: optional diagnostics (iteration found, runtime, etc.)
-    """
-
-    decisions: Dict[str, Any]
+    assignment: DecisionAssignment
     plan: Any
     sim_result: Any
-
-    constraints: ConstraintEvaluation
-    objective: Any  # kept as Any to avoid tight coupling; typically Objective
+    constraints: ConstraintReport
+    score_report: ScoreReport
     score: float
-
-    robustness: Optional[RobustnessStats] = None
+    robustness: Optional[Dict[str, Any]] = None
+    history: Optional[List[Dict[str, Any]]] = None
     debug: Dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def decisions(self) -> Dict[str, Any]:
+        """Expose raw decision values for callers that prefer dictionary access."""
+        return self.assignment.values
+
+    @property
+    def objective(self) -> ObjectiveReport:
+        """Backward-compatible access to the evaluated objective report."""
+        return self.score_report.objective
+
     def feasible(self) -> bool:
-        """Feasible means all HARD constraints passed."""
+        """Feasible means all hard constraints passed."""
         return bool(self.constraints.hard_pass)
 
     def to_dict(self) -> Dict[str, Any]:
+        """Return a JSON-friendly representation of the result."""
         return {
-            "decisions": dict(self.decisions),
-            "plan": self.plan,
-            "sim_result": self.sim_result,
-            "constraints": self.constraints.to_dict(),
-            "objective_total_cost": (
-                float(self.objective.total_cost())
-                if hasattr(self.objective, "total_cost")
-                else None
+            "decisions": _to_builtin(self.assignment.values),
+            "plan": _to_builtin(self.plan),
+            "sim_result": _to_builtin(self.sim_result),
+            "constraints": _to_builtin(
+                self.constraints.to_jsonable()
+                if hasattr(self.constraints, "to_jsonable")
+                else self.constraints.summary()
             ),
+            "score_report": _to_builtin(self.score_report.to_jsonable()),
+            "objective": _to_builtin(self.objective.summary()),
             "score": float(self.score),
-            "robustness": None if self.robustness is None else self.robustness.to_dict(),
-            "debug": dict(self.debug),
+            "robustness": _to_builtin(self.robustness),
+            "history": _to_builtin(self.history),
+            "debug": _to_builtin(self.debug),
         }
 
     def summary(self) -> str:
-        """
-        Human-readable one-liner-ish summary.
-        Does not assume a particular sim_result schema.
-        """
-        obj_cost = self.objective.total_cost() if hasattr(self.objective, "total_cost") else None
-        worst = self.constraints.worst_margin()
-        worst_str = f"{worst[0]}={worst[1]:.3g}" if worst else "n/a"
+        """Human-readable one-line summary for logs and CLIs."""
+        worst = self.constraints.worst(Severity.HARD)
+        worst_str = "n/a" if worst is None else f"{worst.name}={worst.min_margin:.3g}"
         return (
-            f"Solution(score={self.score:.6g}, "
+            f"PlanResult(score={self.score:.6g}, "
             f"hard_pass={self.constraints.hard_pass}, "
-            f"soft_pass={self.constraints.soft_pass}, "
-            f"objective_cost={obj_cost}, "
-            f"worst_margin={worst_str})"
+            f"objective_cost={self.objective.total_cost():.6g}, "
+            f"worst_hard_margin={worst_str})"
         )
+
+    def to_jsonable(self) -> Dict[str, Any]:
+        """Alias used by reporting code that expects JSON-ready objects."""
+        return self.to_dict()
+
+
+def _to_builtin(value: Any) -> Any:
+    """Convert common scientific Python values into JSON-friendly types."""
+    if value is None or isinstance(value, (str, bool, int, float)):
+        return value
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, dict):
+        return {str(k): _to_builtin(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_to_builtin(v) for v in value]
+    if is_dataclass(value):
+        return _to_builtin(asdict(value))
+    return value
+
+
+# Compatibility name for early code that imported Solution from this module.
+Solution = PlanResult

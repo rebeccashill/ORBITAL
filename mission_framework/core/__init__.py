@@ -1,4 +1,4 @@
-"""ORBITAL mission planning framework."""
+"""Core ORBITAL planning primitives."""
 
 from mission_framework.core.constraints import (
     Constraint,
