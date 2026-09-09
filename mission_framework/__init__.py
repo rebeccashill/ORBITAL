@@ -45,6 +45,17 @@ from mission_framework.core.objective import (
 from mission_framework.core.planner import Planner, PlannerConfig
 from mission_framework.core.problem import Problem
 from mission_framework.core.solutions import PlanResult, Solution
+from mission_framework.scenario_validation import (
+    AIRCRAFT_SCHEMA,
+    SHARED_SCENARIO_FIELDS,
+    SPACECRAFT_SCHEMA,
+    ScenarioSchema,
+    ScenarioValidationError,
+    ValidationIssue,
+    collect_scenario_validation_issues,
+    validate_scenario_config,
+    validate_scenario_file,
+)
 
 __all__ = [
     "BinaryVar",
@@ -77,6 +88,13 @@ __all__ = [
     "ScoreReport",
     "Severity",
     "Solution",
+    "AIRCRAFT_SCHEMA",
+    "SHARED_SCENARIO_FIELDS",
+    "SPACECRAFT_SCHEMA",
+    "ScenarioSchema",
+    "ScenarioValidationError",
+    "ValidationIssue",
+    "collect_scenario_validation_issues",
     "evaluate_constraints",
     "margin_geq",
     "margin_in_range",
@@ -88,4 +106,6 @@ __all__ = [
     "term_maximize_value",
     "term_minimize_energy",
     "term_minimize_time",
+    "validate_scenario_config",
+    "validate_scenario_file",
 ]

@@ -34,6 +34,7 @@ from mission_framework.core.decision_variables import (
 from mission_framework.core.objective import Objective, term_maximize_value
 from mission_framework.core.planner import Problem
 from mission_framework.core.types import Event, EventType, Plan, Schedule, SimResult, Trajectory
+from mission_framework.scenario_validation import validate_scenario_config
 from mission_framework.spacecraft.attitude import (
     PointingTask,
     SlewConfig,
@@ -178,6 +179,8 @@ def _horizon_seconds(cfg: Dict[str, Any]) -> float:
 
 
 def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
+    validate_scenario_config(cfg, expected_type="spacecraft")
+
     scenario = cfg.get("scenario", {}) or {}
     if str(scenario.get("type", "")).strip().lower() != "spacecraft":
         raise ValueError("build_problem_from_config called with non-spacecraft scenario")

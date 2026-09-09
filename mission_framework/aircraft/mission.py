@@ -49,6 +49,7 @@ from mission_framework.core.decision_variables import (
 from mission_framework.core.objective import Objective, term_minimize_energy, term_minimize_time
 from mission_framework.core.planner import Problem
 from mission_framework.core.types import Plan, SimResult
+from mission_framework.scenario_validation import validate_scenario_config
 
 # ============================================================
 # Helpers
@@ -209,6 +210,8 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     - visit_order: permutation of required waypoints
     - cruise_speed_mps: nominal commanded airspeed
     """
+    validate_scenario_config(cfg, expected_type="aircraft")
+
     scenario = cfg.get("scenario", {}) or {}
     if str(scenario.get("type", "")).lower() != "aircraft":
         raise ValueError("build_problem_from_config called with non-aircraft scenario")

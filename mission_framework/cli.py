@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any, Dict
 
@@ -31,6 +32,7 @@ from mission_framework.core.constraints import Severity
 from mission_framework.core.decision_variables import MutationConfig
 from mission_framework.core.objective import RobustAggregation, ScoreConfig
 from mission_framework.core.planner import Planner, PlannerConfig, Problem
+from mission_framework.scenario_validation import ScenarioValidationError, validate_scenario_config
 from mission_framework.simulation.feasibility import format_feasibility_report
 
 
@@ -140,6 +142,12 @@ def main() -> None:
     if args.seed is not None:
         cfg.setdefault("planner", {})
         cfg["planner"]["seed"] = int(args.seed)
+
+    try:
+        validate_scenario_config(cfg)
+    except ScenarioValidationError as exc:
+        print(str(exc), file=sys.stderr)
+        raise SystemExit(2) from exc
 
     generate_plots = not bool(args.no_plots)
 
