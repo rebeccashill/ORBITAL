@@ -135,7 +135,6 @@ class Planner:
                 else:
                     iterations_since_improvement += 1
 
-
                 if self.cfg.keep_history and (it % max(1, self.cfg.history_stride) == 0):
                     worst_h = best_local.constraints.worst(Severity.HARD)
                     history.append(

@@ -102,7 +102,9 @@ class Problem:
             raise ValueError("Problem.constraints must be a list (can be empty).")
 
         if not isinstance(self.constraints, list):
-            raise ValueError("Problem.constraints must be a list of Constraint or ConstraintGroup objects.")
+            raise ValueError(
+                "Problem.constraints must be a list of Constraint or ConstraintGroup objects."
+            )
 
         for c in self.constraints:
             if not isinstance(c, (Constraint, ConstraintGroup)):

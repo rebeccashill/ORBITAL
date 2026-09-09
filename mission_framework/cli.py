@@ -24,7 +24,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Sequence
 
 import yaml  # PyYAML
 
@@ -39,6 +39,38 @@ from mission_framework.simulation.feasibility import format_feasibility_report
 def _load_yaml(path: Path) -> Dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
         return yaml.safe_load(f)
+
+
+def _print_validation_error(path: Path, exc: Exception) -> None:
+    print(f"INVALID: {path}", file=sys.stderr)
+    print(str(exc), file=sys.stderr)
+
+
+def _validate_command(argv: Sequence[str]) -> int:
+    ap = argparse.ArgumentParser(description="Validate an ORBITAL scenario YAML file.")
+    ap.add_argument("scenario_yaml", type=str, help="Path to scenario YAML.")
+    ap.add_argument(
+        "--type",
+        choices=("aircraft", "spacecraft"),
+        default=None,
+        help="Optionally require a specific scenario type.",
+    )
+
+    args = ap.parse_args(argv)
+    scenario_path = Path(args.scenario_yaml).resolve()
+
+    try:
+        cfg = _load_yaml(scenario_path)
+        validate_scenario_config(cfg, expected_type=args.type)
+    except (OSError, yaml.YAMLError, ScenarioValidationError) as exc:
+        _print_validation_error(scenario_path, exc)
+        return 2
+
+    scenario = cfg.get("scenario", {}) if isinstance(cfg, dict) else {}
+    print(f"VALID: {scenario_path}")
+    print(f"Scenario: {scenario.get('name', '(unnamed)')}")
+    print(f"Type: {scenario.get('type', '(unknown)')}")
+    return 0
 
 
 def _planner_config_from_yaml(cfg: Dict[str, Any]) -> PlannerConfig:
@@ -97,7 +129,11 @@ def _write_json(out_path: Path, obj: Any) -> None:
         json.dump(obj, f, indent=2, default=str)
 
 
-def main() -> None:
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    raw_args = list(sys.argv[1:] if argv is None else argv)
+    if raw_args and raw_args[0] == "validate":
+        return _validate_command(raw_args[1:])
+
     ap = argparse.ArgumentParser(description="Run ORBITAL unified mission planning scenarios.")
     ap.add_argument(
         "scenario_yaml", type=str, help="Path to scenario YAML (aircraft or spacecraft)."
@@ -111,7 +147,7 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=None, help="Random seed for reproducible runs")
     ap.add_argument("--no-plots", action="store_true", help="Skip PNG plot generation")
 
-    args = ap.parse_args()
+    args = ap.parse_args(raw_args)
     if args.seed is not None:
         import random
 
@@ -124,7 +160,11 @@ def main() -> None:
             pass
 
     scenario_path = Path(args.scenario_yaml).resolve()
-    cfg = _load_yaml(scenario_path)
+    try:
+        cfg = _load_yaml(scenario_path)
+    except (OSError, yaml.YAMLError) as exc:
+        _print_validation_error(scenario_path, exc)
+        return 2
 
     # Optional overrides for fast runs
     if args.iterations is not None:
@@ -146,8 +186,8 @@ def main() -> None:
     try:
         validate_scenario_config(cfg)
     except ScenarioValidationError as exc:
-        print(str(exc), file=sys.stderr)
-        raise SystemExit(2) from exc
+        _print_validation_error(scenario_path, exc)
+        return 2
 
     generate_plots = not bool(args.no_plots)
 
@@ -303,7 +343,8 @@ def main() -> None:
         _write_json(outdir / "history.json", result.history)
 
     print(f"\nWrote outputs to: {outdir}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

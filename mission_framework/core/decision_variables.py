@@ -236,7 +236,9 @@ class DecisionSpace:
             raise ValueError(f"Decision variable names must be unique. Duplicates: {duplicates}")
         for v in self.variables:
             if not isinstance(v, DecisionVar):
-                raise ValueError(f"DecisionSpace entries must be DecisionVar instances. Got: {type(v)}")
+                raise ValueError(
+                    f"DecisionSpace entries must be DecisionVar instances. Got: {type(v)}"
+                )
 
     def names(self) -> List[str]:
         return [v.name for v in self.variables]

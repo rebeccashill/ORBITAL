@@ -47,7 +47,20 @@ runs/aircraft_uav_demo/
 runs/cubesat_leo_demo/
 ```
 
-### 3. Optional Individual Demo Commands
+### 3. Validate Scenario YAML
+
+```bash
+python -m mission_framework.cli validate examples/aircraft_uav_demo.yaml
+python -m mission_framework.cli validate examples/cubesat_leo_demo.yaml
+```
+
+Installed CLI equivalent:
+
+```bash
+orbital validate examples/aircraft_uav_demo.yaml
+```
+
+### 4. Optional Individual Demo Commands
 
 Aircraft:
 
@@ -71,21 +84,9 @@ python run_all.py --fast --no-plots
 
 ## Deliverables
 
-<<<<<<< HEAD
 - Technical report PDF: `docs/AEROHACK_TECHNICAL_REPORT.pdf`
 - Results bundle: `outputs/`
 - Reproducible outputs: `runs/` after executing `python run_all.py`
-=======
-mission_framework/
-├── core/
-├── simulation/
-├── aircraft/
-├── spacecraft/
-├── reporting/
-├── visualization/
-├── examples/
-└── tests/
->>>>>>> 9a6c1c4627dcf63cacbde52a8f3f9b0d0c99ccdd
 
 ---
 

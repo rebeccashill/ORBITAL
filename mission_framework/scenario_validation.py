@@ -251,7 +251,10 @@ def _validate_shared_sections(cfg: Mapping[str, Any], issues: list[ValidationIss
         _number(robustness, "robustness.cvar_alpha", issues, min_value=0.0, max_value=1.0)
 
     if objective is not None:
-        if objective.get("type") is not None and str(objective["type"]).strip().lower() != "weighted_sum":
+        if (
+            objective.get("type") is not None
+            and str(objective["type"]).strip().lower() != "weighted_sum"
+        ):
             issues.append(
                 ValidationIssue(
                     "objective.type",
@@ -311,7 +314,9 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
         waypoints = _require_sequence(mission, "mission.waypoints", issues)
         if waypoints is not None:
             if not waypoints:
-                issues.append(ValidationIssue("mission.waypoints", "must contain at least one waypoint"))
+                issues.append(
+                    ValidationIssue("mission.waypoints", "must contain at least one waypoint")
+                )
             _validate_unique_ids(waypoints, "mission.waypoints", issues)
             for idx, waypoint in enumerate(waypoints):
                 path = f"mission.waypoints[{idx}]"
@@ -475,19 +480,29 @@ def _validate_spacecraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) 
     ops = _optional_mapping(cfg, "ops", issues)
 
     if orbit is not None:
-        _number(orbit, "orbit.altitude_km", issues, required=True, min_value=0.0, exclusive_min=True)
-        _number(orbit, "orbit.inclination_deg", issues, required=True, min_value=0.0, max_value=180.0)
+        _number(
+            orbit, "orbit.altitude_km", issues, required=True, min_value=0.0, exclusive_min=True
+        )
+        _number(
+            orbit, "orbit.inclination_deg", issues, required=True, min_value=0.0, max_value=180.0
+        )
         _number(orbit, "orbit.raan_deg", issues)
         _number(orbit, "orbit.true_anomaly_deg", issues)
         _datetime(orbit, "orbit.epoch_utc", issues, required=True)
-        _number(orbit, "orbit.duration_days", issues, required=True, min_value=0.0, exclusive_min=True)
-        _number(orbit, "orbit.time_step_s", issues, required=True, min_value=0.0, exclusive_min=True)
+        _number(
+            orbit, "orbit.duration_days", issues, required=True, min_value=0.0, exclusive_min=True
+        )
+        _number(
+            orbit, "orbit.time_step_s", issues, required=True, min_value=0.0, exclusive_min=True
+        )
 
     if mission is not None:
         targets = _require_sequence(mission, "mission.targets", issues)
         if targets is not None:
             if not targets:
-                issues.append(ValidationIssue("mission.targets", "must contain at least one target"))
+                issues.append(
+                    ValidationIssue("mission.targets", "must contain at least one target")
+                )
             _validate_unique_ids(targets, "mission.targets", issues)
             for idx, target in enumerate(targets):
                 path = f"mission.targets[{idx}]"
@@ -495,8 +510,22 @@ def _validate_spacecraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) 
                     issues.append(ValidationIssue(path, "must be a mapping/object"))
                     continue
                 _require_nonempty_string(target, f"{path}.id", issues)
-                _number(target, f"{path}.lat_deg", issues, required=True, min_value=-90.0, max_value=90.0)
-                _number(target, f"{path}.lon_deg", issues, required=True, min_value=-180.0, max_value=180.0)
+                _number(
+                    target,
+                    f"{path}.lat_deg",
+                    issues,
+                    required=True,
+                    min_value=-90.0,
+                    max_value=90.0,
+                )
+                _number(
+                    target,
+                    f"{path}.lon_deg",
+                    issues,
+                    required=True,
+                    min_value=-180.0,
+                    max_value=180.0,
+                )
                 _number(target, f"{path}.value", issues, required=True, min_value=0.0)
                 _number(target, f"{path}.obs_duration_s", issues, min_value=0.0, exclusive_min=True)
                 _number(target, f"{path}.cooldown_s", issues, min_value=0.0)
@@ -512,8 +541,12 @@ def _validate_spacecraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) 
                 issues.append(ValidationIssue(path, "must be a mapping/object"))
                 continue
             _require_nonempty_string(station, f"{path}.id", issues)
-            _number(station, f"{path}.lat_deg", issues, required=True, min_value=-90.0, max_value=90.0)
-            _number(station, f"{path}.lon_deg", issues, required=True, min_value=-180.0, max_value=180.0)
+            _number(
+                station, f"{path}.lat_deg", issues, required=True, min_value=-90.0, max_value=90.0
+            )
+            _number(
+                station, f"{path}.lon_deg", issues, required=True, min_value=-180.0, max_value=180.0
+            )
             _number(station, f"{path}.alt_km", issues)
             _number(
                 station,
@@ -734,7 +767,11 @@ def _validate_time_windows(
     *,
     required: bool = False,
 ) -> None:
-    windows = _require_sequence(container, path, issues) if required else _optional_sequence(container, path, issues)
+    windows = (
+        _require_sequence(container, path, issues)
+        if required
+        else _optional_sequence(container, path, issues)
+    )
     if windows is None:
         return
     if not windows:
@@ -858,9 +895,13 @@ def _validate_numeric_range(
         issues.append(ValidationIssue(path, "range bounds must be finite numbers"))
         return
     if min_value is not None and (low < min_value or high < min_value):
-        issues.append(ValidationIssue(path, f"range bounds must be greater than or equal to {min_value:g}"))
+        issues.append(
+            ValidationIssue(path, f"range bounds must be greater than or equal to {min_value:g}")
+        )
     if low > high:
-        issues.append(ValidationIssue(path, "range low value must be less than or equal to high value"))
+        issues.append(
+            ValidationIssue(path, "range low value must be less than or equal to high value")
+        )
 
 
 def _validate_percentiles(
