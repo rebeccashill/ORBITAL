@@ -27,6 +27,57 @@ from typing import Any, Dict, Optional
 
 FEASIBLE_RE = re.compile(r"^\s*Feasible:\s*(True|False)\s*$", re.MULTILINE)
 
+VALIDATION_CASES = [
+    {
+        "case_name": "baseline_aircraft_monte_carlo",
+        "yaml_path": "examples/aircraft_uav_demo.yaml",
+        "iterations": 500,
+        "restarts": 2,
+        "robustness": 50,
+        "seed": 0,
+    },
+    {
+        "case_name": "baseline_spacecraft_monte_carlo",
+        "yaml_path": "examples/cubesat_leo_demo.yaml",
+        "iterations": 300,
+        "restarts": 2,
+        "robustness": 30,
+        "seed": 0,
+    },
+    {
+        "case_name": "stress_aircraft_high_wind",
+        "yaml_path": "examples/stress/aircraft_high_wind.yaml",
+        "iterations": 600,
+        "restarts": 3,
+        "robustness": 30,
+        "seed": 0,
+    },
+    {
+        "case_name": "stress_aircraft_low_battery_tight_nfzs",
+        "yaml_path": "examples/stress/aircraft_low_battery_tight_nfzs.yaml",
+        "iterations": 800,
+        "restarts": 3,
+        "robustness": 20,
+        "seed": 0,
+    },
+    {
+        "case_name": "stress_spacecraft_power_starved",
+        "yaml_path": "examples/stress/spacecraft_power_starved.yaml",
+        "iterations": 600,
+        "restarts": 3,
+        "robustness": 20,
+        "seed": 0,
+    },
+    {
+        "case_name": "stress_spacecraft_slew_constrained",
+        "yaml_path": "examples/stress/spacecraft_slew-constrained.yaml",
+        "iterations": 800,
+        "restarts": 3,
+        "robustness": 20,
+        "seed": 0,
+    },
+]
+
 
 def parse_feasible(stdout: str) -> Optional[bool]:
     m = FEASIBLE_RE.search(stdout or "")
@@ -145,73 +196,8 @@ def main() -> int:
 
     summary: Dict[str, Any] = {"cases": []}
 
-    # Baseline Monte Carlo runs (as before, but now as cases)
-    summary["cases"].append(
-        run_case(
-            "baseline_aircraft_monte_carlo",
-            "examples/aircraft_uav_demo.yaml",
-            iterations=500,
-            restarts=2,
-            robustness=50,
-            seed=0,
-        )
-    )
-
-    summary["cases"].append(
-        run_case(
-            "baseline_spacecraft_monte_carlo",
-            "examples/cubesat_leo_demo.yaml",
-            iterations=300,
-            restarts=2,
-            robustness=30,
-            seed=0,
-        )
-    )
-
-    # Stress cases (2 per domain)
-    summary["cases"].append(
-        run_case(
-            "stress_aircraft_high_wind",
-            "examples/stress/aircraft_high_wind.yaml",
-            iterations=600,
-            restarts=3,
-            robustness=30,
-            seed=0,
-        )
-    )
-
-    summary["cases"].append(
-        run_case(
-            "stress_aircraft_low_battery_tight_nfzs",
-            "examples/stress/aircraft_low_battery_tight_nfzs.yaml",
-            iterations=800,
-            restarts=3,
-            robustness=20,
-            seed=0,
-        )
-    )
-
-    summary["cases"].append(
-        run_case(
-            "stress_spacecraft_power_starved",
-            "examples/stress/spacecraft_power_starved.yaml",
-            iterations=600,
-            restarts=3,
-            robustness=20,
-            seed=0,
-        )
-    )
-
-    summary["cases"].append(
-        run_case(
-            "stress_spacecraft_slew_constrained",
-            "examples/stress/spacecraft_slew_constrained.yaml",
-            iterations=800,
-            restarts=3,
-            robustness=20,
-            seed=0,
-        )
-    )
+    for case in VALIDATION_CASES:
+        summary["cases"].append(run_case(**case))
 
     # Write summary JSON
     out = Path("outputs/validation/validation_summary.json")

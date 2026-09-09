@@ -16,6 +16,7 @@ from mission_framework.scenario_validation import (
     collect_scenario_validation_issues,
     validate_scenario_config,
 )
+from scripts.run_validation import VALIDATION_CASES
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES = ROOT / "examples"
@@ -58,6 +59,17 @@ def test_schema_definitions_cover_shared_and_domain_fields() -> None:
 def test_bundled_scenarios_validate(scenario_path: Path) -> None:
     cfg = _load_yaml(scenario_path)
     assert collect_scenario_validation_issues(cfg) == []
+
+
+def test_validation_script_stress_inventory_matches_examples() -> None:
+    stress_files = {path.resolve() for path in (EXAMPLES / "stress").glob("*.yaml")}
+    inventory_files = {
+        (ROOT / str(case["yaml_path"])).resolve()
+        for case in VALIDATION_CASES
+        if str(case["yaml_path"]).startswith("examples/stress/")
+    }
+
+    assert inventory_files == stress_files
 
 
 def test_aircraft_validation_reports_actionable_errors() -> None:
