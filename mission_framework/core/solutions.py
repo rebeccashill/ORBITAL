@@ -90,7 +90,7 @@ def _to_builtin(value: Any) -> Any:
         return {str(k): _to_builtin(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
         return [_to_builtin(v) for v in value]
-    if is_dataclass(value):
+    if is_dataclass(value) and not isinstance(value, type):
         return _to_builtin(asdict(value))
     return value
 

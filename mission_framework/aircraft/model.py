@@ -261,8 +261,8 @@ class AircraftSim:
 
         if self.geofence is not None:
             audit = self.geofence.audit_trajectory(
-                xs_m=x_arr.tolist(),
-                ys_m=y_arr.tolist(),
+                xs_m=[float(x) for x in x_arr],
+                ys_m=[float(y) for y in y_arr],
                 clearance_m=float(self.geofence_clearance_m),
             )
             nfz_viol = 1.0 if audit.violated else 0.0

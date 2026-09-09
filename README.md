@@ -1,5 +1,7 @@
 # ORBITAL
 
+[![CI](https://github.com/rebeccashill/ORBITAL/actions/workflows/ci.yml/badge.svg)](https://github.com/rebeccashill/ORBITAL/actions/workflows/ci.yml)
+
 **Operational Reusable Backend for Integrated Trajectory and Logistics**  
 Unified Mission Planning Framework for Aircraft and Spacecraft
 

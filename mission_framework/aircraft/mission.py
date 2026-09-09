@@ -176,8 +176,8 @@ def _aircraft_constraints_from_cfg(cfg: Dict[str, Any]) -> List[Constraint | Con
             # fail-safe: return a single negative margin so planner penalizes
             return np.array([-1.0], dtype=float)
 
-        v_air = np.maximum(v_air, 1e-3)
-        yaw_rate_lim = (G0 * math.tan(bank_max_rad)) / v_air
+        v_air_safe = np.maximum(v_air, 1e-3)
+        yaw_rate_lim = (G0 * math.tan(bank_max_rad)) / v_air_safe
 
         return yaw_rate_lim - np.abs(yaw_rate)
 
