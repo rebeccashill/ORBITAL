@@ -1,5 +1,7 @@
 """ORBITAL mission planning framework."""
 
+__version__ = "1.0.1"
+
 from mission_framework.core.constraints import (
     Constraint,
     ConstraintGroup,
@@ -58,6 +60,7 @@ from mission_framework.scenario_validation import (
 )
 
 __all__ = [
+    "__version__",
     "BinaryVar",
     "Bounds",
     "Constraint",

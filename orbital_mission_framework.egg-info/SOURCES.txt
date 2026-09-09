@@ -62,3 +62,4 @@ tests/test_frames.py
 tests/test_scenario_validation.py
 tests/test_spacecraft_end_to_end.py
 tests/test_unified_architecture.py
+tests/test_version_metadata.py

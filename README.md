@@ -5,6 +5,8 @@
 **Operational Reusable Backend for Integrated Trajectory and Logistics**  
 Unified Mission Planning Framework for Aircraft and Spacecraft
 
+Current release: `v1.0.1`
+
 ORBITAL is a domain-agnostic mission planning framework that supports:
 
 - Aircraft multi-waypoint optimization

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: orbital-mission-framework
-Version: 1.0.0
+Version: 1.0.1
 Summary: Unified mission planning and simulation framework for UAV and CubeSat operations.
 Author: Rebecca Shillingford
 License: MIT License
@@ -54,6 +54,8 @@ Requires-Dist: pre-commit<5,>=3.6; extra == "dev"
 
 **Operational Reusable Backend for Integrated Trajectory and Logistics**  
 Unified Mission Planning Framework for Aircraft and Spacecraft
+
+Current release: `v1.0.1`
 
 ORBITAL is a domain-agnostic mission planning framework that supports:
 
