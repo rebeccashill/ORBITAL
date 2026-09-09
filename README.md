@@ -102,6 +102,7 @@ python run_all.py --fast --no-plots
 
 ## Project Artifacts
 
+- Release notes: `docs/RELEASE_NOTES.md`
 - Technical report artifacts: `docs/`
 - Results bundle: `outputs/`
 - Reproducible outputs: `runs/` after executing `python run_all.py`
