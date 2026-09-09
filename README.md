@@ -129,6 +129,10 @@ Outputs:
 outputs/validation/baselines/
 ```
 
+The report compares ORBITAL against `random_search`, `greedy_routing`, and
+`earliest_deadline` baselines across score, feasibility, runtime, and robustness.
+See `docs/BASELINE_COMPARISONS.md` for the current summarized results.
+
 ---
 
 ## Stress Tests

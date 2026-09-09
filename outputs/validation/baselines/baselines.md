@@ -1,34 +1,34 @@
-# Baseline Comparisons (AeroHack Validation)
+# Baseline Comparison Report
 
-This document provides baseline comparisons for both mission domains to support the
-**Robustness & Validation** rubric category.
+This report compares ORBITAL against simple reference planners using the same scenario builders, simulator, objective, constraints, and robustness evaluator.
 
-## Why baselines?
+Lower score is better. Feasibility means all hard constraints pass. Robust hard pass rate is measured by reevaluating the final assignment across the configured Monte Carlo cases.
 
-A baseline answers: **“What happens if we *don’t* run the optimizer?”**
+## Baseline Planners
 
-We compare ORBITAL against simple non-optimized strategies using the same
-simulation + constraint + objective pipeline.
+- `random_search`: sample random feasible decision assignments and keep the best nominal score.
+- `greedy_routing`: aircraft nearest-neighbor route through required waypoints.
+- `earliest_deadline`: spacecraft schedule observations and downlinks as early as the current decision model allows, prioritizing earliest declared deadlines.
 
-For the spacecraft scenario, best-of-50 random sampling achieved a comparable or slightly better score than a single 200-iteration ORBITAL run.
+## Reproduce
 
-This indicates the search landscape is relatively smooth for the simplified demonstration case.
+```bash
+python scripts/run_baselines.py --aircraft examples/aircraft_uav_demo.yaml --spacecraft examples/cubesat_leo_demo.yaml --out outputs/validation/baselines/baselines.csv --orbital-iterations 200 --orbital-restarts 1 --random-samples 50 --robustness-cases 5 --seed 0
+```
 
-In higher-fidelity or more constrained scenarios, iterative mutation-based search is expected to provide greater advantage.
+## Results
 
-## Methods
+| Domain | Planner | Score | Feasible | Runtime (s) | Robust Cases | Hard Pass Rate | Worst Robust Margin |
+| --- | --- | ---: | --- | ---: | ---: | ---: | ---: |
+| aircraft | `orbital` | 311.846 | yes | 9.49675 | 5 | 1 | 0.0925196 |
+| aircraft | `random_search` | 321.716 | yes | 3.28549 | 5 | 1 | 0.0970243 |
+| aircraft | `greedy_routing` | 844.916 | no | 0.247801 | 5 | 0 | -0.5 |
+| spacecraft | `orbital` | -33 | yes | 52.6805 | 5 | 1 | 0 |
+| spacecraft | `random_search` | -33 | yes | 14.2183 | 5 | 1 | 0 |
+| spacecraft | `earliest_deadline` | -33 | yes | 1.51992 | 5 | 1 | 0 |
 
-### Aircraft baseline — Random feasible (no optimization)
-- **Definition:** run **one** randomly sampled feasible assignment (no mutation, no search).
-- **Config:** `iterations=0`, `restarts=1`, `robustness=0`
-- **Purpose:** establishes a “no optimizer” reference point.
+## Notes
 
-### Spacecraft baseline — Best-of-K sampling (greedy-ish)
-- **Definition:** sample **K** random feasible assignments, pick the best score.
-- **Config:** `iterations=0`, `restarts=K` (default K=50), `robustness=0`
-- **Purpose:** shows how much ORBITAL improves beyond “try a bunch of random schedules.”
-
-## How to reproduce
-
-```powershell
-python scripts/run_baselines.py --aircraft examples/aircraft_uav_demo.yaml --spacecraft examples/cubesat_leo_demo.yaml --out outputs/validation/baselines/baselines.csv
+- ORBITAL rows are solved nominally, then the final assignment is evaluated against the same robustness cases as the baselines.
+- Runtime includes method execution plus final robustness evaluation.
+- The CSV file contains additional objective, penalty, and worst hard constraint fields for auditability.

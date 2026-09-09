@@ -106,6 +106,7 @@ Documentation:
 
 - `README.md` - project overview and quick start
 - `docs/AEROHACK_TECHNICAL_REPORT.md` - full technical report
+- `docs/BASELINE_COMPARISONS.md` - optimizer-vs-baseline validation summary
 - `docs/SUBMISSION_CHECKLIST.md` - this checklist
 
 Code quality:

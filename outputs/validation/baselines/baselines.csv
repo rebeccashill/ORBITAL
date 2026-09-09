@@ -1,5 +1,7 @@
-label,scenario_name,scenario_type,iterations,restarts,robustness_cases,seed,score,feasible,worst_hard_margin,worst_hard_constraint,runtime_sec
-ORBITAL (aircraft),UAV Multi-Waypoint Mission Demo,aircraft,200,1,0,0,311.8601330983917,True,0.09244982425907003,bank_angle_turn_limit,0.6893474999815226
-Baseline: Random feasible (aircraft),UAV Multi-Waypoint Mission Demo,aircraft,0,1,0,0,1000711.9147205311,False,-0.5,geofence_no_entry,0.003173300065100193
-ORBITAL (spacecraft),CubeSat 7-Day Earth Observation Demo,spacecraft,200,1,0,0,-23.0,True,0.0,battery_nonnegative,3.903560600243509
-Baseline: Best-of-50 sampling (spacecraft),CubeSat 7-Day Earth Observation Demo,spacecraft,0,50,0,0,-33.0,True,0.0,battery_nonnegative,0.9094456997700036
+domain,scenario,planner,category,samples,iterations,restarts,seed,score,feasible,objective_cost,constraint_penalty,worst_hard_constraint,worst_hard_margin,runtime_s,robustness_cases,robust_hard_pass_rate,robust_worst_hard_margin,robust_score
+aircraft,UAV Multi-Waypoint Mission Demo,orbital,optimizer,,200,1,0,311.8462237110972,True,311.8462237110972,0.0,bank_angle_turn_limit,0.09251957228259053,9.496747999997751,5,1.0,0.09251957228259053,311.8462237110972
+aircraft,UAV Multi-Waypoint Mission Demo,random_search,baseline,50,0,1,0,321.71575964120035,True,321.71575964120035,0.0,bank_angle_turn_limit,0.09702428117473133,3.285492000002705,5,1.0,0.09702428117473133,321.71575964120035
+aircraft,UAV Multi-Waypoint Mission Demo,greedy_routing,baseline,,0,1,0,844.9161639531521,False,344.91616395315214,0.25,geofence_no_entry,-0.5,0.24780070000269916,5,0.0,-0.5,844.9161639531521
+spacecraft,CubeSat 7-Day Earth Observation Demo,orbital,optimizer,,200,1,0,-33.0,True,-33.0,0.0,battery_nonnegative,0.0,52.68047949999891,5,1.0,0.0,-33.0
+spacecraft,CubeSat 7-Day Earth Observation Demo,random_search,baseline,50,0,1,0,-33.0,True,-33.0,0.0,battery_nonnegative,0.0,14.218253599996387,5,1.0,0.0,-33.0
+spacecraft,CubeSat 7-Day Earth Observation Demo,earliest_deadline,baseline,,0,1,0,-33.0,True,-33.0,0.0,battery_nonnegative,0.0,1.5199215000029653,5,1.0,0.0,-33.0
