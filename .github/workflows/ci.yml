@@ -41,7 +41,8 @@ jobs:
         run: python -m ruff check .
 
       - name: Mypy (type check)
-        run: python -m mypy mission_framework
+        if: matrix.python-version == '3.12'
+        run: python -m mypy --python-version 3.12 mission_framework
 
       - name: Pytest
         run: python -m pytest -q --disable-warnings --maxfail=1 --cov=mission_framework --cov-report=term-missing
