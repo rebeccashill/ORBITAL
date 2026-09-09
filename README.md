@@ -62,6 +62,8 @@ Installed CLI equivalent:
 orbital validate examples/aircraft_uav_demo.yaml
 ```
 
+See [Scenario Authoring Guide](docs/SCENARIO_AUTHORING.md) for YAML structure, units, examples, and common validation errors.
+
 ### 4. Optional Individual Demo Commands
 
 Aircraft:
