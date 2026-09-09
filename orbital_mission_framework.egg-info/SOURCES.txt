@@ -3,6 +3,8 @@ README.md
 pyproject.toml
 mission_framework/__init__.py
 mission_framework/cli.py
+mission_framework/py.typed
+mission_framework/scenario_validation.py
 mission_framework/aircraft/battery_model.py
 mission_framework/aircraft/constraints.py
 mission_framework/aircraft/dynamics.py
@@ -13,6 +15,7 @@ mission_framework/aircraft/model.py
 mission_framework/aircraft/objective.py
 mission_framework/aircraft/wind.py
 mission_framework/aircraft/wind_model.py
+mission_framework/core/__init__.py
 mission_framework/core/constraints.py
 mission_framework/core/decision_variables.py
 mission_framework/core/objective.py
@@ -52,7 +55,10 @@ orbital_mission_framework.egg-info/entry_points.txt
 orbital_mission_framework.egg-info/requires.txt
 orbital_mission_framework.egg-info/top_level.txt
 tests/test_aircraft_end_to_end.py
+tests/test_baseline_reports.py
 tests/test_cli_contract.py
+tests/test_core_project_maturity.py
 tests/test_frames.py
+tests/test_scenario_validation.py
 tests/test_spacecraft_end_to_end.py
 tests/test_unified_architecture.py

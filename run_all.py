@@ -27,7 +27,7 @@ def run(cmd: list[str], label: str, log_path: Path) -> None:
         f.write("Command: " + " ".join(cmd) + "\n\n")
         f.flush()
 
-        # Stream stdout/stderr to a UTF-8 log for judge-friendly debugging.
+        # Stream stdout/stderr to a UTF-8 log for debugging.
         result = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT)
 
     elapsed = time.time() - start

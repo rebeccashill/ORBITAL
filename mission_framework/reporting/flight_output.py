@@ -13,9 +13,9 @@ It expects:
 - Plan.waypoints: list of dicts (each dict may include x/y/z or lat/lon/alt, plus eta/t)
 - SimResult.trajectory optionally contains time series state history
 
-Hackathon tip:
+Reporting guidance:
 - Keep exports simple and readable.
-- Judges love "here's the flight plan table" plus a constraint report and metrics.
+- Pair flight plan tables with constraint reports and summary metrics.
 """
 
 from __future__ import annotations

@@ -9,7 +9,7 @@ Key design choices:
 - Constraints are evaluated on a SimulationResult-like object produced by your simulator.
   This keeps planning unified across aircraft + spacecraft.
 
-Upgrades (AeroHack-focused):
+Reporting additions:
 - Traceability: worst index + optional worst time extraction
 - Grouping: ConstraintGroup preserves per-constraint results (audit-friendly)
 - Registry: ConstraintRegistry for presets and reproducible assembly

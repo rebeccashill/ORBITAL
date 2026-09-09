@@ -22,8 +22,9 @@ This is designed to integrate with your core SimResult:
 
 Notes:
 - We do NOT compute sunlight here (that belongs in orbit/illumination or mission simulation).
-- For hackathons, you can approximate "in_sun" using a simple duty cycle (e.g., 60% sunlight per orbit),
-  or leave it as provided by the visibility / orbit module.
+- Early studies can approximate "in_sun" using a simple duty cycle
+  (e.g., 60% sunlight per orbit), or leave it as provided by the visibility /
+  orbit module.
 """
 
 from __future__ import annotations

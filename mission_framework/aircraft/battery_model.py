@@ -2,7 +2,7 @@
 """
 Battery / endurance model for aircraft (UAV/fixed-wing).
 
-This is deliberately "simple but explicit" for AeroHack:
+This is deliberately simple but explicit:
 - tracks battery energy [Wh]
 - defines power draw [W] based on airspeed and climb rate proxies
 - integrates energy over time during simulation
@@ -25,7 +25,7 @@ class BatteryParams:
     initial_Wh: Optional[float] = None  # defaults to capacity
 
     # Simple power model: P = P0 + k_v * v^2 + k_climb * max(0, climb_rate)
-    # (These are proxy coefficients; tune for your demo.)
+    # (These are proxy coefficients; tune for your scenario.)
     p_idle_W: float = 60.0  # avionics + baseline propulsion
     k_v_W_per_m2s2: float = 1.0  # scales with v_air^2
     k_climb_W_per_mps: float = 120.0  # extra power per m/s climb (proxy)

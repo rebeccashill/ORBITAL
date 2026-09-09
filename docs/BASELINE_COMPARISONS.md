@@ -1,7 +1,7 @@
 # Baseline Comparison Reports
 
 ORBITAL includes a reproducible baseline report so optimizer results can be
-compared against simple reference planners instead of judged in isolation.
+compared against simple reference planners instead of evaluated in isolation.
 
 ## Baseline Planners
 
@@ -41,12 +41,12 @@ final assignment across five Monte Carlo cases.
 
 ## Interpretation
 
-For the aircraft demo, ORBITAL finds a lower-cost feasible route than the
+For the aircraft example, ORBITAL finds a lower-cost feasible route than the
 random baseline, while the nearest-neighbor route is rejected by the same hard
 geofence constraint used by the planner. This makes the value of constraint-aware
 search visible.
 
-For the spacecraft demo, ORBITAL, random search, and earliest-deadline scheduling
+For the spacecraft example, ORBITAL, random search, and earliest-deadline scheduling
 all deliver the full 33-point science value. That is a useful result: it shows
-the demo scenario is intentionally easy, and harder spacecraft scenarios should
+the example scenario is intentionally easy, and harder spacecraft scenarios should
 be added when benchmarking future planner improvements.

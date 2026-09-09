@@ -2,7 +2,7 @@
 """
 Waypoint mission definition + Problem builder (MODULE A / aircraft).
 
-UPDATED for AeroHack readiness:
+Planning features:
 - Uses new wind_model.py (ZeroWind / SinusoidalWind / VortexFieldWind / StochasticWind)
 - Uses new AircraftSim in aircraft/model.py (wind + battery + maneuver limits + geofence audit)
 - Builds explicit HARD constraints (battery >= 0, all waypoints reached, geofence clearance, yaw-rate limit)
@@ -96,7 +96,7 @@ class Mission:
 
 def _aircraft_constraints_from_cfg(cfg: Dict[str, Any]) -> List[Constraint | ConstraintGroup]:
     """
-    Build AeroHack-visible constraints with clear, auditable margins.
+    Build mission constraints with clear, auditable margins.
 
     Expected SimResult fields produced by aircraft/model.py:
       - sim.t (timeline)
@@ -449,7 +449,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                     term_minimize_energy(name="energy", weight=weight, key="energy_used_Wh")
                 )
     else:
-        # Default: minimize time (AeroHack objective option)
+        # Default: minimize time.
         objective.add(term_minimize_time(name="time", weight=1.0, key="t_end_s"))
 
     # --- Robustness wiring from YAML ---

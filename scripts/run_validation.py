@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AeroHack Validation Script
+ORBITAL validation script
 
 Runs:
 - Monte Carlo robustness on baseline aircraft/spacecraft demos
@@ -138,7 +138,7 @@ def main() -> int:
     print(
         """
 ╔══════════════════════════════════════════════════════════╗
-║          AEROHACK VALIDATION - ROBUST + STRESS           ║
+║          ORBITAL VALIDATION - ROBUST + STRESS            ║
 ╚══════════════════════════════════════════════════════════╝
 """
     )

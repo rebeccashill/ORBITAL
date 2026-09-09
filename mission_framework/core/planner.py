@@ -287,7 +287,7 @@ class Planner:
         )
 
         # Add hard infeasible penalty on a per-run basis conceptually via constraint penalty,
-        # but we also expose feasibility rate explicitly for AeroHack reporting.
+        # but we also expose feasibility rate explicitly for validation reporting.
         pass_rate = float(np.mean(np.array(hard_pass, dtype=float))) if hard_pass else 0.0
         worst_margin_min = (
             float(np.min(np.array(worst_hard_margins, dtype=float)))

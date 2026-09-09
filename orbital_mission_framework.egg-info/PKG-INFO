@@ -1,11 +1,10 @@
 Metadata-Version: 2.1
 Name: orbital-mission-framework
-Version: 0.1.0
+Version: 1.0.0
 Summary: Unified mission planning and simulation framework for UAV and CubeSat operations.
 Author: Rebecca Shillingford
-License: # 📄 License
+License: MIT License
         
-        MIT License\
         Copyright (c) 2026 Rebecca Shillingford
         
         Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,6 +24,7 @@ License: # 📄 License
         LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
         OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
         SOFTWARE.
+        
 Project-URL: Repository, https://github.com/rebeccashill/ORBITAL
 Keywords: mission-planning,optimization,aerospace,uav,cubesat,simulation
 Classifier: Programming Language :: Python :: 3
@@ -50,6 +50,8 @@ Requires-Dist: pre-commit<5,>=3.6; extra == "dev"
 
 # ORBITAL
 
+[![CI](https://github.com/rebeccashill/ORBITAL/actions/workflows/ci.yml/badge.svg)](https://github.com/rebeccashill/ORBITAL/actions/workflows/ci.yml)
+
 **Operational Reusable Backend for Integrated Trajectory and Logistics**  
 Unified Mission Planning Framework for Aircraft and Spacecraft
 
@@ -64,7 +66,7 @@ ORBITAL is a domain-agnostic mission planning framework that supports:
 
 ---
 
-## Judge Quick Start
+## Quick Start
 
 ### 1. Install
 
@@ -72,22 +74,22 @@ ORBITAL is a domain-agnostic mission planning framework that supports:
 git clone https://github.com/rebeccashill/ORBITAL.git
 cd ORBITAL
 python -m venv .venv
-source .venv/bin/activate        # macOS/Linux
-.venv\Scripts\activate           # Windows PowerShell
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+source .venv/bin/activate          # macOS/Linux
+.venv\Scripts\Activate.ps1         # Windows PowerShell
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
 ```
 
 ### 2. Run Both Domains
 
 ```bash
-python run_all.py
+python run_all.py --fast --no-plots
 ```
 
-For a quick smoke run:
+For full plots and default robustness settings:
 
 ```bash
-python run_all.py --fast
+python run_all.py
 ```
 
 Outputs are saved to:
@@ -97,18 +99,33 @@ runs/aircraft_uav_demo/
 runs/cubesat_leo_demo/
 ```
 
-### 3. Optional Individual Demo Commands
+### 3. Validate Scenario YAML
+
+```bash
+orbital validate examples/aircraft_uav_demo.yaml
+orbital validate examples/cubesat_leo_demo.yaml
+```
+
+Module form:
+
+```bash
+python -m mission_framework.cli validate examples/aircraft_uav_demo.yaml
+```
+
+See [Scenario Authoring Guide](docs/SCENARIO_AUTHORING.md) for YAML structure, units, examples, and common validation errors.
+
+### 4. Optional Individual Demo Commands
 
 Aircraft:
 
 ```bash
-python -m mission_framework.cli examples/aircraft_uav_demo.yaml --iterations 200 --restarts 1 --robustness 20 --seed 0
+orbital examples/aircraft_uav_demo.yaml --iterations 200 --restarts 1 --robustness 20 --seed 0
 ```
 
 Spacecraft:
 
 ```bash
-python -m mission_framework.cli examples/cubesat_leo_demo.yaml --iterations 200 --restarts 1 --robustness 10 --seed 0
+orbital examples/cubesat_leo_demo.yaml --iterations 200 --restarts 1 --robustness 10 --seed 0
 ```
 
 Use `--no-plots` when you only want JSON/CSV artifacts:
@@ -119,9 +136,21 @@ python run_all.py --fast --no-plots
 
 ---
 
-## Deliverables
+## Example Outputs
 
-- Technical report PDF: `docs/AEROHACK_TECHNICAL_REPORT.pdf`
+| Aircraft flight path | Spacecraft mission timeline |
+| --- | --- |
+| ![Aircraft flight path](outputs/aircraft/flight_path.png) | ![Spacecraft mission timeline](outputs/spacecraft/mission_timeline.png) |
+
+| Aircraft battery state | Spacecraft operations summary |
+| --- | --- |
+| ![Aircraft battery state](outputs/aircraft/battery_state.png) | ![Spacecraft operations summary](outputs/spacecraft/operations_summary.png) |
+
+---
+
+## Project Artifacts
+
+- Technical report artifacts: `docs/`
 - Results bundle: `outputs/`
 - Reproducible outputs: `runs/` after executing `python run_all.py`
 
@@ -162,6 +191,10 @@ Outputs:
 outputs/validation/baselines/
 ```
 
+The report compares ORBITAL against `random_search`, `greedy_routing`, and
+`earliest_deadline` baselines across score, feasibility, runtime, and robustness.
+See `docs/BASELINE_COMPARISONS.md` for the current summarized results.
+
 ---
 
 ## Stress Tests
@@ -199,10 +232,10 @@ python experiments/run_seed_experiments.py --aircraft examples/aircraft_uav_demo
 ## Development Checks
 
 ```bash
-ruff check .
-black --check .
-mypy mission_framework
-pytest
+python -m ruff check .
+python -m black --check .
+python -m mypy --python-version 3.12 mission_framework
+python -m pytest
 python run_all.py --fast --no-plots
 ```
 

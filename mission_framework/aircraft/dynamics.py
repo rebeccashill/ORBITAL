@@ -21,7 +21,7 @@ Maneuver constraints:
 Wind:
 - v_ground = v_air_relative(psi, v_air) + wind(x,y,z,t)
 
-This model is intentionally "simple but explicit" for AeroHack.
+This model is intentionally simple but explicit for planning studies.
 """
 
 from __future__ import annotations

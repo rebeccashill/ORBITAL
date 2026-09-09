@@ -1,4 +1,4 @@
-# AeroHack 2026 Submission Checklist
+# ORBITAL Release Checklist
 
 ## Required Components Status
 
@@ -69,10 +69,9 @@ Key spacecraft metrics:
 - Science value: 33 points
 - Hard pass rate: 100%
 
-### 4. Technical Report PDF
+### 4. Technical Report Artifacts
 
-- Location: `docs/AEROHACK_TECHNICAL_REPORT.md`
-- PDF: `docs/AEROHACK_TECHNICAL_REPORT.pdf`
+- Location: `docs/`
 - Length: 8 pages equivalent
 - Contents:
   - Problem statement for both domains
@@ -105,9 +104,9 @@ Spacecraft validation:
 Documentation:
 
 - `README.md` - project overview and quick start
-- `docs/AEROHACK_TECHNICAL_REPORT.md` - full technical report
+- `docs/` - technical report artifacts
 - `docs/BASELINE_COMPARISONS.md` - optimizer-vs-baseline validation summary
-- `docs/SUBMISSION_CHECKLIST.md` - this checklist
+- `docs/SUBMISSION_CHECKLIST.md` - this release checklist
 
 Code quality:
 
@@ -123,7 +122,7 @@ Examples:
 
 ---
 
-## AeroHack Requirements Coverage
+## Project Capability Coverage
 
 | Requirement | Status | Evidence |
 |-------------|--------|----------|
@@ -142,13 +141,13 @@ Examples:
 
 ---
 
-## Submission Summary
+## Release Summary
 
 Project name: ORBITAL - Unified Mission Planning Framework  
 Team: Rebecca Shillingford  
 Repository: https://github.com/rebeccashill/ORBITAL  
 License: MIT  
-Submission date: February 16, 2026
+Initial release date: February 16, 2026
 
 Unique value:
 
@@ -157,4 +156,4 @@ Unique value:
 - Includes reproducible outputs, validation, plots, and documentation
 - Provides a clear path from demo scenarios to stronger mission-planning experiments
 
-Completeness: all listed AeroHack requirements are represented in the repository.
+Completeness: all listed sharing and validation requirements are represented in the repository.

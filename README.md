@@ -16,7 +16,7 @@ ORBITAL is a domain-agnostic mission planning framework that supports:
 
 ---
 
-## Judge Quick Start
+## Quick Start
 
 ### 1. Install
 
@@ -24,22 +24,22 @@ ORBITAL is a domain-agnostic mission planning framework that supports:
 git clone https://github.com/rebeccashill/ORBITAL.git
 cd ORBITAL
 python -m venv .venv
-source .venv/bin/activate        # macOS/Linux
-.venv\Scripts\activate           # Windows PowerShell
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+source .venv/bin/activate          # macOS/Linux
+.venv\Scripts\Activate.ps1         # Windows PowerShell
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
 ```
 
 ### 2. Run Both Domains
 
 ```bash
-python run_all.py
+python run_all.py --fast --no-plots
 ```
 
-For a quick smoke run:
+For full plots and default robustness settings:
 
 ```bash
-python run_all.py --fast
+python run_all.py
 ```
 
 Outputs are saved to:
@@ -52,14 +52,14 @@ runs/cubesat_leo_demo/
 ### 3. Validate Scenario YAML
 
 ```bash
-python -m mission_framework.cli validate examples/aircraft_uav_demo.yaml
-python -m mission_framework.cli validate examples/cubesat_leo_demo.yaml
+orbital validate examples/aircraft_uav_demo.yaml
+orbital validate examples/cubesat_leo_demo.yaml
 ```
 
-Installed CLI equivalent:
+Module form:
 
 ```bash
-orbital validate examples/aircraft_uav_demo.yaml
+python -m mission_framework.cli validate examples/aircraft_uav_demo.yaml
 ```
 
 See [Scenario Authoring Guide](docs/SCENARIO_AUTHORING.md) for YAML structure, units, examples, and common validation errors.
@@ -69,13 +69,13 @@ See [Scenario Authoring Guide](docs/SCENARIO_AUTHORING.md) for YAML structure, u
 Aircraft:
 
 ```bash
-python -m mission_framework.cli examples/aircraft_uav_demo.yaml --iterations 200 --restarts 1 --robustness 20 --seed 0
+orbital examples/aircraft_uav_demo.yaml --iterations 200 --restarts 1 --robustness 20 --seed 0
 ```
 
 Spacecraft:
 
 ```bash
-python -m mission_framework.cli examples/cubesat_leo_demo.yaml --iterations 200 --restarts 1 --robustness 10 --seed 0
+orbital examples/cubesat_leo_demo.yaml --iterations 200 --restarts 1 --robustness 10 --seed 0
 ```
 
 Use `--no-plots` when you only want JSON/CSV artifacts:
@@ -86,9 +86,21 @@ python run_all.py --fast --no-plots
 
 ---
 
-## Deliverables
+## Example Outputs
 
-- Technical report PDF: `docs/AEROHACK_TECHNICAL_REPORT.pdf`
+| Aircraft flight path | Spacecraft mission timeline |
+| --- | --- |
+| ![Aircraft flight path](outputs/aircraft/flight_path.png) | ![Spacecraft mission timeline](outputs/spacecraft/mission_timeline.png) |
+
+| Aircraft battery state | Spacecraft operations summary |
+| --- | --- |
+| ![Aircraft battery state](outputs/aircraft/battery_state.png) | ![Spacecraft operations summary](outputs/spacecraft/operations_summary.png) |
+
+---
+
+## Project Artifacts
+
+- Technical report artifacts: `docs/`
 - Results bundle: `outputs/`
 - Reproducible outputs: `runs/` after executing `python run_all.py`
 
@@ -170,10 +182,10 @@ python experiments/run_seed_experiments.py --aircraft examples/aircraft_uav_demo
 ## Development Checks
 
 ```bash
-ruff check .
-black --check .
-mypy mission_framework
-pytest
+python -m ruff check .
+python -m black --check .
+python -m mypy --python-version 3.12 mission_framework
+python -m pytest
 python run_all.py --fast --no-plots
 ```
 

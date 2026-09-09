@@ -18,7 +18,7 @@ For scheduling:
 This model is intentionally simplified:
 - No reaction wheel momentum saturation
 - No detailed quaternion dynamics
-- Good enough for hackathon planning and constraints
+- Intended for planning studies before high-fidelity attitude simulation
 
 Units:
 - Slew rate in deg/s or rad/s (internally we use rad/s)

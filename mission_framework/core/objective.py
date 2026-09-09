@@ -17,7 +17,7 @@ Conventions:
 Typical planner score:
     score = objective_cost + penalty_weight * constraint_penalty + extra_penalties
 
-AeroHack additions:
+Reporting additions:
 - Explicit scoring config and report objects (auditability)
 - Robust aggregation across Monte-Carlo seeds (mean/worst/CVaR)
 """
@@ -303,7 +303,7 @@ def score_robust(
     """
     Score many simulations and robustly aggregate them.
 
-    Typical usage for AeroHack:
+    Typical robust-planning usage:
     - run N wind seeds for the same planned mission
     - compute N scores
     - aggregate via MEAN or CVAR (risk-aware)

@@ -198,7 +198,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     rob = cfg.get("robustness", {}) or {}
     problem.robustness_cases = int(rob.get("cases", 0)) if rob else 0
 
-    # Optional robust aggregation settings from YAML (nice for AeroHack tuning)
+    # Optional robust aggregation settings from YAML.
     # Example:
     # robustness:
     #   cases: 50
@@ -301,7 +301,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             except Exception as e:
                 print(f"(plot generation skipped: {e})")
 
-    # Core JSON artifacts (judge-friendly)
+    # Core JSON artifacts for repeatable reporting.
     _write_json(outdir / "score.json", result.score_report.to_jsonable())
     _write_json(
         outdir / "constraints.json",
