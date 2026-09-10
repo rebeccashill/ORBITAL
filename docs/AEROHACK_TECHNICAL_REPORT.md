@@ -56,10 +56,11 @@ Both domains share the same planner, constraint system, objective framework, and
 ## 3. Results Summary
 
 ### 3.1 Aircraft Results
-- Score: 8124.23
-- Energy used: 7.45 Wh
-- Flight time: 122 s
+- Score: 311.85 (FEASIBLE)
+- Energy used: 72.82 Wh
+- Flight time: 290 s
 - Geofence violations: 0
+- Hard pass rate: 100%
 
 ### 3.2 Spacecraft Results
 - Score: -33.0 (FEASIBLE)

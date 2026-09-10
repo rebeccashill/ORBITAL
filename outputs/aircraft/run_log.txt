@@ -2,85 +2,92 @@
 === ORBITAL: Planning Complete ===
 Scenario: UAV Multi-Waypoint Mission Demo
 Type:     aircraft
-Score:    8124.23
-Feasible: False
-Worst HARD margin: -2 (all_waypoints_reached)
+Score:    311.846
+Feasible: True
+Worst HARD margin: +0.0925196 (bank_angle_turn_limit)
 
 --- Constraint Report (top worst first) ---
-HARD pass: False | SOFT pass: True | total_penalty: 4
-[FAIL] HARD  all_waypoints_reached           min_margin=-2  max_violation=2  penalty=4
-[PASS] HARD  bank_angle_turn_limit           min_margin=+0.212683  max_violation=0  penalty=0
+HARD pass: True | SOFT pass: True | total_penalty: 0
+[PASS] HARD  bank_angle_turn_limit           min_margin=+0.0925196  max_violation=0  penalty=0
 [PASS] HARD  geofence_no_entry               min_margin=+0.5  max_violation=0  penalty=0
-[PASS] HARD  battery_nonnegative             min_margin=+792.551  max_violation=0  penalty=0
-[PASS] HARD  geofence_clearance              min_margin=+2500  max_violation=0  penalty=0
+[PASS] HARD  all_waypoints_reached           min_margin=+1  max_violation=0  penalty=0
+[PASS] HARD  geofence_clearance              min_margin=+351.629  max_violation=0  penalty=0
+[PASS] HARD  battery_nonnegative             min_margin=+727.179  max_violation=0  penalty=0
 
 --- Score Breakdown ---
 {
-  "total_score": 8124.234693602741,
-  "objective_cost": 124.23469360273869,
-  "constraint_penalty": 4.0,
+  "total_score": 311.8462237110972,
+  "objective_cost": 311.8462237110972,
+  "constraint_penalty": 0.0,
   "constraint_margin_reward": 0.0,
   "objective": {
-    "total_cost": 124.23469360273869,
+    "total_cost": 311.8462237110972,
     "terms": [
       {
         "name": "time",
-        "raw": 122.0,
-        "weighted_cost": 122.0,
+        "raw": 290.0,
+        "weighted_cost": 290.0,
         "weight": 1.0
       },
       {
         "name": "energy",
-        "raw": 7.448978675795615,
-        "weighted_cost": 2.2346936027386843,
+        "raw": 72.8207457036574,
+        "weighted_cost": 21.846223711097217,
         "weight": 0.3
       }
     ]
   },
   "constraint_summary": {
-    "hard_pass": false,
+    "hard_pass": true,
     "soft_pass": true,
-    "total_penalty": 4.0,
+    "total_penalty": 0.0,
     "worst_hard": {
-      "name": "all_waypoints_reached",
+      "name": "bank_angle_turn_limit",
       "severity": "hard",
       "reduce_mode": "min",
       "weight": 1.0,
-      "is_satisfied": false,
-      "min_margin": -2.0,
-      "max_violation": 2.0,
-      "worst_index": 0,
+      "is_satisfied": true,
+      "min_margin": 0.09251957228259053,
+      "max_violation": 0.0,
+      "worst_index": 39,
       "worst_time": null,
-      "metadata_keys": []
+      "metadata_keys": [
+        "bank_max_deg"
+      ]
     },
     "worst_soft": null
   },
   "metadata": {
     "extras": 0.0,
     "penalty_weight": 2000.0,
-    "robust_aggregated_score": 8124.234693602741
+    "robust_aggregated_score": 311.8462237110972
   }
 }
 
 --- Robustness Summary ---
 {
   "cases": 20,
-  "hard_pass_rate": 0.0,
-  "worst_hard_margin_min": -2.0,
+  "hard_pass_rate": 1.0,
+  "worst_hard_margin_min": 0.09251957228259053,
   "robust_aggregation": "cvar",
   "cvar_alpha": 0.8,
-  "robust_score": 8124.234693602741,
-  "mean_score": 8124.234693602741,
-  "p50_score": 8124.234693602739,
-  "p90_score": 8124.234693602739
+  "robust_score": 311.8462237110972,
+  "mean_score": 311.8462237110972,
+  "p50_score": 311.8462237110972,
+  "p90_score": 311.8462237110972
 }
 
 --- Flight Plan ---
 seq | id    | eta_s   | x_m      | y_m      | z_m  
 ----+-------+---------+----------+----------+------
 0   | START | 0.000   | 0.000    | 0.000    | 0.000
-1   | WP2   | 294.628 | 3500.000 | -500.000 | 0.000
-2   | WP3   | 537.584 | 5000.000 | 2000.000 | 0.000
-3   | WP1   | 801.107 | 2000.000 | 1000.000 | 0.000
+1   | WP1   | 76.033  | 2000.000 | 1000.000 | 0.000
+2   | WP3   | 183.559 | 5000.000 | 2000.000 | 0.000
+3   | WP2   | 282.693 | 3500.000 | -500.000 | 0.000
 
-Wrote outputs to: /home/runner/work/ORBITAL/ORBITAL/runs/aircraft_uav_demo
+--- Plots Generated ---
+  flight_path: flight_path.png
+  battery_state: battery_state.png
+  mission_overview: mission_overview.png
+
+Wrote outputs to: runs/aircraft_uav_demo

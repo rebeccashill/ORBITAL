@@ -22,29 +22,30 @@ outputs/
 - **score.json** - Objective function breakdown for time and energy
 - **robustness.json** - Monte Carlo robustness statistics
 - **plan.json** - Complete plan representation
-- **history.json** - Search algorithm iteration history
+- **run_log.txt** - Console output captured from the archived run
 - **flight_path.png** - 2D visualization of the flight trajectory with waypoints
 - **battery_state.png** - Battery energy over time plot
 - **mission_overview.png** - Combined dashboard with path and battery
 
 ### Key Metrics
 
-- **Mission Time:** 122 seconds
-- **Energy Used:** 7.45 Wh out of 800 Wh capacity
+- **Mission Time:** 290 seconds
+- **Energy Used:** 72.82 Wh out of 800 Wh capacity
 - **Waypoints:** 4 total, including START and 3 targets
 - **Geofence Violations:** 0
 - **Battery Violations:** 0
-- **Feasibility:** Unfeasible in this archived run because the limited iteration budget did not complete all waypoints
+- **Hard Pass Rate:** 100% across 20 robustness cases
+- **Feasibility:** Feasible
 
 ### Constraint Summary
 
 | Constraint | Status | Margin |
 |------------|--------|---------|
-| Battery non-negative | PASS | +792.55 Wh |
-| Bank angle limit | PASS | +0.21 rad |
+| Battery non-negative | PASS | +727.18 Wh |
+| Bank angle limit | PASS | +0.09 rad |
 | Geofence no-entry | PASS | +0.5 |
-| Geofence clearance | PASS | +2500 m |
-| All waypoints reached | FAIL | -2 waypoints |
+| Geofence clearance | PASS | +351.63 m |
+| All waypoints reached | PASS | +1 waypoint |
 
 ---
 
@@ -166,6 +167,6 @@ Validation artifacts are saved under `outputs/validation/`.
 
 ---
 
-**Last reviewed:** September 9, 2026
+**Last reviewed:** September 10, 2026
 **Project:** ORBITAL release validation
 **Maintainer:** Rebecca Shillingford

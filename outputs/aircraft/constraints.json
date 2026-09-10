@@ -1,19 +1,21 @@
 {
   "summary": {
-    "hard_pass": false,
+    "hard_pass": true,
     "soft_pass": true,
-    "total_penalty": 4.0,
+    "total_penalty": 0.0,
     "worst_hard": {
-      "name": "all_waypoints_reached",
+      "name": "bank_angle_turn_limit",
       "severity": "hard",
       "reduce_mode": "min",
       "weight": 1.0,
-      "is_satisfied": false,
-      "min_margin": -2.0,
-      "max_violation": 2.0,
-      "worst_index": 0,
+      "is_satisfied": true,
+      "min_margin": 0.09251957228259053,
+      "max_violation": 0.0,
+      "worst_index": 39,
       "worst_time": null,
-      "metadata_keys": []
+      "metadata_keys": [
+        "bank_max_deg"
+      ]
     },
     "worst_soft": null
   },
@@ -24,9 +26,9 @@
       "reduce_mode": "min",
       "weight": 1.0,
       "is_satisfied": true,
-      "min_margin": 792.5510213242044,
+      "min_margin": 727.1792542963426,
       "max_violation": 0.0,
-      "worst_index": 61,
+      "worst_index": 58,
       "worst_time": null,
       "metadata_keys": [
         "t"
@@ -37,9 +39,9 @@
       "severity": "hard",
       "reduce_mode": "min",
       "weight": 1.0,
-      "is_satisfied": false,
-      "min_margin": -2.0,
-      "max_violation": 2.0,
+      "is_satisfied": true,
+      "min_margin": 1.0,
+      "max_violation": 0.0,
       "worst_index": 0,
       "worst_time": null,
       "metadata_keys": []
@@ -50,9 +52,9 @@
       "reduce_mode": "min",
       "weight": 1.0,
       "is_satisfied": true,
-      "min_margin": 0.21268323318226395,
+      "min_margin": 0.09251957228259053,
       "max_violation": 0.0,
-      "worst_index": 1,
+      "worst_index": 39,
       "worst_time": null,
       "metadata_keys": [
         "bank_max_deg"
@@ -76,7 +78,7 @@
       "reduce_mode": "min",
       "weight": 1.0,
       "is_satisfied": true,
-      "min_margin": 2500.0,
+      "min_margin": 351.6286666066642,
       "max_violation": 0.0,
       "worst_index": 0,
       "worst_time": null,

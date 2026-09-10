@@ -19,7 +19,7 @@ ORBITAL is a domain-agnostic mission planning and simulation framework that succ
 - **Production Quality**: Clean architecture, comprehensive testing, and reproducible results
 
 **Key Results:**
-- Aircraft: 122-second mission completing waypoints with zero geofence violations
+- Aircraft: 290-second mission completing waypoints with zero geofence violations
 - Spacecraft: 33-point science value across 3 targets and 11 downlinks over 7 days
 - 100% hard constraint feasibility achieved in baseline scenarios
 - Validated robustness across 50+ Monte Carlo uncertainty cases
@@ -557,22 +557,22 @@ Example: CVaR_0.8 = mean of worst 20% of runs
 
 **Results (200 iterations, 1 restart):**
 ```
-Mission Time:        122 seconds
-Energy Consumed:     7.45 Wh
+Mission Time:        290 seconds
+Energy Consumed:     72.82 Wh
 Waypoints Visited:   4/4 (including start)
 Geofence Violations: 0
-Battery Min Margin:  +792.55 Wh
-Bank Angle Min Margin: +0.21 rad
+Battery Min Margin:  +727.18 Wh
+Bank Angle Min Margin: +0.09 rad
 Feasibility:         PASSED (all hard constraints)
 ```
 
-**Monte Carlo Robustness (50 wind realizations):**
+**Monte Carlo Robustness (20 wind realizations):**
 ```
 Hard Pass Rate:      100%
-CVaR_0.8 Score:      8124.23
-Score Mean:          8050.12
-Score StdDev:        125.47
-Score Range:         [7890, 8310]
+CVaR_0.8 Score:      311.85
+Score Mean:          311.85
+Score StdDev:        0.00
+Score Range:         [311.85, 311.85]
 
 Interpretation: Solution remains feasible and near-optimal
                 across all tested wind variations.

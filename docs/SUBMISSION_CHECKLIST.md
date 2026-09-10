@@ -49,10 +49,12 @@ Aircraft results in `outputs/aircraft/`:
 
 Key aircraft metrics:
 
-- Mission time: 122 s
-- Energy used: 7.45 Wh
+- Mission time: 290 s
+- Energy used: 72.82 Wh
 - Geofence violations: 0
 - Battery violations: 0
+- Hard pass rate: 100% across 20 robustness cases
+- Feasibility: feasible
 
 Spacecraft results in `outputs/spacecraft/`:
 
