@@ -280,8 +280,8 @@ ops:
 | `mission.targets[].value` | number | `>= 0` |
 | `mission.targets[].obs_duration_s` | number | Optional, `> 0`, seconds |
 | `mission.targets[].cooldown_s` | number | Optional, `>= 0`, seconds |
-| `mission.targets[].time_windows[].start_utc` | string | ISO-8601 datetime |
-| `mission.targets[].time_windows[].end_utc` | string | Later than `start_utc` |
+| `mission.targets[].time_windows[].start_utc` | string | ISO-8601 datetime; enforced by default |
+| `mission.targets[].time_windows[].end_utc` | string | Later than `start_utc`; must overlap the mission horizon when enforced |
 | `ground_stations[].id` | string | Unique, non-empty |
 | `ground_stations[].lat_deg` | number | `-90` to `90` |
 | `ground_stations[].lon_deg` | number | `-180` to `180` |
@@ -319,8 +319,15 @@ constraints:
   enforce_power_nonnegative: true
   enforce_data_storage_limit: true
   enforce_cooldown: true
+  enforce_target_time_windows: true
   enforce_max_ops_per_orbit: true
 ```
+
+`mission.targets[].time_windows` are enforced by default. The spacecraft scheduler
+places observations inside the intersection of computed target visibility windows
+and declared UTC target windows. Set `constraints.enforce_target_time_windows:
+false` only when you intentionally want target windows preserved as metadata
+without restricting observation placement.
 
 ### Minimal Spacecraft Example
 
@@ -374,6 +381,7 @@ constraints:
   enforce_power_nonnegative: true
   enforce_data_storage_limit: true
   enforce_cooldown: true
+  enforce_target_time_windows: true
   enforce_max_ops_per_orbit: true
 
 objective:
@@ -494,6 +502,34 @@ For spacecraft target windows, the end time must be after the start time:
 time_windows:
   - start_utc: "2026-01-01T00:00:00Z"
     end_utc: "2026-01-02T00:00:00Z"
+```
+
+### `time_windows: must overlap the mission horizon`
+
+When `constraints.enforce_target_time_windows` is true or omitted, each target
+must have at least one time window that overlaps the mission horizon long enough
+for `obs_duration_s`:
+
+```yaml
+orbit:
+  epoch_utc: "2026-01-01T00:00:00Z"
+  duration_days: 1
+
+mission:
+  targets:
+    - id: "TGT1"
+      obs_duration_s: 30.0
+      time_windows:
+        - start_utc: "2026-01-01T03:00:00Z"
+          end_utc: "2026-01-01T04:00:00Z"
+```
+
+For exploratory scenarios where windows are descriptive only, disable enforcement
+explicitly:
+
+```yaml
+constraints:
+  enforce_target_time_windows: false
 ```
 
 ### `initial_battery_Wh: must be less than or equal to spacecraft.battery_capacity_Wh`

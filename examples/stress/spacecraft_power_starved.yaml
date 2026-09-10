@@ -66,6 +66,7 @@ constraints:
   enforce_power_nonnegative: true
   enforce_data_storage_limit: true
   enforce_cooldown: true
+  enforce_target_time_windows: true
   enforce_max_ops_per_orbit: true
 
 objective:

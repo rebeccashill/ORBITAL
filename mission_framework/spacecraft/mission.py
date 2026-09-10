@@ -20,6 +20,7 @@ Planning-grade demo:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -111,9 +112,79 @@ class GroundTarget:
     value: float = 1.0
     obs_duration_s: float = 30.0
     cooldown_s: float = 0.0
-    time_windows: Tuple[
-        Dict[str, Any], ...
-    ] = ()  # stored as provided (UTC strings), not enforced yet
+    time_windows: Tuple[Dict[str, Any], ...] = ()
+
+
+def _parse_utc_datetime(value: Any) -> datetime:
+    text = str(value).strip()
+    if text.endswith("Z"):
+        text = f"{text[:-1]}+00:00"
+    parsed = datetime.fromisoformat(text)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _target_time_windows_seconds(
+    target: GroundTarget, *, epoch_utc: str, horizon_s: float
+) -> List[Tuple[float, float]]:
+    epoch = _parse_utc_datetime(epoch_utc)
+    windows: List[Tuple[float, float]] = []
+    for window in target.time_windows:
+        start = (_parse_utc_datetime(window["start_utc"]) - epoch).total_seconds()
+        end = (_parse_utc_datetime(window["end_utc"]) - epoch).total_seconds()
+        clipped_start = float(max(0.0, start))
+        clipped_end = float(min(horizon_s, end))
+        if clipped_end > clipped_start:
+            windows.append((clipped_start, clipped_end))
+    return windows
+
+
+def _intersect_windows(
+    first: List[Tuple[float, float]],
+    second: List[Tuple[float, float]],
+    *,
+    min_duration_s: float = 0.0,
+) -> List[Tuple[float, float]]:
+    intersections: List[Tuple[float, float]] = []
+    for a0, a1 in first:
+        for b0, b1 in second:
+            start = float(max(a0, b0))
+            end = float(min(a1, b1))
+            if end - start >= min_duration_s:
+                intersections.append((start, end))
+    return intersections
+
+
+def _time_window_violation_s(
+    event: Event,
+    windows: List[Tuple[float, float]],
+) -> float:
+    if not windows:
+        return float(event.duration)
+
+    best_violation: Optional[float] = None
+    for w0, w1 in windows:
+        violation = max(0.0, float(w0) - float(event.t_start)) + max(
+            0.0, float(event.t_end) - float(w1)
+        )
+        if best_violation is None or violation < best_violation:
+            best_violation = violation
+    return float(best_violation if best_violation is not None else event.duration)
+
+
+def _compute_target_time_window_violation_s(
+    events: List[Event],
+    windows_by_target: Dict[str, List[Tuple[float, float]]],
+) -> float:
+    total_violation = 0.0
+    for event in events:
+        if event.etype != EventType.OBSERVATION or event.target_id is None:
+            continue
+        total_violation += _time_window_violation_s(
+            event, windows_by_target.get(str(event.target_id), [])
+        )
+    return float(total_violation)
 
 
 def _deg2rad(d: float) -> float:
@@ -235,6 +306,9 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     # -------------------------
     step_s = float((cfg.get("orbit", {}) or {}).get("time_step_s", 30.0))
     default_min_el = 10.0
+    epoch_utc = str((cfg.get("orbit", {}) or {}).get("epoch_utc", el.epoch_utc))
+    constraints_cfg = cfg.get("constraints", {}) or {}
+    enforce_target_time_windows = bool(constraints_cfg.get("enforce_target_time_windows", True))
 
     # Propagate once (ECEF positions)
     t_arr, r_ecef_arr = propagate_ecef_trajectory(el, 0.0, t_horizon, step_s)
@@ -246,7 +320,10 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
         wins_dict = compute_access_windows(t=t_arr, r_ecef=r_ecef_arr, sites=[s])
         station_windows[s.name] = wins_dict.get(s.name, [])
 
-    # Target access windows: treat targets as pseudo-sites
+    # Target access windows: treat targets as pseudo-sites, then optionally
+    # intersect line-of-sight visibility with declared mission UTC windows.
+    target_visibility_windows: Dict[str, List[Tuple[float, float]]] = {}
+    target_time_windows_s: Dict[str, List[Tuple[float, float]]] = {}
     target_windows: Dict[str, List[Tuple[float, float]]] = {}
     for tgt in targets:
         pseudo = GroundSite.from_km(
@@ -258,7 +335,22 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
             min_elev_deg=default_min_el,
         )
         wins_dict = compute_access_windows(t=t_arr, r_ecef=r_ecef_arr, sites=[pseudo])
-        target_windows[tgt.target_id] = wins_dict.get(pseudo.name, [])
+        visibility_windows = wins_dict.get(pseudo.name, [])
+        declared_windows = _target_time_windows_seconds(
+            tgt, epoch_utc=epoch_utc, horizon_s=t_horizon
+        )
+
+        target_visibility_windows[tgt.target_id] = visibility_windows
+        target_time_windows_s[tgt.target_id] = declared_windows
+        target_windows[tgt.target_id] = (
+            _intersect_windows(
+                visibility_windows,
+                declared_windows,
+                min_duration_s=float(tgt.obs_duration_s),
+            )
+            if enforce_target_time_windows
+            else visibility_windows
+        )
 
     # -------------------------
     # Decision space
@@ -306,6 +398,9 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                         "value": float(tgt.value),
                         "duration_s": float(tgt.obs_duration_s),
                         "cooldown_s": float(tgt.cooldown_s),
+                        "time_window_enforced": bool(enforce_target_time_windows),
+                        "scheduling_window_start_s": float(w0),
+                        "scheduling_window_end_s": float(w1),
                     },
                 )
             )
@@ -475,6 +570,9 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
 
         ops_per_orbit_max = _compute_ops_per_orbit_max(events, orbit_period_s=orbit_period_s)
         cooldown_violation_s = _compute_cooldown_violation_s(events)
+        target_time_window_violation_s = _compute_target_time_window_violation_s(
+            events, target_time_windows_s
+        )
 
         return SimResult(
             t=(
@@ -494,10 +592,14 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                 "final_battery_Wh": float(trace.final_battery_Wh()),
                 "ops_per_orbit_max": float(ops_per_orbit_max),
                 "cooldown_violation_s": float(cooldown_violation_s),
+                "target_time_window_violation_s": float(target_time_window_violation_s),
             },
             metadata={
                 "station_windows": station_windows,
+                "target_visibility_windows": target_visibility_windows,
+                "target_time_windows_s": target_time_windows_s,
                 "target_windows": target_windows,
+                "target_time_windows_enforced": bool(enforce_target_time_windows),
                 "targets_time_windows_utc": {t.target_id: list(t.time_windows) for t in targets},
             },
         )

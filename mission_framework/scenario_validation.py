@@ -12,9 +12,9 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import yaml
 
@@ -531,6 +531,13 @@ def _validate_spacecraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) 
                 _number(target, f"{path}.cooldown_s", issues, min_value=0.0)
                 _validate_time_windows(target, f"{path}.time_windows", issues, required=True)
 
+    if (
+        mission is not None
+        and orbit is not None
+        and _target_time_window_enforcement_enabled(constraints)
+    ):
+        _validate_target_time_windows_overlap_horizon(mission, orbit, issues)
+
     if ground_stations is not None:
         if not ground_stations:
             issues.append(ValidationIssue("ground_stations", "must contain at least one station"))
@@ -792,6 +799,74 @@ def _validate_time_windows(
             )
 
 
+def _target_time_window_enforcement_enabled(
+    constraints: Optional[Mapping[str, Any]],
+) -> bool:
+    if constraints is None:
+        return True
+    value = constraints.get("enforce_target_time_windows", True)
+    return value if isinstance(value, bool) else True
+
+
+def _validate_target_time_windows_overlap_horizon(
+    mission: Mapping[str, Any],
+    orbit: Mapping[str, Any],
+    issues: list[ValidationIssue],
+) -> None:
+    epoch = _parse_datetime(orbit.get("epoch_utc"))
+    duration_days = _coerce_number(orbit.get("duration_days"))
+    if epoch is None or duration_days is None or duration_days <= 0.0:
+        return
+
+    targets = mission.get("targets")
+    if not _is_non_string_sequence(targets):
+        return
+    targets_seq = cast(Sequence[Any], targets)
+
+    horizon_s = float(duration_days * 24.0 * 3600.0)
+    for idx, target in enumerate(targets_seq):
+        if not isinstance(target, Mapping):
+            continue
+
+        obs_duration_s = _coerce_number(target.get("obs_duration_s"))
+        if obs_duration_s is None:
+            obs_duration_s = 30.0
+        if obs_duration_s <= 0.0:
+            continue
+
+        windows = target.get("time_windows")
+        if not _is_non_string_sequence(windows):
+            continue
+        windows_seq = cast(Sequence[Any], windows)
+
+        has_usable_window = False
+        for window in windows_seq:
+            if not isinstance(window, Mapping):
+                continue
+            start = _parse_datetime(window.get("start_utc"))
+            end = _parse_datetime(window.get("end_utc"))
+            if start is None or end is None or end <= start:
+                continue
+
+            rel_start = float((start - epoch).total_seconds())
+            rel_end = float((end - epoch).total_seconds())
+            overlap_s = min(horizon_s, rel_end) - max(0.0, rel_start)
+            if overlap_s >= float(obs_duration_s):
+                has_usable_window = True
+                break
+
+        if not has_usable_window:
+            issues.append(
+                ValidationIssue(
+                    f"mission.targets[{idx}].time_windows",
+                    "must overlap the mission horizon by at least obs_duration_s "
+                    "when target time windows are enforced",
+                    "Adjust start_utc/end_utc, increase orbit.duration_days, or set "
+                    "constraints.enforce_target_time_windows: false for metadata-only windows.",
+                )
+            )
+
+
 def _validate_polygon(
     container: Mapping[str, Any],
     path: str,
@@ -956,9 +1031,12 @@ def _parse_datetime(value: Any) -> Optional[datetime]:
     if text.endswith("Z"):
         text = f"{text[:-1]}+00:00"
     try:
-        return datetime.fromisoformat(text)
+        parsed = datetime.fromisoformat(text)
     except ValueError:
         return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
 
 
 def _is_non_string_sequence(value: Any) -> bool:

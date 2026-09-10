@@ -8,6 +8,7 @@ implemented using spacecraft simulation outputs (SimResult scalars/resources).
 Constraints included (minimum viable + credible):
 - battery_nonnegative (HARD): min battery >= 0 Wh
 - slew_feasible (HARD): slew_margin_s >= 0 (can rotate between tasks fast enough)
+- target_time_windows (HARD, optional): scheduled observations stay inside target UTC windows
 - max_ops_per_orbit (SOFT, optional): avoid too many operations per orbit-ish period
 - cooldown_between_observations (SOFT, optional): enforce time between successive observations (proxy)
 
@@ -101,6 +102,33 @@ def constraint_slew_feasible(
     )
 
 
+def constraint_target_time_windows(
+    *,
+    violation_key: str = "target_time_window_violation_s",
+    severity: Severity = Severity.HARD,
+) -> Constraint:
+    """
+    HARD constraint: observations must fit inside each target's declared UTC time windows.
+
+    The spacecraft builder schedules observations inside the intersection of target
+    line-of-sight visibility and target time windows. This constraint keeps that
+    behavior auditable and catches externally provided off-window schedules.
+    """
+
+    def margin(sim: Any) -> float:
+        return float(-_get_scalar(sim, violation_key, default=0.0))
+
+    return FunctionalConstraint(
+        name="target_time_windows",
+        severity=severity,
+        fn=margin,
+        metadata={
+            "key": violation_key,
+            "meaning": "margin>=0 => observations stay inside declared target windows",
+        },
+    )
+
+
 def constraint_max_ops_per_orbit_soft(
     *,
     ops_key: str = "ops_per_orbit_max",
@@ -191,15 +219,25 @@ def default_spacecraft_constraints(cfg: Optional[Dict[str, Any]] = None) -> List
     constraints: List[Constraint] = [
         constraint_battery_nonnegative(key_min_batt="min_battery_Wh", severity=Severity.HARD),
         constraint_slew_feasible(key_margin="slew_margin_s", severity=Severity.HARD),
-        constraint_max_ops_per_orbit_soft(
-            ops_key="ops_per_orbit_max",
-            orbit_period_s=orbit_period_s,
-            max_ops=max_ops,
-            severity=Severity.SOFT,
-        ),
         constraint_observation_cooldown_soft(
             cooldown_violation_key="cooldown_violation_s",
             severity=Severity.SOFT,
         ),
     ]
+    if bool((cfg.get("constraints", {}) or {}).get("enforce_target_time_windows", True)):
+        constraints.append(
+            constraint_target_time_windows(
+                violation_key="target_time_window_violation_s",
+                severity=Severity.HARD,
+            )
+        )
+    if bool((cfg.get("constraints", {}) or {}).get("enforce_max_ops_per_orbit", True)):
+        constraints.append(
+            constraint_max_ops_per_orbit_soft(
+                ops_key="ops_per_orbit_max",
+                orbit_period_s=orbit_period_s,
+                max_ops=max_ops,
+                severity=Severity.SOFT,
+            )
+        )
     return constraints
