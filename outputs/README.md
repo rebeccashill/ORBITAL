@@ -1,47 +1,50 @@
 # ORBITAL Results Bundle
 
-This folder contains pre-generated outputs from both aircraft and spacecraft mission planning demos, as required for the AeroHack 2026 submission.
+This folder contains pre-generated outputs from the aircraft and spacecraft mission planning demos used for ORBITAL release validation.
 
 ## Directory Structure
 
-```
+```text
 outputs/
-├── aircraft/          # UAV multi-waypoint mission results
-├── spacecraft/        # CubeSat 7-day LEO mission results
-└── validation/        # Monte Carlo robustness analysis (run validation script to generate)
+  aircraft/     UAV multi-waypoint mission results
+  spacecraft/   CubeSat 7-day LEO mission results
+  validation/   robustness, stress, and baseline validation outputs
 ```
 
 ## Aircraft Results (`aircraft/`)
 
 **Scenario:** UAV multi-waypoint flight mission with wind uncertainty
 
-### Files:
+### Files
+
 - **waypoints.csv** - Planned flight route with waypoint sequence and ETAs
-- **constraints.json** - Detailed constraint evaluation (battery, geofence, maneuvers)
-- **score.json** - Objective function breakdown (time, energy)
+- **constraints.json** - Detailed constraint evaluation for battery, geofence, and maneuvers
+- **score.json** - Objective function breakdown for time and energy
 - **robustness.json** - Monte Carlo robustness statistics
 - **plan.json** - Complete plan representation
 - **history.json** - Search algorithm iteration history
-- **flight_path.png** - 2D visualization of the flight trajectory with waypoints ✨
-- **battery_state.png** - Battery energy over time plot ✨
-- **mission_overview.png** - Combined dashboard with path and battery ✨
+- **flight_path.png** - 2D visualization of the flight trajectory with waypoints
+- **battery_state.png** - Battery energy over time plot
+- **mission_overview.png** - Combined dashboard with path and battery
 
-### Key Metrics:
+### Key Metrics
+
 - **Mission Time:** 122 seconds
-- **Energy Used:** 7.45 Wh (out of 800 Wh capacity)
-- **Waypoints:** 4 total (START + 3 targets)
-- **Geofence Violations:** 0 ✅
-- **Battery Violations:** 0 ✅
-- **Feasibility:** Unfeasible (did not complete all waypoints with limited iterations)
+- **Energy Used:** 7.45 Wh out of 800 Wh capacity
+- **Waypoints:** 4 total, including START and 3 targets
+- **Geofence Violations:** 0
+- **Battery Violations:** 0
+- **Feasibility:** Unfeasible in this archived run because the limited iteration budget did not complete all waypoints
 
-### Constraint Summary:
+### Constraint Summary
+
 | Constraint | Status | Margin |
 |------------|--------|---------|
-| Battery non-negative | ✅ PASS | +792.55 Wh |
-| Bank angle limit | ✅ PASS | +0.21 rad |
-| Geofence no-entry | ✅ PASS | +0.5 |
-| Geofence clearance | ✅ PASS | +2500 m |
-| All waypoints reached | ❌ FAIL | -2 waypoints |
+| Battery non-negative | PASS | +792.55 Wh |
+| Bank angle limit | PASS | +0.21 rad |
+| Geofence no-entry | PASS | +0.5 |
+| Geofence clearance | PASS | +2500 m |
+| All waypoints reached | FAIL | -2 waypoints |
 
 ---
 
@@ -49,37 +52,41 @@ outputs/
 
 **Scenario:** CubeSat 7-day Earth observation and downlink scheduling
 
-### Files:
+### Files
+
 - **schedule.csv** - 7-day mission timeline with observations and downlinks
-- **constraints.json** - Constraint validation (battery, slew, ops limits)
+- **constraints.json** - Constraint validation for battery, slew, and operations limits
 - **score.json** - Science value accounting
 - **robustness.json** - Monte Carlo robustness statistics
 - **plan.json** - Complete schedule representation
 - **history.json** - Search algorithm iteration history
-- **mission_timeline.png** - Gantt chart showing all scheduled events over 7 days ✨
-- **operations_summary.png** - Bar charts of event counts and durations by type ✨
-- **daily_activity.png** - Daily distribution of observations and downlinks ✨
+- **mission_timeline.png** - Gantt chart showing all scheduled events over 7 days
+- **operations_summary.png** - Bar charts of event counts and durations by type
+- **daily_activity.png** - Daily distribution of observations and downlinks
 
-### Key Metrics:
-- **Mission Duration:** 7 days (604,800 seconds)
-- **Targets Observed:** 3/3 ✅
+### Key Metrics
+
+- **Mission Duration:** 7 days, or 604,800 seconds
+- **Targets Observed:** 3/3
 - **Downlinks Scheduled:** 11 ground station contacts
 - **Science Value Delivered:** 33 points
-- **Hard Pass Rate:** 100% ✅
-- **Feasibility:** FEASIBLE ✅
+- **Hard Pass Rate:** 100%
+- **Feasibility:** Feasible
 
-### Schedule Highlights:
+### Schedule Highlights
+
 - **Observations:** TGT1 (LA), TGT2 (Tokyo), TGT3 (Sydney)
 - **Ground Stations:** GS1 (San Francisco), GS2 (Paris)
-- **Activities:** 15 total events (3 observations + 11 downlinks + idle time)
+- **Activities:** 15 total events, including 3 observations, 11 downlinks, and idle time
 
-### Constraint Summary:
+### Constraint Summary
+
 | Constraint | Status | Margin |
 |------------|--------|---------|
-| Battery non-negative | ✅ PASS | +0.0 Wh (tight!) |
-| Slew feasible | ✅ PASS | +1.18 rad/s |
-| Max ops per orbit | ✅ PASS | Not active |
-| Cooldown between obs | ✅ PASS | Not active |
+| Battery non-negative | PASS | +0.0 Wh, tight |
+| Slew feasible | PASS | +1.18 rad/s |
+| Max ops per orbit | PASS | Not active |
+| Cooldown between obs | PASS | Not active |
 
 ---
 
@@ -87,61 +94,78 @@ outputs/
 
 **Generated by:** `python scripts/run_validation.py`
 
-This folder contains comprehensive Monte Carlo robustness analysis:
+This folder contains Monte Carlo robustness, stress, and baseline validation outputs.
 
-### Aircraft Validation:
+### Aircraft Validation
+
 - **Method:** 50 independent wind realizations
-- **Wind Model:** Stochastic spatial + temporal variations
-- **Aggregation:** CVaR α=0.8 (robust tail risk measure)
+- **Wind Model:** Stochastic spatial and temporal variations
+- **Aggregation:** CVaR alpha=0.8 robust tail risk measure
 - **Results:** Consistent performance across wind seeds
 
-### Spacecraft Validation:
+### Spacecraft Validation
+
 - **Method:** 30 parameter perturbation cases
-- **Variations:** Orbital elements, power rates, slew limits
-- **Results:** 100% hard constraint pass rate across all cases
+- **Variations:** Orbital elements, power rates, and slew limits
+- **Results:** 100% hard constraint pass rate across validation cases
 
 ---
 
 ## How to Reproduce
 
-### Quick Reproduction:
+### Quick Reproduction
+
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run aircraft demo
-python -m mission_framework.cli examples/aircraft_uav_demo.yaml \
-  --iterations 200 --restarts 1 --robustness 20
-
-# Run spacecraft demo
-python -m mission_framework.cli examples/cubesat_leo_demo.yaml \
-  --iterations 200 --restarts 1 --robustness 10
+python -m pip install -e ".[dev]"
+python run_all.py --fast --no-plots
 ```
 
-### Full Validation:
+By default, current demo runs save JSON and CSV artifacts to:
+
+```text
+runs/aircraft_uav_demo/
+runs/cubesat_leo_demo/
+```
+
+Run without `--no-plots` when you also want PNG visualizations:
+
 ```bash
-# Run complete validation suite
+python run_all.py
+```
+
+### Individual Demo Runs
+
+```bash
+orbital examples/aircraft_uav_demo.yaml --iterations 200 --restarts 1 --robustness 20
+orbital examples/cubesat_leo_demo.yaml --iterations 200 --restarts 1 --robustness 10
+```
+
+### Full Validation
+
+```bash
 python scripts/run_validation.py
 ```
 
-Results will be saved to `runs/<scenario_name>/` and can be copied here.
+Validation artifacts are saved under `outputs/validation/`.
 
 ---
 
 ## File Format Reference
 
 ### CSV Files
+
 - **waypoints.csv:** `seq | id | eta_s | x_m | y_m | z_m`
 - **schedule.csv:** `seq | etype | label | target_id | t_start_s | t_end_s | duration_s | ...`
 
 ### JSON Files
-- **constraints.json:** Constraint evaluation with margins, violations, metadata
+
+- **constraints.json:** Constraint evaluation with margins, violations, and metadata
 - **score.json:** Objective cost breakdown with individual term contributions
-- **robustness.json:** Monte Carlo aggregation (mean, median, CVaR, pass rates)
+- **robustness.json:** Monte Carlo aggregation with mean, median, CVaR, and pass rates
 - **plan.json:** Complete decision variable values and metadata
 
 ---
 
-**Generated:** February 16, 2026  
-**For:** AeroHack 2026 Submission  
-**Team:** Rebecca Shillingford
+**Last reviewed:** September 9, 2026
+**Project:** ORBITAL release validation
+**Maintainer:** Rebecca Shillingford

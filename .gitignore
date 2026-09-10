@@ -5,11 +5,15 @@ __pycache__/
 *.pyd
 *.egg-info/
 
+# Build artifacts
+build/
+dist/
+
 # Editable install
 src/
 
 # Virtual env
-.venv/
+.venv*/
 venv/
 
 # Pytest

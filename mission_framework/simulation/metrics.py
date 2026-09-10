@@ -3,12 +3,12 @@
 Performance metrics for mission simulations.
 
 This module extracts performance metrics from a completed simulation.
-It does NOT define constraints or objectives — it only measures outcomes.
+It does NOT define constraints or objectives - it only measures outcomes.
 
 Metrics categories:
-- Time    → mission duration
-- Energy  → fuel / delta-v / power usage
-- Value   → science return, coverage, revenue proxies
+- Time    -> mission duration
+- Energy  -> fuel / delta-v / power usage
+- Value   -> science return, coverage, revenue proxies
 """
 
 from __future__ import annotations

@@ -256,7 +256,7 @@ class FunctionalConstraint(Constraint):
 class ConstraintSet(Constraint):
     """
     Backwards-compatible: groups multiple constraints into ONE combined margin vector.
-    Good for “single score”, bad for audits (use ConstraintGroup for audits).
+    Good for "single score", bad for audits (use ConstraintGroup for audits).
     """
 
     def __init__(

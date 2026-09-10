@@ -613,6 +613,8 @@ def write_markdown(rows: Sequence[Dict[str, Any]], out_md: Path, command: str) -
             "- ORBITAL rows are solved nominally, then the final assignment is evaluated "
             "against the same robustness cases as the baselines.",
             "- Runtime includes method execution plus final robustness evaluation.",
+            "- Runtime values are machine-dependent; compare scores, feasibility, and "
+            "robust pass rates for deterministic checks.",
             "- The CSV file contains additional objective, penalty, and worst hard "
             "constraint fields for auditability.",
             "",

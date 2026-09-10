@@ -11,11 +11,6 @@ What this CLI does:
 - Builds a Problem (domain-specific builder, unified core interfaces)
 - Runs the unified Planner
 - Prints summary + writes simple JSON artifacts
-
-Assumes you'll implement:
-- mission_framework.aircraft.mission.build_problem_from_config
-- mission_framework.spacecraft.mission.build_problem_from_config
-- mission_framework.reporting.* exporters (optional; can be simple prints first)
 """
 
 from __future__ import annotations
@@ -141,11 +136,53 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument(
         "--outdir", type=str, default="runs", help="Output directory for reports/artifacts."
     )
+    ap.add_argument(
+        "-outdir",
+        dest="outdir",
+        type=str,
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     ap.add_argument("--iterations", type=int, default=None, help="Override planner.iterations")
+    ap.add_argument(
+        "-iterations",
+        dest="iterations",
+        type=int,
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     ap.add_argument("--restarts", type=int, default=None, help="Override planner.restarts")
+    ap.add_argument(
+        "-restarts",
+        dest="restarts",
+        type=int,
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     ap.add_argument("--robustness", type=int, default=None, help="Override robustness.cases")
+    ap.add_argument(
+        "-robustness",
+        dest="robustness",
+        type=int,
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     ap.add_argument("--seed", type=int, default=None, help="Random seed for reproducible runs")
+    ap.add_argument(
+        "-seed",
+        dest="seed",
+        type=int,
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     ap.add_argument("--no-plots", action="store_true", help="Skip PNG plot generation")
+    ap.add_argument(
+        "-no-plots",
+        dest="no_plots",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
 
     args = ap.parse_args(raw_args)
     if args.seed is not None:

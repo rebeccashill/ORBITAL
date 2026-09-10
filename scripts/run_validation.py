@@ -186,13 +186,9 @@ def run_case(
 
 
 def main() -> int:
-    print(
-        """
-╔══════════════════════════════════════════════════════════╗
-║          ORBITAL VALIDATION - ROBUST + STRESS            ║
-╚══════════════════════════════════════════════════════════╝
-"""
-    )
+    print("\n" + "=" * 64)
+    print("ORBITAL VALIDATION - ROBUSTNESS AND STRESS CASES")
+    print("=" * 64 + "\n")
 
     summary: Dict[str, Any] = {"cases": []}
 

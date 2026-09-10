@@ -103,3 +103,4 @@ def test_baseline_report_writers_include_comparison_fields(tmp_path: Path) -> No
     markdown = markdown_path.read_text(encoding="utf-8")
     assert "`random_search`" in markdown
     assert "Hard Pass Rate" in markdown
+    assert "Runtime values are machine-dependent" in markdown

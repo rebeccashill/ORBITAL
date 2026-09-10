@@ -32,7 +32,7 @@ from mission_framework.core.constraints import (
 
 @dataclass(frozen=True)
 class FeasibilitySummary:
-    """Compact feasibility view that’s easy to print/log."""
+    """Compact feasibility view that's easy to print/log."""
 
     hard_pass: bool
     soft_pass: bool

@@ -1,10 +1,13 @@
-# ORBITAL Release Checklist
+# ORBITAL v1.0.0 Completed Release Checklist
 
-## Required Components Status
+This document records the completed ORBITAL `v1.0.0` release baseline. It is kept as a release artifact so future patch releases can be compared against the original public project package.
+
+## Release Contents
 
 ### 1. Runnable Code
 
-- Location: GitHub repository
+- Location: public GitHub repository
+- Release tag: `v1.0.0`
 - Language: Python 3.10+
 - Structure:
   - `/mission_framework` - core planning engine and domain modules
@@ -147,7 +150,9 @@ Project name: ORBITAL - Unified Mission Planning Framework
 Team: Rebecca Shillingford  
 Repository: https://github.com/rebeccashill/ORBITAL  
 License: MIT  
-Initial release date: February 16, 2026
+Release tag: `v1.0.0`
+Release date: September 8, 2026
+Release status: Complete
 
 Unique value:
 
@@ -156,4 +161,4 @@ Unique value:
 - Includes reproducible outputs, validation, plots, and documentation
 - Provides a clear path from demo scenarios to stronger mission-planning experiments
 
-Completeness: all listed sharing and validation requirements are represented in the repository.
+Completeness: all listed 1.0.0 release requirements are represented in the repository.

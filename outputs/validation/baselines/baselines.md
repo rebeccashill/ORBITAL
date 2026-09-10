@@ -20,15 +20,16 @@ python scripts/run_baselines.py --aircraft examples/aircraft_uav_demo.yaml --spa
 
 | Domain | Planner | Score | Feasible | Runtime (s) | Robust Cases | Hard Pass Rate | Worst Robust Margin |
 | --- | --- | ---: | --- | ---: | ---: | ---: | ---: |
-| aircraft | `orbital` | 311.846 | yes | 9.49675 | 5 | 1 | 0.0925196 |
-| aircraft | `random_search` | 321.716 | yes | 3.28549 | 5 | 1 | 0.0970243 |
-| aircraft | `greedy_routing` | 844.916 | no | 0.247801 | 5 | 0 | -0.5 |
-| spacecraft | `orbital` | -33 | yes | 52.6805 | 5 | 1 | 0 |
-| spacecraft | `random_search` | -33 | yes | 14.2183 | 5 | 1 | 0 |
-| spacecraft | `earliest_deadline` | -33 | yes | 1.51992 | 5 | 1 | 0 |
+| aircraft | `orbital` | 311.846 | yes | 0.618552 | 5 | 1 | 0.0925196 |
+| aircraft | `random_search` | 321.716 | yes | 0.211136 | 5 | 1 | 0.0970243 |
+| aircraft | `greedy_routing` | 844.916 | no | 0.019257 | 5 | 0 | -0.5 |
+| spacecraft | `orbital` | -33 | yes | 4.27038 | 5 | 1 | 0 |
+| spacecraft | `random_search` | -33 | yes | 1.4606 | 5 | 1 | 0 |
+| spacecraft | `earliest_deadline` | -33 | yes | 0.144634 | 5 | 1 | 0 |
 
 ## Notes
 
 - ORBITAL rows are solved nominally, then the final assignment is evaluated against the same robustness cases as the baselines.
 - Runtime includes method execution plus final robustness evaluation.
+- Runtime values are machine-dependent; compare scores, feasibility, and robust pass rates for deterministic checks.
 - The CSV file contains additional objective, penalty, and worst hard constraint fields for auditability.

@@ -108,7 +108,7 @@ class BatteryModel:
         }
 
 
-# Convenience: compute a full battery trace after sim (if you didn’t integrate online)
+# Convenience: compute a full battery trace after sim (if you didn't integrate online)
 def integrate_battery_trace(
     t_s: np.ndarray,
     v_air_mps: np.ndarray,

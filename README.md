@@ -5,7 +5,7 @@
 **Operational Reusable Backend for Integrated Trajectory and Logistics**  
 Unified Mission Planning Framework for Aircraft and Spacecraft
 
-Current release: `v1.0.1`
+Current release: `v1.0.2`
 
 ORBITAL is a domain-agnostic mission planning framework that supports:
 
@@ -85,6 +85,11 @@ Use `--no-plots` when you only want JSON/CSV artifacts:
 ```bash
 python run_all.py --fast --no-plots
 ```
+
+The documented CLI flags use standard double dashes, such as `--seed` and
+`--iterations`. The main run command also accepts single-dash compatibility
+aliases such as `-seed`, `-iterations`, `-restarts`, `-robustness`, `-outdir`,
+and `-no-plots`.
 
 ---
 
@@ -189,6 +194,7 @@ python -m ruff check .
 python -m black --check .
 python -m mypy --python-version 3.12 mission_framework
 python -m pytest
+python -m pytest --cov=mission_framework --cov-report=term-missing
 python run_all.py --fast --no-plots
 ```
 

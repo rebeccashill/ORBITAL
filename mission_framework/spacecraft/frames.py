@@ -33,7 +33,7 @@ def eci_to_ecef(r_eci: np.ndarray, v_eci: np.ndarray, jd_ut1: float):
     """
     ECI -> ECEF with velocity frame correction:
       r_ecef = R3(gmst) r_eci
-      v_ecef = R3(gmst) v_eci - ω×r_ecef
+      v_ecef = R3(gmst) v_eci - omega x r_ecef
     """
     r_eci = np.asarray(r_eci, dtype=float).reshape(3)
     v_eci = np.asarray(v_eci, dtype=float).reshape(3)
