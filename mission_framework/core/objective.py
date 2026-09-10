@@ -30,6 +30,8 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import numpy as np
 
+from mission_framework.core.json_utils import to_strict_jsonable
+
 
 class CombineMode(str, Enum):
     SUM = "sum"
@@ -110,13 +112,15 @@ class ObjectiveReport:
         return {t.name: t for t in self.terms}
 
     def summary(self) -> Dict[str, Any]:
-        return {
-            "total_cost": self.total_cost(),
-            "terms": [
-                {"name": t.name, "raw": t.raw, "weighted_cost": t.cost, "weight": t.weight}
-                for t in self.terms
-            ],
-        }
+        return to_strict_jsonable(
+            {
+                "total_cost": self.total_cost(),
+                "terms": [
+                    {"name": t.name, "raw": t.raw, "weighted_cost": t.cost, "weight": t.weight}
+                    for t in self.terms
+                ],
+            }
+        )
 
     def to_jsonable(self) -> Dict[str, Any]:
         return self.summary()
@@ -194,15 +198,17 @@ class ScoreReport:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_jsonable(self) -> Dict[str, Any]:
-        return {
-            "total_score": float(self.total_score),
-            "objective_cost": float(self.objective_cost),
-            "constraint_penalty": float(self.constraint_penalty),
-            "constraint_margin_reward": float(self.constraint_margin_reward),
-            "objective": self.objective.to_jsonable(),
-            "constraint_summary": self.constraint_summary,
-            "metadata": dict(self.metadata),
-        }
+        return to_strict_jsonable(
+            {
+                "total_score": float(self.total_score),
+                "objective_cost": float(self.objective_cost),
+                "constraint_penalty": float(self.constraint_penalty),
+                "constraint_margin_reward": float(self.constraint_margin_reward),
+                "objective": self.objective.to_jsonable(),
+                "constraint_summary": self.constraint_summary,
+                "metadata": dict(self.metadata),
+            }
+        )
 
 
 def score_plan(
@@ -284,12 +290,14 @@ class RobustScoreReport:
     per_run_reports: Optional[List[ScoreReport]] = None
 
     def to_jsonable(self) -> Dict[str, Any]:
-        return {
-            "aggregated_score": float(self.aggregated_score),
-            "aggregation": str(self.aggregation.value),
-            "alpha": None if self.alpha is None else float(self.alpha),
-            "per_run_scores": [float(x) for x in self.per_run_scores],
-        }
+        return to_strict_jsonable(
+            {
+                "aggregated_score": float(self.aggregated_score),
+                "aggregation": str(self.aggregation.value),
+                "alpha": None if self.alpha is None else float(self.alpha),
+                "per_run_scores": [float(x) for x in self.per_run_scores],
+            }
+        )
 
 
 def score_robust(

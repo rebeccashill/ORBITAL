@@ -13,11 +13,11 @@ Works for BOTH aircraft and spacecraft because ConstraintReport is domain-agnost
 from __future__ import annotations
 
 import csv
-import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from mission_framework.core.constraints import ConstraintReport, ConstraintResult, Severity
+from mission_framework.core.json_utils import finite_float_or_none, write_strict_json
 
 
 def constraint_rows(report: ConstraintReport) -> List[Dict[str, Any]]:
@@ -29,17 +29,17 @@ def constraint_rows(report: ConstraintReport) -> List[Dict[str, Any]]:
                 "name": r.name,
                 "severity": r.severity.value if hasattr(r.severity, "value") else str(r.severity),
                 "status": "PASS" if r.is_satisfied else "FAIL",
-                "min_margin": float(r.min_margin),
-                "max_violation": float(r.max_violation),
-                "penalty": float(r.penalty()),
+                "min_margin": finite_float_or_none(r.min_margin),
+                "max_violation": finite_float_or_none(r.max_violation),
+                "penalty": finite_float_or_none(r.penalty()),
                 "reduce_mode": (
                     r.reduce_mode.value if hasattr(r.reduce_mode, "value") else str(r.reduce_mode)
                 ),
-                "weight": float(r.weight),
+                "weight": finite_float_or_none(r.weight),
             }
         )
     # Sort worst first (lowest min_margin)
-    rows.sort(key=lambda x: x["min_margin"])
+    rows.sort(key=lambda x: float("inf") if x["min_margin"] is None else x["min_margin"])
     return rows
 
 
@@ -51,8 +51,7 @@ def export_constraint_report_json(
         "constraints": constraint_rows(report),
     }
     if out_path is not None:
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+        write_strict_json(out_path, payload)
     return payload
 
 

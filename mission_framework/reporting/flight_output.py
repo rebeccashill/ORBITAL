@@ -21,12 +21,12 @@ Reporting guidance:
 from __future__ import annotations
 
 import csv
-import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+from mission_framework.core.json_utils import write_strict_json
 from mission_framework.core.types import Plan, SimResult, Trajectory
 
 
@@ -113,8 +113,7 @@ def export_flight_json(
         payload["sim_metadata"] = dict(sim.metadata)
 
     if out_path is not None:
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+        write_strict_json(out_path, payload)
 
     return payload
 

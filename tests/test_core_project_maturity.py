@@ -75,7 +75,7 @@ def test_plan_result_serializes_to_json_friendly_dict() -> None:
     payload = result.to_dict()
     assert payload["score"] == pytest.approx(0.0)
     assert payload["score_report"]["objective_cost"] == pytest.approx(0.0)
-    json.dumps(payload)
+    json.dumps(payload, allow_nan=False)
 
 
 def test_decision_space_rejects_duplicate_names_and_accepts_int_shape() -> None:

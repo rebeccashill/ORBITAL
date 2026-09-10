@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field, is_dataclass
-from enum import Enum
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
-
-import numpy as np
 
 from mission_framework.core.constraints import ConstraintReport, Severity
 from mission_framework.core.decision_variables import DecisionAssignment
+from mission_framework.core.json_utils import to_strict_jsonable
 from mission_framework.core.objective import ObjectiveReport, ScoreReport
 
 
@@ -78,21 +76,7 @@ class PlanResult:
 
 def _to_builtin(value: Any) -> Any:
     """Convert common scientific Python values into JSON-friendly types."""
-    if value is None or isinstance(value, (str, bool, int, float)):
-        return value
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    if isinstance(value, Enum):
-        return value.value
-    if isinstance(value, dict):
-        return {str(k): _to_builtin(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_to_builtin(v) for v in value]
-    if is_dataclass(value) and not isinstance(value, type):
-        return _to_builtin(asdict(value))
-    return value
+    return to_strict_jsonable(value)
 
 
 # Compatibility name for early code that imported Solution from this module.

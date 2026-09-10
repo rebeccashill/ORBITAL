@@ -17,13 +17,14 @@ outputs/validation/
 
 from __future__ import annotations
 
-import json
 import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+from mission_framework.core.json_utils import write_strict_json
 
 FEASIBLE_RE = re.compile(r"^\s*Feasible:\s*(True|False)\s*$", re.MULTILINE)
 
@@ -197,8 +198,7 @@ def main() -> int:
 
     # Write summary JSON
     out = Path("outputs/validation/validation_summary.json")
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    write_strict_json(out, summary)
     print(f"\nWrote summary: {out}")
 
     # Exit code: fail if any case hard-failed (nonzero exit)

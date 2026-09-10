@@ -16,7 +16,6 @@ What this CLI does:
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
@@ -25,6 +24,7 @@ import yaml  # PyYAML
 
 from mission_framework.core.constraints import Severity
 from mission_framework.core.decision_variables import MutationConfig
+from mission_framework.core.json_utils import strict_json_dumps, write_strict_json
 from mission_framework.core.objective import RobustAggregation, ScoreConfig
 from mission_framework.core.planner import Planner, PlannerConfig, Problem
 from mission_framework.scenario_validation import ScenarioValidationError, validate_scenario_config
@@ -119,9 +119,7 @@ def _build_problem(cfg: Dict[str, Any]) -> Problem:
 
 
 def _write_json(out_path: Path, obj: Any) -> None:
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with out_path.open("w", encoding="utf-8") as f:
-        json.dump(obj, f, indent=2, default=str)
+    write_strict_json(out_path, obj)
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -269,11 +267,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     print(format_feasibility_report(result.constraints, max_lines=40))
 
     print("\n--- Score Breakdown ---")
-    print(json.dumps(result.score_report.to_jsonable(), indent=2))
+    print(strict_json_dumps(result.score_report.to_jsonable(), indent=2))
 
     if result.robustness is not None:
         print("\n--- Robustness Summary ---")
-        print(json.dumps(result.robustness, indent=2))
+        print(strict_json_dumps(result.robustness, indent=2))
 
     # Write basic artifacts
     outdir = Path(args.outdir).resolve() / scenario_path.stem

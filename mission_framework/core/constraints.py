@@ -24,6 +24,8 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 
+from mission_framework.core.json_utils import finite_float_or_none, to_strict_jsonable
+
 # ---------------------------
 # Core types
 # ---------------------------
@@ -64,7 +66,15 @@ class ConstraintResult:
 
     @property
     def max_violation(self) -> float:
-        return float(max(0.0, -self.min_margin))
+        if self.margins.size == 0:
+            return 0.0
+        violations = np.maximum(0.0, -self.margins)
+        if np.any(np.isposinf(violations)):
+            return float("inf")
+        finite_violations = violations[np.isfinite(violations)]
+        if finite_violations.size == 0:
+            return float("nan")
+        return float(np.max(finite_violations))
 
     @property
     def worst_index(self) -> Optional[int]:
@@ -120,12 +130,12 @@ class ConstraintResult:
             "name": self.name,
             "severity": str(self.severity.value),
             "reduce_mode": str(self.reduce_mode.value),
-            "weight": float(self.weight),
+            "weight": finite_float_or_none(self.weight),
             "is_satisfied": bool(self.is_satisfied),
-            "min_margin": float(self.min_margin),
-            "max_violation": float(self.max_violation),
+            "min_margin": finite_float_or_none(self.min_margin),
+            "max_violation": finite_float_or_none(self.max_violation),
             "worst_index": self.worst_index,
-            "worst_time": self.worst_time(),
+            "worst_time": finite_float_or_none(self.worst_time()),
             # keep metadata but make it safer to serialize (avoid huge arrays)
             "metadata_keys": sorted(list(self.metadata.keys())),
         }
@@ -174,17 +184,19 @@ class ConstraintReport:
         return {
             "hard_pass": self.hard_pass,
             "soft_pass": self.soft_pass,
-            "total_penalty": self.total_penalty(),
+            "total_penalty": finite_float_or_none(self.total_penalty()),
             "worst_hard": None if worst_hard is None else worst_hard.to_dict(),
             "worst_soft": None if worst_soft is None else worst_soft.to_dict(),
         }
 
     def to_jsonable(self) -> Dict[str, Any]:
         """Full JSON-friendly report (for /outputs/constraint_report.json)."""
-        return {
-            "summary": self.summary(),
-            "results": [r.to_dict() for r in self.results],
-        }
+        return to_strict_jsonable(
+            {
+                "summary": self.summary(),
+                "results": [r.to_dict() for r in self.results],
+            }
+        )
 
 
 # ---------------------------

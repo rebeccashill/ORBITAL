@@ -34,12 +34,12 @@ Robustness (if provided elsewhere):
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 import numpy as np
 
+from mission_framework.core.json_utils import write_strict_json
 from mission_framework.core.types import SimResult
 
 DEFAULT_KEYS = [
@@ -109,6 +109,5 @@ def export_summary_metrics_json(
 ) -> Dict[str, Any]:
     payload = compute_summary_metrics(sim, extra=extra)
     if out_path is not None:
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+        write_strict_json(out_path, payload)
     return payload
