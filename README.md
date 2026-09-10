@@ -5,7 +5,7 @@
 **Operational Reusable Backend for Integrated Trajectory and Logistics**  
 Unified Mission Planning Framework for Aircraft and Spacecraft
 
-Current release: `v1.0.2`
+Current release: `v1.0.3`
 
 ORBITAL is a domain-agnostic mission planning framework that supports:
 
@@ -151,7 +151,9 @@ outputs/validation/baselines/
 
 The report compares ORBITAL against `random_search`, `greedy_routing`, and
 `earliest_deadline` baselines across score, feasibility, runtime, and robustness.
-See `docs/BASELINE_COMPARISONS.md` for the current summarized results.
+The current spacecraft demo is intentionally easy, so all spacecraft planners can
+tie on full science value; see `docs/BASELINE_COMPARISONS.md` for benchmark scope
+and current summarized results.
 
 ---
 

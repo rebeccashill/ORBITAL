@@ -18,6 +18,8 @@ def finite_float_or_none(value: Optional[float]) -> Optional[float]:
     if value is None:
         return None
     as_float = float(value)
+    if as_float == 0.0:
+        return 0.0
     return as_float if math.isfinite(as_float) else None
 
 

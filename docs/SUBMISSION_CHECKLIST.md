@@ -70,7 +70,7 @@ Spacecraft results in `outputs/spacecraft/`:
 Key spacecraft metrics:
 
 - Observations: 3 targets captured
-- Downlinks: 11 ground station contacts
+- Downlinks: 12 ground station contacts
 - Science value: 33 points
 - Hard pass rate: 100%
 

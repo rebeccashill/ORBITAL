@@ -2,65 +2,65 @@
   {
     "restart": 0,
     "iter": 0,
-    "best_score": 0.0,
+    "best_score": -15.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": 0.0
+    "objective_cost": -15.0
   },
   {
     "restart": 0,
     "iter": 1,
-    "best_score": 0.0,
+    "best_score": -15.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": 0.0
+    "objective_cost": -15.0
   },
   {
     "restart": 0,
     "iter": 2,
-    "best_score": -8.0,
+    "best_score": -15.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -8.0
+    "objective_cost": -15.0
   },
   {
     "restart": 0,
     "iter": 3,
-    "best_score": -8.0,
+    "best_score": -23.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -8.0
+    "objective_cost": -23.0
   },
   {
     "restart": 0,
     "iter": 4,
-    "best_score": -8.0,
+    "best_score": -23.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -8.0
+    "objective_cost": -23.0
   },
   {
     "restart": 0,
     "iter": 5,
-    "best_score": -8.0,
+    "best_score": -23.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -8.0
+    "objective_cost": -23.0
   },
   {
     "restart": 0,
     "iter": 6,
-    "best_score": -8.0,
+    "best_score": -23.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -8.0
+    "objective_cost": -23.0
   },
   {
     "restart": 0,
@@ -209,191 +209,191 @@
   {
     "restart": 0,
     "iter": 23,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 24,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 25,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 26,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 27,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 28,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 29,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 30,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 31,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 32,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 33,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 34,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 35,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 36,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 37,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 38,
-    "best_score": -23.0,
+    "best_score": -25.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -25.0
   },
   {
     "restart": 0,
     "iter": 39,
-    "best_score": -23.0,
+    "best_score": -33.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -33.0
   },
   {
     "restart": 0,
     "iter": 40,
-    "best_score": -23.0,
+    "best_score": -33.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -33.0
   },
   {
     "restart": 0,
     "iter": 41,
-    "best_score": -23.0,
+    "best_score": -33.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -33.0
   },
   {
     "restart": 0,
     "iter": 42,
-    "best_score": -23.0,
+    "best_score": -33.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -33.0
   },
   {
     "restart": 0,
     "iter": 43,
-    "best_score": -23.0,
+    "best_score": -33.0,
     "hard_pass": true,
     "min_hard_margin": 0.0,
     "total_penalty": 0.0,
-    "objective_cost": -23.0
+    "objective_cost": -33.0
   },
   {
     "restart": 0,

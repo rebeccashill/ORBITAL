@@ -74,7 +74,7 @@ class ConstraintResult:
         finite_violations = violations[np.isfinite(violations)]
         if finite_violations.size == 0:
             return float("nan")
-        return float(np.max(finite_violations))
+        return float(max(0.0, float(np.max(finite_violations))))
 
     @property
     def worst_index(self) -> Optional[int]:

@@ -104,3 +104,4 @@ def test_baseline_report_writers_include_comparison_fields(tmp_path: Path) -> No
     assert "`random_search`" in markdown
     assert "Hard Pass Rate" in markdown
     assert "Runtime values are machine-dependent" in markdown
+    assert "spacecraft demo benchmark is intentionally easy" in markdown

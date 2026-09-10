@@ -131,7 +131,7 @@
 </ul>
 <p><strong>Key Results:</strong>
 - Aircraft: 290-second mission completing waypoints with zero geofence violations
-- Spacecraft: 33-point science value across 3 targets and 11 downlinks over 7 days
+- Spacecraft: 33-point science value across 3 targets and 12 downlinks over 7 days
 - 100% hard constraint feasibility achieved in baseline scenarios
 - Validated robustness across 50+ Monte Carlo uncertainty cases</p>
 <hr />
@@ -494,7 +494,7 @@ t_settle ≈ 10 s (stabilization time)
 </tr>
 <tr>
 <td>Slew feasible</td>
-<td>Angular</td>
+<td>Temporal</td>
 <td><code>t_available ≥ slew_time(Δθ)</code></td>
 <td>HARD</td>
 </tr>
@@ -514,6 +514,12 @@ t_settle ≈ 10 s (stabilization time)
 <td>Observation in window</td>
 <td>Temporal</td>
 <td><code>t_obs ∈ visibility_window</code></td>
+<td>HARD</td>
+</tr>
+<tr>
+<td>Target time windows</td>
+<td>Temporal</td>
+<td><code>t_obs in declared target UTC window</code></td>
 <td>HARD</td>
 </tr>
 <tr>
@@ -739,7 +745,7 @@ Science Value:          33 points
   - TGT2 (Tokyo):       12 points
   - TGT3 (Sydney):      11 points
 
-Total Events:           15 (3 obs + 11 downlinks + idle)
+Total Events:           15 (3 obs + 12 downlinks)
 Battery Min Margin:     +0.0 Wh (tight but feasible)
 Slew Feasibility:       All transitions feasible
 Hard Pass Rate:         100%

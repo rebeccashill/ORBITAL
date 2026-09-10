@@ -240,6 +240,12 @@ output:
 
 Spacecraft scenarios describe an orbit, science targets, ground stations, spacecraft resource limits, constraints, objective terms, planner settings, robustness settings, and output settings.
 
+Model fidelity note: the spacecraft module is a planning-grade proxy, not a
+flight-certified simulator. It uses simplified two-body propagation, line-of-sight
+visibility windows, proxy battery/load accounting, and slew-time feasibility checks.
+Use it for scenario authoring, demonstrations, and research iteration; production
+mission planning claims need external validation and harder benchmark cases.
+
 Required spacecraft sections:
 
 ```yaml

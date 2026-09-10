@@ -9,9 +9,10 @@ Worst HARD margin: +0 (battery_nonnegative)
 --- Constraint Report (top worst first) ---
 HARD pass: True | SOFT pass: True | total_penalty: 0
 [PASS] HARD  battery_nonnegative             min_margin=+0  max_violation=0  penalty=0
-[PASS] HARD  slew_feasible                   min_margin=+1.18403  max_violation=0  penalty=0
-[PASS] SOFT  max_ops_per_orbit               min_margin=+inf  max_violation=0  penalty=0
-[PASS] SOFT  cooldown_between_observations   min_margin=+inf  max_violation=0  penalty=0
+[PASS] SOFT  cooldown_between_observations   min_margin=+0  max_violation=0  penalty=0
+[PASS] HARD  target_time_windows             min_margin=+0  max_violation=0  penalty=0
+[PASS] SOFT  max_ops_per_orbit               min_margin=+4  max_violation=0  penalty=0
+[PASS] HARD  slew_feasible                   min_margin=+68.9482  max_violation=0  penalty=0
 
 --- Score Breakdown ---
 {
@@ -50,19 +51,18 @@ HARD pass: True | SOFT pass: True | total_penalty: 0
       ]
     },
     "worst_soft": {
-      "name": "max_ops_per_orbit",
+      "name": "cooldown_between_observations",
       "severity": "soft",
       "reduce_mode": "min",
       "weight": 1.0,
       "is_satisfied": true,
-      "min_margin": Infinity,
+      "min_margin": 0.0,
       "max_violation": 0.0,
       "worst_index": 0,
       "worst_time": null,
       "metadata_keys": [
         "key",
-        "max_ops",
-        "orbit_period_s"
+        "meaning"
       ]
     }
   },
@@ -87,22 +87,27 @@ HARD pass: True | SOFT pass: True | total_penalty: 0
 }
 
 --- 7-Day Schedule ---
-seq | etype       | label    | target_id | t_start_s | t_end_s   | duration_s | lat_deg | lon_deg | station_id | data_duration_s | value
-----+-------------+----------+-----------+-----------+-----------+------------+---------+---------+------------+-----------------+------
-0   | downlink    | DL_GS2   |           | 744.00    | 924.00    | 180.00     | 48.86   | 2.35    | GS2        | 180.00          |      
-1   | observation | OBS_TGT3 | TGT3      | 3350.46   | 3380.46   | 30.00      | -33.86  | 151.21  |            | 30.00           | 8.00 
-2   | observation | OBS_TGT2 | TGT2      | 8093.22   | 8123.22   | 30.00      | 35.68   | 139.69  |            | 30.00           | 15.00
-3   | observation | OBS_TGT1 | TGT1      | 23535.79  | 23565.79  | 30.00      | 34.05   | -118.25 |            | 30.00           | 10.00
-4   | downlink    | DL_GS1   |           | 23574.00  | 23754.00  | 180.00     | 37.77   | -122.42 | GS1        | 180.00          |      
-5   | downlink    | DL_GS1   |           | 29286.00  | 29466.00  | 180.00     | 37.77   | -122.42 | GS1        | 180.00          |      
-6   | downlink    | DL_GS2   |           | 42276.00  | 42456.00  | 180.00     | 48.86   | 2.35    | GS2        | 180.00          |      
-7   | downlink    | DL_GS2   |           | 47928.00  | 48108.00  | 180.00     | 48.86   | 2.35    | GS2        | 180.00          |      
-8   | downlink    | DL_GS1   |           | 71148.00  | 71328.00  | 180.00     | 37.77   | -122.42 | GS1        | 180.00          |      
-9   | downlink    | DL_GS1   |           | 76794.00  | 76974.00  | 180.00     | 37.77   | -122.42 | GS1        | 180.00          |      
-10  | downlink    | DL_GS2   |           | 81162.00  | 81342.00  | 180.00     | 48.86   | 2.35    | GS2        | 180.00          |      
-11  | downlink    | DL_GS2   |           | 86838.00  | 87018.00  | 180.00     | 48.86   | 2.35    | GS2        | 180.00          |      
-12  | downlink    | DL_GS1   |           | 109650.00 | 109830.00 | 180.00     | 37.77   | -122.42 | GS1        | 180.00          |      
-13  | downlink    | DL_GS1   |           | 115386.00 | 115566.00 | 180.00     | 37.77   | -122.42 | GS1        | 180.00          |      
-14  | downlink    | DL_GS2   |           | 128352.00 | 128532.00 | 180.00     | 48.86   | 2.35    | GS2        | 180.00          |      
+seq | etype       | label    | target_id | t_start_s | t_end_s   | duration_s | lat_deg | lon_deg | value | data_duration_s | cooldown_s | time_window_enforced | scheduling_window_start_s | scheduling_window_end_s | station_id
+----+-------------+----------+-----------+-----------+-----------+------------+---------+---------+-------+-----------------+------------+----------------------+---------------------------+-------------------------+-----------
+0   | observation | OBS_TGT1 | TGT1      | 524.03    | 554.03    | 30.00      | 34.05   | -118.25 | 10.00 | 30.00           | 0.00       | True                 | 390.00                    | 780.00                  |
+1   | downlink    | DL_GS1   |           | 630.00    | 810.00    | 180.00     | 37.77   | -122.42 |       | 180.00          |            |                      |                           |                         | GS1
+2   | downlink    | DL_GS1   |           | 6318.00   | 6498.00   | 180.00     | 37.77   | -122.42 |       | 180.00          |            |                      |                           |                         | GS1
+3   | downlink    | DL_GS2   |           | 19296.00  | 19476.00  | 180.00     | 48.86   | 2.35    |       | 180.00          |            |                      |                           |                         | GS2
+4   | downlink    | DL_GS2   |           | 24906.00  | 25086.00  | 180.00     | 48.86   | 2.35    |       | 180.00          |            |                      |                           |                         | GS2
+5   | observation | OBS_TGT3 | TGT3      | 28211.67  | 28241.67  | 30.00      | -33.86  | 151.21  | 8.00  | 30.00           | 0.00       | True                 | 27900.00                  | 28350.00                |
+6   | downlink    | DL_GS1   |           | 48156.00  | 48336.00  | 180.00     | 37.77   | -122.42 |       | 180.00          |            |                      |                           |                         | GS1
+7   | downlink    | DL_GS1   |           | 53748.00  | 53928.00  | 180.00     | 37.77   | -122.42 |       | 180.00          |            |                      |                           |                         | GS1
+8   | downlink    | DL_GS2   |           | 58146.00  | 58326.00  | 180.00     | 48.86   | 2.35    |       | 180.00          |            |                      |                           |                         | GS2
+9   | downlink    | DL_GS2   |           | 63816.00  | 63996.00  | 180.00     | 48.86   | 2.35    |       | 180.00          |            |                      |                           |                         | GS2
+10  | downlink    | DL_GS1   |           | 86646.00  | 86826.00  | 180.00     | 37.77   | -122.42 |       | 180.00          |            |                      |                           |                         | GS1
+11  | downlink    | DL_GS1   |           | 92352.00  | 92532.00  | 180.00     | 37.77   | -122.42 |       | 180.00          |            |                      |                           |                         | GS1
+12  | downlink    | DL_GS2   |           | 105336.00 | 105516.00 | 180.00     | 48.86   | 2.35    |       | 180.00          |            |                      |                           |                         | GS2
+13  | observation | OBS_TGT2 | TGT2      | 109649.83 | 109679.83 | 30.00      | 35.68   | 139.69  | 15.00 | 30.00           | 0.00       | True                 | 109530.00                 | 109710.00               |
+14  | downlink    | DL_GS2   |           | 110940.00 | 111120.00 | 180.00     | 48.86   | 2.35    |       | 180.00          |            |                      |                           |                         | GS2
 
-Wrote outputs to: /home/runner/work/ORBITAL/ORBITAL/runs/cubesat_leo_demo
+--- Plots Generated ---
+  mission_timeline: mission_timeline.png
+  operations_summary: operations_summary.png
+  daily_activity: daily_activity.png
+
+Wrote outputs to: runs/cubesat_leo_demo

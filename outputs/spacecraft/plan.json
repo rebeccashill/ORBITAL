@@ -7,53 +7,8 @@
   "waypoints": null,
   "schedule": [
     {
-      "t_start": 744.0,
-      "t_end": 924.0,
-      "etype": "EventType.DOWNLINK",
-      "label": "DL_GS2",
-      "target_id": null,
-      "location": [
-        48.8566,
-        2.3522
-      ],
-      "data": {
-        "station_id": "GS2",
-        "duration_s": 180.0
-      }
-    },
-    {
-      "t_start": 3350.4576989392444,
-      "t_end": 3380.4576989392444,
-      "etype": "EventType.OBSERVATION",
-      "label": "OBS_TGT3",
-      "target_id": "TGT3",
-      "location": [
-        -33.86,
-        151.21
-      ],
-      "data": {
-        "value": 8.0,
-        "duration_s": 30.0
-      }
-    },
-    {
-      "t_start": 8093.216435418678,
-      "t_end": 8123.216435418678,
-      "etype": "EventType.OBSERVATION",
-      "label": "OBS_TGT2",
-      "target_id": "TGT2",
-      "location": [
-        35.68,
-        139.69
-      ],
-      "data": {
-        "value": 15.0,
-        "duration_s": 30.0
-      }
-    },
-    {
-      "t_start": 23535.78943990297,
-      "t_end": 23565.78943990297,
+      "t_start": 524.0252521631887,
+      "t_end": 554.0252521631887,
       "etype": "EventType.OBSERVATION",
       "label": "OBS_TGT1",
       "target_id": "TGT1",
@@ -63,12 +18,16 @@
       ],
       "data": {
         "value": 10.0,
-        "duration_s": 30.0
+        "duration_s": 30.0,
+        "cooldown_s": 0.0,
+        "time_window_enforced": true,
+        "scheduling_window_start_s": 390.0,
+        "scheduling_window_end_s": 780.0
       }
     },
     {
-      "t_start": 23574.0,
-      "t_end": 23754.0,
+      "t_start": 630.0,
+      "t_end": 810.0,
       "etype": "EventType.DOWNLINK",
       "label": "DL_GS1",
       "target_id": null,
@@ -82,8 +41,8 @@
       }
     },
     {
-      "t_start": 29286.0,
-      "t_end": 29466.0,
+      "t_start": 6318.0,
+      "t_end": 6498.0,
       "etype": "EventType.DOWNLINK",
       "label": "DL_GS1",
       "target_id": null,
@@ -97,8 +56,8 @@
       }
     },
     {
-      "t_start": 42276.0,
-      "t_end": 42456.0,
+      "t_start": 19296.0,
+      "t_end": 19476.0,
       "etype": "EventType.DOWNLINK",
       "label": "DL_GS2",
       "target_id": null,
@@ -112,8 +71,8 @@
       }
     },
     {
-      "t_start": 47928.0,
-      "t_end": 48108.0,
+      "t_start": 24906.0,
+      "t_end": 25086.0,
       "etype": "EventType.DOWNLINK",
       "label": "DL_GS2",
       "target_id": null,
@@ -127,8 +86,27 @@
       }
     },
     {
-      "t_start": 71148.0,
-      "t_end": 71328.0,
+      "t_start": 28211.672163204552,
+      "t_end": 28241.672163204552,
+      "etype": "EventType.OBSERVATION",
+      "label": "OBS_TGT3",
+      "target_id": "TGT3",
+      "location": [
+        -33.86,
+        151.21
+      ],
+      "data": {
+        "value": 8.0,
+        "duration_s": 30.0,
+        "cooldown_s": 0.0,
+        "time_window_enforced": true,
+        "scheduling_window_start_s": 27900.0,
+        "scheduling_window_end_s": 28350.0
+      }
+    },
+    {
+      "t_start": 48156.0,
+      "t_end": 48336.0,
       "etype": "EventType.DOWNLINK",
       "label": "DL_GS1",
       "target_id": null,
@@ -142,8 +120,8 @@
       }
     },
     {
-      "t_start": 76794.0,
-      "t_end": 76974.0,
+      "t_start": 53748.0,
+      "t_end": 53928.0,
       "etype": "EventType.DOWNLINK",
       "label": "DL_GS1",
       "target_id": null,
@@ -157,8 +135,8 @@
       }
     },
     {
-      "t_start": 81162.0,
-      "t_end": 81342.0,
+      "t_start": 58146.0,
+      "t_end": 58326.0,
       "etype": "EventType.DOWNLINK",
       "label": "DL_GS2",
       "target_id": null,
@@ -172,8 +150,8 @@
       }
     },
     {
-      "t_start": 86838.0,
-      "t_end": 87018.0,
+      "t_start": 63816.0,
+      "t_end": 63996.0,
       "etype": "EventType.DOWNLINK",
       "label": "DL_GS2",
       "target_id": null,
@@ -187,8 +165,8 @@
       }
     },
     {
-      "t_start": 109650.0,
-      "t_end": 109830.0,
+      "t_start": 86646.0,
+      "t_end": 86826.0,
       "etype": "EventType.DOWNLINK",
       "label": "DL_GS1",
       "target_id": null,
@@ -202,8 +180,8 @@
       }
     },
     {
-      "t_start": 115386.0,
-      "t_end": 115566.0,
+      "t_start": 92352.0,
+      "t_end": 92532.0,
       "etype": "EventType.DOWNLINK",
       "label": "DL_GS1",
       "target_id": null,
@@ -217,8 +195,42 @@
       }
     },
     {
-      "t_start": 128352.0,
-      "t_end": 128532.0,
+      "t_start": 105336.0,
+      "t_end": 105516.0,
+      "etype": "EventType.DOWNLINK",
+      "label": "DL_GS2",
+      "target_id": null,
+      "location": [
+        48.8566,
+        2.3522
+      ],
+      "data": {
+        "station_id": "GS2",
+        "duration_s": 180.0
+      }
+    },
+    {
+      "t_start": 109649.82633466167,
+      "t_end": 109679.82633466167,
+      "etype": "EventType.OBSERVATION",
+      "label": "OBS_TGT2",
+      "target_id": "TGT2",
+      "location": [
+        35.68,
+        139.69
+      ],
+      "data": {
+        "value": 15.0,
+        "duration_s": 30.0,
+        "cooldown_s": 0.0,
+        "time_window_enforced": true,
+        "scheduling_window_start_s": 109530.0,
+        "scheduling_window_end_s": 109710.0
+      }
+    },
+    {
+      "t_start": 110940.0,
+      "t_end": 111120.0,
       "etype": "EventType.DOWNLINK",
       "label": "DL_GS2",
       "target_id": null,

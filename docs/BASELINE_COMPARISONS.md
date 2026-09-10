@@ -29,27 +29,34 @@ The command writes:
 
 Lower score is better. Robust hard pass rate is measured by reevaluating each
 final assignment across five Monte Carlo cases. Runtime values come from the
-current local `1.0.2` artifact refresh and are machine-dependent; compare score,
+current local `1.0.3` artifact refresh and are machine-dependent; compare score,
 feasibility, and robust pass rate for deterministic checks.
 
 | Domain | Planner | Score | Feasible | Runtime (s) | Robust hard pass rate |
 | --- | --- | ---: | --- | ---: | ---: |
-| aircraft | `orbital` | 311.846 | yes | 0.619 | 1.0 |
-| aircraft | `random_search` | 321.716 | yes | 0.211 | 1.0 |
-| aircraft | `greedy_routing` | 844.916 | no | 0.019 | 0.0 |
-| spacecraft | `orbital` | -33.000 | yes | 4.270 | 1.0 |
-| spacecraft | `random_search` | -33.000 | yes | 1.461 | 1.0 |
-| spacecraft | `earliest_deadline` | -33.000 | yes | 0.145 | 1.0 |
+| aircraft | `orbital` | 311.846 | yes | 0.633 | 1.0 |
+| aircraft | `random_search` | 321.716 | yes | 0.221 | 1.0 |
+| aircraft | `greedy_routing` | 844.916 | no | 0.023 | 0.0 |
+| spacecraft | `orbital` | -33.000 | yes | 4.201 | 1.0 |
+| spacecraft | `random_search` | -33.000 | yes | 1.011 | 1.0 |
+| spacecraft | `earliest_deadline` | -33.000 | yes | 0.178 | 1.0 |
 
 ## Interpretation
 
 For the aircraft example, ORBITAL finds a lower-cost feasible route than the
 random baseline, while the nearest-neighbor route is rejected by the same hard
 geofence constraint used by the planner. This makes the value of constraint-aware
-search visible. The regenerated `1.0.2` artifacts preserve the previous score,
+search visible. The regenerated `1.0.3` artifacts preserve the previous score,
 feasibility, and robust pass-rate conclusions.
 
 For the spacecraft example, ORBITAL, random search, and earliest-deadline scheduling
 all deliver the full 33-point science value. That is a useful result: it shows
-the example scenario is intentionally easy, and harder spacecraft scenarios should
-be added when benchmarking future planner improvements.
+the example scenario is intentionally easy. Treat the spacecraft row as a smoke
+comparison, not proof that the optimizer dominates simpler scheduling heuristics.
+
+The spacecraft model remains proxy-based: it uses simplified two-body propagation,
+computed line-of-sight windows, simplified power/load accounting, and slew-time
+checks rather than a deeply validated flight dynamics or operations stack. Stronger
+claims require comparisons against established orbital or mission-planning methods,
+clearer physical assumptions, richer benchmark scenarios, and at least one genuinely
+difficult spacecraft scheduling case.

@@ -615,6 +615,13 @@ def write_markdown(rows: Sequence[Dict[str, Any]], out_md: Path, command: str) -
             "- Runtime includes method execution plus final robustness evaluation.",
             "- Runtime values are machine-dependent; compare scores, feasibility, and "
             "robust pass rates for deterministic checks.",
+            "- The spacecraft demo benchmark is intentionally easy: ORBITAL, random "
+            "search, and earliest-deadline scheduling can all deliver the full science "
+            "value. Treat that result as a smoke comparison, not proof of optimizer "
+            "dominance.",
+            "- The spacecraft model is still proxy-based. Stronger claims require "
+            "external method comparisons, clearer physical assumptions, richer benchmark "
+            "scenarios, and at least one difficult scheduling case.",
             "- The CSV file contains additional objective, penalty, and worst hard "
             "constraint fields for auditability.",
             "",

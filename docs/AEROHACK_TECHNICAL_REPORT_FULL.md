@@ -20,7 +20,7 @@ ORBITAL is a domain-agnostic mission planning and simulation framework that succ
 
 **Key Results:**
 - Aircraft: 290-second mission completing waypoints with zero geofence violations
-- Spacecraft: 33-point science value across 3 targets and 11 downlinks over 7 days
+- Spacecraft: 33-point science value across 3 targets and 12 downlinks over 7 days
 - 100% hard constraint feasibility achieved in baseline scenarios
 - Validated robustness across 50+ Monte Carlo uncertainty cases
 
@@ -410,7 +410,8 @@ margin_waypoints = visited_count - required_count
 | Constraint | Type | Formulation | Severity |
 |------------|------|-------------|----------|
 | Battery non-negative | Continuous | `E_battery(t) ≥ 0 ∀t` | HARD |
-| Slew feasible | Angular | `t_available ≥ slew_time(Δθ)` | HARD |
+| Slew feasible | Temporal | `t_available ≥ slew_time(Δθ)` | HARD |
+| Target time windows | Temporal | `t_obs ∈ declared target UTC window` | HARD |
 | Max ops per orbit | Count | `ops_per_orbit ≤ max_ops` | SOFT |
 | Cooldown between obs | Temporal | `Δt_obs ≥ cooldown_min` | SOFT |
 | Observation in window | Temporal | `t_obs ∈ visibility_window` | HARD |
@@ -608,7 +609,7 @@ Science Value:          33 points
   - TGT2 (Tokyo):       12 points
   - TGT3 (Sydney):      11 points
 
-Total Events:           15 (3 obs + 11 downlinks + idle)
+Total Events:           15 (3 obs + 12 downlinks)
 Battery Min Margin:     +0.0 Wh (tight but feasible)
 Slew Feasibility:       All transitions feasible
 Hard Pass Rate:         100%

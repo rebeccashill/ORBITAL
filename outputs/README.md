@@ -69,7 +69,7 @@ outputs/
 
 - **Mission Duration:** 7 days, or 604,800 seconds
 - **Targets Observed:** 3/3
-- **Downlinks Scheduled:** 11 ground station contacts
+- **Downlinks Scheduled:** 12 ground station contacts
 - **Science Value Delivered:** 33 points
 - **Hard Pass Rate:** 100%
 - **Feasibility:** Feasible
@@ -78,16 +78,17 @@ outputs/
 
 - **Observations:** TGT1 (LA), TGT2 (Tokyo), TGT3 (Sydney)
 - **Ground Stations:** GS1 (San Francisco), GS2 (Paris)
-- **Activities:** 15 total events, including 3 observations, 11 downlinks, and idle time
+- **Activities:** 15 total events, including 3 observations and 12 downlinks
 
 ### Constraint Summary
 
 | Constraint | Status | Margin |
 |------------|--------|---------|
 | Battery non-negative | PASS | +0.0 Wh, tight |
-| Slew feasible | PASS | +1.18 rad/s |
-| Max ops per orbit | PASS | Not active |
-| Cooldown between obs | PASS | Not active |
+| Slew feasible | PASS | +68.95 s |
+| Target time windows | PASS | +0.0 s |
+| Max ops per orbit | PASS | +4 ops |
+| Cooldown between obs | PASS | +0.0 s |
 
 ---
 

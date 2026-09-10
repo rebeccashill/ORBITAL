@@ -19,19 +19,18 @@
       ]
     },
     "worst_soft": {
-      "name": "max_ops_per_orbit",
+      "name": "cooldown_between_observations",
       "severity": "soft",
       "reduce_mode": "min",
       "weight": 1.0,
       "is_satisfied": true,
-      "min_margin": Infinity,
+      "min_margin": 0.0,
       "max_violation": 0.0,
       "worst_index": 0,
       "worst_time": null,
       "metadata_keys": [
         "key",
-        "max_ops",
-        "orbit_period_s"
+        "meaning"
       ]
     }
   },
@@ -57,7 +56,37 @@
       "reduce_mode": "min",
       "weight": 1.0,
       "is_satisfied": true,
-      "min_margin": 1.1840336673242673,
+      "min_margin": 68.94822140710392,
+      "max_violation": 0.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": [
+        "key",
+        "meaning"
+      ]
+    },
+    {
+      "name": "cooldown_between_observations",
+      "severity": "soft",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 0.0,
+      "max_violation": 0.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": [
+        "key",
+        "meaning"
+      ]
+    },
+    {
+      "name": "target_time_windows",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 0.0,
       "max_violation": 0.0,
       "worst_index": 0,
       "worst_time": null,
@@ -72,7 +101,7 @@
       "reduce_mode": "min",
       "weight": 1.0,
       "is_satisfied": true,
-      "min_margin": Infinity,
+      "min_margin": 4.0,
       "max_violation": 0.0,
       "worst_index": 0,
       "worst_time": null,
@@ -80,21 +109,6 @@
         "key",
         "max_ops",
         "orbit_period_s"
-      ]
-    },
-    {
-      "name": "cooldown_between_observations",
-      "severity": "soft",
-      "reduce_mode": "min",
-      "weight": 1.0,
-      "is_satisfied": true,
-      "min_margin": Infinity,
-      "max_violation": 0.0,
-      "worst_index": 0,
-      "worst_time": null,
-      "metadata_keys": [
-        "key",
-        "meaning"
       ]
     }
   ]

@@ -1,4 +1,4 @@
-CMD: C:\Users\shill\OneDrive\Desktop\ORBITAL\.venv\Scripts\python.exe -m mission_framework.cli examples/aircraft_uav_demo.yaml --iterations 500 --restarts 2 --robustness 50 --seed 0 --outdir runs
+CMD: python -m mission_framework.cli examples/aircraft_uav_demo.yaml --iterations 500 --restarts 2 --robustness 50 --seed 0 --outdir runs
 
 --- STDOUT ---
 
@@ -81,7 +81,7 @@ HARD pass: True | SOFT pass: True | total_penalty: 0
 }
 
 --- Flight Plan ---
-seq | id    | eta_s   | x_m      | y_m      | z_m  
+seq | id    | eta_s   | x_m      | y_m      | z_m
 ----+-------+---------+----------+----------+------
 0   | START | 0.000   | 0.000    | 0.000    | 0.000
 1   | WP1   | 76.029  | 2000.000 | 1000.000 | 0.000
@@ -93,7 +93,7 @@ seq | id    | eta_s   | x_m      | y_m      | z_m
   battery_state: battery_state.png
   mission_overview: mission_overview.png
 
-Wrote outputs to: C:\Users\shill\OneDrive\Desktop\ORBITAL\runs\aircraft_uav_demo
+Wrote outputs to: runs/aircraft_uav_demo
 
 
 --- STDERR ---

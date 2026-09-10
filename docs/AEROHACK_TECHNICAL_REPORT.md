@@ -65,7 +65,7 @@ Both domains share the same planner, constraint system, objective framework, and
 ### 3.2 Spacecraft Results
 - Score: -33.0 (FEASIBLE)
 - Targets observed: 3/3
-- Downlinks: 11
+- Downlinks: 12
 - Science value: 33 points
 - Hard pass rate: 100%
 

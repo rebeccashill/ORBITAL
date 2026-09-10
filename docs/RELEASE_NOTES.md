@@ -1,5 +1,30 @@
 # Release Notes
 
+## v1.0.3 - September 10, 2026
+
+This patch release focuses on credibility and polish gaps in the ORBITAL 1.0
+artifact set.
+
+### Changed
+
+- Regenerated the archived aircraft output bundle so docs, plots, logs, and
+  JSON artifacts consistently describe a feasible run.
+- Added strict JSON serialization helpers and routed CLI/reporting JSON writes
+  through them so `NaN`, `Infinity`, and `-Infinity` cannot be emitted silently.
+- Enforced spacecraft target `time_windows` by default by intersecting declared
+  UTC target windows with computed visibility windows before scheduling
+  observations.
+- Regenerated the checked-in spacecraft output bundle with strict JSON artifacts
+  and the new `target_time_windows` hard constraint.
+- Reframed spacecraft baseline results as an intentionally easy smoke benchmark
+  and documented the current proxy-based model limitations.
+
+### Verified
+
+- Validated bundled spacecraft demo and stress YAML files.
+- Reran baseline comparison artifacts with documented parameters.
+- Ran Black, Ruff, mypy, pytest, and strict JSON artifact scans locally.
+
 ## v1.0.2 - September 9, 2026
 
 This patch release refreshes reproducibility, packaging, and release artifact

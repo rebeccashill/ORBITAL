@@ -116,7 +116,8 @@ def constraint_target_time_windows(
     """
 
     def margin(sim: Any) -> float:
-        return float(-_get_scalar(sim, violation_key, default=0.0))
+        violation_s = float(_get_scalar(sim, violation_key, default=0.0))
+        return 0.0 if violation_s <= 0.0 else float(-violation_s)
 
     return FunctionalConstraint(
         name="target_time_windows",
@@ -185,7 +186,7 @@ def constraint_observation_cooldown_soft(
             v = float(_get_scalar(sim, cooldown_violation_key))
         except KeyError:
             return float("inf")
-        return float(-v)
+        return 0.0 if v <= 0.0 else float(-v)
 
     return FunctionalConstraint(
         name="cooldown_between_observations",
