@@ -409,6 +409,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if result.history is not None:
         _write_json(outdir / "history.json", result.history)
 
+    if scenario_type == "aircraft" and bool(
+        output_cfg.get("export_operator_evidence_bundle", False)
+    ):
+        try:
+            from mission_framework.reporting.flight_output import export_operator_evidence_bundle
+
+            export_operator_evidence_bundle(outdir, scenario_path)
+        except Exception as e:
+            print(f"(operator evidence bundle skipped: {e})")
+
     print(f"\nWrote outputs to: {outdir}")
     return 0
 

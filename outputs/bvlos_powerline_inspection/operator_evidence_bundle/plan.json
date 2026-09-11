@@ -1,0 +1,63 @@
+{
+  "kind": "aircraft",
+  "metadata": {
+    "mission_id": "BVLOS Powerline Inspection Demo",
+    "cruise_speed_mps": 27.618707267053356,
+    "heading_rad": 0.0,
+    "speed_mps": 18.0,
+    "battery_Wh": 850.0,
+    "fixed_order": true
+  },
+  "waypoints": [
+    {
+      "id": "START",
+      "x_m": 0.0,
+      "y_m": 0.0,
+      "z_m": 90.0,
+      "eta_s": 0.0
+    },
+    {
+      "id": "TOWER_01",
+      "x_m": 750.0,
+      "y_m": 80.0,
+      "z_m": 90.0,
+      "eta_s": 27.309554775037615
+    },
+    {
+      "id": "TOWER_02",
+      "x_m": 1500.0,
+      "y_m": 120.0,
+      "z_m": 90.0,
+      "eta_s": 54.503655569210935
+    },
+    {
+      "id": "TOWER_03",
+      "x_m": 2250.0,
+      "y_m": 80.0,
+      "z_m": 90.0,
+      "eta_s": 81.69775636338426
+    },
+    {
+      "id": "TOWER_04",
+      "x_m": 3000.0,
+      "y_m": 120.0,
+      "z_m": 90.0,
+      "eta_s": 108.89185715755758
+    },
+    {
+      "id": "TOWER_05",
+      "x_m": 3750.0,
+      "y_m": 80.0,
+      "z_m": 90.0,
+      "eta_s": 136.0859579517309
+    },
+    {
+      "id": "TOWER_06",
+      "x_m": 4500.0,
+      "y_m": 120.0,
+      "z_m": 90.0,
+      "eta_s": 163.28005874590423
+    }
+  ],
+  "schedule": null
+}

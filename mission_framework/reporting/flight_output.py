@@ -23,6 +23,7 @@ from __future__ import annotations
 import csv
 from copy import deepcopy
 from pathlib import Path
+from shutil import copy2
 from typing import Any, Dict, Iterable, List, Optional
 
 import numpy as np
@@ -1045,6 +1046,118 @@ def export_what_if_plan(
     write_strict_json(out_dir / "what_if_plan.json", payload)
     (out_dir / "what_if_plan.md").write_text(format_what_if_plan(payload), encoding="utf-8")
     return payload
+
+
+def export_operator_evidence_bundle(
+    out_dir: Path,
+    scenario_path: Path,
+    *,
+    bundle_dir_name: str = "operator_evidence_bundle",
+) -> Dict[str, Any]:
+    """Copy operator-facing BVLOS evidence artifacts into one review bundle."""
+    out_dir = Path(out_dir)
+    scenario_path = Path(scenario_path)
+    bundle_dir = out_dir / bundle_dir_name
+    bundle_dir.mkdir(parents=True, exist_ok=True)
+
+    artifacts: List[Dict[str, Any]] = [
+        {
+            "id": "scenario_yaml",
+            "label": "Scenario YAML",
+            "source": scenario_path,
+            "bundle_name": "scenario.yaml",
+        },
+        {
+            "id": "plan_json",
+            "label": "Plan JSON",
+            "source": out_dir / "plan.json",
+            "bundle_name": "plan.json",
+        },
+        {
+            "id": "constraint_audit_json",
+            "label": "Constraint audit JSON",
+            "source": out_dir / "inspection_constraint_audit.json",
+            "bundle_name": "inspection_constraint_audit.json",
+        },
+        {
+            "id": "score_breakdown",
+            "label": "Score breakdown",
+            "source": out_dir / "score.json",
+            "bundle_name": "score.json",
+        },
+        {
+            "id": "flight_path_plot",
+            "label": "Flight path plot",
+            "source": out_dir / "flight_path.png",
+            "bundle_name": "flight_path.png",
+        },
+        {
+            "id": "robustness_summary",
+            "label": "Robustness summary",
+            "source": out_dir / "robustness.json",
+            "bundle_name": "robustness.json",
+        },
+        {
+            "id": "go_no_go_memo",
+            "label": "Plain-English go/no-go memo",
+            "source": out_dir / "operator_memo.md",
+            "bundle_name": "operator_memo.md",
+        },
+    ]
+
+    manifest_entries: List[Dict[str, Any]] = []
+    for artifact in artifacts:
+        source = Path(artifact["source"])
+        destination = bundle_dir / str(artifact["bundle_name"])
+        present = source.exists()
+        if present:
+            copy2(source, destination)
+
+        manifest_entries.append(
+            {
+                "id": artifact["id"],
+                "label": artifact["label"],
+                "source": str(source),
+                "bundle_path": str(destination.relative_to(bundle_dir)),
+                "present": present,
+            }
+        )
+
+    missing = [entry["id"] for entry in manifest_entries if not entry["present"]]
+    manifest: Dict[str, Any] = {
+        "kind": "operator_evidence_bundle",
+        "bundle_dir": str(bundle_dir),
+        "scenario_path": str(scenario_path),
+        "complete": not missing,
+        "missing": missing,
+        "artifacts": manifest_entries,
+        "documentation_only_notice": (
+            "This bundle supports operator review and audit evidence only. ORBITAL does not "
+            "provide LAANC, waivers, authorizations, legal approval, autopilot control, or "
+            "operational clearance."
+        ),
+    }
+    write_strict_json(bundle_dir / "manifest.json", manifest)
+
+    readme_lines = [
+        "# ORBITAL Operator Evidence Bundle",
+        "",
+        "This folder collects the artifacts an operator can review before a BVLOS "
+        "inspection mission.",
+        "",
+        "ORBITAL is preflight decision support and audit evidence. It is not a LAANC "
+        "provider, autopilot, waiver system, legal approval system, or operational "
+        "clearance system.",
+        "",
+        "## Contents",
+        "",
+    ]
+    for entry in manifest_entries:
+        status = "included" if entry["present"] else "missing"
+        readme_lines.append(f"- {entry['label']}: `{entry['bundle_path']}` ({status})")
+
+    (bundle_dir / "README.md").write_text("\n".join(readme_lines).rstrip() + "\n", encoding="utf-8")
+    return manifest
 
 
 def export_operator_memo(

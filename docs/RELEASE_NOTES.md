@@ -22,6 +22,9 @@ adding a dedicated drone inspection constraint-audit report.
 - Added documentation-only regulatory metadata fields for LAANC, waiver /
   authorization, airspace class, visual observer requirements, and
   ground-risk/population notes.
+- Added an operator evidence bundle with the scenario YAML, plan JSON,
+  constraint audit JSON, score breakdown, flight path plot, robustness summary,
+  and plain-English go/no-go memo.
 - Regenerated the BVLOS powerline inspection output bundle with the new audit
   and what-if artifacts.
 

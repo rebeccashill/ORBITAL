@@ -1,0 +1,59 @@
+{
+  "kind": "operator_evidence_bundle",
+  "bundle_dir": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\operator_evidence_bundle",
+  "scenario_path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml",
+  "complete": true,
+  "missing": [],
+  "artifacts": [
+    {
+      "id": "scenario_yaml",
+      "label": "Scenario YAML",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml",
+      "bundle_path": "scenario.yaml",
+      "present": true
+    },
+    {
+      "id": "plan_json",
+      "label": "Plan JSON",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\plan.json",
+      "bundle_path": "plan.json",
+      "present": true
+    },
+    {
+      "id": "constraint_audit_json",
+      "label": "Constraint audit JSON",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\inspection_constraint_audit.json",
+      "bundle_path": "inspection_constraint_audit.json",
+      "present": true
+    },
+    {
+      "id": "score_breakdown",
+      "label": "Score breakdown",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\score.json",
+      "bundle_path": "score.json",
+      "present": true
+    },
+    {
+      "id": "flight_path_plot",
+      "label": "Flight path plot",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\flight_path.png",
+      "bundle_path": "flight_path.png",
+      "present": true
+    },
+    {
+      "id": "robustness_summary",
+      "label": "Robustness summary",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\robustness.json",
+      "bundle_path": "robustness.json",
+      "present": true
+    },
+    {
+      "id": "go_no_go_memo",
+      "label": "Plain-English go/no-go memo",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\operator_memo.md",
+      "bundle_path": "operator_memo.md",
+      "present": true
+    }
+  ],
+  "documentation_only_notice": "This bundle supports operator review and audit evidence only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance."
+}

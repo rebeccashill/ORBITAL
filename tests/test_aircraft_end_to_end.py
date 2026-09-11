@@ -148,6 +148,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
 
     from mission_framework.reporting.flight_output import (
         export_inspection_constraint_audit,
+        export_operator_evidence_bundle,
         export_what_if_plan,
     )
 
@@ -203,3 +204,30 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     }
     assert (tmp_path / "what_if_plan.json").exists()
     assert (tmp_path / "what_if_plan.md").exists()
+
+    (tmp_path / "plan.json").write_text('{"kind": "aircraft"}\n', encoding="utf-8")
+    (tmp_path / "score.json").write_text('{"total_score": 0.0}\n', encoding="utf-8")
+    (tmp_path / "flight_path.png").write_bytes(b"png")
+    (tmp_path / "robustness.json").write_text('{"cases": 0}\n', encoding="utf-8")
+    (tmp_path / "operator_memo.md").write_text("Status: GO\n", encoding="utf-8")
+
+    evidence = export_operator_evidence_bundle(
+        tmp_path,
+        EXAMPLES_DIR / "bvlos_powerline_inspection_demo.yaml",
+    )
+
+    assert evidence["kind"] == "operator_evidence_bundle"
+    assert evidence["complete"] is True
+    bundle_dir = tmp_path / "operator_evidence_bundle"
+    expected_bundle_files = {
+        "scenario.yaml",
+        "plan.json",
+        "inspection_constraint_audit.json",
+        "score.json",
+        "flight_path.png",
+        "robustness.json",
+        "operator_memo.md",
+        "manifest.json",
+        "README.md",
+    }
+    assert {path.name for path in bundle_dir.iterdir()} >= expected_bundle_files
