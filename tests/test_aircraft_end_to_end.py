@@ -96,3 +96,52 @@ def test_aircraft_pipeline_runs_end_to_end():
     worst_hard = result.constraints.worst(Severity.HARD)
     if worst_hard is not None:
         assert worst_hard.min_margin == worst_hard.min_margin  # not NaN
+
+
+def test_bvlos_powerline_demo_runs_end_to_end():
+    cfg = _load_yaml(EXAMPLES_DIR / "bvlos_powerline_inspection_demo.yaml")
+    assert cfg["scenario"]["type"].lower() == "aircraft"
+    cfg["robustness"]["cases"] = 0
+
+    from mission_framework.aircraft.mission import build_problem_from_config
+    from mission_framework.core.objective import ScoreConfig
+
+    problem = build_problem_from_config(cfg)
+
+    planner_cfg = PlannerConfig(
+        iterations=80,
+        restarts=1,
+        seed=1,
+        keep_history=False,
+        scoring=ScoreConfig(
+            penalty_weight=float(cfg.get("planner", {}).get("penalty_weight", 1000.0)),
+        ),
+        hard_infeasible_penalty=float(cfg.get("planner", {}).get("hard_infeasible_penalty", 1e6)),
+    )
+
+    result = Planner(planner_cfg).solve(problem)
+
+    assert result.plan.kind == "aircraft"
+    assert result.constraints.hard_pass is True
+    assert set(result.constraints.by_name()) >= {
+        "all_waypoints_reached",
+        "battery_nonnegative",
+        "battery_reserve",
+        "geofence_clearance",
+        "geofence_no_entry",
+    }
+
+    scalars = result.sim_result.scalars
+    assert scalars["waypoints_completed"] == scalars["waypoints_total"] == 6.0
+    assert scalars["final_battery_Wh"] >= cfg["vehicle"]["battery_reserve_Wh"]
+
+    waypoint_ids = [wp["id"] for wp in result.plan.waypoints or []]
+    assert waypoint_ids == [
+        "START",
+        "TOWER_01",
+        "TOWER_02",
+        "TOWER_03",
+        "TOWER_04",
+        "TOWER_05",
+        "TOWER_06",
+    ]

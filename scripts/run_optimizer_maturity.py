@@ -95,6 +95,7 @@ def aircraft_exhaustive_assignments(
     waypoint_ids = [str(wp.get("id", "")) for wp in waypoints]
     if not waypoint_ids:
         raise ValueError("aircraft exhaustive grid requires mission.waypoints.")
+    fixed_order = bool((cfg.get("mission", {}) or {}).get("fixed_order", False))
 
     vehicle = cfg.get("vehicle", {}) or {}
     min_speed = float(vehicle.get("min_speed_mps", 12.0))
@@ -102,16 +103,13 @@ def aircraft_exhaustive_assignments(
     speeds = np.linspace(min_speed, max_speed, num=speed_grid, dtype=float)
 
     assignments: list[DecisionAssignment] = []
-    for order in itertools.permutations(waypoint_ids):
+    orders: Sequence[Sequence[str]] = [waypoint_ids] if fixed_order else itertools.permutations(waypoint_ids)
+    for order in orders:
         for speed in speeds:
-            assignments.append(
-                DecisionAssignment(
-                    {
-                        "visit_order": list(order),
-                        "cruise_speed_mps": np.array([float(speed)], dtype=float),
-                    }
-                )
-            )
+            values: Dict[str, Any] = {"cruise_speed_mps": np.array([float(speed)], dtype=float)}
+            if not fixed_order:
+                values["visit_order"] = list(order)
+            assignments.append(DecisionAssignment(values))
     return assignments
 
 

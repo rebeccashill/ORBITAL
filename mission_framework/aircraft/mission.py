@@ -126,6 +126,26 @@ def _aircraft_constraints_from_cfg(cfg: Dict[str, Any]) -> List[Constraint | Con
         },  # lightweight hint; constraints system may ignore callables
     )
 
+    dyn_cfg = cfg.get("vehicle", {}) or {}
+    reserve_wh = float(dyn_cfg.get("battery_reserve_Wh", 0.0))
+    enforce_reserve = bool(constraints_cfg.get("enforce_battery_reserve", reserve_wh > 0.0))
+
+    def battery_reserve_margin(sim: SimResult) -> np.ndarray:
+        final_battery = sim.scalars.get("final_battery_Wh")
+        if final_battery is None:
+            batt = np.asarray(sim.resources.get("battery_Wh", []), dtype=float).reshape(-1)
+            if batt.size == 0:
+                return np.array([-reserve_wh], dtype=float)
+            final_battery = float(batt[-1])
+        return np.array([float(final_battery) - reserve_wh], dtype=float)
+
+    c_batt_reserve = FunctionalConstraint(
+        name="battery_reserve",
+        fn=battery_reserve_margin,
+        severity=Severity.HARD,
+        metadata={"reserve_Wh": reserve_wh},
+    )
+
     # Must reach all waypoints
     def wp_complete_margin(sim: SimResult) -> np.ndarray:
         reached_all = bool(sim.metadata.get("reached_all", False))
@@ -164,7 +184,6 @@ def _aircraft_constraints_from_cfg(cfg: Dict[str, Any]) -> List[Constraint | Con
 
     # Maneuver: yaw-rate limited by bank angle and speed
     # yaw_rate_max = g * tan(phi_max) / v_air
-    dyn_cfg = cfg.get("vehicle", {}) or {}
     bank_max_deg = float(dyn_cfg.get("bank_max_deg", 30.0))
     bank_max_rad = math.radians(bank_max_deg)
 
@@ -189,6 +208,8 @@ def _aircraft_constraints_from_cfg(cfg: Dict[str, Any]) -> List[Constraint | Con
     )
 
     items: List[Constraint | ConstraintGroup] = [c_batt, c_wp, c_turn]
+    if reserve_wh > 0.0 and enforce_reserve:
+        items.insert(1, c_batt_reserve)
 
     if enforce_geofence:
         # Group to keep reporting tidy
@@ -217,7 +238,9 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
         raise ValueError("build_problem_from_config called with non-aircraft scenario")
 
     # --- Parse waypoints ---
-    wps_yaml = (cfg.get("mission", {}) or {}).get("waypoints", []) or []
+    mission_cfg = cfg.get("mission", {}) or {}
+    fixed_order = bool(mission_cfg.get("fixed_order", False))
+    wps_yaml = mission_cfg.get("waypoints", []) or []
     if not wps_yaml:
         raise ValueError("aircraft scenario requires mission.waypoints")
 
@@ -244,11 +267,12 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
 
     # --- Decision space ---
     wp_ids = [wp.name or f"WP{i}" for i, wp in enumerate(mission.waypoints)]
+    decision_vars: List[Any] = []
+    if not fixed_order:
+        decision_vars.append(PermutationVar("visit_order", items=wp_ids))
+    decision_vars.append(ContinuousVar("cruise_speed_mps", bounds=Bounds(min_v, max_v)))
     ds = DecisionSpace(
-        variables=[
-            PermutationVar("visit_order", items=wp_ids),
-            ContinuousVar("cruise_speed_mps", bounds=Bounds(min_v, max_v)),
-        ]
+        variables=decision_vars
     )
 
     # --- Wind model ---
@@ -390,7 +414,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
 
     # --- Build plan from decisions ---
     def build_plan(a: DecisionAssignment) -> Plan:
-        order = list(a["visit_order"])
+        order = list(wp_ids if fixed_order else a["visit_order"])
         cruise_speed = float(np.array(a["cruise_speed_mps"]).reshape(-1)[0])
 
         name_to_wp = {wp.name: wp for wp in mission.waypoints}
@@ -423,6 +447,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                 "heading_rad": float(ic.get("heading_rad", 0.0)),
                 "speed_mps": float(ic.get("speed_mps", cruise_default)),
                 "battery_Wh": float(ic.get("battery_Wh", batt_cap)),
+                "fixed_order": bool(fixed_order),
             },
         )
 

@@ -274,7 +274,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(strict_json_dumps(result.robustness, indent=2))
 
     # Write basic artifacts
-    outdir = Path(args.outdir).resolve() / scenario_path.stem
+    output_cfg = cfg.get("output", {}) or {}
+    run_dir_name = str(output_cfg.get("run_dir_name") or scenario_path.stem).strip()
+    outdir = Path(args.outdir).resolve() / run_dir_name
     outdir.mkdir(parents=True, exist_ok=True)
 
     scenario_type = str(cfg.get("scenario", {}).get("type", "")).strip().lower()
@@ -283,6 +285,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         # Optional human-readable output
         try:
             from mission_framework.reporting.flight_output import (
+                export_operator_memo,
                 export_waypoints_csv,
                 print_flight_plan,
             )
@@ -290,6 +293,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             print("\n--- Flight Plan ---")
             print(print_flight_plan(result.plan))
             export_waypoints_csv(result.plan, outdir / "waypoints.csv")
+            export_operator_memo(
+                result.plan,
+                result.sim_result,
+                result.constraints,
+                result.score_report,
+                outdir / "operator_memo.md",
+                robustness=result.robustness,
+            )
         except Exception as e:
             print(f"(flight reporting skipped: {e})")
 

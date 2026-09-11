@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 import numpy as np
 
@@ -139,6 +139,154 @@ def export_waypoints_csv(plan: Plan, out_path: Path) -> None:
         w.writeheader()
         for r in rows:
             w.writerow(r)
+
+
+def _scalar(sim: Optional[SimResult], key: str, default: Optional[float] = None) -> Optional[float]:
+    if sim is None:
+        return default
+    if key in sim.scalars:
+        return float(sim.scalars[key])
+    if key in sim.resources:
+        values = np.asarray(sim.resources[key], dtype=float).reshape(-1)
+        if values.size:
+            return float(values[-1])
+    return default
+
+
+def _fmt_value(value: Any, unit: str = "") -> str:
+    if value is None:
+        return "n/a"
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return "n/a"
+    if not np.isfinite(number):
+        return "n/a"
+    suffix = f" {unit}" if unit else ""
+    return f"{number:.1f}{suffix}"
+
+
+def _constraint_label(name: str) -> str:
+    labels = {
+        "all_waypoints_reached": "inspection_completion",
+        "battery_nonnegative": "battery_nonnegative",
+        "battery_reserve": "battery_reserve",
+        "bank_angle_turn_limit": "turn_limit",
+        "geofence_no_entry": "geofence_no_entry",
+        "geofence_clearance": "geofence_clearance",
+    }
+    return labels.get(name, name)
+
+
+def _hard_constraints(constraints: Any) -> Iterable[Any]:
+    results = list(getattr(constraints, "results", []) or [])
+    return [
+        result
+        for result in results
+        if str(getattr(getattr(result, "severity", ""), "value", result.severity)) == "hard"
+    ]
+
+
+def _recommended_actions(constraints: Any) -> List[str]:
+    hard = list(_hard_constraints(constraints))
+    failed_names = [str(result.name) for result in hard if not bool(result.is_satisfied)]
+    actions: List[str] = []
+
+    if not failed_names:
+        actions.append(
+            "Proceed if the pilot-in-command confirms airspace authorization, crew readiness, "
+            "and field conditions."
+        )
+        low_reserve = next((r for r in hard if str(r.name) == "battery_reserve"), None)
+        if low_reserve is not None and float(low_reserve.min_margin) < 75.0:
+            actions.append("Reduce route length or plan a relaunch / battery swap to widen reserve.")
+        actions.append("Wait for better wind if observed conditions exceed the scenario model.")
+        actions.append("Maintain the modeled geofence clearance before export to any flight system.")
+        return actions
+
+    if any("battery" in name for name in failed_names):
+        actions.append("Reduce route length or plan a relaunch / battery swap.")
+    if any("geofence" in name for name in failed_names):
+        actions.append("Adjust geofence clearance or reroute the inspection corridor.")
+    if "all_waypoints_reached" in failed_names:
+        actions.append("Reduce the route or split the inspection into shorter sorties.")
+    if "bank_angle_turn_limit" in failed_names:
+        actions.append("Lower cruise speed or increase turn spacing.")
+    actions.append("Wait for better wind before retrying if winds are the binding constraint.")
+    return actions
+
+
+def export_operator_memo(
+    plan: Plan,
+    sim: SimResult,
+    constraints: Any,
+    score_report: Any,
+    out_path: Path,
+    robustness: Optional[Dict[str, Any]] = None,
+) -> str:
+    """
+    Write a lightweight go/no-go memo for BVLOS inspection planning review.
+
+    This is additive reporting only; core JSON contracts remain unchanged.
+    """
+    hard_pass = bool(getattr(constraints, "hard_pass", False))
+    status = "GO" if hard_pass else "MODIFY / DO NOT FLY"
+    waypoints = plan.waypoints or []
+    inspection_points = max(0, len(waypoints) - 1)
+    hard = sorted(list(_hard_constraints(constraints)), key=lambda result: result.min_margin)
+
+    lines = [
+        "# BVLOS Inspection Operator Memo",
+        "",
+        f"Status: {status}",
+        "",
+        "ORBITAL is preflight decision support and audit evidence. It is not a LAANC "
+        "provider, autopilot, or regulatory approval system.",
+        "",
+        "## Mission Summary",
+        "",
+        f"- Mission: {plan.metadata.get('mission_id', 'aircraft_mission')}",
+        f"- Inspection points: {inspection_points}",
+        f"- Planned cruise speed: {_fmt_value(plan.metadata.get('cruise_speed_mps'), 'm/s')}",
+        f"- Estimated flight time: {_fmt_value(_scalar(sim, 't_end_s'), 's')}",
+        f"- Estimated energy used: {_fmt_value(_scalar(sim, 'energy_used_Wh'), 'Wh')}",
+        f"- Final battery: {_fmt_value(_scalar(sim, 'final_battery_Wh'), 'Wh')}",
+        f"- Objective score: {_fmt_value(getattr(score_report, 'total_score', None))}",
+        "",
+        "## Top Constraints",
+        "",
+    ]
+
+    if hard:
+        for result in hard[:5]:
+            state = "PASS" if bool(result.is_satisfied) else "REVIEW"
+            lines.append(
+                f"- {state}: {_constraint_label(str(result.name))} "
+                f"(margin {_fmt_value(float(result.min_margin))})"
+            )
+    else:
+        lines.append("- No hard constraints were reported.")
+
+    if robustness:
+        lines.extend(
+            [
+                "",
+                "## Robustness",
+                "",
+                f"- Cases: {robustness.get('cases', 'n/a')}",
+                f"- Hard pass rate: {_fmt_value(robustness.get('hard_pass_rate'))}",
+                "- Worst hard margin across cases: "
+                f"{_fmt_value(robustness.get('worst_hard_margin_min'))}",
+            ]
+        )
+
+    lines.extend(["", "## Recommended Next Actions", ""])
+    lines.extend(f"- {action}" for action in _recommended_actions(constraints))
+
+    memo = "\n".join(lines) + "\n"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(memo, encoding="utf-8")
+    return memo
 
 
 def print_flight_plan(plan: Plan, max_rows: int = 50) -> str:

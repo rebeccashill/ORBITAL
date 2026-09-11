@@ -3,18 +3,76 @@
 [![CI](https://github.com/rebeccashill/ORBITAL/actions/workflows/ci.yml/badge.svg)](https://github.com/rebeccashill/ORBITAL/actions/workflows/ci.yml)
 
 **Operational Reusable Backend for Integrated Trajectory and Logistics**  
-Unified Mission Planning Framework for Aircraft and Spacecraft
+Constraint-Aware BVLOS Inspection Mission Planning
 
-Current release: `v1.0.3`
+Current release: `v1.0.4`
 
-ORBITAL is a domain-agnostic mission planning framework that supports:
+ORBITAL helps drone operators plan constraint-aware BVLOS inspection missions
+under battery, weather, geofence, and regulatory constraints. It is built on a
+domain-agnostic mission planning engine that can simulate candidate plans,
+evaluate hard and soft constraints, compare objective tradeoffs, and export
+auditable planning evidence before a crew commits field time.
 
-- Aircraft multi-waypoint optimization
-- Spacecraft 7-day scheduling and operations planning
+Current v1.0.4 focus: make the drone/BVLOS inspection workflow the flagship
+story while keeping the existing aircraft and spacecraft engine intact.
+
+ORBITAL supports:
+
+- Drone and aircraft multi-waypoint optimization
+- Battery, wind, geofence, and route feasibility checks
+- Spacecraft 7-day scheduling and operations planning as technical depth
 - Simulation-based optimization with constraints
 - Monte Carlo robustness analysis
 - Structured reporting with JSON and CSV exports
 - Automated visualization for flight paths, timelines, and performance plots
+
+---
+
+## Product Focus
+
+The first customer wedge is BVLOS inspection planning for operators who need to
+know whether a mission is feasible before sending a crew into the field.
+
+Representative use cases:
+
+- Power line and utility corridor inspection
+- Pipeline and rail corridor inspection
+- Solar, wind, mining, and industrial-site inspection
+- Emergency infrastructure assessment after storms or outages
+
+HBS one-liner:
+
+> ORBITAL helps drone inspection teams know whether a BVLOS mission is feasible
+> before sending a crew into the field.
+
+## Competitive Positioning
+
+Drone operators already have tools for airspace authorization, fleet management,
+mapping, photogrammetry, and flight execution. ORBITAL is positioned differently:
+it is a preflight feasibility and evidence layer. The goal is to show the
+operator which constraints are binding, whether the plan is likely to complete,
+and what tradeoffs are available before the mission is attempted.
+
+ORBITAL's current differentiators are:
+
+- Constraint-first planning rather than map-first planning
+- Transparent score and feasibility breakdowns
+- Battery, wind, geofence, and route-completion evidence
+- Monte Carlo robustness checks for uncertain mission conditions
+- Exportable JSON/CSV artifacts for operator review and audit trails
+
+## What ORBITAL Is Not
+
+ORBITAL is not a drone autopilot, LAANC provider, live UTM service, or regulatory
+approval system. It does not replace a licensed remote pilot, operational safety
+review, waiver, authorization, or customer-specific compliance process. ORBITAL
+recommends and documents candidate plans; human operators remain responsible for
+flight approval and execution.
+
+The spacecraft module remains part of the repository as a demonstration of the
+same planning architecture applied to a harder scheduling domain. For the current
+venture story, spacecraft planning should be treated as technical depth and
+future expansion rather than the initial market wedge.
 
 ---
 

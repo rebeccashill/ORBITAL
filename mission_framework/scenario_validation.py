@@ -220,6 +220,24 @@ def _validate_shared_sections(cfg: Mapping[str, Any], issues: list[ValidationIss
 
     if output is not None:
         for key, value in output.items():
+            if key == "run_dir_name":
+                if not isinstance(value, str) or not value.strip():
+                    issues.append(
+                        ValidationIssue(
+                            "output.run_dir_name",
+                            "must be a non-empty string",
+                            "Use a folder-safe name such as bvlos_powerline_inspection.",
+                        )
+                    )
+                elif value.strip() in {".", ".."} or any(ch in value for ch in '<>:"/\\|?*'):
+                    issues.append(
+                        ValidationIssue(
+                            "output.run_dir_name",
+                            "must be a folder-safe name",
+                            "Avoid path separators and reserved filename characters.",
+                        )
+                    )
+                continue
             if not isinstance(value, bool):
                 issues.append(
                     ValidationIssue(
@@ -311,6 +329,8 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
         _number(initial_state, "initial_state.battery_Wh", issues, min_value=0.0)
 
     if mission is not None:
+        if "fixed_order" in mission and not isinstance(mission["fixed_order"], bool):
+            issues.append(ValidationIssue("mission.fixed_order", "must be a boolean"))
         waypoints = _require_sequence(mission, "mission.waypoints", issues)
         if waypoints is not None:
             if not waypoints:
@@ -352,6 +372,7 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
             "bank_max_deg",
             "climb_rate_max_mps",
             "descent_rate_max_mps",
+            "battery_reserve_Wh",
         ):
             _number(vehicle, f"vehicle.{key}", issues, min_value=0.0)
         _number(vehicle, "vehicle.z_min_m", issues)

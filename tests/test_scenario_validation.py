@@ -49,6 +49,7 @@ def test_schema_definitions_cover_shared_and_domain_fields() -> None:
     "scenario_path",
     [
         EXAMPLES / "aircraft_uav_demo.yaml",
+        EXAMPLES / "bvlos_powerline_inspection_demo.yaml",
         EXAMPLES / "cubesat_leo_demo.yaml",
         EXAMPLES / "stress" / "aircraft_high_wind.yaml",
         EXAMPLES / "stress" / "aircraft_low_battery_tight_nfzs.yaml",
@@ -157,3 +158,15 @@ def test_cli_prints_validation_errors_without_running_planner(tmp_path: Path) ->
     assert "Scenario validation failed" in result.stderr
     assert "planner.iterations" in result.stderr
     assert "mission.waypoints[0].x_m" in result.stderr
+
+
+def test_aircraft_validation_allows_named_output_folder() -> None:
+    cfg = copy.deepcopy(_load_yaml(EXAMPLES / "aircraft_uav_demo.yaml"))
+    cfg["vehicle"]["battery_reserve_Wh"] = 100.0
+    cfg["output"]["run_dir_name"] = "bvlos_powerline_inspection"
+
+    assert collect_scenario_validation_issues(cfg) == []
+
+    cfg["output"]["run_dir_name"] = "../unsafe"
+    issues = collect_scenario_validation_issues(cfg)
+    assert "output.run_dir_name" in _issue_paths(issues)

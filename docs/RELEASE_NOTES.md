@@ -1,5 +1,41 @@
 # Release Notes
 
+## v1.0.4 - September 11, 2026
+
+This patch release narrows ORBITAL's venture story around constraint-aware BVLOS
+inspection planning while preserving the existing unified aircraft and
+spacecraft mission-planning architecture.
+
+### Changed
+
+- Repositioned the README around the BVLOS inspection wedge: battery, weather,
+  geofence, route-completion, and regulatory-adjacent preflight decision
+  support.
+- Added `examples/bvlos_powerline_inspection_demo.yaml`, a fixed-order powerline
+  corridor inspection scenario with six tower waypoints, sinusoidal wind,
+  geofence clearance, and a battery reserve requirement.
+- Added optional aircraft `vehicle.battery_reserve_Wh` support and a
+  `battery_reserve` hard constraint without changing the existing
+  `battery_nonnegative` contract.
+- Added optional `mission.fixed_order` support so linear-asset demos can preserve
+  corridor order while the default aircraft planner still supports waypoint
+  permutation.
+- Added safe `output.run_dir_name` validation so curated demos can write stable
+  output bundle paths.
+- Added a lightweight BVLOS operator memo with go/no-go status, top constraints,
+  robustness summary, and recommended next actions.
+- Updated optimizer maturity exhaustive-grid assignment generation to respect
+  fixed-order aircraft scenarios.
+
+### Verified
+
+- Added validation coverage for the BVLOS powerline inspection scenario.
+- Added an aircraft end-to-end smoke test for the new BVLOS demo.
+- Generated `outputs/bvlos_powerline_inspection/` with waypoint CSV, stable JSON
+  artifacts, plots, and `operator_memo.md`.
+- Ran pytest, Ruff, mypy for `mission_framework`, and the fast no-plot demo
+  runner locally.
+
 ## v1.0.3 - September 10, 2026
 
 This patch release focuses on credibility and polish gaps in the ORBITAL 1.0

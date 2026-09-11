@@ -1,0 +1,102 @@
+{
+  "summary": {
+    "hard_pass": true,
+    "soft_pass": true,
+    "total_penalty": 0.0,
+    "worst_hard": {
+      "name": "bank_angle_turn_limit",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 0.1390076277875651,
+      "max_violation": 0.0,
+      "worst_index": 3,
+      "worst_time": null,
+      "metadata_keys": [
+        "bank_max_deg"
+      ]
+    },
+    "worst_soft": null
+  },
+  "results": [
+    {
+      "name": "battery_nonnegative",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 831.8553549273508,
+      "max_violation": 0.0,
+      "worst_index": 28,
+      "worst_time": null,
+      "metadata_keys": [
+        "t"
+      ]
+    },
+    {
+      "name": "battery_reserve",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 131.85535492735085,
+      "max_violation": 0.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": [
+        "reserve_Wh"
+      ]
+    },
+    {
+      "name": "all_waypoints_reached",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 1.0,
+      "max_violation": 0.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": []
+    },
+    {
+      "name": "bank_angle_turn_limit",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 0.1390076277875651,
+      "max_violation": 0.0,
+      "worst_index": 3,
+      "worst_time": null,
+      "metadata_keys": [
+        "bank_max_deg"
+      ]
+    },
+    {
+      "name": "geofence_no_entry",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 0.5,
+      "max_violation": 0.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": []
+    },
+    {
+      "name": "geofence_clearance",
+      "severity": "hard",
+      "reduce_mode": "min",
+      "weight": 1.0,
+      "is_satisfied": true,
+      "min_margin": 261.6023274099015,
+      "max_violation": 0.0,
+      "worst_index": 0,
+      "worst_time": null,
+      "metadata_keys": []
+    }
+  ]
+}
