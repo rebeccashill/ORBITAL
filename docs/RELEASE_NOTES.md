@@ -18,11 +18,18 @@ artifact set.
   and the new `target_time_windows` hard constraint.
 - Reframed spacecraft baseline results as an intentionally easy smoke benchmark
   and documented the current proxy-based model limitations.
+- Added an optimizer maturity benchmark covering demo and stress scenarios,
+  including an `exhaustive_grid` solver-style comparison where enumeration is
+  practical.
+- Documented that the current optimizer is strong demo/research engineering, but
+  not yet production-grade mission planning.
 
 ### Verified
 
 - Validated bundled spacecraft demo and stress YAML files.
 - Reran baseline comparison artifacts with documented parameters.
+- Generated optimizer maturity CSV and Markdown artifacts with demo and stress
+  scenarios.
 - Ran Black, Ruff, mypy, pytest, and strict JSON artifact scans locally.
 
 ## v1.0.2 - September 9, 2026

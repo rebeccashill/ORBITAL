@@ -155,6 +155,23 @@ The current spacecraft demo is intentionally easy, so all spacecraft planners ca
 tie on full science value; see `docs/BASELINE_COMPARISONS.md` for benchmark scope
 and current summarized results.
 
+## Optimizer Maturity
+
+```bash
+python scripts/run_optimizer_maturity.py --out outputs/validation/optimizer_maturity/optimizer_maturity.csv --orbital-iterations 120 --orbital-restarts 1 --random-samples 25 --robustness-cases 3 --speed-grid 5 --offset-grid 3 --max-exhaustive-candidates 5000 --seed 0
+```
+
+Outputs:
+
+```text
+outputs/validation/optimizer_maturity/
+```
+
+This broader report adds stress scenarios and an `exhaustive_grid` solver-style
+comparison where small decision spaces make enumeration practical. ORBITAL's
+optimizer is strong demo and research engineering, but not yet production-grade
+mission planning; see `docs/OPTIMIZER_MATURITY.md`.
+
 ---
 
 ## Stress Tests

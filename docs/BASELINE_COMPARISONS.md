@@ -2,6 +2,8 @@
 
 ORBITAL includes a reproducible baseline report so optimizer results can be
 compared against simple reference planners instead of evaluated in isolation.
+For the broader demo-plus-stress maturity matrix, including the `exhaustive_grid`
+solver-style baseline, see `docs/OPTIMIZER_MATURITY.md`.
 
 ## Baseline Planners
 
