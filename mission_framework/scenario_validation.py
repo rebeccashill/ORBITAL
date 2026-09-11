@@ -321,6 +321,7 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
     objective = _optional_mapping(cfg, "objective", issues)
     simulation = _optional_mapping(cfg, "simulation", issues)
     regulatory = _optional_mapping(cfg, "regulatory", issues)
+    weather = _optional_mapping(cfg, "weather", issues)
 
     if initial_state is not None:
         for key in ("x_m", "y_m", "heading_rad", "speed_mps", "battery_Wh"):
@@ -456,6 +457,90 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
         _number(wind, "wind.warning_margin_mps", issues, min_value=0.0)
         if "stochastic" in wind and not isinstance(wind["stochastic"], bool):
             issues.append(ValidationIssue("wind.stochastic", "must be a boolean"))
+
+    if weather is not None:
+        provider = weather.get("provider")
+        if provider is not None and str(provider).strip().lower() not in {
+            "offline",
+            "mock",
+            "sample",
+            "open_meteo",
+            "open-meteo",
+            "openmeteo",
+        }:
+            issues.append(
+                ValidationIssue(
+                    "weather.provider",
+                    "must be one of: offline, mock, sample, open_meteo",
+                )
+            )
+        for key in ("enabled", "use_live", "fallback_enabled", "apply_to_wind"):
+            if key in weather and not isinstance(weather[key], bool):
+                issues.append(ValidationIssue(f"weather.{key}", "must be a boolean"))
+        _datetime(weather, "weather.timestamp_utc", issues)
+        _number(weather, "weather.timeout_s", issues, min_value=0.0, exclusive_min=True)
+
+        location = _optional_mapping(cfg, "weather.location", issues)
+        if location is not None:
+            _optional_nonempty_string(cfg, "weather.location.name", issues)
+            _number(
+                cfg,
+                "weather.location.latitude_deg",
+                issues,
+                min_value=-90.0,
+                max_value=90.0,
+            )
+            _number(
+                cfg,
+                "weather.location.longitude_deg",
+                issues,
+                min_value=-180.0,
+                max_value=180.0,
+            )
+
+        forecast_window = _optional_mapping(cfg, "weather.forecast_window", issues)
+        if forecast_window is not None:
+            _datetime(cfg, "weather.forecast_window.start_utc", issues)
+            _number(
+                cfg,
+                "weather.forecast_window.hours",
+                issues,
+                min_value=0.0,
+                exclusive_min=True,
+            )
+
+        offline = _optional_mapping(cfg, "weather.offline", issues)
+        if offline is not None:
+            _optional_nonempty_string(cfg, "weather.offline.source", issues)
+            _datetime(cfg, "weather.offline.timestamp_utc", issues)
+            _number(cfg, "weather.offline.wind_speed_mps", issues, min_value=0.0)
+            _number(
+                cfg,
+                "weather.offline.wind_direction_deg",
+                issues,
+                min_value=0.0,
+                max_value=360.0,
+            )
+            _number(cfg, "weather.offline.wind_gust_mps", issues, min_value=0.0)
+            _number(cfg, "weather.offline.visibility_m", issues, min_value=0.0)
+            _number(cfg, "weather.offline.precipitation_mm", issues, min_value=0.0)
+            _number(cfg, "weather.offline.temperature_C", issues)
+
+        limits = _optional_mapping(cfg, "weather.operational_limits", issues)
+        if limits is not None:
+            _number(
+                cfg,
+                "weather.operational_limits.max_safe_wind_mps",
+                issues,
+                min_value=0.0,
+                exclusive_min=True,
+            )
+            _number(
+                cfg,
+                "weather.operational_limits.warning_margin_mps",
+                issues,
+                min_value=0.0,
+            )
 
     if geofence is not None:
         _number(geofence, "geofence.clearance_m", issues, min_value=0.0)

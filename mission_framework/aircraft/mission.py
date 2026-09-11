@@ -50,6 +50,7 @@ from mission_framework.core.objective import Objective, term_minimize_energy, te
 from mission_framework.core.planner import Problem
 from mission_framework.core.types import Plan, SimResult
 from mission_framework.scenario_validation import validate_scenario_config
+from mission_framework.weather import apply_weather_to_config
 
 # ============================================================
 # Helpers
@@ -236,6 +237,8 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     scenario = cfg.get("scenario", {}) or {}
     if str(scenario.get("type", "")).lower() != "aircraft":
         raise ValueError("build_problem_from_config called with non-aircraft scenario")
+
+    apply_weather_to_config(cfg)
 
     # --- Parse waypoints ---
     mission_cfg = cfg.get("mission", {}) or {}
@@ -448,6 +451,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                 "speed_mps": float(ic.get("speed_mps", cruise_default)),
                 "battery_Wh": float(ic.get("battery_Wh", batt_cap)),
                 "fixed_order": bool(fixed_order),
+                "weather": ((cfg.get("weather", {}) or {}).get("resolved", {}) or {}),
             },
         )
 

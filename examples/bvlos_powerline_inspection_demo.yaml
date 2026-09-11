@@ -83,6 +83,34 @@ wind:
   max_safe_wind_mps: 9.0
   warning_margin_mps: 2.0
 
+weather:
+  enabled: true
+  provider: "open_meteo"
+  use_live: false
+  fallback_enabled: true
+  apply_to_wind: true
+  timestamp_utc: "2026-09-11T16:00:00Z"
+  timeout_s: 6.0
+  location:
+    name: "Palo Alto utility corridor demo"
+    latitude_deg: 37.4419
+    longitude_deg: -122.1430
+  forecast_window:
+    start_utc: "2026-09-11T16:00:00Z"
+    hours: 2.0
+  offline:
+    source: "offline Open-Meteo-shaped sample"
+    timestamp_utc: "2026-09-11T16:00:00Z"
+    wind_speed_mps: 4.5
+    wind_direction_deg: 285.0
+    wind_gust_mps: 5.9
+    visibility_m: 16000.0
+    precipitation_mm: 0.0
+    temperature_C: 18.5
+  operational_limits:
+    max_safe_wind_mps: 9.0
+    warning_margin_mps: 2.0
+
 geofence:
   clearance_m: 75.0
   no_fly_zones:

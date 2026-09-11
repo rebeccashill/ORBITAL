@@ -12,22 +12,52 @@
     "ground_risk_population_note": "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch.",
     "documentation_only_notice": "For planning documentation only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, or operational clearance."
   },
+  "weather_metadata": {
+    "provider": "open_meteo",
+    "source": "offline Open-Meteo-shaped sample",
+    "timestamp_utc": "2026-09-11T16:00:00Z",
+    "location_name": "Palo Alto utility corridor demo",
+    "latitude_deg": 37.4419,
+    "longitude_deg": -122.143,
+    "forecast_window_start_utc": "2026-09-11T16:00:00Z",
+    "forecast_window_hours": 2.0,
+    "wind_speed_mps": 4.5,
+    "wind_direction_deg": 285.0,
+    "wind_gust_mps": 5.9,
+    "visibility_m": 16000.0,
+    "precipitation_mm": 0.0,
+    "temperature_C": 18.5,
+    "fallback_used": true,
+    "fallback_reason": "weather.use_live is false; using offline sample",
+    "live_fetch_enabled": false,
+    "applied_to_wind": true
+  },
   "top_limiting_constraint": {
     "id": "wind_weather",
     "label": "Wind / weather margin",
     "status": "pass",
     "margin": {
-      "value": 3.5,
+      "value": 3.0999999999999996,
       "unit": "m/s"
     },
     "warning_margin": {
       "value": 2.0,
       "unit": "m/s"
     },
-    "risk_points": 12.499999999999998,
+    "risk_points": 14.500000000000002,
     "observed": {
-      "max_horizontal_wind_mps": 5.5,
-      "max_safe_wind_mps": 9.0
+      "max_horizontal_wind_mps": 5.9,
+      "weather_audit_wind_mps": 5.9,
+      "max_safe_wind_mps": 9.0,
+      "weather_source": "offline Open-Meteo-shaped sample",
+      "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+      "weather_wind_speed_mps": 4.5,
+      "weather_wind_direction_deg": 285.0,
+      "weather_wind_gust_mps": 5.9,
+      "visibility_m": 16000.0,
+      "precipitation_mm": 0.0,
+      "temperature_C": 18.5,
+      "weather_fallback_used": true
     },
     "recommendation": "Wait for better wind or lower mission scope."
   },
@@ -37,17 +67,27 @@
       "label": "Wind / weather margin",
       "status": "pass",
       "margin": {
-        "value": 3.5,
+        "value": 3.0999999999999996,
         "unit": "m/s"
       },
       "warning_margin": {
         "value": 2.0,
         "unit": "m/s"
       },
-      "risk_points": 12.499999999999998,
+      "risk_points": 14.500000000000002,
       "observed": {
-        "max_horizontal_wind_mps": 5.5,
-        "max_safe_wind_mps": 9.0
+        "max_horizontal_wind_mps": 5.9,
+        "weather_audit_wind_mps": 5.9,
+        "max_safe_wind_mps": 9.0,
+        "weather_source": "offline Open-Meteo-shaped sample",
+        "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+        "weather_wind_speed_mps": 4.5,
+        "weather_wind_direction_deg": 285.0,
+        "weather_wind_gust_mps": 5.9,
+        "visibility_m": 16000.0,
+        "precipitation_mm": 0.0,
+        "temperature_C": 18.5,
+        "weather_fallback_used": true
       },
       "recommendation": "Wait for better wind or lower mission scope."
     },
@@ -56,16 +96,16 @@
       "label": "Battery reserve margin",
       "status": "pass",
       "margin": {
-        "value": 131.85535492735085,
+        "value": 132.05997803125206,
         "unit": "Wh"
       },
       "warning_margin": {
         "value": 70.0,
         "unit": "Wh"
       },
-      "risk_points": 11.163520724664163,
+      "risk_points": 11.13428885267828,
       "observed": {
-        "final_battery_Wh": 831.8553549273508,
+        "final_battery_Wh": 832.0599780312521,
         "required_reserve_Wh": 700.0
       },
       "recommendation": "Reduce route length or plan a relaunch / battery swap."
@@ -97,16 +137,16 @@
       "label": "Battery reserve margin",
       "status": "pass",
       "margin": {
-        "value": 131.85535492735085,
+        "value": 132.05997803125206,
         "unit": "Wh"
       },
       "warning_margin": {
         "value": 70.0,
         "unit": "Wh"
       },
-      "risk_points": 11.163520724664163,
+      "risk_points": 11.13428885267828,
       "observed": {
-        "final_battery_Wh": 831.8553549273508,
+        "final_battery_Wh": 832.0599780312521,
         "required_reserve_Wh": 700.0
       },
       "recommendation": "Reduce route length or plan a relaunch / battery swap."
@@ -116,17 +156,27 @@
       "label": "Wind / weather margin",
       "status": "pass",
       "margin": {
-        "value": 3.5,
+        "value": 3.0999999999999996,
         "unit": "m/s"
       },
       "warning_margin": {
         "value": 2.0,
         "unit": "m/s"
       },
-      "risk_points": 12.499999999999998,
+      "risk_points": 14.500000000000002,
       "observed": {
-        "max_horizontal_wind_mps": 5.5,
-        "max_safe_wind_mps": 9.0
+        "max_horizontal_wind_mps": 5.9,
+        "weather_audit_wind_mps": 5.9,
+        "max_safe_wind_mps": 9.0,
+        "weather_source": "offline Open-Meteo-shaped sample",
+        "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+        "weather_wind_speed_mps": 4.5,
+        "weather_wind_direction_deg": 285.0,
+        "weather_wind_gust_mps": 5.9,
+        "visibility_m": 16000.0,
+        "precipitation_mm": 0.0,
+        "temperature_C": 18.5,
+        "weather_fallback_used": true
       },
       "recommendation": "Wait for better wind or lower mission scope."
     },
@@ -135,7 +185,7 @@
       "label": "Geofence / no-fly-zone clearance",
       "status": "pass",
       "margin": {
-        "value": 261.6023274099015,
+        "value": 276.69524979477507,
         "unit": "m"
       },
       "warning_margin": {
@@ -145,7 +195,7 @@
       "risk_points": 0.0,
       "observed": {
         "required_clearance_m": 75.0,
-        "min_clearance_m": 336.6023274099015,
+        "min_clearance_m": 351.69524979477507,
         "geofence_violated": false
       },
       "recommendation": "Adjust route geometry or increase no-fly-zone clearance."
@@ -195,15 +245,15 @@
     "worst_hard_margin_min": 0.1390076277875651,
     "robust_aggregation": "mean",
     "cvar_alpha": null,
-    "robust_score": 146.35062577542718,
-    "mean_score": 146.35062577542718,
-    "p50_score": 146.3506257754272,
-    "p90_score": 146.3506257754272
+    "robust_score": 146.2790076890618,
+    "mean_score": 146.2790076890618,
+    "p50_score": 146.27900768906179,
+    "p90_score": 146.27900768906179
   },
   "summary": {
     "hard_constraints_pass": true,
     "inspection_points": 6,
     "estimated_time_s": 140.0,
-    "energy_used_Wh": 18.144645072649155
+    "energy_used_Wh": 17.940021968747942
   }
 }

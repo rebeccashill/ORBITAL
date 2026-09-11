@@ -1,10 +1,10 @@
 {
-  "total_score": 146.35062577542718,
-  "objective_cost": 146.3506257754272,
+  "total_score": 146.2790076890618,
+  "objective_cost": 146.27900768906179,
   "constraint_penalty": 0.0,
   "constraint_margin_reward": 0.0,
   "objective": {
-    "total_cost": 146.3506257754272,
+    "total_cost": 146.27900768906179,
     "terms": [
       {
         "name": "time",
@@ -14,8 +14,8 @@
       },
       {
         "name": "energy",
-        "raw": 18.144645072649155,
-        "weighted_cost": 6.350625775427204,
+        "raw": 17.940021968747942,
+        "weighted_cost": 6.279007689061779,
         "weight": 0.35
       }
     ]
@@ -43,6 +43,6 @@
   "metadata": {
     "extras": 0.0,
     "penalty_weight": 2500.0,
-    "robust_aggregated_score": 146.35062577542718
+    "robust_aggregated_score": 146.2790076890618
   }
 }

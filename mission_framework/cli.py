@@ -380,6 +380,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
     if result.robustness is not None:
         _write_json(outdir / "robustness.json", result.robustness)
+    weather_metadata = ((cfg.get("weather", {}) or {}).get("resolved", {}) or {})
+    if scenario_type == "aircraft" and weather_metadata:
+        _write_json(outdir / "weather.json", weather_metadata)
 
     # Minimal generic plan export
     plan_payload: Dict[str, Any] = {
@@ -415,7 +418,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         try:
             from mission_framework.reporting.flight_output import export_operator_evidence_bundle
 
-            export_operator_evidence_bundle(outdir, scenario_path)
+            export_operator_evidence_bundle(outdir, scenario_path, cfg=cfg)
         except Exception as e:
             print(f"(operator evidence bundle skipped: {e})")
 

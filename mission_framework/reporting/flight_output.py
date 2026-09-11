@@ -258,6 +258,33 @@ def _regulatory_metadata(cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+def _weather_metadata(cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    weather = (cfg or {}).get("weather", {}) or {}
+    resolved = weather.get("resolved", {}) or {}
+    if not resolved:
+        return {}
+    return {
+        "provider": resolved.get("provider"),
+        "source": resolved.get("source"),
+        "timestamp_utc": resolved.get("timestamp_utc"),
+        "location_name": resolved.get("location_name"),
+        "latitude_deg": resolved.get("latitude_deg"),
+        "longitude_deg": resolved.get("longitude_deg"),
+        "forecast_window_start_utc": resolved.get("forecast_window_start_utc"),
+        "forecast_window_hours": resolved.get("forecast_window_hours"),
+        "wind_speed_mps": resolved.get("wind_speed_mps"),
+        "wind_direction_deg": resolved.get("wind_direction_deg"),
+        "wind_gust_mps": resolved.get("wind_gust_mps"),
+        "visibility_m": resolved.get("visibility_m"),
+        "precipitation_mm": resolved.get("precipitation_mm"),
+        "temperature_C": resolved.get("temperature_C"),
+        "fallback_used": resolved.get("fallback_used"),
+        "fallback_reason": resolved.get("fallback_reason"),
+        "live_fetch_enabled": resolved.get("live_fetch_enabled"),
+        "applied_to_wind": weather.get("applied_to_wind"),
+    }
+
+
 def _resource_values(sim: SimResult, key: str) -> np.ndarray:
     return np.asarray(sim.resources.get(key, []), dtype=float).reshape(-1)
 
@@ -335,6 +362,7 @@ def build_inspection_constraint_audit(
     vehicle = cfg.get("vehicle", {}) or {}
     wind_cfg = cfg.get("wind", {}) or {}
     geofence_cfg = cfg.get("geofence", {}) or {}
+    weather = _weather_metadata(cfg)
 
     reserve_wh = float(vehicle.get("battery_reserve_Wh", 0.0))
     battery_warning_wh = max(50.0, reserve_wh * 0.10) if reserve_wh > 0.0 else 50.0
@@ -347,7 +375,14 @@ def build_inspection_constraint_audit(
     max_safe_wind = float(wind_cfg.get("max_safe_wind_mps", max(8.0, max_speed * 0.35)))
     wind_warning_mps = float(wind_cfg.get("warning_margin_mps", 2.0))
     max_wind = _max_horizontal_wind_mps(sim)
-    wind_margin = None if max_wind is None else max_safe_wind - max_wind
+    weather_wind = weather.get("wind_gust_mps") or weather.get("wind_speed_mps")
+    wind_inputs = [
+        float(value)
+        for value in (max_wind, weather_wind)
+        if value is not None and np.isfinite(float(value))
+    ]
+    audit_wind = max(wind_inputs) if wind_inputs else None
+    wind_margin = None if audit_wind is None else max_safe_wind - audit_wind
 
     required_clearance = float(geofence_cfg.get("clearance_m", 0.0))
     geofence_margin = _named_margin(constraints, "geofence_clearance")
@@ -385,7 +420,17 @@ def build_inspection_constraint_audit(
             warning_margin=wind_warning_mps,
             observed={
                 "max_horizontal_wind_mps": max_wind,
+                "weather_audit_wind_mps": audit_wind,
                 "max_safe_wind_mps": max_safe_wind,
+                "weather_source": weather.get("source"),
+                "weather_timestamp_utc": weather.get("timestamp_utc"),
+                "weather_wind_speed_mps": weather.get("wind_speed_mps"),
+                "weather_wind_direction_deg": weather.get("wind_direction_deg"),
+                "weather_wind_gust_mps": weather.get("wind_gust_mps"),
+                "visibility_m": weather.get("visibility_m"),
+                "precipitation_mm": weather.get("precipitation_mm"),
+                "temperature_C": weather.get("temperature_C"),
+                "weather_fallback_used": weather.get("fallback_used"),
             },
             recommendation="Wait for better wind or lower mission scope.",
         ),
@@ -447,6 +492,7 @@ def build_inspection_constraint_audit(
         "status": "go" if hard_pass else "modify",
         "mission_risk": mission_risk,
         "regulatory_metadata": _regulatory_metadata(cfg),
+        "weather_metadata": weather,
         "top_limiting_constraint": checks_sorted[0] if checks_sorted else None,
         "top_three_risk_drivers": checks_sorted[:3],
         "checks": checks,
@@ -464,6 +510,7 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
     """Render the drone inspection audit payload as Markdown."""
     top = audit.get("top_limiting_constraint") or {}
     regulatory = audit.get("regulatory_metadata") or {}
+    weather = audit.get("weather_metadata") or {}
     lines = [
         "# Drone Inspection Constraint Audit",
         "",
@@ -494,6 +541,22 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
         "- Ground-risk / population note: "
         f"{regulatory.get('ground_risk_population_note') or 'not provided'}",
         f"- Documentation-only notice: {regulatory.get('documentation_only_notice')}",
+        "",
+        "## Weather Metadata",
+        "",
+        f"- Source: {weather.get('source') or 'not provided'}",
+        f"- Provider: {weather.get('provider') or 'not provided'}",
+        f"- Timestamp: {weather.get('timestamp_utc') or 'not provided'}",
+        f"- Location: {weather.get('location_name') or 'not provided'}",
+        f"- Forecast window start: {weather.get('forecast_window_start_utc') or 'not provided'}",
+        f"- Forecast window hours: {_fmt_value(weather.get('forecast_window_hours'))}",
+        f"- Wind speed: {_fmt_value(weather.get('wind_speed_mps'), 'm/s')}",
+        f"- Wind direction: {_fmt_value(weather.get('wind_direction_deg'), 'deg')}",
+        f"- Wind gust: {_fmt_value(weather.get('wind_gust_mps'), 'm/s')}",
+        f"- Visibility: {_fmt_value(weather.get('visibility_m'), 'm')}",
+        f"- Precipitation: {_fmt_value(weather.get('precipitation_mm'), 'mm')}",
+        f"- Temperature: {_fmt_value(weather.get('temperature_C'), 'C')}",
+        f"- Fallback used: {_yes_no_unknown(weather.get('fallback_used'))}",
         "",
         "## Top Three Risk Drivers",
         "",
@@ -1053,12 +1116,14 @@ def export_operator_evidence_bundle(
     scenario_path: Path,
     *,
     bundle_dir_name: str = "operator_evidence_bundle",
+    cfg: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Copy operator-facing BVLOS evidence artifacts into one review bundle."""
     out_dir = Path(out_dir)
     scenario_path = Path(scenario_path)
     bundle_dir = out_dir / bundle_dir_name
     bundle_dir.mkdir(parents=True, exist_ok=True)
+    weather = _weather_metadata(cfg)
 
     artifacts: List[Dict[str, Any]] = [
         {
@@ -1104,6 +1169,15 @@ def export_operator_evidence_bundle(
             "bundle_name": "operator_memo.md",
         },
     ]
+    if weather:
+        artifacts.append(
+            {
+                "id": "weather_snapshot",
+                "label": "Weather snapshot",
+                "source": out_dir / "weather.json",
+                "bundle_name": "weather.json",
+            }
+        )
 
     manifest_entries: List[Dict[str, Any]] = []
     for artifact in artifacts:
@@ -1130,6 +1204,15 @@ def export_operator_evidence_bundle(
         "scenario_path": str(scenario_path),
         "complete": not missing,
         "missing": missing,
+        "weather": {
+            "source": weather.get("source"),
+            "provider": weather.get("provider"),
+            "timestamp_utc": weather.get("timestamp_utc"),
+            "fallback_used": weather.get("fallback_used"),
+            "live_fetch_enabled": weather.get("live_fetch_enabled"),
+        }
+        if weather
+        else {},
         "artifacts": manifest_entries,
         "documentation_only_notice": (
             "This bundle supports operator review and audit evidence only. ORBITAL does not "
@@ -1155,6 +1238,18 @@ def export_operator_evidence_bundle(
     for entry in manifest_entries:
         status = "included" if entry["present"] else "missing"
         readme_lines.append(f"- {entry['label']}: `{entry['bundle_path']}` ({status})")
+    if weather:
+        readme_lines.extend(
+            [
+                "",
+                "## Weather Source",
+                "",
+                f"- Source: {weather.get('source') or 'not provided'}",
+                f"- Provider: {weather.get('provider') or 'not provided'}",
+                f"- Timestamp: {weather.get('timestamp_utc') or 'not provided'}",
+                f"- Fallback used: {_yes_no_unknown(weather.get('fallback_used'))}",
+            ]
+        )
 
     (bundle_dir / "README.md").write_text("\n".join(readme_lines).rstrip() + "\n", encoding="utf-8")
     return manifest
@@ -1180,6 +1275,7 @@ def export_operator_memo(
     inspection_points = max(0, len(waypoints) - 1)
     hard = sorted(list(_hard_constraints(constraints)), key=lambda result: result.min_margin)
     regulatory = _regulatory_metadata(cfg)
+    weather = _weather_metadata(cfg)
 
     lines = [
         "# BVLOS Inspection Operator Memo",
@@ -1198,6 +1294,16 @@ def export_operator_memo(
         f"- Estimated energy used: {_fmt_value(_scalar(sim, 'energy_used_Wh'), 'Wh')}",
         f"- Final battery: {_fmt_value(_scalar(sim, 'final_battery_Wh'), 'Wh')}",
         f"- Objective score: {_fmt_value(getattr(score_report, 'total_score', None))}",
+        "",
+        "## Weather",
+        "",
+        f"- Source: {weather.get('source') or 'not provided'}",
+        f"- Timestamp: {weather.get('timestamp_utc') or 'not provided'}",
+        f"- Wind speed: {_fmt_value(weather.get('wind_speed_mps'), 'm/s')}",
+        f"- Wind gust: {_fmt_value(weather.get('wind_gust_mps'), 'm/s')}",
+        f"- Visibility: {_fmt_value(weather.get('visibility_m'), 'm')}",
+        f"- Precipitation: {_fmt_value(weather.get('precipitation_mm'), 'mm')}",
+        f"- Fallback used: {_yes_no_unknown(weather.get('fallback_used'))}",
         "",
         "## Regulatory Metadata",
         "",

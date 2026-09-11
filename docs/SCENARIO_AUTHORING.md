@@ -107,6 +107,7 @@ Common optional aircraft sections:
 
 ```yaml
 wind:
+weather:
 geofence:
 simulation:
 ```
@@ -138,6 +139,20 @@ simulation:
 | `vehicle.descent_rate_max_mps` | number | Optional, `>= 0` |
 | `geofence.no_fly_zones[].id` | string | Unique, non-empty |
 | `geofence.no_fly_zones[].polygon` | list | At least 3 coordinate pairs |
+| `weather.provider` | string | Optional: `offline`, `mock`, `sample`, or `open_meteo` |
+| `weather.use_live` | boolean | Optional; `true` allows live provider fetches |
+| `weather.fallback_enabled` | boolean | Optional; fallback to offline sample on provider failure |
+| `weather.apply_to_wind` | boolean | Optional; map resolved wind into the aircraft wind model |
+| `weather.location.latitude_deg` | number | Optional, `-90` to `90` |
+| `weather.location.longitude_deg` | number | Optional, `-180` to `180` |
+| `weather.forecast_window.start_utc` | string | Optional ISO-8601 datetime |
+| `weather.forecast_window.hours` | number | Optional, `> 0` |
+| `weather.offline.wind_speed_mps` | number | Optional, `>= 0` |
+| `weather.offline.wind_direction_deg` | number | Optional, `0` to `360` |
+| `weather.offline.wind_gust_mps` | number | Optional, `>= 0` |
+| `weather.offline.visibility_m` | number | Optional, `>= 0` |
+| `weather.offline.precipitation_mm` | number | Optional, `>= 0` |
+| `weather.offline.temperature_C` | number | Optional |
 
 Supported aircraft wind types:
 

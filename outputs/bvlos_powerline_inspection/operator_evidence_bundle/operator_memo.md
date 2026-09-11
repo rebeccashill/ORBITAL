@@ -8,11 +8,21 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 
 - Mission: BVLOS Powerline Inspection Demo
 - Inspection points: 6
-- Planned cruise speed: 27.6 m/s
+- Planned cruise speed: 27.4 m/s
 - Estimated flight time: 140.0 s
-- Estimated energy used: 18.1 Wh
-- Final battery: 831.9 Wh
-- Objective score: 146.4
+- Estimated energy used: 17.9 Wh
+- Final battery: 832.1 Wh
+- Objective score: 146.3
+
+## Weather
+
+- Source: offline Open-Meteo-shaped sample
+- Timestamp: 2026-09-11T16:00:00Z
+- Wind speed: 4.5 m/s
+- Wind gust: 5.9 m/s
+- Visibility: 16000.0 m
+- Precipitation: 0.0 mm
+- Fallback used: yes
 
 ## Regulatory Metadata
 
@@ -28,8 +38,8 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 - PASS: turn_limit (margin 0.139)
 - PASS: geofence_no_entry (margin 0.5)
 - PASS: inspection_completion (margin 1.0)
-- PASS: battery_reserve (margin 131.9)
-- PASS: geofence_clearance (margin 261.6)
+- PASS: battery_reserve (margin 132.1)
+- PASS: geofence_clearance (margin 276.7)
 
 ## Robustness
 

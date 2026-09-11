@@ -13,3 +13,11 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 - Flight path plot: `flight_path.png` (included)
 - Robustness summary: `robustness.json` (included)
 - Plain-English go/no-go memo: `operator_memo.md` (included)
+- Weather snapshot: `weather.json` (included)
+
+## Weather Source
+
+- Source: offline Open-Meteo-shaped sample
+- Provider: open_meteo
+- Timestamp: 2026-09-11T16:00:00Z
+- Fallback used: yes

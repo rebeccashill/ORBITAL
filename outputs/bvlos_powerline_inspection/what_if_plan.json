@@ -6,14 +6,14 @@
     "label": "Current BVLOS plan",
     "feasible": true,
     "mission_risk": "low",
-    "score": 146.35062577542718,
+    "score": 146.2790076890618,
     "inspection_points": 6,
     "estimated_time_s": 140.0,
-    "energy_used_Wh": 18.144645072649155,
-    "final_battery_Wh": 831.8553549273508,
-    "battery_reserve_margin_Wh": 131.85535492735085,
-    "wind_weather_margin_mps": 3.5,
-    "geofence_clearance_margin_m": 261.6023274099015,
+    "energy_used_Wh": 17.940021968747942,
+    "final_battery_Wh": 832.0599780312521,
+    "battery_reserve_margin_Wh": 132.05997803125206,
+    "wind_weather_margin_mps": 3.0999999999999996,
+    "geofence_clearance_margin_m": 276.69524979477507,
     "route_completion_margin": 1.0,
     "turn_bank_margin_radps": 0.1390076277875651
   },
@@ -24,13 +24,13 @@
       "description": "Drop the final inspection points to compare a shorter sortie.",
       "feasible": true,
       "mission_risk": "low",
-      "score": 99.17247114991532,
+      "score": 99.12424318975452,
       "estimated_time_s": 95.0,
-      "energy_used_Wh": 11.92134614261522,
-      "final_battery_Wh": 838.0786538573848,
-      "battery_reserve_margin_Wh": 138.07865385738478,
-      "wind_weather_margin_mps": 3.508214424718026,
-      "geofence_clearance_margin_m": 262.2123292883871,
+      "energy_used_Wh": 11.783551970727217,
+      "final_battery_Wh": 838.2164480292728,
+      "battery_reserve_margin_Wh": 138.21644802927278,
+      "wind_weather_margin_mps": 3.0999999999999996,
+      "geofence_clearance_margin_m": 278.44267203228713,
       "route_completion_margin": 1.0,
       "turn_bank_margin_radps": 0.1390076277875651,
       "top_limiting_constraint": {
@@ -38,17 +38,27 @@
         "label": "Wind / weather margin",
         "status": "pass",
         "margin": {
-          "value": 3.508214424718026,
+          "value": 3.0999999999999996,
           "unit": "m/s"
         },
         "warning_margin": {
           "value": 2.0,
           "unit": "m/s"
         },
-        "risk_points": 12.45892787640987,
+        "risk_points": 14.500000000000002,
         "observed": {
-          "max_horizontal_wind_mps": 5.491785575281974,
-          "max_safe_wind_mps": 9.0
+          "max_horizontal_wind_mps": 5.892330653515582,
+          "weather_audit_wind_mps": 5.9,
+          "max_safe_wind_mps": 9.0,
+          "weather_source": "offline Open-Meteo-shaped sample",
+          "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+          "weather_wind_speed_mps": 4.5,
+          "weather_wind_direction_deg": 285.0,
+          "weather_wind_gust_mps": 5.9,
+          "visibility_m": 16000.0,
+          "precipitation_mm": 0.0,
+          "temperature_C": 18.5,
+          "weather_fallback_used": true
         },
         "recommendation": "Wait for better wind or lower mission scope."
       },
@@ -58,17 +68,27 @@
           "label": "Wind / weather margin",
           "status": "pass",
           "margin": {
-            "value": 3.508214424718026,
+            "value": 3.0999999999999996,
             "unit": "m/s"
           },
           "warning_margin": {
             "value": 2.0,
             "unit": "m/s"
           },
-          "risk_points": 12.45892787640987,
+          "risk_points": 14.500000000000002,
           "observed": {
-            "max_horizontal_wind_mps": 5.491785575281974,
-            "max_safe_wind_mps": 9.0
+            "max_horizontal_wind_mps": 5.892330653515582,
+            "weather_audit_wind_mps": 5.9,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "offline Open-Meteo-shaped sample",
+            "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+            "weather_wind_speed_mps": 4.5,
+            "weather_wind_direction_deg": 285.0,
+            "weather_wind_gust_mps": 5.9,
+            "visibility_m": 16000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 18.5,
+            "weather_fallback_used": true
           },
           "recommendation": "Wait for better wind or lower mission scope."
         },
@@ -77,16 +97,16 @@
           "label": "Battery reserve margin",
           "status": "pass",
           "margin": {
-            "value": 138.07865385738478,
+            "value": 138.21644802927278,
             "unit": "Wh"
           },
           "warning_margin": {
             "value": 70.0,
             "unit": "Wh"
           },
-          "risk_points": 10.274478020373602,
+          "risk_points": 10.254793138675316,
           "observed": {
-            "final_battery_Wh": 838.0786538573848,
+            "final_battery_Wh": 838.2164480292728,
             "required_reserve_Wh": 700.0
           },
           "recommendation": "Reduce route length or plan a relaunch / battery swap."
@@ -114,7 +134,7 @@
       ],
       "delta_vs_baseline": {
         "estimated_time_s": -45.0,
-        "energy_used_Wh": -6.223298930033934
+        "energy_used_Wh": -6.156469998020725
       }
     },
     {
@@ -123,13 +143,13 @@
       "description": "Force a lower cruise speed to compare endurance and turn margin.",
       "feasible": true,
       "mission_risk": "low",
-      "score": 214.3118089930743,
+      "score": 214.3153017173916,
       "estimated_time_s": 210.0,
-      "energy_used_Wh": 12.319454265926538,
-      "final_battery_Wh": 837.6805457340735,
-      "battery_reserve_margin_Wh": 137.68054573407346,
-      "wind_weather_margin_mps": 3.5,
-      "geofence_clearance_margin_m": 261.1283674644079,
+      "energy_used_Wh": 12.329433478261763,
+      "final_battery_Wh": 837.6705665217382,
+      "battery_reserve_margin_Wh": 137.67056652173824,
+      "wind_weather_margin_mps": 3.0999999999999996,
+      "geofence_clearance_margin_m": 284.3915548806467,
       "route_completion_margin": 1.0,
       "turn_bank_margin_radps": 0.2538670010842776,
       "top_limiting_constraint": {
@@ -137,17 +157,27 @@
         "label": "Wind / weather margin",
         "status": "pass",
         "margin": {
-          "value": 3.5,
+          "value": 3.0999999999999996,
           "unit": "m/s"
         },
         "warning_margin": {
           "value": 2.0,
           "unit": "m/s"
         },
-        "risk_points": 12.499999999999998,
+        "risk_points": 14.500000000000002,
         "observed": {
-          "max_horizontal_wind_mps": 5.5,
-          "max_safe_wind_mps": 9.0
+          "max_horizontal_wind_mps": 5.9,
+          "weather_audit_wind_mps": 5.9,
+          "max_safe_wind_mps": 9.0,
+          "weather_source": "offline Open-Meteo-shaped sample",
+          "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+          "weather_wind_speed_mps": 4.5,
+          "weather_wind_direction_deg": 285.0,
+          "weather_wind_gust_mps": 5.9,
+          "visibility_m": 16000.0,
+          "precipitation_mm": 0.0,
+          "temperature_C": 18.5,
+          "weather_fallback_used": true
         },
         "recommendation": "Wait for better wind or lower mission scope."
       },
@@ -157,17 +187,27 @@
           "label": "Wind / weather margin",
           "status": "pass",
           "margin": {
-            "value": 3.5,
+            "value": 3.0999999999999996,
             "unit": "m/s"
           },
           "warning_margin": {
             "value": 2.0,
             "unit": "m/s"
           },
-          "risk_points": 12.499999999999998,
+          "risk_points": 14.500000000000002,
           "observed": {
-            "max_horizontal_wind_mps": 5.5,
-            "max_safe_wind_mps": 9.0
+            "max_horizontal_wind_mps": 5.9,
+            "weather_audit_wind_mps": 5.9,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "offline Open-Meteo-shaped sample",
+            "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+            "weather_wind_speed_mps": 4.5,
+            "weather_wind_direction_deg": 285.0,
+            "weather_wind_gust_mps": 5.9,
+            "visibility_m": 16000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 18.5,
+            "weather_fallback_used": true
           },
           "recommendation": "Wait for better wind or lower mission scope."
         },
@@ -176,16 +216,16 @@
           "label": "Battery reserve margin",
           "status": "pass",
           "margin": {
-            "value": 137.68054573407346,
+            "value": 137.67056652173824,
             "unit": "Wh"
           },
           "warning_margin": {
             "value": 70.0,
             "unit": "Wh"
           },
-          "risk_points": 10.331350609418076,
+          "risk_points": 10.332776211180253,
           "observed": {
-            "final_battery_Wh": 837.6805457340735,
+            "final_battery_Wh": 837.6705665217382,
             "required_reserve_Wh": 700.0
           },
           "recommendation": "Reduce route length or plan a relaunch / battery swap."
@@ -213,7 +253,7 @@
       ],
       "delta_vs_baseline": {
         "estimated_time_s": 70.0,
-        "energy_used_Wh": -5.825190806722617
+        "energy_used_Wh": -5.61058849048618
       }
     },
     {
@@ -222,31 +262,41 @@
       "description": "Move launch closer to the first tower / inspection corridor.",
       "feasible": true,
       "mission_risk": "low",
-      "score": 192.8737599372211,
-      "estimated_time_s": 185.0,
-      "energy_used_Wh": 22.496456963488868,
-      "final_battery_Wh": 827.5035430365111,
-      "battery_reserve_margin_Wh": 127.50354303651113,
-      "wind_weather_margin_mps": 3.5,
-      "geofence_clearance_margin_m": 256.8804408487862,
+      "score": 188.32707290484865,
+      "estimated_time_s": 180.0,
+      "energy_used_Wh": 23.79163687099617,
+      "final_battery_Wh": 826.2083631290038,
+      "battery_reserve_margin_Wh": 126.20836312900383,
+      "wind_weather_margin_mps": 3.0999999999999996,
+      "geofence_clearance_margin_m": 277.2716101242169,
       "route_completion_margin": 1.0,
-      "turn_bank_margin_radps": 0.11570427767978192,
+      "turn_bank_margin_radps": 0.10422106875706796,
       "top_limiting_constraint": {
         "id": "wind_weather",
         "label": "Wind / weather margin",
         "status": "pass",
         "margin": {
-          "value": 3.5,
+          "value": 3.0999999999999996,
           "unit": "m/s"
         },
         "warning_margin": {
           "value": 2.0,
           "unit": "m/s"
         },
-        "risk_points": 12.499999999999998,
+        "risk_points": 14.500000000000002,
         "observed": {
-          "max_horizontal_wind_mps": 5.5,
-          "max_safe_wind_mps": 9.0
+          "max_horizontal_wind_mps": 5.9,
+          "weather_audit_wind_mps": 5.9,
+          "max_safe_wind_mps": 9.0,
+          "weather_source": "offline Open-Meteo-shaped sample",
+          "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+          "weather_wind_speed_mps": 4.5,
+          "weather_wind_direction_deg": 285.0,
+          "weather_wind_gust_mps": 5.9,
+          "visibility_m": 16000.0,
+          "precipitation_mm": 0.0,
+          "temperature_C": 18.5,
+          "weather_fallback_used": true
         },
         "recommendation": "Wait for better wind or lower mission scope."
       },
@@ -256,17 +306,27 @@
           "label": "Wind / weather margin",
           "status": "pass",
           "margin": {
-            "value": 3.5,
+            "value": 3.0999999999999996,
             "unit": "m/s"
           },
           "warning_margin": {
             "value": 2.0,
             "unit": "m/s"
           },
-          "risk_points": 12.499999999999998,
+          "risk_points": 14.500000000000002,
           "observed": {
-            "max_horizontal_wind_mps": 5.5,
-            "max_safe_wind_mps": 9.0
+            "max_horizontal_wind_mps": 5.9,
+            "weather_audit_wind_mps": 5.9,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "offline Open-Meteo-shaped sample",
+            "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+            "weather_wind_speed_mps": 4.5,
+            "weather_wind_direction_deg": 285.0,
+            "weather_wind_gust_mps": 5.9,
+            "visibility_m": 16000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 18.5,
+            "weather_fallback_used": true
           },
           "recommendation": "Wait for better wind or lower mission scope."
         },
@@ -275,16 +335,16 @@
           "label": "Battery reserve margin",
           "status": "pass",
           "margin": {
-            "value": 127.50354303651113,
+            "value": 126.20836312900383,
             "unit": "Wh"
           },
           "warning_margin": {
             "value": 70.0,
             "unit": "Wh"
           },
-          "risk_points": 11.785208137641266,
+          "risk_points": 11.970233838713739,
           "observed": {
-            "final_battery_Wh": 827.5035430365111,
+            "final_battery_Wh": 826.2083631290038,
             "required_reserve_Wh": 700.0
           },
           "recommendation": "Reduce route length or plan a relaunch / battery swap."
@@ -311,8 +371,8 @@
         }
       ],
       "delta_vs_baseline": {
-        "estimated_time_s": 45.0,
-        "energy_used_Wh": 4.351811890839713
+        "estimated_time_s": 40.0,
+        "energy_used_Wh": 5.8516149022482296
       }
     },
     {
@@ -320,32 +380,42 @@
       "label": "Stronger wind case",
       "description": "Increase modeled wind components by 50 percent.",
       "feasible": true,
-      "mission_risk": "medium",
-      "score": 135.82291940142363,
-      "estimated_time_s": 130.0,
-      "energy_used_Wh": 16.636912575496126,
-      "final_battery_Wh": 833.3630874245039,
-      "battery_reserve_margin_Wh": 133.36308742450387,
-      "wind_weather_margin_mps": 0.75,
-      "geofence_clearance_margin_m": 258.70982241234594,
+      "mission_risk": "low",
+      "score": 146.2798454441629,
+      "estimated_time_s": 140.0,
+      "energy_used_Wh": 17.942415554751165,
+      "final_battery_Wh": 832.0575844452488,
+      "battery_reserve_margin_Wh": 132.05758444524884,
+      "wind_weather_margin_mps": 3.0999999999999996,
+      "geofence_clearance_margin_m": 276.67234471030395,
       "route_completion_margin": 1.0,
       "turn_bank_margin_radps": 0.1390076277875651,
       "top_limiting_constraint": {
         "id": "wind_weather",
         "label": "Wind / weather margin",
-        "status": "warning",
+        "status": "pass",
         "margin": {
-          "value": 0.75,
+          "value": 3.0999999999999996,
           "unit": "m/s"
         },
         "warning_margin": {
           "value": 2.0,
           "unit": "m/s"
         },
-        "risk_points": 58.75,
+        "risk_points": 14.500000000000002,
         "observed": {
-          "max_horizontal_wind_mps": 8.25,
-          "max_safe_wind_mps": 9.0
+          "max_horizontal_wind_mps": 5.9,
+          "weather_audit_wind_mps": 5.9,
+          "max_safe_wind_mps": 9.0,
+          "weather_source": "offline Open-Meteo-shaped sample",
+          "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+          "weather_wind_speed_mps": 4.5,
+          "weather_wind_direction_deg": 285.0,
+          "weather_wind_gust_mps": 5.9,
+          "visibility_m": 16000.0,
+          "precipitation_mm": 0.0,
+          "temperature_C": 18.5,
+          "weather_fallback_used": true
         },
         "recommendation": "Wait for better wind or lower mission scope."
       },
@@ -353,19 +423,29 @@
         {
           "id": "wind_weather",
           "label": "Wind / weather margin",
-          "status": "warning",
+          "status": "pass",
           "margin": {
-            "value": 0.75,
+            "value": 3.0999999999999996,
             "unit": "m/s"
           },
           "warning_margin": {
             "value": 2.0,
             "unit": "m/s"
           },
-          "risk_points": 58.75,
+          "risk_points": 14.500000000000002,
           "observed": {
-            "max_horizontal_wind_mps": 8.25,
-            "max_safe_wind_mps": 9.0
+            "max_horizontal_wind_mps": 5.9,
+            "weather_audit_wind_mps": 5.9,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "offline Open-Meteo-shaped sample",
+            "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+            "weather_wind_speed_mps": 4.5,
+            "weather_wind_direction_deg": 285.0,
+            "weather_wind_gust_mps": 5.9,
+            "visibility_m": 16000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 18.5,
+            "weather_fallback_used": true
           },
           "recommendation": "Wait for better wind or lower mission scope."
         },
@@ -374,16 +454,16 @@
           "label": "Battery reserve margin",
           "status": "pass",
           "margin": {
-            "value": 133.36308742450387,
+            "value": 132.05758444524884,
             "unit": "Wh"
           },
           "warning_margin": {
             "value": 70.0,
             "unit": "Wh"
           },
-          "risk_points": 10.94813036792802,
+          "risk_points": 11.134630793535882,
           "observed": {
-            "final_battery_Wh": 833.3630874245039,
+            "final_battery_Wh": 832.0575844452488,
             "required_reserve_Wh": 700.0
           },
           "recommendation": "Reduce route length or plan a relaunch / battery swap."
@@ -410,8 +490,8 @@
         }
       ],
       "delta_vs_baseline": {
-        "estimated_time_s": -10.0,
-        "energy_used_Wh": -1.5077324971530288
+        "estimated_time_s": 0.0,
+        "energy_used_Wh": 0.002393586003222481
       }
     },
     {
@@ -420,13 +500,13 @@
       "description": "Increase the required final battery reserve.",
       "feasible": true,
       "mission_risk": "medium",
-      "score": 146.36225082179865,
+      "score": 146.2951633898005,
       "estimated_time_s": 140.0,
-      "energy_used_Wh": 18.17785949085328,
-      "final_battery_Wh": 831.8221405091467,
-      "battery_reserve_margin_Wh": 26.822140509146834,
-      "wind_weather_margin_mps": 3.5,
-      "geofence_clearance_margin_m": 261.4765890295554,
+      "energy_used_Wh": 17.986181113715702,
+      "final_battery_Wh": 832.0138188862843,
+      "battery_reserve_margin_Wh": 27.01381888628441,
+      "wind_weather_margin_mps": 3.0999999999999996,
+      "geofence_clearance_margin_m": 276.25179230165264,
       "route_completion_margin": 1.0,
       "turn_bank_margin_radps": 0.1390076277875651,
       "top_limiting_constraint": {
@@ -434,16 +514,16 @@
         "label": "Battery reserve margin",
         "status": "warning",
         "margin": {
-          "value": 26.822140509146834,
+          "value": 27.01381888628441,
           "unit": "Wh"
         },
         "warning_margin": {
           "value": 80.5,
           "unit": "Wh"
         },
-        "risk_points": 60.00417123882727,
+        "risk_points": 59.932738303248044,
         "observed": {
-          "final_battery_Wh": 831.8221405091467,
+          "final_battery_Wh": 832.0138188862843,
           "required_reserve_Wh": 804.9999999999999
         },
         "recommendation": "Reduce route length or plan a relaunch / battery swap."
@@ -454,16 +534,16 @@
           "label": "Battery reserve margin",
           "status": "warning",
           "margin": {
-            "value": 26.822140509146834,
+            "value": 27.01381888628441,
             "unit": "Wh"
           },
           "warning_margin": {
             "value": 80.5,
             "unit": "Wh"
           },
-          "risk_points": 60.00417123882727,
+          "risk_points": 59.932738303248044,
           "observed": {
-            "final_battery_Wh": 831.8221405091467,
+            "final_battery_Wh": 832.0138188862843,
             "required_reserve_Wh": 804.9999999999999
           },
           "recommendation": "Reduce route length or plan a relaunch / battery swap."
@@ -473,17 +553,27 @@
           "label": "Wind / weather margin",
           "status": "pass",
           "margin": {
-            "value": 3.5,
+            "value": 3.0999999999999996,
             "unit": "m/s"
           },
           "warning_margin": {
             "value": 2.0,
             "unit": "m/s"
           },
-          "risk_points": 12.499999999999998,
+          "risk_points": 14.500000000000002,
           "observed": {
-            "max_horizontal_wind_mps": 5.5,
-            "max_safe_wind_mps": 9.0
+            "max_horizontal_wind_mps": 5.9,
+            "weather_audit_wind_mps": 5.9,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "offline Open-Meteo-shaped sample",
+            "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+            "weather_wind_speed_mps": 4.5,
+            "weather_wind_direction_deg": 285.0,
+            "weather_wind_gust_mps": 5.9,
+            "visibility_m": 16000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 18.5,
+            "weather_fallback_used": true
           },
           "recommendation": "Wait for better wind or lower mission scope."
         },
@@ -510,7 +600,7 @@
       ],
       "delta_vs_baseline": {
         "estimated_time_s": 0.0,
-        "energy_used_Wh": 0.03321441820412474
+        "energy_used_Wh": 0.04615914496775986
       }
     },
     {
@@ -519,31 +609,41 @@
       "description": "Split the route into two sorties with a fresh battery for the second leg.",
       "feasible": true,
       "mission_risk": "low",
-      "score": 155.98699301999918,
+      "score": 155.8778982681432,
       "estimated_time_s": 150.0,
-      "energy_used_Wh": 17.105694342854804,
-      "final_battery_Wh": 841.3962941109446,
-      "battery_reserve_margin_Wh": 141.3962941109446,
-      "wind_weather_margin_mps": 3.5444755429788675,
-      "geofence_clearance_margin_m": 144.06239059298662,
+      "energy_used_Wh": 16.793995051837783,
+      "final_battery_Wh": 841.5808026449887,
+      "battery_reserve_margin_Wh": 141.5808026449887,
+      "wind_weather_margin_mps": 3.0999999999999996,
+      "geofence_clearance_margin_m": 162.23615642716717,
       "route_completion_margin": 1.0,
-      "turn_bank_margin_radps": 0.14200235999754302,
+      "turn_bank_margin_radps": 0.14363842080732245,
       "top_limiting_constraint": {
         "id": "wind_weather",
         "label": "Wind / weather margin",
         "status": "pass",
         "margin": {
-          "value": 3.5444755429788675,
+          "value": 3.0999999999999996,
           "unit": "m/s"
         },
         "warning_margin": {
           "value": 2.0,
           "unit": "m/s"
         },
-        "risk_points": 12.277622285105661,
+        "risk_points": 14.500000000000002,
         "observed": {
-          "max_horizontal_wind_mps": 5.4555244570211325,
-          "max_safe_wind_mps": 9.0
+          "max_horizontal_wind_mps": 5.858414016786395,
+          "weather_audit_wind_mps": 5.9,
+          "max_safe_wind_mps": 9.0,
+          "weather_source": "offline Open-Meteo-shaped sample",
+          "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+          "weather_wind_speed_mps": 4.5,
+          "weather_wind_direction_deg": 285.0,
+          "weather_wind_gust_mps": 5.9,
+          "visibility_m": 16000.0,
+          "precipitation_mm": 0.0,
+          "temperature_C": 18.5,
+          "weather_fallback_used": true
         },
         "recommendation": "Wait for better wind or lower mission scope."
       },
@@ -553,17 +653,27 @@
           "label": "Wind / weather margin",
           "status": "pass",
           "margin": {
-            "value": 3.5444755429788675,
+            "value": 3.0999999999999996,
             "unit": "m/s"
           },
           "warning_margin": {
             "value": 2.0,
             "unit": "m/s"
           },
-          "risk_points": 12.277622285105661,
+          "risk_points": 14.500000000000002,
           "observed": {
-            "max_horizontal_wind_mps": 5.4555244570211325,
-            "max_safe_wind_mps": 9.0
+            "max_horizontal_wind_mps": 5.858414016786395,
+            "weather_audit_wind_mps": 5.9,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "offline Open-Meteo-shaped sample",
+            "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+            "weather_wind_speed_mps": 4.5,
+            "weather_wind_direction_deg": 285.0,
+            "weather_wind_gust_mps": 5.9,
+            "visibility_m": 16000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 18.5,
+            "weather_fallback_used": true
           },
           "recommendation": "Wait for better wind or lower mission scope."
         },
@@ -592,16 +702,16 @@
           "label": "Battery reserve margin",
           "status": "pass",
           "margin": {
-            "value": 141.3962941109446,
+            "value": 141.5808026449887,
             "unit": "Wh"
           },
           "warning_margin": {
             "value": 70.0,
             "unit": "Wh"
           },
-          "risk_points": 9.800529412722197,
+          "risk_points": 9.7741710507159,
           "observed": {
-            "final_battery_Wh": 841.3962941109446,
+            "final_battery_Wh": 841.5808026449887,
             "required_reserve_Wh": 700.0
           },
           "recommendation": "Reduce route length or plan a relaunch / battery swap."
@@ -614,31 +724,41 @@
           "description": "One sortie in a split-route battery swap option.",
           "feasible": true,
           "mission_risk": "low",
-          "score": 77.97569595882979,
+          "score": 77.93117919388926,
           "estimated_time_s": 75.0,
-          "energy_used_Wh": 8.501988453799413,
-          "final_battery_Wh": 841.4980115462006,
-          "battery_reserve_margin_Wh": 141.4980115462006,
-          "wind_weather_margin_mps": 3.5444755429788675,
-          "geofence_clearance_margin_m": 328.9223266697648,
+          "energy_used_Wh": 8.374797696826477,
+          "final_battery_Wh": 841.6252023031735,
+          "battery_reserve_margin_Wh": 141.62520230317352,
+          "wind_weather_margin_mps": 3.0999999999999996,
+          "geofence_clearance_margin_m": 342.8878861484889,
           "route_completion_margin": 1.0,
-          "turn_bank_margin_radps": 0.14289791264974072,
+          "turn_bank_margin_radps": 0.14406382842694823,
           "top_limiting_constraint": {
             "id": "wind_weather",
             "label": "Wind / weather margin",
             "status": "pass",
             "margin": {
-              "value": 3.5444755429788675,
+              "value": 3.0999999999999996,
               "unit": "m/s"
             },
             "warning_margin": {
               "value": 2.0,
               "unit": "m/s"
             },
-            "risk_points": 12.277622285105661,
+            "risk_points": 14.500000000000002,
             "observed": {
-              "max_horizontal_wind_mps": 5.4555244570211325,
-              "max_safe_wind_mps": 9.0
+              "max_horizontal_wind_mps": 5.858414016786395,
+              "weather_audit_wind_mps": 5.9,
+              "max_safe_wind_mps": 9.0,
+              "weather_source": "offline Open-Meteo-shaped sample",
+              "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+              "weather_wind_speed_mps": 4.5,
+              "weather_wind_direction_deg": 285.0,
+              "weather_wind_gust_mps": 5.9,
+              "visibility_m": 16000.0,
+              "precipitation_mm": 0.0,
+              "temperature_C": 18.5,
+              "weather_fallback_used": true
             },
             "recommendation": "Wait for better wind or lower mission scope."
           },
@@ -648,17 +768,27 @@
               "label": "Wind / weather margin",
               "status": "pass",
               "margin": {
-                "value": 3.5444755429788675,
+                "value": 3.0999999999999996,
                 "unit": "m/s"
               },
               "warning_margin": {
                 "value": 2.0,
                 "unit": "m/s"
               },
-              "risk_points": 12.277622285105661,
+              "risk_points": 14.500000000000002,
               "observed": {
-                "max_horizontal_wind_mps": 5.4555244570211325,
-                "max_safe_wind_mps": 9.0
+                "max_horizontal_wind_mps": 5.858414016786395,
+                "weather_audit_wind_mps": 5.9,
+                "max_safe_wind_mps": 9.0,
+                "weather_source": "offline Open-Meteo-shaped sample",
+                "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+                "weather_wind_speed_mps": 4.5,
+                "weather_wind_direction_deg": 285.0,
+                "weather_wind_gust_mps": 5.9,
+                "visibility_m": 16000.0,
+                "precipitation_mm": 0.0,
+                "temperature_C": 18.5,
+                "weather_fallback_used": true
               },
               "recommendation": "Wait for better wind or lower mission scope."
             },
@@ -687,16 +817,16 @@
               "label": "Battery reserve margin",
               "status": "pass",
               "margin": {
-                "value": 141.4980115462006,
+                "value": 141.62520230317352,
                 "unit": "Wh"
               },
               "warning_margin": {
                 "value": 70.0,
                 "unit": "Wh"
               },
-              "risk_points": 9.785998350542775,
+              "risk_points": 9.76782824240378,
               "observed": {
-                "final_battery_Wh": 841.4980115462006,
+                "final_battery_Wh": 841.6252023031735,
                 "required_reserve_Wh": 700.0
               },
               "recommendation": "Reduce route length or plan a relaunch / battery swap."
@@ -704,7 +834,7 @@
           ],
           "delta_vs_baseline": {
             "estimated_time_s": -65.0,
-            "energy_used_Wh": -9.642656618849742
+            "energy_used_Wh": -9.565224271921466
           }
         },
         {
@@ -713,31 +843,41 @@
           "description": "One sortie in a split-route battery swap option.",
           "feasible": true,
           "mission_risk": "low",
-          "score": 78.01129706116939,
+          "score": 77.94671907425396,
           "estimated_time_s": 75.0,
-          "energy_used_Wh": 8.60370588905539,
-          "final_battery_Wh": 841.3962941109446,
-          "battery_reserve_margin_Wh": 141.3962941109446,
-          "wind_weather_margin_mps": 3.5444755429788675,
-          "geofence_clearance_margin_m": 144.06239059298662,
+          "energy_used_Wh": 8.419197355011306,
+          "final_battery_Wh": 841.5808026449887,
+          "battery_reserve_margin_Wh": 141.5808026449887,
+          "wind_weather_margin_mps": 3.0999999999999996,
+          "geofence_clearance_margin_m": 162.23615642716717,
           "route_completion_margin": 1.0,
-          "turn_bank_margin_radps": 0.14200235999754302,
+          "turn_bank_margin_radps": 0.14363842080732245,
           "top_limiting_constraint": {
             "id": "wind_weather",
             "label": "Wind / weather margin",
             "status": "pass",
             "margin": {
-              "value": 3.5444755429788675,
+              "value": 3.0999999999999996,
               "unit": "m/s"
             },
             "warning_margin": {
               "value": 2.0,
               "unit": "m/s"
             },
-            "risk_points": 12.277622285105661,
+            "risk_points": 14.500000000000002,
             "observed": {
-              "max_horizontal_wind_mps": 5.4555244570211325,
-              "max_safe_wind_mps": 9.0
+              "max_horizontal_wind_mps": 5.858414016786395,
+              "weather_audit_wind_mps": 5.9,
+              "max_safe_wind_mps": 9.0,
+              "weather_source": "offline Open-Meteo-shaped sample",
+              "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+              "weather_wind_speed_mps": 4.5,
+              "weather_wind_direction_deg": 285.0,
+              "weather_wind_gust_mps": 5.9,
+              "visibility_m": 16000.0,
+              "precipitation_mm": 0.0,
+              "temperature_C": 18.5,
+              "weather_fallback_used": true
             },
             "recommendation": "Wait for better wind or lower mission scope."
           },
@@ -747,17 +887,27 @@
               "label": "Wind / weather margin",
               "status": "pass",
               "margin": {
-                "value": 3.5444755429788675,
+                "value": 3.0999999999999996,
                 "unit": "m/s"
               },
               "warning_margin": {
                 "value": 2.0,
                 "unit": "m/s"
               },
-              "risk_points": 12.277622285105661,
+              "risk_points": 14.500000000000002,
               "observed": {
-                "max_horizontal_wind_mps": 5.4555244570211325,
-                "max_safe_wind_mps": 9.0
+                "max_horizontal_wind_mps": 5.858414016786395,
+                "weather_audit_wind_mps": 5.9,
+                "max_safe_wind_mps": 9.0,
+                "weather_source": "offline Open-Meteo-shaped sample",
+                "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+                "weather_wind_speed_mps": 4.5,
+                "weather_wind_direction_deg": 285.0,
+                "weather_wind_gust_mps": 5.9,
+                "visibility_m": 16000.0,
+                "precipitation_mm": 0.0,
+                "temperature_C": 18.5,
+                "weather_fallback_used": true
               },
               "recommendation": "Wait for better wind or lower mission scope."
             },
@@ -786,16 +936,16 @@
               "label": "Battery reserve margin",
               "status": "pass",
               "margin": {
-                "value": 141.3962941109446,
+                "value": 141.5808026449887,
                 "unit": "Wh"
               },
               "warning_margin": {
                 "value": 70.0,
                 "unit": "Wh"
               },
-              "risk_points": 9.800529412722197,
+              "risk_points": 9.7741710507159,
               "observed": {
-                "final_battery_Wh": 841.3962941109446,
+                "final_battery_Wh": 841.5808026449887,
                 "required_reserve_Wh": 700.0
               },
               "recommendation": "Reduce route length or plan a relaunch / battery swap."
@@ -803,13 +953,13 @@
           ],
           "delta_vs_baseline": {
             "estimated_time_s": -65.0,
-            "energy_used_Wh": -9.540939183593764
+            "energy_used_Wh": -9.520824613736636
           }
         }
       ],
       "delta_vs_baseline": {
         "estimated_time_s": 10.0,
-        "energy_used_Wh": -1.038950729794351
+        "energy_used_Wh": -1.1460269169101593
       }
     }
   ]

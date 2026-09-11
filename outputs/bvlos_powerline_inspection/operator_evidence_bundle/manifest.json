@@ -4,6 +4,13 @@
   "scenario_path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml",
   "complete": true,
   "missing": [],
+  "weather": {
+    "source": "offline Open-Meteo-shaped sample",
+    "provider": "open_meteo",
+    "timestamp_utc": "2026-09-11T16:00:00Z",
+    "fallback_used": true,
+    "live_fetch_enabled": false
+  },
   "artifacts": [
     {
       "id": "scenario_yaml",
@@ -52,6 +59,13 @@
       "label": "Plain-English go/no-go memo",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\operator_memo.md",
       "bundle_path": "operator_memo.md",
+      "present": true
+    },
+    {
+      "id": "weather_snapshot",
+      "label": "Weather snapshot",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\weather.json",
+      "bundle_path": "weather.json",
       "present": true
     }
   ],

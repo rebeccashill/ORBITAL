@@ -107,6 +107,9 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     from mission_framework.core.objective import ScoreConfig
 
     problem = build_problem_from_config(cfg)
+    assert cfg["weather"]["resolved"]["source"] == "offline Open-Meteo-shaped sample"
+    assert cfg["weather"]["resolved"]["timestamp_utc"] == "2026-09-11T16:00:00Z"
+    assert cfg["weather"]["applied_to_wind"] is True
 
     planner_cfg = PlannerConfig(
         iterations=80,
@@ -168,6 +171,10 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert audit["regulatory_metadata"]["waiver_or_authorization_required"] is True
     assert audit["regulatory_metadata"]["airspace_class"] == "Class D"
     assert audit["regulatory_metadata"]["visual_observer_required"] is True
+    assert audit["weather_metadata"]["source"] == "offline Open-Meteo-shaped sample"
+    assert audit["weather_metadata"]["timestamp_utc"] == "2026-09-11T16:00:00Z"
+    assert audit["weather_metadata"]["fallback_used"] is True
+    assert audit["weather_metadata"]["applied_to_wind"] is True
     assert "ORBITAL does not provide LAANC" in audit["regulatory_metadata"][
         "documentation_only_notice"
     ]
@@ -210,14 +217,21 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     (tmp_path / "flight_path.png").write_bytes(b"png")
     (tmp_path / "robustness.json").write_text('{"cases": 0}\n', encoding="utf-8")
     (tmp_path / "operator_memo.md").write_text("Status: GO\n", encoding="utf-8")
+    (tmp_path / "weather.json").write_text(
+        '{"source": "offline Open-Meteo-shaped sample"}\n',
+        encoding="utf-8",
+    )
 
     evidence = export_operator_evidence_bundle(
         tmp_path,
         EXAMPLES_DIR / "bvlos_powerline_inspection_demo.yaml",
+        cfg=cfg,
     )
 
     assert evidence["kind"] == "operator_evidence_bundle"
     assert evidence["complete"] is True
+    assert evidence["weather"]["source"] == "offline Open-Meteo-shaped sample"
+    assert evidence["weather"]["timestamp_utc"] == "2026-09-11T16:00:00Z"
     bundle_dir = tmp_path / "operator_evidence_bundle"
     expected_bundle_files = {
         "scenario.yaml",
@@ -227,6 +241,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "flight_path.png",
         "robustness.json",
         "operator_memo.md",
+        "weather.json",
         "manifest.json",
         "README.md",
     }

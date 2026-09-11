@@ -191,3 +191,50 @@ def test_aircraft_regulatory_metadata_validates_as_documentation_fields() -> Non
     paths = _issue_paths(issues)
     assert "regulatory.laanc_required" in paths
     assert "regulatory.airspace_class" in paths
+
+
+def test_aircraft_weather_metadata_validates_provider_fields() -> None:
+    cfg = copy.deepcopy(_load_yaml(EXAMPLES / "aircraft_uav_demo.yaml"))
+    cfg["weather"] = {
+        "enabled": True,
+        "provider": "open_meteo",
+        "use_live": False,
+        "fallback_enabled": True,
+        "apply_to_wind": True,
+        "timestamp_utc": "2026-09-11T16:00:00Z",
+        "timeout_s": 6.0,
+        "location": {
+            "name": "Demo corridor",
+            "latitude_deg": 37.4419,
+            "longitude_deg": -122.1430,
+        },
+        "forecast_window": {
+            "start_utc": "2026-09-11T16:00:00Z",
+            "hours": 2.0,
+        },
+        "offline": {
+            "source": "offline sample",
+            "timestamp_utc": "2026-09-11T16:00:00Z",
+            "wind_speed_mps": 4.5,
+            "wind_direction_deg": 285.0,
+            "wind_gust_mps": 5.9,
+            "visibility_m": 16000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 18.5,
+        },
+        "operational_limits": {
+            "max_safe_wind_mps": 9.0,
+            "warning_margin_mps": 2.0,
+        },
+    }
+
+    assert collect_scenario_validation_issues(cfg) == []
+
+    cfg["weather"]["provider"] = "unknown"
+    cfg["weather"]["location"]["latitude_deg"] = 100.0
+    cfg["weather"]["offline"]["wind_direction_deg"] = 400.0
+    issues = collect_scenario_validation_issues(cfg)
+    paths = _issue_paths(issues)
+    assert "weather.provider" in paths
+    assert "weather.location.latitude_deg" in paths
+    assert "weather.offline.wind_direction_deg" in paths

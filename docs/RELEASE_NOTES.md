@@ -1,5 +1,29 @@
 # Release Notes
 
+## v1.0.6 - Unreleased
+
+This in-progress release connects the BVLOS planning workflow to operational
+weather inputs while preserving deterministic offline demos.
+
+### Changed
+
+- Added a weather provider layer with offline/mock snapshots and an Open-Meteo
+  live provider integration.
+- Added scenario weather fields for provider, timestamp, location, forecast
+  window, fallback behavior, and operational wind limits.
+- Mapped resolved weather wind speed/direction/gusts into the existing aircraft
+  wind model before planning.
+- Added weather source, timestamp, fallback status, visibility, precipitation,
+  temperature, and gust data to the drone inspection audit.
+- Added weather metadata and `weather.json` to the operator evidence bundle.
+
+### Verified
+
+- Added unit tests for offline weather mapping and Open-Meteo payload parsing.
+- Added validation coverage for the new weather scenario fields.
+- Added end-to-end coverage for weather metadata in BVLOS audit and evidence
+  artifacts.
+
 ## v1.0.5 - September 11, 2026
 
 This patch release makes the HBS BVLOS inspection positioning more defensible by
