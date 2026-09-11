@@ -38,6 +38,21 @@ def test_offline_weather_maps_to_existing_wind_config() -> None:
     assert cfg["wind"]["weather_timestamp_utc"] == "2026-09-11T16:00:00Z"
 
 
+def test_mock_weather_provider_uses_offline_snapshot_without_live_fetch() -> None:
+    cfg = _load_yaml(EXAMPLES_DIR / "bvlos_powerline_inspection_demo.yaml")
+    cfg["weather"]["provider"] = "mock"
+    cfg["weather"]["use_live"] = False
+
+    resolved = apply_weather_to_config(cfg)
+
+    assert resolved is not None
+    assert resolved["provider"] == "mock"
+    assert resolved["source"] == "offline Open-Meteo-shaped sample"
+    assert resolved["live_fetch_enabled"] is False
+    assert resolved["fallback_used"] is False
+    assert cfg["weather"]["applied_to_wind"] is True
+
+
 def test_open_meteo_provider_parses_live_payload(monkeypatch: pytest.MonkeyPatch) -> None:
     class FakeResponse:
         def __enter__(self) -> "FakeResponse":

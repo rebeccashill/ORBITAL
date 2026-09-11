@@ -1,9 +1,10 @@
 # Release Notes
 
-## v1.0.6 - Unreleased
+## v1.0.6 - September 11, 2026
 
-This in-progress release connects the BVLOS planning workflow to operational
-weather inputs while preserving deterministic offline demos.
+This patch release connects the BVLOS planning workflow to operational weather,
+GIS, downstream export, and fleet-readiness inputs while preserving deterministic
+offline demos.
 
 ### Changed
 
@@ -33,15 +34,20 @@ weather inputs while preserving deterministic offline demos.
 
 ### Verified
 
-- Added unit tests for offline weather mapping and Open-Meteo payload parsing.
+- Added unit tests for mock/offline weather mapping and Open-Meteo payload
+  parsing.
 - Added validation coverage for the new weather scenario fields.
 - Added validation coverage for malformed or empty GeoJSON route/geofence files.
+- Added tests for GeoJSON geofence import.
 - Added end-to-end coverage for autopilot CSV/KML exports and evidence-bundle
   inclusion.
+- Added tests for KML/CSV export generation.
 - Added validation, report, memo, and batch-summary coverage for enterprise /
   fleet readiness fields.
-- Added end-to-end coverage for weather metadata in BVLOS audit and evidence
-  artifacts.
+- Added end-to-end coverage for the BVLOS demo with mock weather, GeoJSON route
+  and geofence inputs, weather metadata in the audit, and evidence artifacts.
+- Ran pytest, Ruff, mypy for `mission_framework`, and the fast no-plot demo
+  runner locally.
 
 ## v1.0.5 - September 11, 2026
 

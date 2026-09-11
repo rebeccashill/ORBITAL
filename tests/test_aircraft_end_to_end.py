@@ -102,11 +102,14 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     cfg = _load_yaml(EXAMPLES_DIR / "bvlos_powerline_inspection_demo.yaml")
     assert cfg["scenario"]["type"].lower() == "aircraft"
     cfg["robustness"]["cases"] = 0
+    cfg["weather"]["provider"] = "mock"
+    cfg["weather"]["use_live"] = False
 
     from mission_framework.aircraft.mission import build_problem_from_config
     from mission_framework.core.objective import ScoreConfig
 
     problem = build_problem_from_config(cfg)
+    assert cfg["weather"]["resolved"]["provider"] == "mock"
     assert cfg["weather"]["resolved"]["source"] == "offline Open-Meteo-shaped sample"
     assert cfg["weather"]["resolved"]["timestamp_utc"] == "2026-09-11T16:00:00Z"
     assert cfg["weather"]["applied_to_wind"] is True
@@ -189,7 +192,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert audit["regulatory_metadata"]["visual_observer_required"] is True
     assert audit["weather_metadata"]["source"] == "offline Open-Meteo-shaped sample"
     assert audit["weather_metadata"]["timestamp_utc"] == "2026-09-11T16:00:00Z"
-    assert audit["weather_metadata"]["fallback_used"] is True
+    assert audit["weather_metadata"]["fallback_used"] is False
     assert audit["weather_metadata"]["applied_to_wind"] is True
     assert "ORBITAL does not provide LAANC" in audit["regulatory_metadata"][
         "documentation_only_notice"
