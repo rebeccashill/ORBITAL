@@ -557,6 +557,42 @@ def _weather_metadata(cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+def _optional_metadata_block(
+    cfg: Optional[Dict[str, Any]],
+    section: str,
+    keys: Iterable[str],
+) -> Dict[str, Any]:
+    block = (cfg or {}).get(section, {}) or {}
+    return {key: block.get(key) for key in keys if block.get(key) is not None}
+
+
+def _mission_metadata(cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    return _optional_metadata_block(
+        cfg,
+        "mission_metadata",
+        (
+            "operator",
+            "aircraft_id",
+            "pilot",
+            "organization",
+            "asset_owner",
+        ),
+    )
+
+
+def _fleet_metadata(cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    return _optional_metadata_block(
+        cfg,
+        "fleet_metadata",
+        (
+            "drone_model",
+            "battery_pack_id",
+            "sensor_payload",
+            "inspection_type",
+        ),
+    )
+
+
 def _resource_values(sim: SimResult, key: str) -> np.ndarray:
     return np.asarray(sim.resources.get(key, []), dtype=float).reshape(-1)
 
@@ -635,6 +671,8 @@ def build_inspection_constraint_audit(
     wind_cfg = cfg.get("wind", {}) or {}
     geofence_cfg = cfg.get("geofence", {}) or {}
     weather = _weather_metadata(cfg)
+    mission_metadata = _mission_metadata(cfg)
+    fleet_metadata = _fleet_metadata(cfg)
 
     reserve_wh = float(vehicle.get("battery_reserve_Wh", 0.0))
     battery_warning_wh = max(50.0, reserve_wh * 0.10) if reserve_wh > 0.0 else 50.0
@@ -763,6 +801,8 @@ def build_inspection_constraint_audit(
         "mission_id": plan.metadata.get("mission_id", "aircraft_mission"),
         "status": "go" if hard_pass else "modify",
         "mission_risk": mission_risk,
+        "mission_metadata": mission_metadata,
+        "fleet_metadata": fleet_metadata,
         "regulatory_metadata": _regulatory_metadata(cfg),
         "weather_metadata": weather,
         "top_limiting_constraint": checks_sorted[0] if checks_sorted else None,
@@ -783,6 +823,8 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
     top = audit.get("top_limiting_constraint") or {}
     regulatory = audit.get("regulatory_metadata") or {}
     weather = audit.get("weather_metadata") or {}
+    mission_metadata = audit.get("mission_metadata") or {}
+    fleet_metadata = audit.get("fleet_metadata") or {}
     lines = [
         "# Drone Inspection Constraint Audit",
         "",
@@ -802,6 +844,18 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
                 unit=(top.get("margin") or {}).get("unit", ""),
             )
         ),
+        "",
+        "## Mission / Fleet Metadata",
+        "",
+        f"- Operator: {mission_metadata.get('operator') or 'not provided'}",
+        f"- Aircraft ID: {mission_metadata.get('aircraft_id') or 'not provided'}",
+        f"- Pilot: {mission_metadata.get('pilot') or 'not provided'}",
+        f"- Organization: {mission_metadata.get('organization') or 'not provided'}",
+        f"- Asset owner: {mission_metadata.get('asset_owner') or 'not provided'}",
+        f"- Drone model: {fleet_metadata.get('drone_model') or 'not provided'}",
+        f"- Battery pack ID: {fleet_metadata.get('battery_pack_id') or 'not provided'}",
+        f"- Sensor payload: {fleet_metadata.get('sensor_payload') or 'not provided'}",
+        f"- Inspection type: {fleet_metadata.get('inspection_type') or 'not provided'}",
         "",
         "## Regulatory Metadata",
         "",
@@ -1599,6 +1653,8 @@ def export_operator_memo(
     hard = sorted(list(_hard_constraints(constraints)), key=lambda result: result.min_margin)
     regulatory = _regulatory_metadata(cfg)
     weather = _weather_metadata(cfg)
+    mission_metadata = _mission_metadata(cfg)
+    fleet_metadata = _fleet_metadata(cfg)
 
     lines = [
         "# BVLOS Inspection Operator Memo",
@@ -1617,6 +1673,18 @@ def export_operator_memo(
         f"- Estimated energy used: {_fmt_value(_scalar(sim, 'energy_used_Wh'), 'Wh')}",
         f"- Final battery: {_fmt_value(_scalar(sim, 'final_battery_Wh'), 'Wh')}",
         f"- Objective score: {_fmt_value(getattr(score_report, 'total_score', None))}",
+        "",
+        "## Mission / Fleet Metadata",
+        "",
+        f"- Operator: {mission_metadata.get('operator') or 'not provided'}",
+        f"- Aircraft ID: {mission_metadata.get('aircraft_id') or 'not provided'}",
+        f"- Pilot: {mission_metadata.get('pilot') or 'not provided'}",
+        f"- Organization: {mission_metadata.get('organization') or 'not provided'}",
+        f"- Asset owner: {mission_metadata.get('asset_owner') or 'not provided'}",
+        f"- Drone model: {fleet_metadata.get('drone_model') or 'not provided'}",
+        f"- Battery pack ID: {fleet_metadata.get('battery_pack_id') or 'not provided'}",
+        f"- Sensor payload: {fleet_metadata.get('sensor_payload') or 'not provided'}",
+        f"- Inspection type: {fleet_metadata.get('inspection_type') or 'not provided'}",
         "",
         "## Weather",
         "",

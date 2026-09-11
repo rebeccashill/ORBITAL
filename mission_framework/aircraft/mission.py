@@ -485,6 +485,8 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                 "battery_Wh": float(ic.get("battery_Wh", batt_cap)),
                 "fixed_order": bool(fixed_order),
                 "weather": ((cfg.get("weather", {}) or {}).get("resolved", {}) or {}),
+                "mission_metadata": dict(cfg.get("mission_metadata", {}) or {}),
+                "fleet_metadata": dict(cfg.get("fleet_metadata", {}) or {}),
                 "route_source": route_source,
                 "geofence_geojson_zones_loaded": geofence_geojson_loaded,
             },

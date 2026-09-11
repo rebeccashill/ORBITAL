@@ -329,6 +329,8 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
     simulation = _optional_mapping(cfg, "simulation", issues)
     regulatory = _optional_mapping(cfg, "regulatory", issues)
     weather = _optional_mapping(cfg, "weather", issues)
+    mission_metadata = _optional_mapping(cfg, "mission_metadata", issues)
+    fleet_metadata = _optional_mapping(cfg, "fleet_metadata", issues)
 
     if initial_state is not None:
         for key in ("x_m", "y_m", "heading_rad", "speed_mps", "battery_Wh"):
@@ -336,6 +338,25 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
         _number(initial_state, "initial_state.z_m", issues)
         _number(initial_state, "initial_state.speed_mps", issues, min_value=0.0)
         _number(initial_state, "initial_state.battery_Wh", issues, min_value=0.0)
+
+    if mission_metadata is not None:
+        for key in (
+            "operator",
+            "aircraft_id",
+            "pilot",
+            "organization",
+            "asset_owner",
+        ):
+            _optional_nonempty_string(cfg, f"mission_metadata.{key}", issues)
+
+    if fleet_metadata is not None:
+        for key in (
+            "drone_model",
+            "battery_pack_id",
+            "sensor_payload",
+            "inspection_type",
+        ):
+            _optional_nonempty_string(cfg, f"fleet_metadata.{key}", issues)
 
     if mission is not None:
         if "fixed_order" in mission and not isinstance(mission["fixed_order"], bool):

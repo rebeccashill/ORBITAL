@@ -24,6 +24,12 @@ weather inputs while preserving deterministic offline demos.
   mission CSV, KML route review file, and planning-only disclaimer.
 - Included downstream export artifacts in the operator evidence bundle when
   enabled.
+- Added optional enterprise mission metadata and fleet metadata fields for
+  operator, aircraft, pilot, organization, asset owner, drone model, battery
+  pack, sensor payload, and inspection type.
+- Added a `batch` CLI entry point that runs multiple inspection scenarios and
+  writes CSV/Markdown summaries with status, risk, top constraint, and evidence
+  path.
 
 ### Verified
 
@@ -32,6 +38,8 @@ weather inputs while preserving deterministic offline demos.
 - Added validation coverage for malformed or empty GeoJSON route/geofence files.
 - Added end-to-end coverage for autopilot CSV/KML exports and evidence-bundle
   inclusion.
+- Added validation, report, memo, and batch-summary coverage for enterprise /
+  fleet readiness fields.
 - Added end-to-end coverage for weather metadata in BVLOS audit and evidence
   artifacts.
 

@@ -8,6 +8,18 @@ Mission risk: LOW
 
 - Wind / weather margin: PASS with margin 3.1 m/s
 
+## Mission / Fleet Metadata
+
+- Operator: ORBITAL Demo Operations
+- Aircraft ID: UAV-BVLOS-104
+- Pilot: Demo Pilot
+- Organization: Utility Inspection Team
+- Asset owner: Palo Alto Grid Demo
+- Drone model: Multirotor inspection UAV
+- Battery pack ID: PACK-900WH-A
+- Sensor payload: RGB + thermal inspection camera
+- Inspection type: Powerline corridor inspection
+
 ## Regulatory Metadata
 
 - LAANC required: yes

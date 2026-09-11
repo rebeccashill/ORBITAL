@@ -16,6 +16,8 @@ What this CLI does:
 from __future__ import annotations
 
 import argparse
+import csv
+import json
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
@@ -124,10 +126,132 @@ def _write_json(out_path: Path, obj: Any) -> None:
     write_strict_json(out_path, obj)
 
 
+def _run_single_scenario(argv: Sequence[str]) -> int:
+    return main(argv)
+
+
+def _scenario_output_dir(scenario_path: Path, outdir: Path) -> Path:
+    cfg = _load_yaml(scenario_path)
+    output_cfg = cfg.get("output", {}) if isinstance(cfg, dict) else {}
+    run_dir_name = str(output_cfg.get("run_dir_name") or scenario_path.stem).strip()
+    return outdir.resolve() / run_dir_name
+
+
+def _read_json_mapping(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _batch_summary_row(scenario_path: Path, outdir: Path, exit_code: int) -> Dict[str, Any]:
+    cfg = _load_yaml(scenario_path)
+    scenario = cfg.get("scenario", {}) if isinstance(cfg, dict) else {}
+    run_dir = _scenario_output_dir(scenario_path, outdir)
+    audit = _read_json_mapping(run_dir / "inspection_constraint_audit.json")
+    top = audit.get("top_limiting_constraint") if isinstance(audit, dict) else {}
+    top = top if isinstance(top, dict) else {}
+    evidence_dir = run_dir / "operator_evidence_bundle"
+
+    return {
+        "scenario": str(scenario_path),
+        "mission": scenario.get("name", scenario_path.stem),
+        "exit_code": exit_code,
+        "status": audit.get("status") or ("error" if exit_code else "complete"),
+        "risk": audit.get("mission_risk") or "unknown",
+        "top_constraint": top.get("label") or "not available",
+        "top_constraint_status": top.get("status") or "unknown",
+        "evidence_path": str(evidence_dir) if evidence_dir.exists() else "",
+        "output_path": str(run_dir),
+    }
+
+
+def _write_batch_summary(rows: Sequence[Dict[str, Any]], outdir: Path) -> None:
+    outdir.mkdir(parents=True, exist_ok=True)
+    fields = [
+        "scenario",
+        "mission",
+        "exit_code",
+        "status",
+        "risk",
+        "top_constraint",
+        "top_constraint_status",
+        "evidence_path",
+        "output_path",
+    ]
+    with (outdir / "batch_summary.csv").open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({field: row.get(field, "") for field in fields})
+
+    lines = [
+        "# ORBITAL Batch Summary",
+        "",
+        "| Mission | Status | Risk | Top Constraint | Evidence |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for row in rows:
+        top_constraint = (
+            f"{row.get('top_constraint', 'not available')} "
+            f"({row.get('top_constraint_status', 'unknown')})"
+        )
+        lines.append(
+            "| {mission} | {status} | {risk} | {top} | {evidence} |".format(
+                mission=row.get("mission", ""),
+                status=row.get("status", ""),
+                risk=row.get("risk", ""),
+                top=top_constraint,
+                evidence=row.get("evidence_path", ""),
+            )
+        )
+    (outdir / "batch_summary.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+
+
+def _batch_command(argv: Sequence[str]) -> int:
+    ap = argparse.ArgumentParser(description="Run multiple ORBITAL scenarios and summarize them.")
+    ap.add_argument("scenario_yamls", nargs="+", help="Scenario YAML files to run.")
+    ap.add_argument("--outdir", type=str, default="batch_runs", help="Batch output directory.")
+    ap.add_argument("--iterations", type=int, default=None, help="Override planner.iterations")
+    ap.add_argument("--restarts", type=int, default=None, help="Override planner.restarts")
+    ap.add_argument("--robustness", type=int, default=None, help="Override robustness.cases")
+    ap.add_argument("--seed", type=int, default=None, help="Override planner seed")
+    ap.add_argument("--no-plots", action="store_true", help="Skip PNG plot generation")
+    args = ap.parse_args(list(argv))
+
+    outdir = Path(args.outdir).resolve()
+    rows: list[Dict[str, Any]] = []
+    for scenario_yaml in args.scenario_yamls:
+        scenario_path = Path(scenario_yaml).resolve()
+        run_args = [str(scenario_path), "--outdir", str(outdir)]
+        if args.iterations is not None:
+            run_args.extend(["--iterations", str(args.iterations)])
+        if args.restarts is not None:
+            run_args.extend(["--restarts", str(args.restarts)])
+        if args.robustness is not None:
+            run_args.extend(["--robustness", str(args.robustness)])
+        if args.seed is not None:
+            run_args.extend(["--seed", str(args.seed)])
+        if args.no_plots:
+            run_args.append("--no-plots")
+
+        exit_code = _run_single_scenario(run_args)
+        rows.append(_batch_summary_row(scenario_path, outdir, exit_code))
+
+    _write_batch_summary(rows, outdir)
+    print(f"\nWrote batch summary to: {outdir}")
+    return 0 if all(int(row.get("exit_code", 1)) == 0 for row in rows) else 1
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     raw_args = list(sys.argv[1:] if argv is None else argv)
     if raw_args and raw_args[0] == "validate":
         return _validate_command(raw_args[1:])
+    if raw_args and raw_args[0] == "batch":
+        return _batch_command(raw_args[1:])
 
     ap = argparse.ArgumentParser(description="Run ORBITAL unified mission planning scenarios.")
     ap.add_argument(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -224,6 +225,54 @@ def test_cli_validate_accepts_valid_aircraft_scenario() -> None:
     assert "Scenario: UAV Multi-Waypoint Mission Demo" in result.stdout
     assert "Type: aircraft" in result.stdout
     assert result.stderr == ""
+
+
+def test_cli_batch_writes_summary(monkeypatch, tmp_path: Path) -> None:
+    import mission_framework.cli as cli
+
+    scenario_path = tmp_path / "inspection.yaml"
+    scenario_path.write_text(
+        yaml.safe_dump(
+            {
+                "scenario": {"name": "Batch Inspection", "type": "aircraft"},
+                "output": {"run_dir_name": "batch_inspection"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    batch_out = tmp_path / "batch"
+
+    def fake_run_single(run_args: list[str]) -> int:
+        outdir = Path(run_args[run_args.index("--outdir") + 1])
+        run_dir = outdir / "batch_inspection"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        (run_dir / "operator_evidence_bundle").mkdir()
+        (run_dir / "inspection_constraint_audit.json").write_text(
+            json.dumps(
+                {
+                    "status": "go",
+                    "mission_risk": "low",
+                    "top_limiting_constraint": {
+                        "label": "Battery reserve margin",
+                        "status": "pass",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        return 0
+
+    monkeypatch.setattr(cli, "_run_single_scenario", fake_run_single)
+
+    exit_code = cli.main(["batch", str(scenario_path), "--outdir", str(batch_out), "--no-plots"])
+
+    assert exit_code == 0
+    csv_text = (batch_out / "batch_summary.csv").read_text(encoding="utf-8")
+    md_text = (batch_out / "batch_summary.md").read_text(encoding="utf-8")
+    assert "Batch Inspection" in csv_text
+    assert "low" in csv_text
+    assert "Battery reserve margin" in md_text
+    assert "operator_evidence_bundle" in md_text
 
 
 def test_cli_validate_reports_all_errors_for_invalid_scenario(tmp_path: Path) -> None:

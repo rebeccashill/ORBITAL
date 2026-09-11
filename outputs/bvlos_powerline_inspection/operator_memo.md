@@ -14,6 +14,18 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 - Final battery: 832.1 Wh
 - Objective score: 146.3
 
+## Mission / Fleet Metadata
+
+- Operator: ORBITAL Demo Operations
+- Aircraft ID: UAV-BVLOS-104
+- Pilot: Demo Pilot
+- Organization: Utility Inspection Team
+- Asset owner: Palo Alto Grid Demo
+- Drone model: Multirotor inspection UAV
+- Battery pack ID: PACK-900WH-A
+- Sensor payload: RGB + thermal inspection camera
+- Inspection type: Powerline corridor inspection
+
 ## Weather
 
 - Source: offline Open-Meteo-shaped sample

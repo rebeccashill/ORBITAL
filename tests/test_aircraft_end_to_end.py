@@ -158,6 +158,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         export_flight_planning_artifacts,
         export_inspection_constraint_audit,
         export_operator_evidence_bundle,
+        export_operator_memo,
         export_what_if_plan,
     )
 
@@ -172,6 +173,15 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
 
     assert audit["kind"] == "drone_inspection_constraint_audit"
     assert audit["mission_risk"] in {"low", "medium", "high"}
+    assert audit["mission_metadata"]["operator"] == "ORBITAL Demo Operations"
+    assert audit["mission_metadata"]["aircraft_id"] == "UAV-BVLOS-104"
+    assert audit["mission_metadata"]["pilot"] == "Demo Pilot"
+    assert audit["mission_metadata"]["organization"] == "Utility Inspection Team"
+    assert audit["mission_metadata"]["asset_owner"] == "Palo Alto Grid Demo"
+    assert audit["fleet_metadata"]["drone_model"] == "Multirotor inspection UAV"
+    assert audit["fleet_metadata"]["battery_pack_id"] == "PACK-900WH-A"
+    assert audit["fleet_metadata"]["sensor_payload"] == "RGB + thermal inspection camera"
+    assert audit["fleet_metadata"]["inspection_type"] == "Powerline corridor inspection"
     assert audit["regulatory_metadata"]["documentation_only"] is True
     assert audit["regulatory_metadata"]["laanc_required"] is True
     assert audit["regulatory_metadata"]["waiver_or_authorization_required"] is True
@@ -195,6 +205,22 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     }
     assert (tmp_path / "inspection_constraint_audit.json").exists()
     assert (tmp_path / "inspection_constraint_audit.md").exists()
+    memo_text = (tmp_path / "inspection_constraint_audit.md").read_text(encoding="utf-8")
+    assert "ORBITAL Demo Operations" in memo_text
+    assert "Powerline corridor inspection" in memo_text
+
+    export_operator_memo(
+        result.plan,
+        result.sim_result,
+        result.constraints,
+        result.score_report,
+        tmp_path / "operator_memo.md",
+        robustness=result.robustness,
+        cfg=cfg,
+    )
+    operator_memo = (tmp_path / "operator_memo.md").read_text(encoding="utf-8")
+    assert "UAV-BVLOS-104" in operator_memo
+    assert "PACK-900WH-A" in operator_memo
 
     what_if = export_what_if_plan(
         result.plan,
@@ -236,7 +262,6 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     (tmp_path / "score.json").write_text('{"total_score": 0.0}\n', encoding="utf-8")
     (tmp_path / "flight_path.png").write_bytes(b"png")
     (tmp_path / "robustness.json").write_text('{"cases": 0}\n', encoding="utf-8")
-    (tmp_path / "operator_memo.md").write_text("Status: GO\n", encoding="utf-8")
     (tmp_path / "weather.json").write_text(
         '{"source": "offline Open-Meteo-shaped sample"}\n',
         encoding="utf-8",

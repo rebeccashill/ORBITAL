@@ -238,3 +238,29 @@ def test_aircraft_weather_metadata_validates_provider_fields() -> None:
     assert "weather.provider" in paths
     assert "weather.location.latitude_deg" in paths
     assert "weather.offline.wind_direction_deg" in paths
+
+
+def test_aircraft_mission_and_fleet_metadata_are_optional_documentation() -> None:
+    cfg = copy.deepcopy(_load_yaml(EXAMPLES / "aircraft_uav_demo.yaml"))
+    cfg["mission_metadata"] = {
+        "operator": "Demo Operator",
+        "aircraft_id": "UAV-001",
+        "pilot": "Demo Pilot",
+        "organization": "Inspection Team",
+        "asset_owner": "Utility Owner",
+    }
+    cfg["fleet_metadata"] = {
+        "drone_model": "Inspection UAV",
+        "battery_pack_id": "BAT-001",
+        "sensor_payload": "RGB camera",
+        "inspection_type": "Powerline inspection",
+    }
+
+    assert collect_scenario_validation_issues(cfg) == []
+
+    cfg["mission_metadata"]["operator"] = ""
+    cfg["fleet_metadata"]["drone_model"] = ""
+    issues = collect_scenario_validation_issues(cfg)
+    paths = _issue_paths(issues)
+    assert "mission_metadata.operator" in paths
+    assert "fleet_metadata.drone_model" in paths

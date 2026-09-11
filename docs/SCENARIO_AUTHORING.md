@@ -131,6 +131,15 @@ simulation:
 | `mission.use_geojson_route` | boolean | Optional; use route GeoJSON as waypoint source |
 | `mission.route_default_z_m` | number | Optional fallback altitude for 2D route coordinates |
 | `mission.route_default_radius_m` | number | Optional fallback waypoint radius |
+| `mission_metadata.operator` | string | Optional operator name |
+| `mission_metadata.aircraft_id` | string | Optional aircraft/tail/vehicle identifier |
+| `mission_metadata.pilot` | string | Optional pilot or PIC name |
+| `mission_metadata.organization` | string | Optional operating organization |
+| `mission_metadata.asset_owner` | string | Optional inspected asset owner |
+| `fleet_metadata.drone_model` | string | Optional drone model |
+| `fleet_metadata.battery_pack_id` | string | Optional battery pack identifier |
+| `fleet_metadata.sensor_payload` | string | Optional payload description |
+| `fleet_metadata.inspection_type` | string | Optional inspection category |
 | `vehicle.dt_s` | number | `>= 0`, seconds |
 | `vehicle.reach_radius_m` | number | `>= 0`, meters |
 | `vehicle.mass_kg` | number | `>= 0`, kilograms |
@@ -281,6 +290,19 @@ writes `autopilot_mission.csv` and `export_kml` writes `mission_review.kml`.
 These files are planning artifacts for review or downstream ingestion. They are
 not direct flight authorization, autopilot control, LAANC, waivers, or legal
 approval.
+
+## Batch Inspection Runs
+
+Run multiple inspection scenarios and write a portfolio summary:
+
+```bash
+python -m mission_framework.cli batch examples/bvlos_powerline_inspection_demo.yaml --outdir outputs/batch --no-plots
+```
+
+The batch command writes `batch_summary.csv` and `batch_summary.md` with mission,
+status, risk, top constraint, and evidence bundle path. It uses the same
+single-scenario runner for each input, so all scenario fields remain optional and
+existing YAML files continue to run unchanged.
 
 ## Spacecraft YAML Structure
 

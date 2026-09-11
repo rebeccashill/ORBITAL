@@ -17,6 +17,19 @@ initial_state:
   speed_mps: 18.0
   battery_Wh: 850.0
 
+mission_metadata:
+  operator: "ORBITAL Demo Operations"
+  aircraft_id: "UAV-BVLOS-104"
+  pilot: "Demo Pilot"
+  organization: "Utility Inspection Team"
+  asset_owner: "Palo Alto Grid Demo"
+
+fleet_metadata:
+  drone_model: "Multirotor inspection UAV"
+  battery_pack_id: "PACK-900WH-A"
+  sensor_payload: "RGB + thermal inspection camera"
+  inspection_type: "Powerline corridor inspection"
+
 mission:
   fixed_order: true
   route_geojson_path: "examples/geojson/bvlos_powerline_route.geojson"
