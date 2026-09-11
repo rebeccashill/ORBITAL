@@ -1,0 +1,200 @@
+{
+  "kind": "drone_inspection_constraint_audit",
+  "mission_id": "BVLOS Powerline Inspection Demo",
+  "status": "go",
+  "mission_risk": "low",
+  "top_limiting_constraint": {
+    "id": "wind_weather",
+    "label": "Wind / weather margin",
+    "status": "pass",
+    "margin": {
+      "value": 3.5,
+      "unit": "m/s"
+    },
+    "warning_margin": {
+      "value": 2.0,
+      "unit": "m/s"
+    },
+    "risk_points": 12.499999999999998,
+    "observed": {
+      "max_horizontal_wind_mps": 5.5,
+      "max_safe_wind_mps": 9.0
+    },
+    "recommendation": "Wait for better wind or lower mission scope."
+  },
+  "top_three_risk_drivers": [
+    {
+      "id": "wind_weather",
+      "label": "Wind / weather margin",
+      "status": "pass",
+      "margin": {
+        "value": 3.5,
+        "unit": "m/s"
+      },
+      "warning_margin": {
+        "value": 2.0,
+        "unit": "m/s"
+      },
+      "risk_points": 12.499999999999998,
+      "observed": {
+        "max_horizontal_wind_mps": 5.5,
+        "max_safe_wind_mps": 9.0
+      },
+      "recommendation": "Wait for better wind or lower mission scope."
+    },
+    {
+      "id": "battery_reserve",
+      "label": "Battery reserve margin",
+      "status": "pass",
+      "margin": {
+        "value": 131.85535492735085,
+        "unit": "Wh"
+      },
+      "warning_margin": {
+        "value": 70.0,
+        "unit": "Wh"
+      },
+      "risk_points": 11.163520724664163,
+      "observed": {
+        "final_battery_Wh": 831.8553549273508,
+        "required_reserve_Wh": 700.0
+      },
+      "recommendation": "Reduce route length or plan a relaunch / battery swap."
+    },
+    {
+      "id": "route_completion",
+      "label": "Route completion status",
+      "status": "pass",
+      "margin": {
+        "value": 1.0,
+        "unit": "completion"
+      },
+      "warning_margin": {
+        "value": 0.5,
+        "unit": "completion"
+      },
+      "risk_points": 10.000000000000002,
+      "observed": {
+        "waypoints_completed": 6.0,
+        "waypoints_total": 6.0,
+        "reached_all": true
+      },
+      "recommendation": "Split the inspection into shorter sorties."
+    }
+  ],
+  "checks": [
+    {
+      "id": "battery_reserve",
+      "label": "Battery reserve margin",
+      "status": "pass",
+      "margin": {
+        "value": 131.85535492735085,
+        "unit": "Wh"
+      },
+      "warning_margin": {
+        "value": 70.0,
+        "unit": "Wh"
+      },
+      "risk_points": 11.163520724664163,
+      "observed": {
+        "final_battery_Wh": 831.8553549273508,
+        "required_reserve_Wh": 700.0
+      },
+      "recommendation": "Reduce route length or plan a relaunch / battery swap."
+    },
+    {
+      "id": "wind_weather",
+      "label": "Wind / weather margin",
+      "status": "pass",
+      "margin": {
+        "value": 3.5,
+        "unit": "m/s"
+      },
+      "warning_margin": {
+        "value": 2.0,
+        "unit": "m/s"
+      },
+      "risk_points": 12.499999999999998,
+      "observed": {
+        "max_horizontal_wind_mps": 5.5,
+        "max_safe_wind_mps": 9.0
+      },
+      "recommendation": "Wait for better wind or lower mission scope."
+    },
+    {
+      "id": "geofence_clearance",
+      "label": "Geofence / no-fly-zone clearance",
+      "status": "pass",
+      "margin": {
+        "value": 261.6023274099015,
+        "unit": "m"
+      },
+      "warning_margin": {
+        "value": 25.0,
+        "unit": "m"
+      },
+      "risk_points": 0.0,
+      "observed": {
+        "required_clearance_m": 75.0,
+        "min_clearance_m": 336.6023274099015,
+        "geofence_violated": false
+      },
+      "recommendation": "Adjust route geometry or increase no-fly-zone clearance."
+    },
+    {
+      "id": "route_completion",
+      "label": "Route completion status",
+      "status": "pass",
+      "margin": {
+        "value": 1.0,
+        "unit": "completion"
+      },
+      "warning_margin": {
+        "value": 0.5,
+        "unit": "completion"
+      },
+      "risk_points": 10.000000000000002,
+      "observed": {
+        "waypoints_completed": 6.0,
+        "waypoints_total": 6.0,
+        "reached_all": true
+      },
+      "recommendation": "Split the inspection into shorter sorties."
+    },
+    {
+      "id": "turn_bank_feasibility",
+      "label": "Turn / bank feasibility",
+      "status": "pass",
+      "margin": {
+        "value": 0.1390076277875651,
+        "unit": "rad/s"
+      },
+      "warning_margin": {
+        "value": 0.05,
+        "unit": "rad/s"
+      },
+      "risk_points": 2.198474442486985,
+      "observed": {
+        "bank_max_deg": 30.0
+      },
+      "recommendation": "Lower cruise speed or add more turn spacing."
+    }
+  ],
+  "robustness": {
+    "cases": 20,
+    "hard_pass_rate": 1.0,
+    "worst_hard_margin_min": 0.1390076277875651,
+    "robust_aggregation": "mean",
+    "cvar_alpha": null,
+    "robust_score": 146.35062577542718,
+    "mean_score": 146.35062577542718,
+    "p50_score": 146.3506257754272,
+    "p90_score": 146.3506257754272
+  },
+  "summary": {
+    "hard_constraints_pass": true,
+    "inspection_points": 6,
+    "estimated_time_s": 140.0,
+    "energy_used_Wh": 18.144645072649155
+  }
+}

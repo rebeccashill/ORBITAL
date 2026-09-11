@@ -16,7 +16,7 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 
 ## Top Constraints
 
-- PASS: turn_limit (margin 0.1)
+- PASS: turn_limit (margin 0.139)
 - PASS: geofence_no_entry (margin 0.5)
 - PASS: inspection_completion (margin 1.0)
 - PASS: battery_reserve (margin 131.9)
@@ -26,7 +26,7 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 
 - Cases: 20
 - Hard pass rate: 1.0
-- Worst hard margin across cases: 0.1
+- Worst hard margin across cases: 0.139
 
 ## Recommended Next Actions
 

@@ -285,6 +285,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         # Optional human-readable output
         try:
             from mission_framework.reporting.flight_output import (
+                export_inspection_constraint_audit,
                 export_operator_memo,
                 export_waypoints_csv,
                 print_flight_plan,
@@ -299,6 +300,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 result.constraints,
                 result.score_report,
                 outdir / "operator_memo.md",
+                robustness=result.robustness,
+            )
+            export_inspection_constraint_audit(
+                result.plan,
+                result.sim_result,
+                result.constraints,
+                outdir,
+                cfg=cfg,
                 robustness=result.robustness,
             )
         except Exception as e:

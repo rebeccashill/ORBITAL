@@ -80,6 +80,8 @@ wind:
   amp_up_mps: 0.0
   period_s: 900.0
   phase_s: 120.0
+  max_safe_wind_mps: 9.0
+  warning_margin_mps: 2.0
 
 geofence:
   clearance_m: 75.0

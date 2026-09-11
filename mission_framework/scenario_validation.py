@@ -444,11 +444,15 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
             "sigma_bias_mps",
             "sigma_gust_mps",
             "tau_gust_s",
+            "max_safe_wind_mps",
+            "warning_margin_mps",
         ):
             _number(wind, f"wind.{key}", issues)
         _number(wind, "wind.period_s", issues, min_value=0.0, exclusive_min=True)
         _number(wind, "wind.core_radius_m", issues, min_value=0.0, exclusive_min=True)
         _number(wind, "wind.tau_gust_s", issues, min_value=0.0, exclusive_min=True)
+        _number(wind, "wind.max_safe_wind_mps", issues, min_value=0.0, exclusive_min=True)
+        _number(wind, "wind.warning_margin_mps", issues, min_value=0.0)
         if "stochastic" in wind and not isinstance(wind["stochastic"], bool):
             issues.append(ValidationIssue("wind.stochastic", "must be a boolean"))
 

@@ -98,7 +98,7 @@ def test_aircraft_pipeline_runs_end_to_end():
         assert worst_hard.min_margin == worst_hard.min_margin  # not NaN
 
 
-def test_bvlos_powerline_demo_runs_end_to_end():
+def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     cfg = _load_yaml(EXAMPLES_DIR / "bvlos_powerline_inspection_demo.yaml")
     assert cfg["scenario"]["type"].lower() == "aircraft"
     cfg["robustness"]["cases"] = 0
@@ -145,3 +145,28 @@ def test_bvlos_powerline_demo_runs_end_to_end():
         "TOWER_05",
         "TOWER_06",
     ]
+
+    from mission_framework.reporting.flight_output import export_inspection_constraint_audit
+
+    audit = export_inspection_constraint_audit(
+        result.plan,
+        result.sim_result,
+        result.constraints,
+        tmp_path,
+        cfg=cfg,
+        robustness=result.robustness,
+    )
+
+    assert audit["kind"] == "drone_inspection_constraint_audit"
+    assert audit["mission_risk"] in {"low", "medium", "high"}
+    assert audit["top_limiting_constraint"] is not None
+    assert len(audit["top_three_risk_drivers"]) == 3
+    assert {check["id"] for check in audit["checks"]} >= {
+        "battery_reserve",
+        "wind_weather",
+        "geofence_clearance",
+        "route_completion",
+        "turn_bank_feasibility",
+    }
+    assert (tmp_path / "inspection_constraint_audit.json").exists()
+    assert (tmp_path / "inspection_constraint_audit.md").exists()

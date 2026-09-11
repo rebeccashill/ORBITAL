@@ -26,7 +26,7 @@ from typing import Any, Dict, Iterable, List, Optional
 
 import numpy as np
 
-from mission_framework.core.json_utils import write_strict_json
+from mission_framework.core.json_utils import strict_json_dumps, write_strict_json
 from mission_framework.core.types import Plan, SimResult, Trajectory
 
 
@@ -163,6 +163,8 @@ def _fmt_value(value: Any, unit: str = "") -> str:
     if not np.isfinite(number):
         return "n/a"
     suffix = f" {unit}" if unit else ""
+    if 0.0 < abs(number) < 1.0:
+        return f"{number:.3g}{suffix}"
     return f"{number:.1f}{suffix}"
 
 
@@ -176,6 +178,15 @@ def _constraint_label(name: str) -> str:
         "geofence_clearance": "geofence_clearance",
     }
     return labels.get(name, name)
+
+
+def _constraint_by_name(constraints: Any, name: str) -> Optional[Any]:
+    if hasattr(constraints, "by_name"):
+        return constraints.by_name().get(name)
+    for result in getattr(constraints, "results", []) or []:
+        if str(getattr(result, "name", "")) == name:
+            return result
+    return None
 
 
 def _hard_constraints(constraints: Any) -> Iterable[Any]:
@@ -214,6 +225,293 @@ def _recommended_actions(constraints: Any) -> List[str]:
         actions.append("Lower cruise speed or increase turn spacing.")
     actions.append("Wait for better wind before retrying if winds are the binding constraint.")
     return actions
+
+
+def _resource_values(sim: SimResult, key: str) -> np.ndarray:
+    return np.asarray(sim.resources.get(key, []), dtype=float).reshape(-1)
+
+
+def _max_horizontal_wind_mps(sim: SimResult) -> Optional[float]:
+    east = _resource_values(sim, "wind_east_mps")
+    north = _resource_values(sim, "wind_north_mps")
+    if east.size == 0 or north.size == 0:
+        return None
+    n = min(east.size, north.size)
+    return float(np.max(np.hypot(east[:n], north[:n])))
+
+
+def _status_from_margin(margin: Optional[float], warning_margin: float) -> str:
+    if margin is None:
+        return "unknown"
+    if margin < 0.0:
+        return "fail"
+    if margin < warning_margin:
+        return "warning"
+    return "pass"
+
+
+def _risk_points(margin: Optional[float], warning_margin: float) -> float:
+    warn = max(float(warning_margin), 1e-6)
+    if margin is None:
+        return 50.0
+    if margin < 0.0:
+        return float(min(100.0, 80.0 + min(20.0, abs(float(margin)) / warn * 20.0)))
+    if margin < warn:
+        return float(40.0 + (warn - float(margin)) / warn * 30.0)
+    return float(max(0.0, 30.0 * (1.0 - min(float(margin) / (3.0 * warn), 1.0))))
+
+
+def _check(
+    *,
+    check_id: str,
+    label: str,
+    margin: Optional[float],
+    unit: str,
+    warning_margin: float,
+    observed: Dict[str, Any],
+    recommendation: str,
+) -> Dict[str, Any]:
+    points = _risk_points(margin, warning_margin)
+    return {
+        "id": check_id,
+        "label": label,
+        "status": _status_from_margin(margin, warning_margin),
+        "margin": {"value": margin, "unit": unit},
+        "warning_margin": {"value": float(warning_margin), "unit": unit},
+        "risk_points": float(points),
+        "observed": observed,
+        "recommendation": recommendation,
+    }
+
+
+def _named_margin(constraints: Any, name: str) -> Optional[float]:
+    result = _constraint_by_name(constraints, name)
+    if result is None:
+        return None
+    return float(result.min_margin)
+
+
+def build_inspection_constraint_audit(
+    plan: Plan,
+    sim: SimResult,
+    constraints: Any,
+    *,
+    cfg: Optional[Dict[str, Any]] = None,
+    robustness: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Build a drone-inspection-specific audit payload from a solved aircraft mission."""
+    cfg = cfg or {}
+    vehicle = cfg.get("vehicle", {}) or {}
+    wind_cfg = cfg.get("wind", {}) or {}
+    geofence_cfg = cfg.get("geofence", {}) or {}
+
+    reserve_wh = float(vehicle.get("battery_reserve_Wh", 0.0))
+    battery_warning_wh = max(50.0, reserve_wh * 0.10) if reserve_wh > 0.0 else 50.0
+    final_battery = _scalar(sim, "final_battery_Wh")
+    battery_margin = _named_margin(constraints, "battery_reserve")
+    if battery_margin is None and final_battery is not None and reserve_wh > 0.0:
+        battery_margin = final_battery - reserve_wh
+
+    max_speed = float(vehicle.get("max_speed_mps", 30.0))
+    max_safe_wind = float(wind_cfg.get("max_safe_wind_mps", max(8.0, max_speed * 0.35)))
+    wind_warning_mps = float(wind_cfg.get("warning_margin_mps", 2.0))
+    max_wind = _max_horizontal_wind_mps(sim)
+    wind_margin = None if max_wind is None else max_safe_wind - max_wind
+
+    required_clearance = float(geofence_cfg.get("clearance_m", 0.0))
+    geofence_margin = _named_margin(constraints, "geofence_clearance")
+    geofence_warning_m = max(25.0, required_clearance * 0.25)
+    no_entry_margin = _named_margin(constraints, "geofence_no_entry")
+    if no_entry_margin is not None and no_entry_margin < 0.0:
+        geofence_margin = min(geofence_margin or 0.0, no_entry_margin)
+
+    completed = float(sim.scalars.get("waypoints_completed", 0.0))
+    total = float(sim.scalars.get("waypoints_total", 0.0))
+    missing = max(0.0, total - completed)
+    route_margin = 1.0 if bool(sim.metadata.get("reached_all", False)) else -missing
+
+    turn_margin = _named_margin(constraints, "bank_angle_turn_limit")
+    turn_warning = float(vehicle.get("turn_warning_margin_radps", 0.05))
+
+    checks = [
+        _check(
+            check_id="battery_reserve",
+            label="Battery reserve margin",
+            margin=battery_margin,
+            unit="Wh",
+            warning_margin=battery_warning_wh,
+            observed={
+                "final_battery_Wh": final_battery,
+                "required_reserve_Wh": reserve_wh if reserve_wh > 0.0 else None,
+            },
+            recommendation="Reduce route length or plan a relaunch / battery swap.",
+        ),
+        _check(
+            check_id="wind_weather",
+            label="Wind / weather margin",
+            margin=wind_margin,
+            unit="m/s",
+            warning_margin=wind_warning_mps,
+            observed={
+                "max_horizontal_wind_mps": max_wind,
+                "max_safe_wind_mps": max_safe_wind,
+            },
+            recommendation="Wait for better wind or lower mission scope.",
+        ),
+        _check(
+            check_id="geofence_clearance",
+            label="Geofence / no-fly-zone clearance",
+            margin=geofence_margin,
+            unit="m",
+            warning_margin=geofence_warning_m,
+            observed={
+                "required_clearance_m": required_clearance,
+                "min_clearance_m": sim.scalars.get("geofence_min_clearance_m"),
+                "geofence_violated": bool(sim.scalars.get("geofence_violated", 0.0)),
+            },
+            recommendation="Adjust route geometry or increase no-fly-zone clearance.",
+        ),
+        _check(
+            check_id="route_completion",
+            label="Route completion status",
+            margin=route_margin,
+            unit="completion",
+            warning_margin=0.5,
+            observed={
+                "waypoints_completed": completed,
+                "waypoints_total": total,
+                "reached_all": bool(sim.metadata.get("reached_all", False)),
+            },
+            recommendation="Split the inspection into shorter sorties.",
+        ),
+        _check(
+            check_id="turn_bank_feasibility",
+            label="Turn / bank feasibility",
+            margin=turn_margin,
+            unit="rad/s",
+            warning_margin=turn_warning,
+            observed={"bank_max_deg": vehicle.get("bank_max_deg", None)},
+            recommendation="Lower cruise speed or add more turn spacing.",
+        ),
+    ]
+
+    checks_sorted = sorted(checks, key=lambda item: float(item["risk_points"]), reverse=True)
+    hard_pass = bool(getattr(constraints, "hard_pass", False))
+    robust_pass_rate = None if not robustness else robustness.get("hard_pass_rate")
+    top_points = float(checks_sorted[0]["risk_points"]) if checks_sorted else 0.0
+    if (not hard_pass) or top_points >= 70.0 or (
+        robust_pass_rate is not None and float(robust_pass_rate) < 0.95
+    ):
+        mission_risk = "high"
+    elif top_points >= 35.0 or (
+        robust_pass_rate is not None and float(robust_pass_rate) < 1.0
+    ):
+        mission_risk = "medium"
+    else:
+        mission_risk = "low"
+
+    return {
+        "kind": "drone_inspection_constraint_audit",
+        "mission_id": plan.metadata.get("mission_id", "aircraft_mission"),
+        "status": "go" if hard_pass else "modify",
+        "mission_risk": mission_risk,
+        "top_limiting_constraint": checks_sorted[0] if checks_sorted else None,
+        "top_three_risk_drivers": checks_sorted[:3],
+        "checks": checks,
+        "robustness": robustness or {},
+        "summary": {
+            "hard_constraints_pass": hard_pass,
+            "inspection_points": max(0, len(plan.waypoints or []) - 1),
+            "estimated_time_s": _scalar(sim, "t_end_s"),
+            "energy_used_Wh": _scalar(sim, "energy_used_Wh"),
+        },
+    }
+
+
+def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
+    """Render the drone inspection audit payload as Markdown."""
+    top = audit.get("top_limiting_constraint") or {}
+    lines = [
+        "# Drone Inspection Constraint Audit",
+        "",
+        f"Mission: {audit.get('mission_id', 'aircraft_mission')}",
+        f"Status: {str(audit.get('status', 'unknown')).upper()}",
+        f"Mission risk: {str(audit.get('mission_risk', 'unknown')).upper()}",
+        "",
+        "## Top Limiting Constraint",
+        "",
+        (
+            "- n/a"
+            if not top
+            else "- {label}: {status} with margin {margin} {unit}".format(
+                label=top.get("label", "unknown"),
+                status=str(top.get("status", "unknown")).upper(),
+                margin=_fmt_value((top.get("margin") or {}).get("value")),
+                unit=(top.get("margin") or {}).get("unit", ""),
+            )
+        ),
+        "",
+        "## Top Three Risk Drivers",
+        "",
+    ]
+    for driver in audit.get("top_three_risk_drivers", []) or []:
+        margin = driver.get("margin") or {}
+        lines.append(
+            "- {label}: {status}, margin {value} {unit}, risk points {points}".format(
+                label=driver.get("label", "unknown"),
+                status=str(driver.get("status", "unknown")).upper(),
+                value=_fmt_value(margin.get("value")),
+                unit=margin.get("unit", ""),
+                points=_fmt_value(driver.get("risk_points")),
+            )
+        )
+
+    lines.extend(["", "## Full Constraint Audit", ""])
+    for check in audit.get("checks", []) or []:
+        margin = check.get("margin") or {}
+        observed = check.get("observed") or {}
+        lines.extend(
+            [
+                f"### {check.get('label', 'Constraint')}",
+                "",
+                f"- Status: {str(check.get('status', 'unknown')).upper()}",
+                f"- Margin: {_fmt_value(margin.get('value'))} {margin.get('unit', '')}",
+                f"- Warning margin: "
+                f"{_fmt_value((check.get('warning_margin') or {}).get('value'))} "
+                f"{(check.get('warning_margin') or {}).get('unit', '')}",
+                f"- Observed: `{strict_json_dumps(observed, sort_keys=True)}`",
+                f"- Recommended action: {check.get('recommendation', 'Review mission plan.')}",
+                "",
+            ]
+        )
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def export_inspection_constraint_audit(
+    plan: Plan,
+    sim: SimResult,
+    constraints: Any,
+    out_dir: Path,
+    *,
+    cfg: Optional[Dict[str, Any]] = None,
+    robustness: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Write drone inspection audit JSON and Markdown artifacts."""
+    audit = build_inspection_constraint_audit(
+        plan,
+        sim,
+        constraints,
+        cfg=cfg,
+        robustness=robustness,
+    )
+    out_dir.mkdir(parents=True, exist_ok=True)
+    write_strict_json(out_dir / "inspection_constraint_audit.json", audit)
+    (out_dir / "inspection_constraint_audit.md").write_text(
+        format_inspection_constraint_audit(audit),
+        encoding="utf-8",
+    )
+    return audit
 
 
 def export_operator_memo(
