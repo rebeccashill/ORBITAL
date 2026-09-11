@@ -14,6 +14,15 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 - Final battery: 831.9 Wh
 - Objective score: 146.4
 
+## Regulatory Metadata
+
+- LAANC required: yes
+- Waiver / authorization required: yes
+- Airspace class: Class D
+- Visual observer required: yes
+- Ground-risk / population note: Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch.
+- Documentation-only notice: For planning documentation only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, or operational clearance.
+
 ## Top Constraints
 
 - PASS: turn_limit (margin 0.139)

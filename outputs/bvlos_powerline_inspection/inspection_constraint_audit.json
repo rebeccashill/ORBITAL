@@ -3,6 +3,15 @@
   "mission_id": "BVLOS Powerline Inspection Demo",
   "status": "go",
   "mission_risk": "low",
+  "regulatory_metadata": {
+    "documentation_only": true,
+    "laanc_required": true,
+    "waiver_or_authorization_required": true,
+    "airspace_class": "Class D",
+    "visual_observer_required": true,
+    "ground_risk_population_note": "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch.",
+    "documentation_only_notice": "For planning documentation only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, or operational clearance."
+  },
   "top_limiting_constraint": {
     "id": "wind_weather",
     "label": "Wind / weather margin",

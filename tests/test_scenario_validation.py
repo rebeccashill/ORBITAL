@@ -170,3 +170,24 @@ def test_aircraft_validation_allows_named_output_folder() -> None:
     cfg["output"]["run_dir_name"] = "../unsafe"
     issues = collect_scenario_validation_issues(cfg)
     assert "output.run_dir_name" in _issue_paths(issues)
+
+
+def test_aircraft_regulatory_metadata_validates_as_documentation_fields() -> None:
+    cfg = copy.deepcopy(_load_yaml(EXAMPLES / "aircraft_uav_demo.yaml"))
+    cfg["regulatory"] = {
+        "laanc_required": True,
+        "waiver_or_authorization_required": False,
+        "airspace_class": "Class G",
+        "visual_observer_required": True,
+        "ground_risk_population_note": "Sparse rural corridor.",
+        "documentation_only_notice": "Documentation only; not legal approval.",
+    }
+
+    assert collect_scenario_validation_issues(cfg) == []
+
+    cfg["regulatory"]["laanc_required"] = "yes"
+    cfg["regulatory"]["airspace_class"] = ""
+    issues = collect_scenario_validation_issues(cfg)
+    paths = _issue_paths(issues)
+    assert "regulatory.laanc_required" in paths
+    assert "regulatory.airspace_class" in paths

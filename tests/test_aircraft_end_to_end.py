@@ -162,6 +162,14 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
 
     assert audit["kind"] == "drone_inspection_constraint_audit"
     assert audit["mission_risk"] in {"low", "medium", "high"}
+    assert audit["regulatory_metadata"]["documentation_only"] is True
+    assert audit["regulatory_metadata"]["laanc_required"] is True
+    assert audit["regulatory_metadata"]["waiver_or_authorization_required"] is True
+    assert audit["regulatory_metadata"]["airspace_class"] == "Class D"
+    assert audit["regulatory_metadata"]["visual_observer_required"] is True
+    assert "ORBITAL does not provide LAANC" in audit["regulatory_metadata"][
+        "documentation_only_notice"
+    ]
     assert audit["top_limiting_constraint"] is not None
     assert len(audit["top_three_risk_drivers"]) == 3
     assert {check["id"] for check in audit["checks"]} >= {

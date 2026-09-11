@@ -302,6 +302,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 result.score_report,
                 outdir / "operator_memo.md",
                 robustness=result.robustness,
+                cfg=cfg,
             )
             export_inspection_constraint_audit(
                 result.plan,

@@ -231,6 +231,32 @@ def _recommended_actions(constraints: Any) -> List[str]:
     return actions
 
 
+def _yes_no_unknown(value: Any) -> str:
+    if value is None:
+        return "unknown"
+    return "yes" if bool(value) else "no"
+
+
+def _regulatory_metadata(cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    regulatory = (cfg or {}).get("regulatory", {}) or {}
+    notice = regulatory.get(
+        "documentation_only_notice",
+        "Regulatory fields are planning documentation only. ORBITAL does not provide "
+        "LAANC, waivers, authorizations, legal approval, or operational clearance.",
+    )
+    return {
+        "documentation_only": True,
+        "laanc_required": regulatory.get("laanc_required"),
+        "waiver_or_authorization_required": regulatory.get(
+            "waiver_or_authorization_required"
+        ),
+        "airspace_class": regulatory.get("airspace_class"),
+        "visual_observer_required": regulatory.get("visual_observer_required"),
+        "ground_risk_population_note": regulatory.get("ground_risk_population_note"),
+        "documentation_only_notice": notice,
+    }
+
+
 def _resource_values(sim: SimResult, key: str) -> np.ndarray:
     return np.asarray(sim.resources.get(key, []), dtype=float).reshape(-1)
 
@@ -419,6 +445,7 @@ def build_inspection_constraint_audit(
         "mission_id": plan.metadata.get("mission_id", "aircraft_mission"),
         "status": "go" if hard_pass else "modify",
         "mission_risk": mission_risk,
+        "regulatory_metadata": _regulatory_metadata(cfg),
         "top_limiting_constraint": checks_sorted[0] if checks_sorted else None,
         "top_three_risk_drivers": checks_sorted[:3],
         "checks": checks,
@@ -435,6 +462,7 @@ def build_inspection_constraint_audit(
 def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
     """Render the drone inspection audit payload as Markdown."""
     top = audit.get("top_limiting_constraint") or {}
+    regulatory = audit.get("regulatory_metadata") or {}
     lines = [
         "# Drone Inspection Constraint Audit",
         "",
@@ -454,6 +482,17 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
                 unit=(top.get("margin") or {}).get("unit", ""),
             )
         ),
+        "",
+        "## Regulatory Metadata",
+        "",
+        f"- LAANC required: {_yes_no_unknown(regulatory.get('laanc_required'))}",
+        "- Waiver / authorization required: "
+        f"{_yes_no_unknown(regulatory.get('waiver_or_authorization_required'))}",
+        f"- Airspace class: {regulatory.get('airspace_class') or 'unknown'}",
+        f"- Visual observer required: {_yes_no_unknown(regulatory.get('visual_observer_required'))}",
+        "- Ground-risk / population note: "
+        f"{regulatory.get('ground_risk_population_note') or 'not provided'}",
+        f"- Documentation-only notice: {regulatory.get('documentation_only_notice')}",
         "",
         "## Top Three Risk Drivers",
         "",
@@ -1015,6 +1054,7 @@ def export_operator_memo(
     score_report: Any,
     out_path: Path,
     robustness: Optional[Dict[str, Any]] = None,
+    cfg: Optional[Dict[str, Any]] = None,
 ) -> str:
     """
     Write a lightweight go/no-go memo for BVLOS inspection planning review.
@@ -1026,6 +1066,7 @@ def export_operator_memo(
     waypoints = plan.waypoints or []
     inspection_points = max(0, len(waypoints) - 1)
     hard = sorted(list(_hard_constraints(constraints)), key=lambda result: result.min_margin)
+    regulatory = _regulatory_metadata(cfg)
 
     lines = [
         "# BVLOS Inspection Operator Memo",
@@ -1044,6 +1085,17 @@ def export_operator_memo(
         f"- Estimated energy used: {_fmt_value(_scalar(sim, 'energy_used_Wh'), 'Wh')}",
         f"- Final battery: {_fmt_value(_scalar(sim, 'final_battery_Wh'), 'Wh')}",
         f"- Objective score: {_fmt_value(getattr(score_report, 'total_score', None))}",
+        "",
+        "## Regulatory Metadata",
+        "",
+        f"- LAANC required: {_yes_no_unknown(regulatory.get('laanc_required'))}",
+        "- Waiver / authorization required: "
+        f"{_yes_no_unknown(regulatory.get('waiver_or_authorization_required'))}",
+        f"- Airspace class: {regulatory.get('airspace_class') or 'unknown'}",
+        f"- Visual observer required: {_yes_no_unknown(regulatory.get('visual_observer_required'))}",
+        "- Ground-risk / population note: "
+        f"{regulatory.get('ground_risk_population_note') or 'not provided'}",
+        f"- Documentation-only notice: {regulatory.get('documentation_only_notice')}",
         "",
         "## Top Constraints",
         "",

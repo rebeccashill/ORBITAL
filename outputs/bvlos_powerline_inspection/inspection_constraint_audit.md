@@ -8,6 +8,15 @@ Mission risk: LOW
 
 - Wind / weather margin: PASS with margin 3.5 m/s
 
+## Regulatory Metadata
+
+- LAANC required: yes
+- Waiver / authorization required: yes
+- Airspace class: Class D
+- Visual observer required: yes
+- Ground-risk / population note: Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch.
+- Documentation-only notice: For planning documentation only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, or operational clearance.
+
 ## Top Three Risk Drivers
 
 - Wind / weather margin: PASS, margin 3.5 m/s, risk points 12.5

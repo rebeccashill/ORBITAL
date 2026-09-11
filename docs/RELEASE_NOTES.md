@@ -19,6 +19,9 @@ adding a dedicated drone inspection constraint-audit report.
 - Added opt-in BVLOS what-if planning artifacts that compare fewer waypoints,
   lower speed, alternate launch point, stronger wind, larger battery reserve, and
   relaunch / battery swap options.
+- Added documentation-only regulatory metadata fields for LAANC, waiver /
+  authorization, airspace class, visual observer requirements, and
+  ground-risk/population notes.
 - Regenerated the BVLOS powerline inspection output bundle with the new audit
   and what-if artifacts.
 

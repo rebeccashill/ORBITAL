@@ -320,6 +320,7 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
     constraints = _optional_mapping(cfg, "constraints", issues)
     objective = _optional_mapping(cfg, "objective", issues)
     simulation = _optional_mapping(cfg, "simulation", issues)
+    regulatory = _optional_mapping(cfg, "regulatory", issues)
 
     if initial_state is not None:
         for key in ("x_m", "y_m", "heading_rad", "speed_mps", "battery_Wh"):
@@ -491,6 +492,27 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
         for key in ("t_max_s", "stall_time_s", "stall_improve_m", "k_heading", "k_speed"):
             _number(simulation, f"simulation.{key}", issues, min_value=0.0)
         _number(simulation, "simulation.max_speed_step_mps", issues, min_value=0.0)
+
+    if regulatory is not None:
+        for key in (
+            "laanc_required",
+            "waiver_or_authorization_required",
+            "visual_observer_required",
+        ):
+            if key in regulatory and not isinstance(regulatory[key], bool):
+                issues.append(
+                    ValidationIssue(
+                        f"regulatory.{key}",
+                        "must be a boolean",
+                        "Use true or false.",
+                    )
+                )
+        for key in (
+            "airspace_class",
+            "ground_risk_population_note",
+            "documentation_only_notice",
+        ):
+            _optional_nonempty_string(regulatory, f"regulatory.{key}", issues)
 
 
 def _validate_spacecraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) -> None:
@@ -724,6 +746,20 @@ def _require_nonempty_string(
     value = _get_path(container, path)
     if value is None:
         issues.append(ValidationIssue(path, "required field is missing"))
+        return None
+    if not isinstance(value, str) or not value.strip():
+        issues.append(ValidationIssue(path, "must be a non-empty string"))
+        return None
+    return value
+
+
+def _optional_nonempty_string(
+    container: Mapping[str, Any],
+    path: str,
+    issues: list[ValidationIssue],
+) -> Optional[str]:
+    value = _get_path(container, path)
+    if value is None:
         return None
     if not isinstance(value, str) or not value.strip():
         issues.append(ValidationIssue(path, "must be a non-empty string"))

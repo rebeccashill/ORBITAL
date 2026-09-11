@@ -93,6 +93,14 @@ geofence:
         - [3050.0, 850.0]
         - [2350.0, 850.0]
 
+regulatory:
+  laanc_required: true
+  waiver_or_authorization_required: true
+  airspace_class: "Class D"
+  visual_observer_required: true
+  ground_risk_population_note: "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch."
+  documentation_only_notice: "For planning documentation only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, or operational clearance."
+
 constraints:
   enforce_waypoint_visit: true
   enforce_inspection_completion: true
