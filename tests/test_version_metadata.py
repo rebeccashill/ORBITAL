@@ -6,5 +6,5 @@ import mission_framework
 
 
 def test_package_level_version_matches_installed_metadata() -> None:
-    assert mission_framework.__version__ == "1.0.4"
+    assert mission_framework.__version__ == "1.0.5"
     assert mission_framework.__version__ == version("orbital-mission-framework")

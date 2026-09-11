@@ -5,7 +5,7 @@
 **Operational Reusable Backend for Integrated Trajectory and Logistics**  
 Constraint-Aware BVLOS Inspection Mission Planning
 
-Current release: `v1.0.4`
+Current release: `v1.0.5`
 
 ORBITAL helps drone operators plan constraint-aware BVLOS inspection missions
 under battery, weather, geofence, and regulatory constraints. It is built on a

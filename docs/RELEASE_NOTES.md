@@ -1,5 +1,31 @@
 # Release Notes
 
+## v1.0.5 - September 11, 2026
+
+This patch release makes the HBS BVLOS inspection positioning more defensible by
+adding a dedicated drone inspection constraint-audit report.
+
+### Changed
+
+- Added `inspection_constraint_audit.json` and `inspection_constraint_audit.md`
+  for aircraft/drone inspection runs.
+- Reported battery reserve margin, wind/weather margin, geofence/no-fly-zone
+  clearance, route completion, and turn/bank feasibility in one operator-facing
+  audit.
+- Added top limiting constraint, low/medium/high mission risk, and top three
+  risk drivers to the audit payload.
+- Added configurable wind audit thresholds through `wind.max_safe_wind_mps` and
+  `wind.warning_margin_mps`.
+- Regenerated the BVLOS powerline inspection output bundle with the new audit
+  artifacts.
+
+### Verified
+
+- Added end-to-end test coverage for the drone inspection audit report.
+- Validated the BVLOS scenario with the new wind audit fields.
+- Ran pytest, Ruff, mypy for `mission_framework`, and the fast no-plot demo
+  runner locally.
+
 ## v1.0.4 - September 11, 2026
 
 This patch release narrows ORBITAL's venture story around constraint-aware BVLOS
