@@ -14,6 +14,10 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 - Robustness summary: `robustness.json` (included)
 - Plain-English go/no-go memo: `operator_memo.md` (included)
 - Weather snapshot: `weather.json` (included)
+- Autopilot mission CSV: `autopilot_mission.csv` (included)
+- Mission review KML: `mission_review.kml` (included)
+- Flight-planning exports manifest: `flight_planning_exports.json` (included)
+- Flight-planning exports README: `flight_planning_exports.md` (included)
 
 ## Weather Source
 
@@ -21,3 +25,7 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 - Provider: open_meteo
 - Timestamp: 2026-09-11T16:00:00Z
 - Fallback used: yes
+
+## Flight-Planning Exports
+
+Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.

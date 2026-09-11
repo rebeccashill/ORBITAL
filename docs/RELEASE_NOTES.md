@@ -20,12 +20,18 @@ weather inputs while preserving deterministic offline demos.
   LineString/MultiLineString asset routes and Polygon/MultiPolygon no-fly zones.
 - Added BVLOS example GeoJSON files for the powerline route and substation
   no-fly zone.
+- Added opt-in downstream flight-planning exports with a simple autopilot
+  mission CSV, KML route review file, and planning-only disclaimer.
+- Included downstream export artifacts in the operator evidence bundle when
+  enabled.
 
 ### Verified
 
 - Added unit tests for offline weather mapping and Open-Meteo payload parsing.
 - Added validation coverage for the new weather scenario fields.
 - Added validation coverage for malformed or empty GeoJSON route/geofence files.
+- Added end-to-end coverage for autopilot CSV/KML exports and evidence-bundle
+  inclusion.
 - Added end-to-end coverage for weather metadata in BVLOS audit and evidence
   artifacts.
 

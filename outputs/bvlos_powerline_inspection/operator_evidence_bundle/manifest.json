@@ -11,6 +11,7 @@
     "fallback_used": true,
     "live_fetch_enabled": false
   },
+  "flight_planning_exports_enabled": true,
   "artifacts": [
     {
       "id": "scenario_yaml",
@@ -66,6 +67,34 @@
       "label": "Weather snapshot",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\weather.json",
       "bundle_path": "weather.json",
+      "present": true
+    },
+    {
+      "id": "autopilot_mission_csv",
+      "label": "Autopilot mission CSV",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\autopilot_mission.csv",
+      "bundle_path": "autopilot_mission.csv",
+      "present": true
+    },
+    {
+      "id": "mission_review_kml",
+      "label": "Mission review KML",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\mission_review.kml",
+      "bundle_path": "mission_review.kml",
+      "present": true
+    },
+    {
+      "id": "flight_planning_exports_manifest",
+      "label": "Flight-planning exports manifest",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\flight_planning_exports.json",
+      "bundle_path": "flight_planning_exports.json",
+      "present": true
+    },
+    {
+      "id": "flight_planning_exports_readme",
+      "label": "Flight-planning exports README",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\flight_planning_exports.md",
+      "bundle_path": "flight_planning_exports.md",
       "present": true
     }
   ],

@@ -21,10 +21,12 @@ Reporting guidance:
 from __future__ import annotations
 
 import csv
+import math
 from copy import deepcopy
 from pathlib import Path
 from shutil import copy2
 from typing import Any, Dict, Iterable, List, Optional
+from xml.sax.saxutils import escape
 
 import numpy as np
 
@@ -33,6 +35,11 @@ from mission_framework.core.json_utils import strict_json_dumps, write_strict_js
 from mission_framework.core.objective import ScoreConfig
 from mission_framework.core.planner import Planner, PlannerConfig
 from mission_framework.core.types import Plan, SimResult, Trajectory
+
+FLIGHT_PLANNING_EXPORT_NOTICE = (
+    "Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, "
+    "legal approval, autopilot control, or operational clearance."
+)
 
 
 def flight_plan_table(plan: Plan) -> List[Dict[str, Any]]:
@@ -144,6 +151,271 @@ def export_waypoints_csv(plan: Plan, out_path: Path) -> None:
         w.writeheader()
         for r in rows:
             w.writerow(r)
+
+
+def _float_or_none(value: Any) -> Optional[float]:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def _kml_origin(cfg: Optional[Dict[str, Any]]) -> Optional[Dict[str, float]]:
+    cfg = cfg or {}
+    mission = cfg.get("mission", {}) or {}
+    weather = cfg.get("weather", {}) or {}
+    resolved_weather = weather.get("resolved", {}) or {}
+    location_weather = weather.get("location", {}) or {}
+    origin = mission.get("kml_origin", {}) or {}
+
+    lat = (
+        _float_or_none(origin.get("latitude_deg"))
+        or _float_or_none(resolved_weather.get("latitude_deg"))
+        or _float_or_none(location_weather.get("latitude_deg"))
+    )
+    lon = (
+        _float_or_none(origin.get("longitude_deg"))
+        or _float_or_none(resolved_weather.get("longitude_deg"))
+        or _float_or_none(location_weather.get("longitude_deg"))
+    )
+    if lat is None or lon is None:
+        return None
+    return {"latitude_deg": lat, "longitude_deg": lon}
+
+
+def _local_xy_to_lat_lon(
+    x_m: float,
+    y_m: float,
+    *,
+    origin_lat_deg: float,
+    origin_lon_deg: float,
+) -> Dict[str, float]:
+    earth_radius_m = 6_378_137.0
+    lat = origin_lat_deg + math.degrees(y_m / earth_radius_m)
+    lon = origin_lon_deg + math.degrees(
+        x_m / max(1e-9, earth_radius_m * math.cos(math.radians(origin_lat_deg)))
+    )
+    return {"latitude_deg": lat, "longitude_deg": lon}
+
+
+def _geo_waypoint(row: Dict[str, Any], origin: Optional[Dict[str, float]]) -> Dict[str, Any]:
+    lat = _float_or_none(row.get("lat_deg") or row.get("latitude_deg"))
+    lon = _float_or_none(row.get("lon_deg") or row.get("longitude_deg"))
+    frame = "wgs84"
+    if lat is None or lon is None:
+        x = _float_or_none(row.get("x_m"))
+        y = _float_or_none(row.get("y_m"))
+        if x is None or y is None or origin is None:
+            return {**row, "latitude_deg": None, "longitude_deg": None, "frame": "local_only"}
+        converted = _local_xy_to_lat_lon(
+            x,
+            y,
+            origin_lat_deg=origin["latitude_deg"],
+            origin_lon_deg=origin["longitude_deg"],
+        )
+        lat = converted["latitude_deg"]
+        lon = converted["longitude_deg"]
+        frame = "local_enu_derived_wgs84"
+
+    alt = _float_or_none(row.get("alt_m") or row.get("z_m"))
+    return {
+        **row,
+        "latitude_deg": lat,
+        "longitude_deg": lon,
+        "altitude_m": 0.0 if alt is None else alt,
+        "frame": frame,
+    }
+
+
+def build_downstream_flight_plan_rows(
+    plan: Plan,
+    *,
+    cfg: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
+    """Build simple CSV rows for downstream flight-planning ingestion."""
+    origin = _kml_origin(cfg)
+    cruise_speed = _float_or_none(plan.metadata.get("cruise_speed_mps"))
+    rows: List[Dict[str, Any]] = []
+    for row in flight_plan_table(plan):
+        geo = _geo_waypoint(row, origin)
+        rows.append(
+            {
+                "sequence": int(row.get("seq", len(rows))),
+                "waypoint_id": str(row.get("id", f"WP{len(rows)}")),
+                "command": "WAYPOINT",
+                "frame": geo.get("frame"),
+                "latitude_deg": geo.get("latitude_deg"),
+                "longitude_deg": geo.get("longitude_deg"),
+                "altitude_m": geo.get("altitude_m"),
+                "x_m": row.get("x_m"),
+                "y_m": row.get("y_m"),
+                "eta_s": row.get("eta_s"),
+                "speed_mps": cruise_speed,
+                "hold_s": 0.0,
+                "planning_only_notice": FLIGHT_PLANNING_EXPORT_NOTICE,
+            }
+        )
+    return rows
+
+
+def export_autopilot_mission_csv(
+    plan: Plan,
+    out_path: Path,
+    *,
+    cfg: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
+    """Write a simple downstream mission CSV for drone flight-planning tools."""
+    rows = build_downstream_flight_plan_rows(plan, cfg=cfg)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fields = [
+        "sequence",
+        "waypoint_id",
+        "command",
+        "frame",
+        "latitude_deg",
+        "longitude_deg",
+        "altitude_m",
+        "x_m",
+        "y_m",
+        "eta_s",
+        "speed_mps",
+        "hold_s",
+        "planning_only_notice",
+    ]
+    with out_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    return rows
+
+
+def _kml_coordinates(rows: List[Dict[str, Any]]) -> List[str]:
+    coordinates = []
+    for row in rows:
+        lat = _float_or_none(row.get("latitude_deg"))
+        lon = _float_or_none(row.get("longitude_deg"))
+        alt = _float_or_none(row.get("altitude_m")) or 0.0
+        if lat is None or lon is None:
+            continue
+        coordinates.append(f"{lon:.8f},{lat:.8f},{alt:.2f}")
+    return coordinates
+
+
+def export_kml_flight_review(
+    plan: Plan,
+    out_path: Path,
+    *,
+    cfg: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Write a KML route preview for visual review in mapping tools."""
+    rows = build_downstream_flight_plan_rows(plan, cfg=cfg)
+    coordinates = _kml_coordinates(rows)
+    if not coordinates:
+        raise ValueError("KML export requires lat/lon waypoints or a configured local-frame origin")
+
+    mission_name = str(plan.metadata.get("mission_id", "ORBITAL Mission"))
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    placemarks = []
+    for row in rows:
+        coord = _kml_coordinates([row])
+        if not coord:
+            continue
+        placemarks.append(
+            "\n".join(
+                [
+                    "    <Placemark>",
+                    f"      <name>{escape(str(row.get('waypoint_id', 'Waypoint')))}</name>",
+                    f"      <description>{escape(FLIGHT_PLANNING_EXPORT_NOTICE)}</description>",
+                    "      <Point>",
+                    f"        <coordinates>{coord[0]}</coordinates>",
+                    "      </Point>",
+                    "    </Placemark>",
+                ]
+            )
+        )
+
+    kml = "\n".join(
+        [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<kml xmlns="http://www.opengis.net/kml/2.2">',
+            "  <Document>",
+            f"    <name>{escape(mission_name)} - ORBITAL Planning Export</name>",
+            f"    <description>{escape(FLIGHT_PLANNING_EXPORT_NOTICE)}</description>",
+            "    <Placemark>",
+            "      <name>Planned Route</name>",
+            f"      <description>{escape(FLIGHT_PLANNING_EXPORT_NOTICE)}</description>",
+            "      <LineString>",
+            "        <tessellate>1</tessellate>",
+            "        <altitudeMode>absolute</altitudeMode>",
+            "        <coordinates>",
+            f"          {' '.join(coordinates)}",
+            "        </coordinates>",
+            "      </LineString>",
+            "    </Placemark>",
+            *placemarks,
+            "  </Document>",
+            "</kml>",
+            "",
+        ]
+    )
+    out_path.write_text(kml, encoding="utf-8")
+    return {
+        "path": str(out_path),
+        "coordinates": len(coordinates),
+        "notice": FLIGHT_PLANNING_EXPORT_NOTICE,
+    }
+
+
+def export_flight_planning_artifacts(
+    plan: Plan,
+    out_dir: Path,
+    *,
+    cfg: Optional[Dict[str, Any]] = None,
+    export_csv: bool = True,
+    export_kml: bool = True,
+) -> Dict[str, Any]:
+    """Export downstream flight-planning artifacts and a planning-only manifest."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    artifacts: Dict[str, Any] = {
+        "kind": "downstream_flight_planning_exports",
+        "notice": FLIGHT_PLANNING_EXPORT_NOTICE,
+        "artifacts": {},
+    }
+
+    if export_csv:
+        csv_path = out_dir / "autopilot_mission.csv"
+        rows = export_autopilot_mission_csv(plan, csv_path, cfg=cfg)
+        artifacts["artifacts"]["autopilot_mission_csv"] = {
+            "path": str(csv_path),
+            "rows": len(rows),
+            "present": csv_path.exists(),
+        }
+
+    if export_kml:
+        kml_path = out_dir / "mission_review.kml"
+        artifacts["artifacts"]["mission_review_kml"] = {
+            **export_kml_flight_review(plan, kml_path, cfg=cfg),
+            "present": kml_path.exists(),
+        }
+
+    readme_lines = [
+        "# Downstream Flight-Planning Exports",
+        "",
+        FLIGHT_PLANNING_EXPORT_NOTICE,
+        "",
+        "## Files",
+        "",
+    ]
+    for artifact_id, artifact in artifacts["artifacts"].items():
+        readme_lines.append(f"- {artifact_id}: `{Path(str(artifact['path'])).name}`")
+    (out_dir / "flight_planning_exports.md").write_text(
+        "\n".join(readme_lines).rstrip() + "\n",
+        encoding="utf-8",
+    )
+    write_strict_json(out_dir / "flight_planning_exports.json", artifacts)
+    return artifacts
 
 
 def _scalar(sim: Optional[SimResult], key: str, default: Optional[float] = None) -> Optional[float]:
@@ -1124,6 +1396,12 @@ def export_operator_evidence_bundle(
     bundle_dir = out_dir / bundle_dir_name
     bundle_dir.mkdir(parents=True, exist_ok=True)
     weather = _weather_metadata(cfg)
+    output_cfg = (cfg or {}).get("output", {}) or {}
+    flight_exports_enabled = bool(
+        output_cfg.get("export_flight_planning_exports", False)
+        or output_cfg.get("export_autopilot_csv", False)
+        or output_cfg.get("export_kml", False)
+    )
 
     artifacts: List[Dict[str, Any]] = [
         {
@@ -1178,6 +1456,41 @@ def export_operator_evidence_bundle(
                 "bundle_name": "weather.json",
             }
         )
+    if flight_exports_enabled:
+        if bool(output_cfg.get("export_autopilot_csv", True)):
+            artifacts.append(
+                {
+                    "id": "autopilot_mission_csv",
+                    "label": "Autopilot mission CSV",
+                    "source": out_dir / "autopilot_mission.csv",
+                    "bundle_name": "autopilot_mission.csv",
+                }
+            )
+        if bool(output_cfg.get("export_kml", True)):
+            artifacts.append(
+                {
+                    "id": "mission_review_kml",
+                    "label": "Mission review KML",
+                    "source": out_dir / "mission_review.kml",
+                    "bundle_name": "mission_review.kml",
+                }
+            )
+        artifacts.extend(
+            [
+                {
+                    "id": "flight_planning_exports_manifest",
+                    "label": "Flight-planning exports manifest",
+                    "source": out_dir / "flight_planning_exports.json",
+                    "bundle_name": "flight_planning_exports.json",
+                },
+                {
+                    "id": "flight_planning_exports_readme",
+                    "label": "Flight-planning exports README",
+                    "source": out_dir / "flight_planning_exports.md",
+                    "bundle_name": "flight_planning_exports.md",
+                },
+            ]
+        )
 
     manifest_entries: List[Dict[str, Any]] = []
     for artifact in artifacts:
@@ -1213,6 +1526,7 @@ def export_operator_evidence_bundle(
         }
         if weather
         else {},
+        "flight_planning_exports_enabled": flight_exports_enabled,
         "artifacts": manifest_entries,
         "documentation_only_notice": (
             "This bundle supports operator review and audit evidence only. ORBITAL does not "
@@ -1248,6 +1562,15 @@ def export_operator_evidence_bundle(
                 f"- Provider: {weather.get('provider') or 'not provided'}",
                 f"- Timestamp: {weather.get('timestamp_utc') or 'not provided'}",
                 f"- Fallback used: {_yes_no_unknown(weather.get('fallback_used'))}",
+            ]
+        )
+    if flight_exports_enabled:
+        readme_lines.extend(
+            [
+                "",
+                "## Flight-Planning Exports",
+                "",
+                FLIGHT_PLANNING_EXPORT_NOTICE,
             ]
         )
 

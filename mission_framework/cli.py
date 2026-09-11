@@ -416,6 +416,25 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if result.history is not None:
         _write_json(outdir / "history.json", result.history)
 
+    flight_exports_enabled = bool(
+        output_cfg.get("export_flight_planning_exports", False)
+        or output_cfg.get("export_autopilot_csv", False)
+        or output_cfg.get("export_kml", False)
+    )
+    if scenario_type == "aircraft" and flight_exports_enabled:
+        try:
+            from mission_framework.reporting.flight_output import export_flight_planning_artifacts
+
+            export_flight_planning_artifacts(
+                result.plan,
+                outdir,
+                cfg=cfg,
+                export_csv=bool(output_cfg.get("export_autopilot_csv", True)),
+                export_kml=bool(output_cfg.get("export_kml", True)),
+            )
+        except Exception as e:
+            print(f"(flight-planning exports skipped: {e})")
+
     if scenario_type == "aircraft" and bool(
         output_cfg.get("export_operator_evidence_bundle", False)
     ):

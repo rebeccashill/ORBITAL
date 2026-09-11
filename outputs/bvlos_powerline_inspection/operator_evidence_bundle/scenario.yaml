@@ -181,6 +181,9 @@ output:
   export_flight_path: true
   export_constraint_report: true
   export_what_if_plan: true
+  export_flight_planning_exports: true
+  export_autopilot_csv: true
+  export_kml: true
   export_operator_evidence_bundle: true
   export_summary_metrics: true
   verbose: true

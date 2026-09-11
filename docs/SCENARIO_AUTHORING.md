@@ -268,9 +268,19 @@ output:
   save_history: false
   export_flight_path: true
   export_constraint_report: true
+  export_flight_planning_exports: true
+  export_autopilot_csv: true
+  export_kml: true
   export_summary_metrics: true
   verbose: true
 ```
+
+Aircraft scenarios can opt into downstream flight-planning exports with
+`output.export_flight_planning_exports`. When enabled, `export_autopilot_csv`
+writes `autopilot_mission.csv` and `export_kml` writes `mission_review.kml`.
+These files are planning artifacts for review or downstream ingestion. They are
+not direct flight authorization, autopilot control, LAANC, waivers, or legal
+approval.
 
 ## Spacecraft YAML Structure
 

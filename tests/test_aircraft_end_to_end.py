@@ -154,6 +154,8 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     ]
 
     from mission_framework.reporting.flight_output import (
+        FLIGHT_PLANNING_EXPORT_NOTICE,
+        export_flight_planning_artifacts,
         export_inspection_constraint_audit,
         export_operator_evidence_bundle,
         export_what_if_plan,
@@ -216,6 +218,20 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert (tmp_path / "what_if_plan.json").exists()
     assert (tmp_path / "what_if_plan.md").exists()
 
+    flight_exports = export_flight_planning_artifacts(result.plan, tmp_path, cfg=cfg)
+
+    assert flight_exports["kind"] == "downstream_flight_planning_exports"
+    assert (tmp_path / "autopilot_mission.csv").exists()
+    assert (tmp_path / "mission_review.kml").exists()
+    assert (tmp_path / "flight_planning_exports.json").exists()
+    assert (tmp_path / "flight_planning_exports.md").exists()
+    assert FLIGHT_PLANNING_EXPORT_NOTICE in (tmp_path / "autopilot_mission.csv").read_text(
+        encoding="utf-8"
+    )
+    assert FLIGHT_PLANNING_EXPORT_NOTICE in (tmp_path / "mission_review.kml").read_text(
+        encoding="utf-8"
+    )
+
     (tmp_path / "plan.json").write_text('{"kind": "aircraft"}\n', encoding="utf-8")
     (tmp_path / "score.json").write_text('{"total_score": 0.0}\n', encoding="utf-8")
     (tmp_path / "flight_path.png").write_bytes(b"png")
@@ -246,6 +262,10 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "robustness.json",
         "operator_memo.md",
         "weather.json",
+        "autopilot_mission.csv",
+        "mission_review.kml",
+        "flight_planning_exports.json",
+        "flight_planning_exports.md",
         "manifest.json",
         "README.md",
     }
