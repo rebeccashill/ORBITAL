@@ -19,6 +19,10 @@ initial_state:
 
 mission:
   fixed_order: true
+  route_geojson_path: "examples/geojson/bvlos_powerline_route.geojson"
+  use_geojson_route: true
+  route_default_z_m: 90.0
+  route_default_radius_m: 70.0
   waypoints:
     - id: "TOWER_01"
       x_m: 750.0
@@ -113,6 +117,8 @@ weather:
 
 geofence:
   clearance_m: 75.0
+  geojson_path: "examples/geojson/bvlos_powerline_geofences.geojson"
+  use_geojson: true
   no_fly_zones:
     - id: "SUBSTATION_NFZ"
       polygon:

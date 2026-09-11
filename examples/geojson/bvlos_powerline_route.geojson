@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "POWERLINE_CORRIDOR",
+        "asset_type": "powerline",
+        "waypoint_ids": [
+          "TOWER_01",
+          "TOWER_02",
+          "TOWER_03",
+          "TOWER_04",
+          "TOWER_05",
+          "TOWER_06"
+        ],
+        "radius_m": 70.0,
+        "z_m": 90.0
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [750.0, 80.0, 90.0],
+          [1500.0, 120.0, 90.0],
+          [2250.0, 80.0, 90.0],
+          [3000.0, 120.0, 90.0],
+          [3750.0, 80.0, 90.0],
+          [4500.0, 120.0, 90.0]
+        ]
+      }
+    }
+  ]
+}

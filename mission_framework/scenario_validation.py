@@ -18,6 +18,13 @@ from typing import Any, Optional, cast
 
 import yaml
 
+from mission_framework.gis import (
+    GeoJSONError,
+    load_geofence_zones,
+    load_route_waypoints,
+    resolve_config_path,
+)
+
 
 @dataclass(frozen=True)
 class ValidationIssue:
@@ -333,7 +340,27 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
     if mission is not None:
         if "fixed_order" in mission and not isinstance(mission["fixed_order"], bool):
             issues.append(ValidationIssue("mission.fixed_order", "must be a boolean"))
-        waypoints = _require_sequence(mission, "mission.waypoints", issues)
+        if "use_geojson_route" in mission and not isinstance(mission["use_geojson_route"], bool):
+            issues.append(ValidationIssue("mission.use_geojson_route", "must be a boolean"))
+        route_path = _optional_nonempty_string(cfg, "mission.route_geojson_path", issues)
+        _number(cfg, "mission.route_default_z_m", issues)
+        _number(cfg, "mission.route_default_radius_m", issues, min_value=0.0)
+        if route_path is not None:
+            _validate_route_geojson(cfg, route_path, issues)
+        use_geojson_route = bool(mission.get("use_geojson_route", False))
+        if use_geojson_route and route_path is None:
+            issues.append(
+                ValidationIssue(
+                    "mission.route_geojson_path",
+                    "is required when mission.use_geojson_route is true",
+                )
+            )
+
+        waypoints = (
+            _optional_sequence(mission, "mission.waypoints", issues)
+            if use_geojson_route and route_path is not None
+            else _require_sequence(mission, "mission.waypoints", issues)
+        )
         if waypoints is not None:
             if not waypoints:
                 issues.append(
@@ -544,6 +571,11 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
 
     if geofence is not None:
         _number(geofence, "geofence.clearance_m", issues, min_value=0.0)
+        if "use_geojson" in geofence and not isinstance(geofence["use_geojson"], bool):
+            issues.append(ValidationIssue("geofence.use_geojson", "must be a boolean"))
+        geofence_path = _optional_nonempty_string(cfg, "geofence.geojson_path", issues)
+        if geofence_path is not None:
+            _validate_geofence_geojson(cfg, geofence_path, issues)
         zones = _optional_sequence(geofence, "geofence.no_fly_zones", issues)
         if zones is not None:
             _validate_unique_ids(zones, "geofence.no_fly_zones", issues)
@@ -1031,6 +1063,46 @@ def _validate_polygon(
         x, y = _coerce_number(point[0]), _coerce_number(point[1])
         if x is None or y is None:
             issues.append(ValidationIssue(point_path, "coordinates must be finite numbers"))
+
+
+def _validate_route_geojson(
+    cfg: Mapping[str, Any],
+    path_value: str,
+    issues: list[ValidationIssue],
+) -> None:
+    try:
+        load_route_waypoints(
+            resolve_config_path(path_value, cfg),
+            default_z_m=float(_coerce_number(_get_path(cfg, "mission.route_default_z_m")) or 0.0),
+            default_radius_m=float(
+                _coerce_number(_get_path(cfg, "mission.route_default_radius_m")) or 10.0
+            ),
+        )
+    except GeoJSONError as exc:
+        issues.append(
+            ValidationIssue(
+                "mission.route_geojson_path",
+                f"invalid route GeoJSON: {exc}",
+                "Use LineString or MultiLineString features with local [x_m, y_m, z_m] coordinates.",
+            )
+        )
+
+
+def _validate_geofence_geojson(
+    cfg: Mapping[str, Any],
+    path_value: str,
+    issues: list[ValidationIssue],
+) -> None:
+    try:
+        load_geofence_zones(resolve_config_path(path_value, cfg))
+    except GeoJSONError as exc:
+        issues.append(
+            ValidationIssue(
+                "geofence.geojson_path",
+                f"invalid geofence GeoJSON: {exc}",
+                "Use Polygon or MultiPolygon features with closed local-coordinate rings.",
+            )
+        )
 
 
 def _validate_boolean_map(

@@ -110,6 +110,8 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert cfg["weather"]["resolved"]["source"] == "offline Open-Meteo-shaped sample"
     assert cfg["weather"]["resolved"]["timestamp_utc"] == "2026-09-11T16:00:00Z"
     assert cfg["weather"]["applied_to_wind"] is True
+    assert cfg["mission"]["geojson_route_loaded"] is True
+    assert cfg["geofence"]["geojson_zones_loaded"] == 1
 
     planner_cfg = PlannerConfig(
         iterations=80,
@@ -125,6 +127,8 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     result = Planner(planner_cfg).solve(problem)
 
     assert result.plan.kind == "aircraft"
+    assert result.plan.metadata["route_source"].endswith("bvlos_powerline_route.geojson")
+    assert result.plan.metadata["geofence_geojson_zones_loaded"] == 1
     assert result.constraints.hard_pass is True
     assert set(result.constraints.by_name()) >= {
         "all_waypoints_reached",

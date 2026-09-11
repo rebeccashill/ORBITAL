@@ -56,6 +56,8 @@ def _validate_command(argv: Sequence[str]) -> int:
 
     try:
         cfg = _load_yaml(scenario_path)
+        if isinstance(cfg, dict):
+            cfg["_scenario_dir"] = str(scenario_path.parent)
         validate_scenario_config(cfg, expected_type=args.type)
     except (OSError, yaml.YAMLError, ScenarioValidationError) as exc:
         _print_validation_error(scenario_path, exc)
@@ -197,6 +199,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     scenario_path = Path(args.scenario_yaml).resolve()
     try:
         cfg = _load_yaml(scenario_path)
+        if isinstance(cfg, dict):
+            cfg["_scenario_dir"] = str(scenario_path.parent)
     except (OSError, yaml.YAMLError) as exc:
         _print_validation_error(scenario_path, exc)
         return 2

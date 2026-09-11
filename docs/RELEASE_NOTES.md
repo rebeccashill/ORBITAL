@@ -16,11 +16,16 @@ weather inputs while preserving deterministic offline demos.
 - Added weather source, timestamp, fallback status, visibility, precipitation,
   temperature, and gust data to the drone inspection audit.
 - Added weather metadata and `weather.json` to the operator evidence bundle.
+- Added GeoJSON route and geofence imports for aircraft scenarios, including
+  LineString/MultiLineString asset routes and Polygon/MultiPolygon no-fly zones.
+- Added BVLOS example GeoJSON files for the powerline route and substation
+  no-fly zone.
 
 ### Verified
 
 - Added unit tests for offline weather mapping and Open-Meteo payload parsing.
 - Added validation coverage for the new weather scenario fields.
+- Added validation coverage for malformed or empty GeoJSON route/geofence files.
 - Added end-to-end coverage for weather metadata in BVLOS audit and evidence
   artifacts.
 

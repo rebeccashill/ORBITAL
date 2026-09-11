@@ -25,7 +25,9 @@
       "fallback_used": true,
       "fallback_reason": "weather.use_live is false; using offline sample",
       "live_fetch_enabled": false
-    }
+    },
+    "route_source": "examples\\geojson\\bvlos_powerline_route.geojson",
+    "geofence_geojson_zones_loaded": 1
   },
   "waypoints": [
     {

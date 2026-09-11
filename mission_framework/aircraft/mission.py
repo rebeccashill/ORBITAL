@@ -49,6 +49,7 @@ from mission_framework.core.decision_variables import (
 from mission_framework.core.objective import Objective, term_minimize_energy, term_minimize_time
 from mission_framework.core.planner import Problem
 from mission_framework.core.types import Plan, SimResult
+from mission_framework.gis import load_geofence_zones, load_route_waypoints, resolve_config_path
 from mission_framework.scenario_validation import validate_scenario_config
 from mission_framework.weather import apply_weather_to_config
 
@@ -243,7 +244,32 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     # --- Parse waypoints ---
     mission_cfg = cfg.get("mission", {}) or {}
     fixed_order = bool(mission_cfg.get("fixed_order", False))
-    wps_yaml = mission_cfg.get("waypoints", []) or []
+    wps_yaml = list(mission_cfg.get("waypoints", []) or [])
+    route_source = "yaml"
+    route_geojson_path = mission_cfg.get("route_geojson_path")
+    if route_geojson_path and bool(mission_cfg.get("use_geojson_route", False)):
+        route_path = resolve_config_path(str(route_geojson_path), cfg)
+        route_default_z = float(
+            mission_cfg.get(
+                "route_default_z_m",
+                (cfg.get("initial_state", {}) or {}).get("z_m", 0.0),
+            )
+        )
+        route_default_radius = float(
+            mission_cfg.get(
+                "route_default_radius_m",
+                (cfg.get("vehicle", {}) or {}).get("reach_radius_m", 10.0),
+            )
+        )
+        wps_yaml = load_route_waypoints(
+            route_path,
+            default_z_m=route_default_z,
+            default_radius_m=route_default_radius,
+        )
+        mission_cfg["waypoints"] = wps_yaml
+        mission_cfg["geojson_route_loaded"] = True
+        mission_cfg["use_geojson_route"] = False
+        route_source = str(route_path)
     if not wps_yaml:
         raise ValueError("aircraft scenario requires mission.waypoints")
 
@@ -351,6 +377,13 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     # --- Geofence map ---
     gcfg = cfg.get("geofence", {}) or {}
     zones_yaml = gcfg.get("no_fly_zones", []) or []
+    geofence_geojson_path = gcfg.get("geojson_path")
+    geofence_geojson_loaded = 0
+    if geofence_geojson_path and bool(gcfg.get("use_geojson", True)):
+        imported_zones = load_geofence_zones(resolve_config_path(str(geofence_geojson_path), cfg))
+        zones_yaml = [*zones_yaml, *imported_zones]
+        geofence_geojson_loaded = len(imported_zones)
+        gcfg["geojson_zones_loaded"] = geofence_geojson_loaded
     zones: List[NoFlyZone] = []
     for z in zones_yaml:
         poly = [(float(p[0]), float(p[1])) for p in (z.get("polygon", []) or [])]
@@ -452,6 +485,8 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
                 "battery_Wh": float(ic.get("battery_Wh", batt_cap)),
                 "fixed_order": bool(fixed_order),
                 "weather": ((cfg.get("weather", {}) or {}).get("resolved", {}) or {}),
+                "route_source": route_source,
+                "geofence_geojson_zones_loaded": geofence_geojson_loaded,
             },
         )
 

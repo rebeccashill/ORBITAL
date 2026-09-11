@@ -127,6 +127,10 @@ simulation:
 | `mission.waypoints[].y_m` | number | meters |
 | `mission.waypoints[].z_m` | number | Optional, meters |
 | `mission.waypoints[].radius_m` | number | Optional, `>= 0`, meters |
+| `mission.route_geojson_path` | string | Optional route/asset GeoJSON path |
+| `mission.use_geojson_route` | boolean | Optional; use route GeoJSON as waypoint source |
+| `mission.route_default_z_m` | number | Optional fallback altitude for 2D route coordinates |
+| `mission.route_default_radius_m` | number | Optional fallback waypoint radius |
 | `vehicle.dt_s` | number | `>= 0`, seconds |
 | `vehicle.reach_radius_m` | number | `>= 0`, meters |
 | `vehicle.mass_kg` | number | `>= 0`, kilograms |
@@ -137,6 +141,8 @@ simulation:
 | `vehicle.bank_max_deg` | number | Optional, `>= 0`, degrees |
 | `vehicle.climb_rate_max_mps` | number | Optional, `>= 0` |
 | `vehicle.descent_rate_max_mps` | number | Optional, `>= 0` |
+| `geofence.geojson_path` | string | Optional no-fly-zone GeoJSON path |
+| `geofence.use_geojson` | boolean | Optional; import GeoJSON polygons when path is set |
 | `geofence.no_fly_zones[].id` | string | Unique, non-empty |
 | `geofence.no_fly_zones[].polygon` | list | At least 3 coordinate pairs |
 | `weather.provider` | string | Optional: `offline`, `mock`, `sample`, or `open_meteo` |
@@ -159,6 +165,21 @@ Supported aircraft wind types:
 ```text
 none, no_wind, zero, uniform, constant, sinusoidal, vortex, swirl
 ```
+
+Supported aircraft GeoJSON geometry:
+
+```text
+Routes/assets: LineString, MultiLineString
+Geofences: Polygon, MultiPolygon
+```
+
+GeoJSON coordinates are interpreted in the same local mission frame as YAML
+coordinates: `[x_m, y_m]` or `[x_m, y_m, z_m]`. Existing YAML waypoints and
+`geofence.no_fly_zones` remain supported. When `mission.use_geojson_route` is
+true, ORBITAL loads waypoints from `mission.route_geojson_path`; YAML waypoints
+can stay in the file as a fallback/reference. When `geofence.geojson_path` is
+set and `geofence.use_geojson` is true or omitted, imported no-fly zones are
+added alongside any YAML no-fly zones.
 
 Supported aircraft objective terms:
 
