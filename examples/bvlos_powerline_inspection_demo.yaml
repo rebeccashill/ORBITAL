@@ -138,6 +138,7 @@ output:
   save_history: false
   export_flight_path: true
   export_constraint_report: true
+  export_what_if_plan: true
   export_summary_metrics: true
   verbose: true
 

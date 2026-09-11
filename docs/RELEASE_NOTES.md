@@ -16,8 +16,11 @@ adding a dedicated drone inspection constraint-audit report.
   risk drivers to the audit payload.
 - Added configurable wind audit thresholds through `wind.max_safe_wind_mps` and
   `wind.warning_margin_mps`.
+- Added opt-in BVLOS what-if planning artifacts that compare fewer waypoints,
+  lower speed, alternate launch point, stronger wind, larger battery reserve, and
+  relaunch / battery swap options.
 - Regenerated the BVLOS powerline inspection output bundle with the new audit
-  artifacts.
+  and what-if artifacts.
 
 ### Verified
 

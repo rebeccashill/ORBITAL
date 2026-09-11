@@ -146,7 +146,10 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "TOWER_06",
     ]
 
-    from mission_framework.reporting.flight_output import export_inspection_constraint_audit
+    from mission_framework.reporting.flight_output import (
+        export_inspection_constraint_audit,
+        export_what_if_plan,
+    )
 
     audit = export_inspection_constraint_audit(
         result.plan,
@@ -170,3 +173,25 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     }
     assert (tmp_path / "inspection_constraint_audit.json").exists()
     assert (tmp_path / "inspection_constraint_audit.md").exists()
+
+    what_if = export_what_if_plan(
+        result.plan,
+        result.sim_result,
+        result.constraints,
+        result.score_report,
+        tmp_path,
+        cfg=cfg,
+        robustness=result.robustness,
+    )
+
+    assert what_if["kind"] == "drone_inspection_what_if_plan"
+    assert {variant["id"] for variant in what_if["variants"]} >= {
+        "fewer_waypoints",
+        "lower_speed",
+        "alternate_launch_point",
+        "stronger_wind",
+        "larger_battery_reserve",
+        "relaunch_battery_swap",
+    }
+    assert (tmp_path / "what_if_plan.json").exists()
+    assert (tmp_path / "what_if_plan.md").exists()

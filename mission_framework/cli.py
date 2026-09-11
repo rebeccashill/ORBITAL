@@ -288,6 +288,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 export_inspection_constraint_audit,
                 export_operator_memo,
                 export_waypoints_csv,
+                export_what_if_plan,
                 print_flight_plan,
             )
 
@@ -310,6 +311,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 cfg=cfg,
                 robustness=result.robustness,
             )
+            if bool(output_cfg.get("export_what_if_plan", False)):
+                export_what_if_plan(
+                    result.plan,
+                    result.sim_result,
+                    result.constraints,
+                    result.score_report,
+                    outdir,
+                    cfg=cfg,
+                    robustness=result.robustness,
+                )
         except Exception as e:
             print(f"(flight reporting skipped: {e})")
 

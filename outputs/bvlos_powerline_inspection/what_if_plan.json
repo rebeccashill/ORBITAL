@@ -1,0 +1,816 @@
+{
+  "kind": "drone_inspection_what_if_plan",
+  "mission_id": "BVLOS Powerline Inspection Demo",
+  "baseline": {
+    "id": "baseline",
+    "label": "Current BVLOS plan",
+    "feasible": true,
+    "mission_risk": "low",
+    "score": 146.35062577542718,
+    "inspection_points": 6,
+    "estimated_time_s": 140.0,
+    "energy_used_Wh": 18.144645072649155,
+    "final_battery_Wh": 831.8553549273508,
+    "battery_reserve_margin_Wh": 131.85535492735085,
+    "wind_weather_margin_mps": 3.5,
+    "geofence_clearance_margin_m": 261.6023274099015,
+    "route_completion_margin": 1.0,
+    "turn_bank_margin_radps": 0.1390076277875651
+  },
+  "variants": [
+    {
+      "id": "fewer_waypoints",
+      "label": "Fewer waypoints",
+      "description": "Drop the final inspection points to compare a shorter sortie.",
+      "feasible": true,
+      "mission_risk": "low",
+      "score": 99.17247114991532,
+      "estimated_time_s": 95.0,
+      "energy_used_Wh": 11.92134614261522,
+      "final_battery_Wh": 838.0786538573848,
+      "battery_reserve_margin_Wh": 138.07865385738478,
+      "wind_weather_margin_mps": 3.508214424718026,
+      "geofence_clearance_margin_m": 262.2123292883871,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.1390076277875651,
+      "top_limiting_constraint": {
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "status": "pass",
+        "margin": {
+          "value": 3.508214424718026,
+          "unit": "m/s"
+        },
+        "warning_margin": {
+          "value": 2.0,
+          "unit": "m/s"
+        },
+        "risk_points": 12.45892787640987,
+        "observed": {
+          "max_horizontal_wind_mps": 5.491785575281974,
+          "max_safe_wind_mps": 9.0
+        },
+        "recommendation": "Wait for better wind or lower mission scope."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "status": "pass",
+          "margin": {
+            "value": 3.508214424718026,
+            "unit": "m/s"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s"
+          },
+          "risk_points": 12.45892787640987,
+          "observed": {
+            "max_horizontal_wind_mps": 5.491785575281974,
+            "max_safe_wind_mps": 9.0
+          },
+          "recommendation": "Wait for better wind or lower mission scope."
+        },
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "status": "pass",
+          "margin": {
+            "value": 138.07865385738478,
+            "unit": "Wh"
+          },
+          "warning_margin": {
+            "value": 70.0,
+            "unit": "Wh"
+          },
+          "risk_points": 10.274478020373602,
+          "observed": {
+            "final_battery_Wh": 838.0786538573848,
+            "required_reserve_Wh": 700.0
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "status": "pass",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 4.0,
+            "waypoints_total": 4.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties."
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": -45.0,
+        "energy_used_Wh": -6.223298930033934
+      }
+    },
+    {
+      "id": "lower_speed",
+      "label": "Lower speed",
+      "description": "Force a lower cruise speed to compare endurance and turn margin.",
+      "feasible": true,
+      "mission_risk": "low",
+      "score": 214.3118089930743,
+      "estimated_time_s": 210.0,
+      "energy_used_Wh": 12.319454265926538,
+      "final_battery_Wh": 837.6805457340735,
+      "battery_reserve_margin_Wh": 137.68054573407346,
+      "wind_weather_margin_mps": 3.5,
+      "geofence_clearance_margin_m": 261.1283674644079,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.2538670010842776,
+      "top_limiting_constraint": {
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "status": "pass",
+        "margin": {
+          "value": 3.5,
+          "unit": "m/s"
+        },
+        "warning_margin": {
+          "value": 2.0,
+          "unit": "m/s"
+        },
+        "risk_points": 12.499999999999998,
+        "observed": {
+          "max_horizontal_wind_mps": 5.5,
+          "max_safe_wind_mps": 9.0
+        },
+        "recommendation": "Wait for better wind or lower mission scope."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "status": "pass",
+          "margin": {
+            "value": 3.5,
+            "unit": "m/s"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s"
+          },
+          "risk_points": 12.499999999999998,
+          "observed": {
+            "max_horizontal_wind_mps": 5.5,
+            "max_safe_wind_mps": 9.0
+          },
+          "recommendation": "Wait for better wind or lower mission scope."
+        },
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "status": "pass",
+          "margin": {
+            "value": 137.68054573407346,
+            "unit": "Wh"
+          },
+          "warning_margin": {
+            "value": 70.0,
+            "unit": "Wh"
+          },
+          "risk_points": 10.331350609418076,
+          "observed": {
+            "final_battery_Wh": 837.6805457340735,
+            "required_reserve_Wh": 700.0
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "status": "pass",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 6.0,
+            "waypoints_total": 6.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties."
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": 70.0,
+        "energy_used_Wh": -5.825190806722617
+      }
+    },
+    {
+      "id": "alternate_launch_point",
+      "label": "Alternate launch point",
+      "description": "Move launch closer to the first tower / inspection corridor.",
+      "feasible": true,
+      "mission_risk": "low",
+      "score": 192.8737599372211,
+      "estimated_time_s": 185.0,
+      "energy_used_Wh": 22.496456963488868,
+      "final_battery_Wh": 827.5035430365111,
+      "battery_reserve_margin_Wh": 127.50354303651113,
+      "wind_weather_margin_mps": 3.5,
+      "geofence_clearance_margin_m": 256.8804408487862,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.11570427767978192,
+      "top_limiting_constraint": {
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "status": "pass",
+        "margin": {
+          "value": 3.5,
+          "unit": "m/s"
+        },
+        "warning_margin": {
+          "value": 2.0,
+          "unit": "m/s"
+        },
+        "risk_points": 12.499999999999998,
+        "observed": {
+          "max_horizontal_wind_mps": 5.5,
+          "max_safe_wind_mps": 9.0
+        },
+        "recommendation": "Wait for better wind or lower mission scope."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "status": "pass",
+          "margin": {
+            "value": 3.5,
+            "unit": "m/s"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s"
+          },
+          "risk_points": 12.499999999999998,
+          "observed": {
+            "max_horizontal_wind_mps": 5.5,
+            "max_safe_wind_mps": 9.0
+          },
+          "recommendation": "Wait for better wind or lower mission scope."
+        },
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "status": "pass",
+          "margin": {
+            "value": 127.50354303651113,
+            "unit": "Wh"
+          },
+          "warning_margin": {
+            "value": 70.0,
+            "unit": "Wh"
+          },
+          "risk_points": 11.785208137641266,
+          "observed": {
+            "final_battery_Wh": 827.5035430365111,
+            "required_reserve_Wh": 700.0
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "status": "pass",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 6.0,
+            "waypoints_total": 6.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties."
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": 45.0,
+        "energy_used_Wh": 4.351811890839713
+      }
+    },
+    {
+      "id": "stronger_wind",
+      "label": "Stronger wind case",
+      "description": "Increase modeled wind components by 50 percent.",
+      "feasible": true,
+      "mission_risk": "medium",
+      "score": 135.82291940142363,
+      "estimated_time_s": 130.0,
+      "energy_used_Wh": 16.636912575496126,
+      "final_battery_Wh": 833.3630874245039,
+      "battery_reserve_margin_Wh": 133.36308742450387,
+      "wind_weather_margin_mps": 0.75,
+      "geofence_clearance_margin_m": 258.70982241234594,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.1390076277875651,
+      "top_limiting_constraint": {
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "status": "warning",
+        "margin": {
+          "value": 0.75,
+          "unit": "m/s"
+        },
+        "warning_margin": {
+          "value": 2.0,
+          "unit": "m/s"
+        },
+        "risk_points": 58.75,
+        "observed": {
+          "max_horizontal_wind_mps": 8.25,
+          "max_safe_wind_mps": 9.0
+        },
+        "recommendation": "Wait for better wind or lower mission scope."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "status": "warning",
+          "margin": {
+            "value": 0.75,
+            "unit": "m/s"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s"
+          },
+          "risk_points": 58.75,
+          "observed": {
+            "max_horizontal_wind_mps": 8.25,
+            "max_safe_wind_mps": 9.0
+          },
+          "recommendation": "Wait for better wind or lower mission scope."
+        },
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "status": "pass",
+          "margin": {
+            "value": 133.36308742450387,
+            "unit": "Wh"
+          },
+          "warning_margin": {
+            "value": 70.0,
+            "unit": "Wh"
+          },
+          "risk_points": 10.94813036792802,
+          "observed": {
+            "final_battery_Wh": 833.3630874245039,
+            "required_reserve_Wh": 700.0
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "status": "pass",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 6.0,
+            "waypoints_total": 6.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties."
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": -10.0,
+        "energy_used_Wh": -1.5077324971530288
+      }
+    },
+    {
+      "id": "larger_battery_reserve",
+      "label": "Larger battery reserve requirement",
+      "description": "Increase the required final battery reserve.",
+      "feasible": true,
+      "mission_risk": "medium",
+      "score": 146.36225082179865,
+      "estimated_time_s": 140.0,
+      "energy_used_Wh": 18.17785949085328,
+      "final_battery_Wh": 831.8221405091467,
+      "battery_reserve_margin_Wh": 26.822140509146834,
+      "wind_weather_margin_mps": 3.5,
+      "geofence_clearance_margin_m": 261.4765890295554,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.1390076277875651,
+      "top_limiting_constraint": {
+        "id": "battery_reserve",
+        "label": "Battery reserve margin",
+        "status": "warning",
+        "margin": {
+          "value": 26.822140509146834,
+          "unit": "Wh"
+        },
+        "warning_margin": {
+          "value": 80.5,
+          "unit": "Wh"
+        },
+        "risk_points": 60.00417123882727,
+        "observed": {
+          "final_battery_Wh": 831.8221405091467,
+          "required_reserve_Wh": 804.9999999999999
+        },
+        "recommendation": "Reduce route length or plan a relaunch / battery swap."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "status": "warning",
+          "margin": {
+            "value": 26.822140509146834,
+            "unit": "Wh"
+          },
+          "warning_margin": {
+            "value": 80.5,
+            "unit": "Wh"
+          },
+          "risk_points": 60.00417123882727,
+          "observed": {
+            "final_battery_Wh": 831.8221405091467,
+            "required_reserve_Wh": 804.9999999999999
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap."
+        },
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "status": "pass",
+          "margin": {
+            "value": 3.5,
+            "unit": "m/s"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s"
+          },
+          "risk_points": 12.499999999999998,
+          "observed": {
+            "max_horizontal_wind_mps": 5.5,
+            "max_safe_wind_mps": 9.0
+          },
+          "recommendation": "Wait for better wind or lower mission scope."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "status": "pass",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 6.0,
+            "waypoints_total": 6.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties."
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": 0.0,
+        "energy_used_Wh": 0.03321441820412474
+      }
+    },
+    {
+      "id": "relaunch_battery_swap",
+      "label": "Relaunch / battery swap",
+      "description": "Split the route into two sorties with a fresh battery for the second leg.",
+      "feasible": true,
+      "mission_risk": "low",
+      "score": 155.98699301999918,
+      "estimated_time_s": 150.0,
+      "energy_used_Wh": 17.105694342854804,
+      "final_battery_Wh": 841.3962941109446,
+      "battery_reserve_margin_Wh": 141.3962941109446,
+      "wind_weather_margin_mps": 3.5444755429788675,
+      "geofence_clearance_margin_m": 144.06239059298662,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.14200235999754302,
+      "top_limiting_constraint": {
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "status": "pass",
+        "margin": {
+          "value": 3.5444755429788675,
+          "unit": "m/s"
+        },
+        "warning_margin": {
+          "value": 2.0,
+          "unit": "m/s"
+        },
+        "risk_points": 12.277622285105661,
+        "observed": {
+          "max_horizontal_wind_mps": 5.4555244570211325,
+          "max_safe_wind_mps": 9.0
+        },
+        "recommendation": "Wait for better wind or lower mission scope."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "status": "pass",
+          "margin": {
+            "value": 3.5444755429788675,
+            "unit": "m/s"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s"
+          },
+          "risk_points": 12.277622285105661,
+          "observed": {
+            "max_horizontal_wind_mps": 5.4555244570211325,
+            "max_safe_wind_mps": 9.0
+          },
+          "recommendation": "Wait for better wind or lower mission scope."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "status": "pass",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 3.0,
+            "waypoints_total": 3.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties."
+        },
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "status": "pass",
+          "margin": {
+            "value": 141.3962941109446,
+            "unit": "Wh"
+          },
+          "warning_margin": {
+            "value": 70.0,
+            "unit": "Wh"
+          },
+          "risk_points": 9.800529412722197,
+          "observed": {
+            "final_battery_Wh": 841.3962941109446,
+            "required_reserve_Wh": 700.0
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap."
+        }
+      ],
+      "sorties": [
+        {
+          "id": "relaunch_battery_swap_sortie_1",
+          "label": "Relaunch / battery swap sortie 1",
+          "description": "One sortie in a split-route battery swap option.",
+          "feasible": true,
+          "mission_risk": "low",
+          "score": 77.97569595882979,
+          "estimated_time_s": 75.0,
+          "energy_used_Wh": 8.501988453799413,
+          "final_battery_Wh": 841.4980115462006,
+          "battery_reserve_margin_Wh": 141.4980115462006,
+          "wind_weather_margin_mps": 3.5444755429788675,
+          "geofence_clearance_margin_m": 328.9223266697648,
+          "route_completion_margin": 1.0,
+          "turn_bank_margin_radps": 0.14289791264974072,
+          "top_limiting_constraint": {
+            "id": "wind_weather",
+            "label": "Wind / weather margin",
+            "status": "pass",
+            "margin": {
+              "value": 3.5444755429788675,
+              "unit": "m/s"
+            },
+            "warning_margin": {
+              "value": 2.0,
+              "unit": "m/s"
+            },
+            "risk_points": 12.277622285105661,
+            "observed": {
+              "max_horizontal_wind_mps": 5.4555244570211325,
+              "max_safe_wind_mps": 9.0
+            },
+            "recommendation": "Wait for better wind or lower mission scope."
+          },
+          "top_three_risk_drivers": [
+            {
+              "id": "wind_weather",
+              "label": "Wind / weather margin",
+              "status": "pass",
+              "margin": {
+                "value": 3.5444755429788675,
+                "unit": "m/s"
+              },
+              "warning_margin": {
+                "value": 2.0,
+                "unit": "m/s"
+              },
+              "risk_points": 12.277622285105661,
+              "observed": {
+                "max_horizontal_wind_mps": 5.4555244570211325,
+                "max_safe_wind_mps": 9.0
+              },
+              "recommendation": "Wait for better wind or lower mission scope."
+            },
+            {
+              "id": "route_completion",
+              "label": "Route completion status",
+              "status": "pass",
+              "margin": {
+                "value": 1.0,
+                "unit": "completion"
+              },
+              "warning_margin": {
+                "value": 0.5,
+                "unit": "completion"
+              },
+              "risk_points": 10.000000000000002,
+              "observed": {
+                "waypoints_completed": 3.0,
+                "waypoints_total": 3.0,
+                "reached_all": true
+              },
+              "recommendation": "Split the inspection into shorter sorties."
+            },
+            {
+              "id": "battery_reserve",
+              "label": "Battery reserve margin",
+              "status": "pass",
+              "margin": {
+                "value": 141.4980115462006,
+                "unit": "Wh"
+              },
+              "warning_margin": {
+                "value": 70.0,
+                "unit": "Wh"
+              },
+              "risk_points": 9.785998350542775,
+              "observed": {
+                "final_battery_Wh": 841.4980115462006,
+                "required_reserve_Wh": 700.0
+              },
+              "recommendation": "Reduce route length or plan a relaunch / battery swap."
+            }
+          ],
+          "delta_vs_baseline": {
+            "estimated_time_s": -65.0,
+            "energy_used_Wh": -9.642656618849742
+          }
+        },
+        {
+          "id": "relaunch_battery_swap_sortie_2",
+          "label": "Relaunch / battery swap sortie 2",
+          "description": "One sortie in a split-route battery swap option.",
+          "feasible": true,
+          "mission_risk": "low",
+          "score": 78.01129706116939,
+          "estimated_time_s": 75.0,
+          "energy_used_Wh": 8.60370588905539,
+          "final_battery_Wh": 841.3962941109446,
+          "battery_reserve_margin_Wh": 141.3962941109446,
+          "wind_weather_margin_mps": 3.5444755429788675,
+          "geofence_clearance_margin_m": 144.06239059298662,
+          "route_completion_margin": 1.0,
+          "turn_bank_margin_radps": 0.14200235999754302,
+          "top_limiting_constraint": {
+            "id": "wind_weather",
+            "label": "Wind / weather margin",
+            "status": "pass",
+            "margin": {
+              "value": 3.5444755429788675,
+              "unit": "m/s"
+            },
+            "warning_margin": {
+              "value": 2.0,
+              "unit": "m/s"
+            },
+            "risk_points": 12.277622285105661,
+            "observed": {
+              "max_horizontal_wind_mps": 5.4555244570211325,
+              "max_safe_wind_mps": 9.0
+            },
+            "recommendation": "Wait for better wind or lower mission scope."
+          },
+          "top_three_risk_drivers": [
+            {
+              "id": "wind_weather",
+              "label": "Wind / weather margin",
+              "status": "pass",
+              "margin": {
+                "value": 3.5444755429788675,
+                "unit": "m/s"
+              },
+              "warning_margin": {
+                "value": 2.0,
+                "unit": "m/s"
+              },
+              "risk_points": 12.277622285105661,
+              "observed": {
+                "max_horizontal_wind_mps": 5.4555244570211325,
+                "max_safe_wind_mps": 9.0
+              },
+              "recommendation": "Wait for better wind or lower mission scope."
+            },
+            {
+              "id": "route_completion",
+              "label": "Route completion status",
+              "status": "pass",
+              "margin": {
+                "value": 1.0,
+                "unit": "completion"
+              },
+              "warning_margin": {
+                "value": 0.5,
+                "unit": "completion"
+              },
+              "risk_points": 10.000000000000002,
+              "observed": {
+                "waypoints_completed": 3.0,
+                "waypoints_total": 3.0,
+                "reached_all": true
+              },
+              "recommendation": "Split the inspection into shorter sorties."
+            },
+            {
+              "id": "battery_reserve",
+              "label": "Battery reserve margin",
+              "status": "pass",
+              "margin": {
+                "value": 141.3962941109446,
+                "unit": "Wh"
+              },
+              "warning_margin": {
+                "value": 70.0,
+                "unit": "Wh"
+              },
+              "risk_points": 9.800529412722197,
+              "observed": {
+                "final_battery_Wh": 841.3962941109446,
+                "required_reserve_Wh": 700.0
+              },
+              "recommendation": "Reduce route length or plan a relaunch / battery swap."
+            }
+          ],
+          "delta_vs_baseline": {
+            "estimated_time_s": -65.0,
+            "energy_used_Wh": -9.540939183593764
+          }
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": 10.0,
+        "energy_used_Wh": -1.038950729794351
+      }
+    }
+  ]
+}
