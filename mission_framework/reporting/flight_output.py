@@ -25,6 +25,8 @@ import hashlib
 import json
 import math
 from copy import deepcopy
+from datetime import datetime, timezone
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from shutil import copy2
 from typing import Any, Dict, Iterable, List, Optional
@@ -574,6 +576,7 @@ def _regulatory_metadata(cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         "special_conditions_limitations": _string_list(
             regulatory.get("special_conditions_limitations")
         ),
+        "emergency_contingency_plan": regulatory.get("emergency_contingency_plan"),
         "operating_assumptions": _string_list(regulatory.get("operating_assumptions")),
         "unresolved_items": _string_list(regulatory.get("unresolved_items")),
         "documentation_only_notice": notice,
@@ -842,7 +845,9 @@ def _check(
     label: str,
     margin: Optional[float],
     unit: str,
+    margin_source: str,
     warning_margin: float,
+    warning_margin_source: str,
     observed: Dict[str, Any],
     recommendation: str,
 ) -> Dict[str, Any]:
@@ -872,8 +877,12 @@ def _check(
         "status_meaning": _constraint_status_meaning(status),
         "plain_english": group.get("plain_english"),
         "why_this_matters_to_operator": group.get("why_this_matters_to_operator"),
-        "margin": {"value": margin, "unit": unit},
-        "warning_margin": {"value": float(warning_margin), "unit": unit},
+        "margin": {"value": margin, "unit": unit, "source": margin_source},
+        "warning_margin": {
+            "value": float(warning_margin),
+            "unit": unit,
+            "source": warning_margin_source,
+        },
         "risk_points": float(points),
         "observed": observed,
         "recommendation": recommendation,
@@ -888,6 +897,420 @@ def _named_margin(constraints: Any, name: str) -> Optional[float]:
     return float(result.min_margin)
 
 
+def _field_value(name: str, value: Any, unit: str, source: str) -> Dict[str, Any]:
+    return {"name": name, "value": value, "unit": unit, "source": source}
+
+
+def _model_assumptions_report(
+    plan: Plan,
+    sim: SimResult,
+    *,
+    cfg: Dict[str, Any],
+    robustness: Optional[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    vehicle = cfg.get("vehicle", {}) or {}
+    initial_state = cfg.get("initial_state", {}) or {}
+    wind_cfg = cfg.get("wind", {}) or {}
+    weather = _weather_metadata(cfg)
+    geofence_cfg = cfg.get("geofence", {}) or {}
+    mission_cfg = cfg.get("mission", {}) or {}
+    constraints_cfg = cfg.get("constraints", {}) or {}
+    robustness_cfg = cfg.get("robustness", {}) or {}
+    robustness_summary = robustness or {}
+    waypoint_total = _scalar(sim, "waypoints_total")
+    waypoint_count = len(mission_cfg.get("waypoints", []) or [])
+    if waypoint_count == 0 and waypoint_total is not None:
+        waypoint_count = int(waypoint_total)
+    geofence_zones = list(geofence_cfg.get("no_fly_zones", []) or [])
+    route_source = (
+        plan.metadata.get("route_source") or mission_cfg.get("route_geojson_path") or "yaml"
+    )
+    robustness_cases = robustness_summary.get("cases", robustness_cfg.get("cases", 0))
+
+    return [
+        {
+            "id": "battery",
+            "label": "Battery / energy model",
+            "source": "scenario.initial_state, scenario.vehicle, simulation scalars, and battery constraints",
+            "inputs": [
+                _field_value(
+                    "initial battery",
+                    initial_state.get("battery_Wh", vehicle.get("battery_capacity_Wh")),
+                    "Wh",
+                    "initial_state.battery_Wh",
+                ),
+                _field_value(
+                    "battery capacity",
+                    vehicle.get("battery_capacity_Wh"),
+                    "Wh",
+                    "vehicle.battery_capacity_Wh",
+                ),
+                _field_value(
+                    "required battery reserve",
+                    vehicle.get("battery_reserve_Wh"),
+                    "Wh",
+                    "vehicle.battery_reserve_Wh",
+                ),
+                _field_value(
+                    "final simulated battery",
+                    _scalar(sim, "final_battery_Wh"),
+                    "Wh",
+                    "simulation.scalars.final_battery_Wh",
+                ),
+                _field_value(
+                    "energy used",
+                    _scalar(sim, "energy_used_Wh"),
+                    "Wh",
+                    "simulation.scalars.energy_used_Wh",
+                ),
+            ],
+            "assumption": (
+                "Battery feasibility is based on the configured capacity, initial charge, "
+                "reserve policy, and simplified power model coefficients."
+            ),
+            "operator_review_note": (
+                "Confirm aircraft battery health, payload draw, temperature effects, and "
+                "abort reserve outside ORBITAL before release."
+            ),
+        },
+        {
+            "id": "wind",
+            "label": "Wind / weather model",
+            "source": "scenario.wind, scenario.weather, weather.resolved, and simulation wind resources",
+            "inputs": [
+                _field_value(
+                    "wind model type",
+                    wind_cfg.get("type", "sinusoidal"),
+                    "",
+                    "wind.type",
+                ),
+                _field_value(
+                    "maximum safe wind",
+                    wind_cfg.get("max_safe_wind_mps"),
+                    "m/s",
+                    "wind.max_safe_wind_mps",
+                ),
+                _field_value(
+                    "weather wind gust",
+                    weather.get("wind_gust_mps"),
+                    "m/s",
+                    "weather.resolved.wind_gust_mps",
+                ),
+                _field_value(
+                    "weather source",
+                    weather.get("source"),
+                    "",
+                    "weather.resolved.source",
+                ),
+                _field_value(
+                    "weather timestamp",
+                    weather.get("timestamp_utc"),
+                    "UTC",
+                    "weather.resolved.timestamp_utc",
+                ),
+            ],
+            "assumption": (
+                "Wind feasibility compares the modeled or weather-provided wind exposure "
+                "against the configured safe operating limit."
+            ),
+            "operator_review_note": (
+                "Refresh field weather and gust observations close to launch, especially "
+                "when offline or sample weather is used."
+            ),
+        },
+        {
+            "id": "geofence",
+            "label": "Geofence / no-fly-zone model",
+            "source": "scenario.geofence, imported GeoJSON zones, and simulation geofence scalars",
+            "inputs": [
+                _field_value(
+                    "required clearance",
+                    geofence_cfg.get("clearance_m"),
+                    "m",
+                    "geofence.clearance_m",
+                ),
+                _field_value(
+                    "manual no-fly zones",
+                    len(geofence_zones),
+                    "zones",
+                    "geofence.no_fly_zones",
+                ),
+                _field_value(
+                    "GeoJSON geofence path",
+                    geofence_cfg.get("geojson_path"),
+                    "",
+                    "geofence.geojson_path",
+                ),
+                _field_value(
+                    "minimum simulated clearance",
+                    _scalar(sim, "geofence_min_clearance_m"),
+                    "m",
+                    "simulation.scalars.geofence_min_clearance_m",
+                ),
+            ],
+            "assumption": (
+                "Geofence feasibility treats configured polygons and imported GeoJSON "
+                "zones as the planning boundary source."
+            ),
+            "operator_review_note": (
+                "Confirm site boundaries, customer buffers, and launch/recovery areas on "
+                "current maps before export or dispatch."
+            ),
+        },
+        {
+            "id": "route_completion",
+            "label": "Route completion model",
+            "source": "scenario.mission, route GeoJSON, plan waypoints, and simulation completion scalars",
+            "inputs": [
+                _field_value(
+                    "route source",
+                    route_source,
+                    "",
+                    "mission.route_geojson_path or mission.waypoints",
+                ),
+                _field_value(
+                    "fixed route order",
+                    mission_cfg.get("fixed_order"),
+                    "boolean",
+                    "mission.fixed_order",
+                ),
+                _field_value(
+                    "inspection waypoints",
+                    waypoint_count,
+                    "waypoints",
+                    "mission.waypoints",
+                ),
+                _field_value(
+                    "waypoints completed",
+                    _scalar(sim, "waypoints_completed"),
+                    "waypoints",
+                    "simulation.scalars.waypoints_completed",
+                ),
+                _field_value(
+                    "route completion enforced",
+                    constraints_cfg.get("enforce_inspection_completion"),
+                    "boolean",
+                    "constraints.enforce_inspection_completion",
+                ),
+            ],
+            "assumption": (
+                "The route is considered complete only when the simulation reaches the "
+                "required inspection waypoints under the configured reach radius."
+            ),
+            "operator_review_note": (
+                "Confirm the waypoint list matches the inspection scope and define any "
+                "acceptable skipped-point policy before dispatch."
+            ),
+        },
+        {
+            "id": "turn_feasibility",
+            "label": "Turn / bank feasibility model",
+            "source": "scenario.vehicle, simulated yaw-rate resources, and bank-angle constraint margins",
+            "inputs": [
+                _field_value(
+                    "bank limit",
+                    vehicle.get("bank_max_deg"),
+                    "deg",
+                    "vehicle.bank_max_deg",
+                ),
+                _field_value(
+                    "planned cruise speed",
+                    plan.metadata.get("cruise_speed_mps"),
+                    "m/s",
+                    "plan.metadata.cruise_speed_mps",
+                ),
+                _field_value(
+                    "minimum airspeed",
+                    vehicle.get("min_speed_mps"),
+                    "m/s",
+                    "vehicle.min_speed_mps",
+                ),
+                _field_value(
+                    "maximum airspeed",
+                    vehicle.get("max_speed_mps"),
+                    "m/s",
+                    "vehicle.max_speed_mps",
+                ),
+            ],
+            "assumption": (
+                "Turn feasibility uses a simplified bank-angle/yaw-rate envelope rather "
+                "than aircraft-specific autopilot tracking or detailed aerodynamics."
+            ),
+            "operator_review_note": (
+                "Confirm the route geometry, turn spacing, and selected speed are within "
+                "the aircraft operating envelope."
+            ),
+        },
+        {
+            "id": "robustness",
+            "label": "Robustness model",
+            "source": "scenario.robustness and planner robustness summary",
+            "inputs": [
+                _field_value(
+                    "robustness cases configured",
+                    robustness_cfg.get("cases", 0),
+                    "cases",
+                    "robustness.cases",
+                ),
+                _field_value(
+                    "robustness cases run",
+                    robustness_cases,
+                    "cases",
+                    "robustness summary",
+                ),
+                _field_value(
+                    "wind scale range",
+                    robustness_cfg.get("wind_scale_range"),
+                    "multiplier",
+                    "robustness.wind_scale_range",
+                ),
+                _field_value(
+                    "battery variation",
+                    robustness_cfg.get("battery_variation_pct"),
+                    "fraction",
+                    "robustness.battery_variation_pct",
+                ),
+                _field_value(
+                    "hard pass rate",
+                    robustness_summary.get("hard_pass_rate"),
+                    "ratio",
+                    "robustness summary.hard_pass_rate",
+                ),
+            ],
+            "assumption": (
+                "Robustness reflects configured Monte Carlo perturbations only; it is not "
+                "a certification, reliability guarantee, or live safety monitor."
+            ),
+            "operator_review_note": (
+                "Increase robustness cases or add scenario-specific uncertainty ranges "
+                "when margin sensitivity matters."
+            ),
+        },
+    ]
+
+
+def _model_limitations(cfg: Dict[str, Any], weather: Dict[str, Any]) -> List[Dict[str, Any]]:
+    weather_cfg = cfg.get("weather", {}) or {}
+    source = str(weather.get("source") or "").lower()
+    offline_or_sample = (
+        bool(weather.get("fallback_used"))
+        or bool(weather_cfg.get("use_live") is False)
+        or "offline" in source
+        or "sample" in source
+    )
+    return [
+        {
+            "id": "offline_sample_weather",
+            "applies": offline_or_sample,
+            "limitation": (
+                "Weather may come from offline, fallback, or sample inputs. ORBITAL "
+                "records the source and timestamp, but the operator must verify current "
+                "field weather before release."
+            ),
+        },
+        {
+            "id": "simplified_flight_dynamics",
+            "applies": True,
+            "limitation": (
+                "Aircraft dynamics are simplified for feasibility planning. ORBITAL does "
+                "not model every autopilot behavior, controller response, payload effect, "
+                "battery aging factor, sensor constraint, or emergency maneuver."
+            ),
+        },
+        {
+            "id": "decision_support_only",
+            "applies": True,
+            "limitation": (
+                "Constraint margins are planning evidence for operator review. They do not "
+                "approve a flight, issue authorization, or replace pilot-in-command judgment."
+            ),
+        },
+    ]
+
+
+def _top_limiting_constraint_selection(checks_sorted: List[Dict[str, Any]]) -> Dict[str, Any]:
+    if not checks_sorted:
+        return {
+            "method": "risk_points_descending",
+            "selected_constraint_id": None,
+            "explanation": "No constraint groups were available to rank.",
+            "ranking": [],
+        }
+
+    top = checks_sorted[0]
+    margin = top.get("margin") or {}
+    warning_margin = top.get("warning_margin") or {}
+    ranking = []
+    for index, check in enumerate(checks_sorted, start=1):
+        ranking.append(
+            {
+                "rank": index,
+                "id": check.get("id"),
+                "label": check.get("label"),
+                "status": check.get("status"),
+                "risk_points": check.get("risk_points"),
+                "margin": check.get("margin"),
+            }
+        )
+    return {
+        "method": "risk_points_descending",
+        "risk_points_definition": (
+            "Risk points increase when a constraint fails, is inside its warning band, "
+            "or has little positive margin relative to its warning threshold."
+        ),
+        "selected_constraint_id": top.get("id"),
+        "selected_label": top.get("label"),
+        "selected_status": top.get("status"),
+        "selected_risk_points": top.get("risk_points"),
+        "selected_margin": margin,
+        "selected_warning_margin": warning_margin,
+        "explanation": (
+            f"{top.get('label', 'The top constraint')} was selected because it had "
+            f"the highest risk_points value ({_fmt_value(top.get('risk_points'))}) "
+            f"among {len(checks_sorted)} audited constraint groups. Its margin was "
+            f"{_fmt_value(margin.get('value'), margin.get('unit', ''))} against a "
+            f"warning threshold of "
+            f"{_fmt_value(warning_margin.get('value'), warning_margin.get('unit', ''))}."
+        ),
+        "ranking": ranking,
+    }
+
+
+def _scenario_path_text(scenario_path: Optional[Any], cfg: Dict[str, Any]) -> str:
+    if scenario_path:
+        try:
+            return str(Path(str(scenario_path)).resolve())
+        except OSError:
+            return str(scenario_path)
+    configured = cfg.get("_scenario_path")
+    return str(configured) if configured else "not provided"
+
+
+def _reproducibility_report(
+    *,
+    cfg: Dict[str, Any],
+    scenario_path: Optional[Any],
+    command_used: Optional[Any],
+    robustness: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    planner = cfg.get("planner", {}) or {}
+    robustness_cfg = cfg.get("robustness", {}) or {}
+    robustness_summary = robustness or {}
+    return {
+        "scenario_path": _scenario_path_text(scenario_path, cfg),
+        "seed": planner.get("seed"),
+        "iterations": planner.get("iterations"),
+        "restarts": planner.get("restarts"),
+        "robustness_cases_configured": robustness_cfg.get("cases", 0),
+        "robustness_cases_run": robustness_summary.get(
+            "cases",
+            0 if int(robustness_cfg.get("cases", 0) or 0) == 0 else None,
+        ),
+        "command": _command_metadata(command_used),
+        "orbital_version": _orbital_version(),
+    }
+
+
 def build_inspection_constraint_audit(
     plan: Plan,
     sim: SimResult,
@@ -895,6 +1318,8 @@ def build_inspection_constraint_audit(
     *,
     cfg: Optional[Dict[str, Any]] = None,
     robustness: Optional[Dict[str, Any]] = None,
+    scenario_path: Optional[Any] = None,
+    command_used: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Build a drone-inspection-specific audit payload from a solved aircraft mission."""
     cfg = cfg or {}
@@ -946,7 +1371,12 @@ def build_inspection_constraint_audit(
             label="Battery reserve margin",
             margin=battery_margin,
             unit="Wh",
+            margin_source=(
+                "constraint_result.battery_reserve.min_margin with fallback to "
+                "simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+            ),
             warning_margin=battery_warning_wh,
+            warning_margin_source=("max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"),
             observed={
                 "final_battery_Wh": final_battery,
                 "required_reserve_Wh": reserve_wh if reserve_wh > 0.0 else None,
@@ -958,7 +1388,12 @@ def build_inspection_constraint_audit(
             label="Wind / weather margin",
             margin=wind_margin,
             unit="m/s",
+            margin_source=(
+                "wind.max_safe_wind_mps minus the larger of simulation wind resources "
+                "and weather.resolved wind speed or gust"
+            ),
             warning_margin=wind_warning_mps,
+            warning_margin_source="wind.warning_margin_mps or default 2.0 m/s",
             observed={
                 "max_horizontal_wind_mps": max_wind,
                 "weather_audit_wind_mps": audit_wind,
@@ -980,7 +1415,12 @@ def build_inspection_constraint_audit(
             label="Geofence / no-fly-zone clearance",
             margin=geofence_margin,
             unit="m",
+            margin_source=(
+                "constraint_result.geofence_clearance.min_margin with no-entry violation "
+                "override from constraint_result.geofence_no_entry"
+            ),
             warning_margin=geofence_warning_m,
+            warning_margin_source="max(25 m, 25 percent of geofence.clearance_m)",
             observed={
                 "required_clearance_m": required_clearance,
                 "min_clearance_m": sim.scalars.get("geofence_min_clearance_m"),
@@ -993,7 +1433,11 @@ def build_inspection_constraint_audit(
             label="Route completion status",
             margin=route_margin,
             unit="completion",
+            margin_source=(
+                "simulation.metadata.reached_all and simulation.scalars waypoint counts"
+            ),
             warning_margin=0.5,
+            warning_margin_source="fixed 0.5 completion warning band",
             observed={
                 "waypoints_completed": completed,
                 "waypoints_total": total,
@@ -1006,13 +1450,42 @@ def build_inspection_constraint_audit(
             label="Turn / bank feasibility",
             margin=turn_margin,
             unit="rad/s",
+            margin_source="constraint_result.bank_angle_turn_limit.min_margin",
             warning_margin=turn_warning,
+            warning_margin_source=("vehicle.turn_warning_margin_radps or default 0.05 rad/s"),
             observed={"bank_max_deg": vehicle.get("bank_max_deg", None)},
             recommendation="Lower cruise speed or add more turn spacing.",
         ),
     ]
 
     checks_sorted = sorted(checks, key=lambda item: float(item["risk_points"]), reverse=True)
+    top_selection = _top_limiting_constraint_selection(checks_sorted)
+    model_transparency = {
+        "assumptions_report": _model_assumptions_report(
+            plan,
+            sim,
+            cfg=cfg,
+            robustness=robustness,
+        ),
+        "constraint_margin_sources": [
+            {
+                "id": check.get("id"),
+                "label": check.get("label"),
+                "margin_unit": (check.get("margin") or {}).get("unit"),
+                "margin_source": (check.get("margin") or {}).get("source"),
+                "warning_margin_source": (check.get("warning_margin") or {}).get("source"),
+            }
+            for check in checks
+        ],
+        "top_limiting_constraint_selection": top_selection,
+        "reproducibility": _reproducibility_report(
+            cfg=cfg,
+            scenario_path=scenario_path,
+            command_used=command_used,
+            robustness=robustness,
+        ),
+        "model_limitations": _model_limitations(cfg, weather),
+    }
     hard_pass = bool(getattr(constraints, "hard_pass", False))
     robust_pass_rate = None if not robustness else robustness.get("hard_pass_rate")
     top_points = float(checks_sorted[0]["risk_points"]) if checks_sorted else 0.0
@@ -1045,9 +1518,12 @@ def build_inspection_constraint_audit(
         "regulatory_metadata": _regulatory_metadata(cfg),
         "weather_metadata": weather,
         "top_limiting_constraint": checks_sorted[0] if checks_sorted else None,
+        "top_limiting_constraint_selection": top_selection,
         "top_three_risk_drivers": checks_sorted[:3],
         "constraint_groups": checks,
         "checks": checks,
+        "model_transparency": model_transparency,
+        "assumptions_report": model_transparency["assumptions_report"],
         "robustness": robustness or {},
         "summary": {
             "hard_constraints_pass": hard_pass,
@@ -1066,6 +1542,12 @@ def _markdown_cell(value: Any) -> str:
 def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
     """Render the drone inspection audit payload as Markdown."""
     top = audit.get("top_limiting_constraint") or {}
+    transparency = audit.get("model_transparency") or {}
+    top_selection = (
+        transparency.get("top_limiting_constraint_selection")
+        or audit.get("top_limiting_constraint_selection")
+        or {}
+    )
     regulatory = audit.get("regulatory_metadata") or {}
     weather = audit.get("weather_metadata") or {}
     mission_metadata = audit.get("mission_metadata") or {}
@@ -1107,6 +1589,9 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
                     unit=(top.get("margin") or {}).get("unit", ""),
                 )
             ),
+            "- Selection rationale: "
+            f"{top_selection.get('explanation') or 'No selection rationale available.'}",
+            "- Selection method: " f"{top_selection.get('method') or 'not provided'}",
             "",
             "## Constraint Group Summary",
             "",
@@ -1130,6 +1615,85 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
                 ),
             )
         )
+
+    lines.extend(
+        [
+            "",
+            "## Model Transparency",
+            "",
+            "### Assumptions Report",
+            "",
+        ]
+    )
+    for item in transparency.get("assumptions_report", []) or []:
+        lines.extend(
+            [
+                f"#### {item.get('label') or item.get('id') or 'Assumption'}",
+                "",
+                f"- Source: {item.get('source') or 'not provided'}",
+                f"- Assumption: {item.get('assumption') or 'not provided'}",
+                "- Operator review note: " f"{item.get('operator_review_note') or 'not provided'}",
+                "",
+                "| Input | Value | Unit | Source |",
+                "| --- | ---: | --- | --- |",
+            ]
+        )
+        for field in item.get("inputs", []) or []:
+            lines.append(
+                "| {name} | {value} | {unit} | {source} |".format(
+                    name=_markdown_cell(field.get("name")),
+                    value=_markdown_cell(field.get("value")),
+                    unit=_markdown_cell(field.get("unit")),
+                    source=_markdown_cell(field.get("source")),
+                )
+            )
+        lines.append("")
+
+    lines.extend(
+        [
+            "### Constraint Margin Units And Sources",
+            "",
+            "| Constraint | Unit | Margin source | Warning margin source |",
+            "| --- | --- | --- | --- |",
+        ]
+    )
+    for check in constraint_groups:
+        margin = check.get("margin") or {}
+        warning_margin = check.get("warning_margin") or {}
+        lines.append(
+            "| {label} | {unit} | {source} | {warning_source} |".format(
+                label=_markdown_cell(check.get("label")),
+                unit=_markdown_cell(margin.get("unit")),
+                source=_markdown_cell(margin.get("source")),
+                warning_source=_markdown_cell(warning_margin.get("source")),
+            )
+        )
+
+    reproducibility = transparency.get("reproducibility") or {}
+    command = reproducibility.get("command") or {}
+    lines.extend(
+        [
+            "",
+            "### Reproducibility",
+            "",
+            f"- Scenario path: {reproducibility.get('scenario_path') or 'not provided'}",
+            f"- Seed: {reproducibility.get('seed') if reproducibility.get('seed') is not None else 'not provided'}",
+            "- Iterations: "
+            f"{reproducibility.get('iterations') if reproducibility.get('iterations') is not None else 'not provided'}",
+            f"- Restarts: {reproducibility.get('restarts') if reproducibility.get('restarts') is not None else 'not provided'}",
+            "- Robustness cases configured: "
+            f"{reproducibility.get('robustness_cases_configured')}",
+            "- Robustness cases run: " f"{reproducibility.get('robustness_cases_run')}",
+            f"- Command: {command.get('display') or 'not provided'}",
+            f"- ORBITAL version: {reproducibility.get('orbital_version') or 'not provided'}",
+            "",
+            "### Model Limitations",
+            "",
+        ]
+    )
+    for limitation in transparency.get("model_limitations", []) or []:
+        applies = "applies" if limitation.get("applies") else "context"
+        lines.append(f"- {applies}: {limitation.get('limitation') or 'not provided'}")
 
     lines.extend(
         [
@@ -1227,6 +1791,8 @@ def export_inspection_constraint_audit(
     *,
     cfg: Optional[Dict[str, Any]] = None,
     robustness: Optional[Dict[str, Any]] = None,
+    scenario_path: Optional[Any] = None,
+    command_used: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Write drone inspection audit JSON and Markdown artifacts."""
     audit = build_inspection_constraint_audit(
@@ -1235,6 +1801,8 @@ def export_inspection_constraint_audit(
         constraints,
         cfg=cfg,
         robustness=robustness,
+        scenario_path=scenario_path,
+        command_used=command_used,
     )
     out_dir.mkdir(parents=True, exist_ok=True)
     write_strict_json(out_dir / "inspection_constraint_audit.json", audit)
@@ -1432,6 +2000,7 @@ def _regulatory_evidence_fields(regulatory: Dict[str, Any]) -> Dict[str, Any]:
         "special_conditions_limitations": list(
             regulatory.get("special_conditions_limitations") or []
         ),
+        "emergency_contingency_plan": regulatory.get("emergency_contingency_plan"),
         "notice": (
             "Optional documentation-only evidence fields. ORBITAL records these values "
             "for operator review but does not verify, approve, or issue authorizations."
@@ -1523,6 +2092,14 @@ def _regulatory_evidence_status(
             "recommended_when": "An authorization includes special conditions.",
             "operator_attention_when_missing": False,
         },
+        {
+            "id": "emergency_contingency_plan",
+            "label": "Emergency / contingency plan documentation",
+            "path": "regulatory.emergency_contingency_plan",
+            "present": _documentation_value_present(evidence.get("emergency_contingency_plan")),
+            "recommended_when": "BVLOS, authorization-bound, or higher-risk operations are planned.",
+            "operator_attention_when_missing": authorization_needed or visual_observer_needed,
+        },
     ]
 
     fields: List[Dict[str, Any]] = []
@@ -1580,6 +2157,183 @@ def _read_json_mapping(path: Path) -> Dict[str, Any]:
     except (OSError, UnicodeDecodeError, json.JSONDecodeError):
         return {}
     return payload if isinstance(payload, dict) else {}
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def _utc_from_timestamp(timestamp: float) -> str:
+    return (
+        datetime.fromtimestamp(timestamp, timezone.utc)
+        .isoformat(timespec="seconds")
+        .replace("+00:00", "Z")
+    )
+
+
+def _file_sha256(path: Path) -> Optional[str]:
+    try:
+        data = path.read_bytes()
+    except OSError:
+        return None
+    return hashlib.sha256(data).hexdigest()
+
+
+def _file_size(path: Path) -> Optional[int]:
+    try:
+        return path.stat().st_size
+    except OSError:
+        return None
+
+
+def _file_modified_utc(path: Path) -> Optional[str]:
+    try:
+        return _utc_from_timestamp(path.stat().st_mtime)
+    except OSError:
+        return None
+
+
+def _file_modified_timestamp(path: Path) -> Optional[float]:
+    try:
+        return float(path.stat().st_mtime)
+    except OSError:
+        return None
+
+
+def _orbital_version() -> str:
+    try:
+        return version("orbital-mission-framework")
+    except PackageNotFoundError:
+        return "unknown"
+
+
+def _command_metadata(command_used: Optional[Any]) -> Dict[str, Any]:
+    if isinstance(command_used, dict):
+        argv = command_used.get("argv")
+        display = command_used.get("display")
+        return {
+            "display": str(display).strip() if display else "not provided",
+            "argv": [str(item) for item in argv] if isinstance(argv, list) else [],
+        }
+    if isinstance(command_used, (list, tuple)):
+        argv = [str(item) for item in command_used]
+        return {"display": " ".join(argv) if argv else "not provided", "argv": argv}
+    if command_used:
+        return {"display": str(command_used), "argv": []}
+    return {"display": "not provided", "argv": []}
+
+
+def _regulatory_documentation_completeness(
+    regulatory_evidence_status: Dict[str, Any],
+) -> Dict[str, Any]:
+    field_count = int(regulatory_evidence_status.get("field_count", 0) or 0)
+    missing_count = int(regulatory_evidence_status.get("missing_count", 0) or 0)
+    documented = max(0, field_count - missing_count)
+    score = 100.0 if field_count == 0 else round((documented / field_count) * 100.0, 1)
+    return {
+        "score": score,
+        "unit": "percent",
+        "documented_fields": documented,
+        "total_fields": field_count,
+        "missing_fields": missing_count,
+        "operator_attention_missing_fields": int(
+            regulatory_evidence_status.get("operator_attention_missing_count", 0) or 0
+        ),
+        "complete": missing_count == 0,
+        "documentation_only": True,
+        "scoring_note": (
+            "Score is based on optional regulatory documentation fields. Missing fields "
+            "are visible for operator review but do not block planning or imply approval."
+        ),
+    }
+
+
+def _artifact_freshness_metadata(
+    *,
+    source: Path,
+    destination: Path,
+    present: bool,
+    scenario_modified_ts: Optional[float],
+) -> Dict[str, Any]:
+    source_modified_ts = _file_modified_timestamp(source) if present else None
+    stale = False
+    if (
+        present
+        and scenario_modified_ts is not None
+        and source_modified_ts is not None
+        and source.name != "scenario.yaml"
+    ):
+        stale = source_modified_ts < scenario_modified_ts
+    return {
+        "source_sha256": _file_sha256(source) if present else None,
+        "bundle_sha256": _file_sha256(destination) if destination.exists() else None,
+        "source_modified_utc": _file_modified_utc(source) if present else None,
+        "bundle_modified_utc": _file_modified_utc(destination) if destination.exists() else None,
+        "source_size_bytes": _file_size(source) if present else None,
+        "bundle_size_bytes": _file_size(destination) if destination.exists() else None,
+        "stale_against_scenario": stale,
+    }
+
+
+def _bundle_warnings(
+    manifest_entries: List[Dict[str, Any]],
+    *,
+    scenario_sha256: Optional[str],
+) -> List[Dict[str, Any]]:
+    warnings: List[Dict[str, Any]] = []
+    for entry in manifest_entries:
+        if not entry.get("present"):
+            warnings.append(
+                {
+                    "id": f"missing_{entry.get('id')}",
+                    "kind": "missing_artifact",
+                    "severity": "warning",
+                    "artifact_id": entry.get("id"),
+                    "label": entry.get("label"),
+                    "bundle_path": entry.get("bundle_path"),
+                    "message": "Expected evidence artifact is missing from the bundle.",
+                }
+            )
+        freshness = entry.get("freshness") or {}
+        if freshness.get("stale_against_scenario"):
+            warnings.append(
+                {
+                    "id": f"stale_{entry.get('id')}",
+                    "kind": "stale_artifact",
+                    "severity": "warning",
+                    "artifact_id": entry.get("id"),
+                    "label": entry.get("label"),
+                    "bundle_path": entry.get("bundle_path"),
+                    "message": (
+                        "Artifact source appears older than the scenario file used for "
+                        "the evidence bundle."
+                    ),
+                }
+            )
+    scenario_entry = next(
+        (entry for entry in manifest_entries if entry.get("id") == "scenario_yaml"),
+        None,
+    )
+    scenario_bundle_hash = (
+        (scenario_entry.get("freshness") or {}).get("bundle_sha256")
+        if scenario_entry is not None
+        else None
+    )
+    if scenario_sha256 and scenario_bundle_hash and scenario_sha256 != scenario_bundle_hash:
+        warnings.append(
+            {
+                "id": "scenario_hash_mismatch",
+                "kind": "scenario_metadata_mismatch",
+                "severity": "warning",
+                "artifact_id": "scenario_yaml",
+                "bundle_path": "scenario.yaml",
+                "message": (
+                    "Bundled scenario.yaml does not match the scenario hash recorded in "
+                    "manifest freshness metadata."
+                ),
+            }
+        )
+    return warnings
 
 
 def _approval_checklist_summary(
@@ -1980,6 +2734,8 @@ def format_regulatory_readiness_report(report: Dict[str, Any]) -> str:
             f"- Required crew roles: {fmt_list(evidence.get('required_crew_roles'))}",
             "- Special conditions / limitations: "
             f"{fmt_list(evidence.get('special_conditions_limitations'))}",
+            "- Emergency / contingency plan: "
+            f"{evidence.get('emergency_contingency_plan') or 'not provided'}",
         ]
     )
 
@@ -2750,10 +3506,13 @@ def _evidence_bundle_review_metadata(
         "allowed_statuses": ["draft", "ready_for_review", "reviewed"],
         "reviewer_name": bundle_cfg.get("reviewer_name"),
         "review_timestamp_utc": bundle_cfg.get("review_timestamp_utc"),
+        "review_notes": bundle_cfg.get("review_notes"),
+        "operator_decision": bundle_cfg.get("operator_decision"),
         "documentation_only": True,
         "notice": (
-            "Operator review status is documentation only. It does not approve a flight, "
-            "issue an authorization, or replace pilot-in-command release authority."
+            "Operator review fields are documentation only. They do not approve a flight, "
+            "issue an authorization, provide legal advice, or replace pilot-in-command "
+            "release authority."
         ),
     }
 
@@ -2813,6 +3572,13 @@ def _bundle_missing_evidence(
 
 def _generated_bundle_artifacts() -> List[Dict[str, Any]]:
     return [
+        {
+            "id": "operator_dashboard",
+            "label": "Operator evidence dashboard",
+            "bundle_path": "operator_dashboard.md",
+            "present": True,
+            "generated": True,
+        },
         {
             "id": "bundle_summary",
             "label": "Evidence bundle summary",
@@ -2875,8 +3641,12 @@ def _format_missing_evidence_list(missing_evidence: List[Dict[str, Any]]) -> Lis
 
 def _format_evidence_bundle_summary(manifest: Dict[str, Any]) -> str:
     completeness = manifest.get("bundle_completeness") or {}
+    artifact_completeness = manifest.get("artifact_completeness") or completeness
+    regulatory_completeness = manifest.get("regulatory_documentation_completeness") or {}
     review = manifest.get("operator_review") or {}
     missing_evidence = manifest.get("missing_evidence") or []
+    freshness = manifest.get("freshness") or {}
+    warnings = manifest.get("bundle_warnings") or []
     lines = [
         "# Evidence Bundle Summary",
         "",
@@ -2885,16 +3655,28 @@ def _format_evidence_bundle_summary(manifest: Dict[str, Any]) -> str:
         f"Artifacts present: {completeness.get('present_artifacts', 0)} / "
         f"{completeness.get('total_artifacts', 0)}",
         f"Missing artifact count: {completeness.get('missing_artifacts', 0)}",
+        f"Artifact completeness score: {_fmt_value(artifact_completeness.get('score'), '%')}",
+        "Regulatory documentation completeness score: "
+        f"{_fmt_value(regulatory_completeness.get('score'), '%')}",
         f"Operator review status: {str(review.get('status', 'draft')).replace('_', ' ')}",
         f"Reviewer: {review.get('reviewer_name') or 'not provided'}",
         f"Review timestamp UTC: {review.get('review_timestamp_utc') or 'not provided'}",
+        f"Operator decision: {review.get('operator_decision') or 'not provided'}",
+        f"Review notes: {review.get('review_notes') or 'not provided'}",
+        f"Generated timestamp UTC: {freshness.get('generated_timestamp_utc') or 'not provided'}",
+        f"ORBITAL version: {freshness.get('orbital_version') or 'not provided'}",
+        "Scenario SHA-256: "
+        f"{((freshness.get('scenario_hash') or {}).get('value')) or 'not provided'}",
+        f"Command used: {(freshness.get('command') or {}).get('display') or 'not provided'}",
         "",
         "ORBITAL evidence bundles are decision-support packages. Bundle completeness, "
-        "review status, and checksums do not provide legal approval, LAANC, waivers, "
-        "authorizations, operational clearance, or permission to fly.",
+        "review status, review notes, operator decisions, and checksums do not provide "
+        "legal approval, LAANC, waivers, authorizations, operational clearance, legal "
+        "advice, or permission to fly.",
         "",
         "## Start Here",
         "",
+        f"- Operator dashboard: {_artifact_link('operator_dashboard.md', 'operator_dashboard.md')}",
         "- Primary constraint audit: "
         f"{_artifact_link('inspection_constraint_audit.md', 'inspection_constraint_audit.md')}",
         f"- Artifact index: {_artifact_link('artifact_index.md', 'artifact_index.md')}",
@@ -2905,6 +3687,15 @@ def _format_evidence_bundle_summary(manifest: Dict[str, Any]) -> str:
         "",
     ]
     lines.extend(_format_missing_evidence_list(missing_evidence))
+    lines.extend(["", "## Bundle Warnings", ""])
+    if warnings:
+        for warning in warnings:
+            lines.append(
+                f"- {warning.get('kind', 'warning')}: "
+                f"{warning.get('message', 'Review evidence bundle before operator acceptance.')}"
+            )
+    else:
+        lines.append("- none")
     lines.extend(
         [
             "",
@@ -2912,8 +3703,200 @@ def _format_evidence_bundle_summary(manifest: Dict[str, Any]) -> str:
             "",
             f"- Missing optional documentation fields: "
             f"{len((manifest.get('regulatory_evidence_status') or {}).get('missing', []) or [])}",
+            f"- Documented optional fields: "
+            f"{regulatory_completeness.get('documented_fields', 0)} / "
+            f"{regulatory_completeness.get('total_fields', 0)}",
             f"- Approval checklist items: "
             f"{(manifest.get('approval_checklist') or {}).get('item_count', 0)}",
+            "",
+            "## Review Summary",
+            "",
+            f"- Review status: {str(review.get('status', 'draft')).replace('_', ' ')}",
+            f"- Operator decision: {review.get('operator_decision') or 'not provided'}",
+            f"- Reviewer: {review.get('reviewer_name') or 'not provided'}",
+            f"- Review timestamp UTC: {review.get('review_timestamp_utc') or 'not provided'}",
+            f"- Review notes: {review.get('review_notes') or 'not provided'}",
+            "",
+        ]
+    )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _artifact_reference(
+    manifest: Dict[str, Any],
+    artifact_id: str,
+    label: str,
+    fallback_bundle_path: str,
+) -> str:
+    for entry in list(manifest.get("artifacts", []) or []) + list(
+        manifest.get("generated_artifacts", []) or []
+    ):
+        if entry.get("id") == artifact_id:
+            path = entry.get("bundle_path") or fallback_bundle_path
+            if entry.get("present"):
+                return _artifact_link(path, label)
+            return f"{label} (missing: {path})"
+    return _artifact_link(fallback_bundle_path, label)
+
+
+def _top_constraint_summary(top: Dict[str, Any]) -> str:
+    if not top:
+        return "not available"
+    margin = top.get("margin") or {}
+    margin_value = margin.get("value")
+    margin_unit = margin.get("unit") or ""
+    label = top.get("label") or top.get("id") or "Constraint"
+    status = str(top.get("status", "unknown")).upper()
+    return f"{label}, {status}, margin {_fmt_value(margin_value, margin_unit)}"
+
+
+def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
+    audit = manifest.get("constraint_audit") or {}
+    regulatory = manifest.get("regulatory_readiness") or {}
+    completeness = manifest.get("bundle_completeness") or {}
+    regulatory_completeness = manifest.get("regulatory_documentation_completeness") or {}
+    review = manifest.get("operator_review") or {}
+    top = audit.get("top_limiting_constraint") or {}
+    mission_status = str(audit.get("status") or "unknown").upper()
+    mission_risk = str(audit.get("mission_risk") or "unknown").upper()
+    regulatory_state = str(
+        regulatory.get("readiness_state") or regulatory.get("status") or "unknown"
+    ).upper()
+
+    links = [
+        (
+            "Primary constraint audit",
+            _artifact_reference(
+                manifest,
+                "constraint_audit_markdown",
+                "inspection_constraint_audit.md",
+                "inspection_constraint_audit.md",
+            ),
+        ),
+        (
+            "What-if plan",
+            _artifact_reference(
+                manifest, "what_if_plan_markdown", "what_if_plan.md", "what_if_plan.md"
+            ),
+        ),
+        (
+            "Regulatory readiness",
+            _artifact_reference(
+                manifest,
+                "regulatory_readiness_markdown",
+                "regulatory_readiness_report.md",
+                "regulatory_readiness_report.md",
+            ),
+        ),
+        (
+            "Bundle manifest",
+            _artifact_reference(manifest, "manifest_json", "manifest.json", "manifest.json"),
+        ),
+        (
+            "Checksum manifest",
+            _artifact_reference(
+                manifest,
+                "checksum_manifest",
+                "checksum_manifest.json",
+                "checksum_manifest.json",
+            ),
+        ),
+        (
+            "Flight path plot",
+            _artifact_reference(manifest, "flight_path_plot", "flight_path.png", "flight_path.png"),
+        ),
+        (
+            "Autopilot CSV",
+            _artifact_reference(
+                manifest,
+                "autopilot_mission_csv",
+                "autopilot_mission.csv",
+                "autopilot_mission.csv",
+            ),
+        ),
+        (
+            "Mission review KML",
+            _artifact_reference(
+                manifest, "mission_review_kml", "mission_review.kml", "mission_review.kml"
+            ),
+        ),
+        (
+            "Artifact index",
+            _artifact_reference(
+                manifest, "artifact_index", "artifact_index.md", "artifact_index.md"
+            ),
+        ),
+    ]
+
+    missing_evidence = manifest.get("missing_evidence") or []
+    warnings = manifest.get("bundle_warnings") or []
+    lines = [
+        "# ORBITAL Operator Evidence Dashboard",
+        "",
+        "First artifact to open for operator review.",
+        "",
+        "ORBITAL provides decision support only. This dashboard is not approval, "
+        "not authorization, not legal advice, not LAANC, and not operational clearance. "
+        "The pilot-in-command and operator retain final responsibility for release.",
+        "",
+        "## Mission Snapshot",
+        "",
+        f"- Mission: {audit.get('mission_id') or Path(str(manifest.get('scenario_path', 'scenario.yaml'))).stem}",
+        f"- Mission status: {mission_status}",
+        f"- Mission risk: {mission_risk}",
+        f"- Top limiting constraint: {_top_constraint_summary(top)}",
+        f"- Regulatory readiness: {regulatory_state}",
+        f"- Bundle completeness: {_fmt_value(completeness.get('score'), '%')} "
+        f"({completeness.get('present_artifacts', 0)} / "
+        f"{completeness.get('total_artifacts', 0)} artifacts present)",
+        "- Regulatory documentation completeness: "
+        f"{_fmt_value(regulatory_completeness.get('score'), '%')} "
+        f"({regulatory_completeness.get('documented_fields', 0)} / "
+        f"{regulatory_completeness.get('total_fields', 0)} fields documented)",
+        f"- Missing evidence items: {len(missing_evidence)}",
+        f"- Bundle warnings: {len(warnings)}",
+        "",
+        "## Operator Review",
+        "",
+        f"- Review status: {str(review.get('status', 'draft')).replace('_', ' ')}",
+        f"- Reviewer name: {review.get('reviewer_name') or 'not provided'}",
+        f"- Review timestamp UTC: {review.get('review_timestamp_utc') or 'not provided'}",
+        f"- Operator decision: {review.get('operator_decision') or 'not provided'}",
+        f"- Review notes: {review.get('review_notes') or 'not provided'}",
+        "",
+        "Review fields are documentation-only. They do not approve a flight, issue an "
+        "authorization, provide legal advice, or replace pilot-in-command release authority.",
+        "",
+        "## Open Artifacts",
+        "",
+        "| Artifact | Link |",
+        "| --- | --- |",
+    ]
+    for label, link in links:
+        lines.append(f"| {_markdown_cell(label)} | {link} |")
+
+    lines.extend(["", "## Missing Evidence", ""])
+    lines.extend(_format_missing_evidence_list(missing_evidence))
+    lines.extend(["", "## Bundle Warnings", ""])
+    if warnings:
+        for warning in warnings:
+            lines.append(
+                f"- {warning.get('kind', 'warning')}: "
+                f"{warning.get('message', 'Review evidence bundle before operator acceptance.')}"
+            )
+    else:
+        lines.append("- none")
+    lines.extend(
+        [
+            "",
+            "## Next Operator Actions",
+            "",
+            "- Review the primary constraint audit and top limiting constraint.",
+            "- Review the what-if plan if any constraint margin is tight.",
+            "- Confirm regulatory readiness outside ORBITAL before any operation.",
+            "- Verify bundle completeness, manifest, and checksum manifest before archiving.",
+            "- Record reviewer, timestamp, notes, and operator decision in scenario metadata "
+            "when appropriate.",
             "",
         ]
     )
@@ -2957,15 +3940,182 @@ def _bundle_checksum_entries(bundle_dir: Path) -> List[Dict[str, Any]]:
     for path in sorted(bundle_dir.rglob("*")):
         if not path.is_file() or path.name == "checksum_manifest.json":
             continue
-        data = path.read_bytes()
+        sha256 = _file_sha256(path)
+        size = _file_size(path)
+        if sha256 is None or size is None:
+            continue
         entries.append(
             {
                 "bundle_path": str(path.relative_to(bundle_dir)).replace("\\", "/"),
-                "sha256": hashlib.sha256(data).hexdigest(),
-                "size_bytes": len(data),
+                "sha256": sha256,
+                "size_bytes": size,
             }
         )
     return entries
+
+
+def verify_evidence_bundle_checksums(bundle_dir: Path) -> Dict[str, Any]:
+    """Verify evidence bundle checksums and freshness metadata."""
+    bundle_dir = Path(bundle_dir)
+    checksum_path = bundle_dir / "checksum_manifest.json"
+    manifest_path = bundle_dir / "manifest.json"
+    checksum_manifest = _read_json_mapping(checksum_path)
+    manifest = _read_json_mapping(manifest_path)
+    warnings: List[Dict[str, Any]] = []
+    missing_files: List[Dict[str, Any]] = []
+    mismatched_files: List[Dict[str, Any]] = []
+    size_mismatches: List[Dict[str, Any]] = []
+
+    if not checksum_manifest:
+        warnings.append(
+            {
+                "id": "missing_checksum_manifest",
+                "kind": "missing_artifact",
+                "severity": "warning",
+                "bundle_path": "checksum_manifest.json",
+                "message": "Checksum manifest is missing or unreadable.",
+            }
+        )
+    for entry in checksum_manifest.get("files", []) or []:
+        bundle_path = str(entry.get("bundle_path") or "").strip()
+        if not bundle_path:
+            continue
+        path = bundle_dir / bundle_path
+        if not path.exists():
+            record = {
+                "bundle_path": bundle_path,
+                "expected_sha256": entry.get("sha256"),
+                "message": "Checksummed bundle file is missing.",
+            }
+            missing_files.append(record)
+            warnings.append(
+                {
+                    "id": f"missing_checksum_file_{bundle_path}",
+                    "kind": "missing_artifact",
+                    "severity": "warning",
+                    "bundle_path": bundle_path,
+                    "message": record["message"],
+                }
+            )
+            continue
+        actual_sha = _file_sha256(path)
+        if actual_sha != entry.get("sha256"):
+            record = {
+                "bundle_path": bundle_path,
+                "expected_sha256": entry.get("sha256"),
+                "actual_sha256": actual_sha,
+                "message": "Bundle file checksum does not match checksum_manifest.json.",
+            }
+            mismatched_files.append(record)
+            warnings.append(
+                {
+                    "id": f"checksum_mismatch_{bundle_path}",
+                    "kind": "checksum_mismatch",
+                    "severity": "warning",
+                    "bundle_path": bundle_path,
+                    "message": record["message"],
+                }
+            )
+        actual_size = _file_size(path)
+        if actual_size != entry.get("size_bytes"):
+            record = {
+                "bundle_path": bundle_path,
+                "expected_size_bytes": entry.get("size_bytes"),
+                "actual_size_bytes": actual_size,
+                "message": "Bundle file size does not match checksum_manifest.json.",
+            }
+            size_mismatches.append(record)
+            warnings.append(
+                {
+                    "id": f"size_mismatch_{bundle_path}",
+                    "kind": "checksum_mismatch",
+                    "severity": "warning",
+                    "bundle_path": bundle_path,
+                    "message": record["message"],
+                }
+            )
+
+    expected_scenario_hash = ((manifest.get("freshness") or {}).get("scenario_hash") or {}).get(
+        "value"
+    )
+    actual_scenario_hash = _file_sha256(bundle_dir / "scenario.yaml")
+    scenario_metadata_ok = bool(
+        expected_scenario_hash
+        and actual_scenario_hash
+        and expected_scenario_hash == actual_scenario_hash
+    )
+    if (
+        expected_scenario_hash
+        and actual_scenario_hash
+        and expected_scenario_hash != actual_scenario_hash
+    ):
+        warnings.append(
+            {
+                "id": "scenario_hash_mismatch",
+                "kind": "scenario_metadata_mismatch",
+                "severity": "warning",
+                "bundle_path": "scenario.yaml",
+                "expected_sha256": expected_scenario_hash,
+                "actual_sha256": actual_scenario_hash,
+                "message": (
+                    "Bundled scenario.yaml does not match the scenario hash recorded in "
+                    "manifest freshness metadata."
+                ),
+            }
+        )
+    elif expected_scenario_hash and not actual_scenario_hash:
+        warnings.append(
+            {
+                "id": "missing_scenario_yaml",
+                "kind": "missing_artifact",
+                "severity": "warning",
+                "bundle_path": "scenario.yaml",
+                "message": "Bundled scenario.yaml is missing or unreadable.",
+            }
+        )
+
+    manifest_artifact_warnings = []
+    for entry in manifest.get("artifacts", []) or []:
+        bundle_path = str(entry.get("bundle_path") or "").strip()
+        if entry.get("present") and bundle_path and not (bundle_dir / bundle_path).exists():
+            manifest_artifact_warnings.append(
+                {
+                    "id": f"missing_manifest_artifact_{entry.get('id')}",
+                    "kind": "missing_artifact",
+                    "severity": "warning",
+                    "artifact_id": entry.get("id"),
+                    "bundle_path": bundle_path,
+                    "message": "Manifest marks artifact present, but the bundled file is missing.",
+                }
+            )
+        if (entry.get("freshness") or {}).get("stale_against_scenario"):
+            manifest_artifact_warnings.append(
+                {
+                    "id": f"stale_manifest_artifact_{entry.get('id')}",
+                    "kind": "stale_artifact",
+                    "severity": "warning",
+                    "artifact_id": entry.get("id"),
+                    "bundle_path": bundle_path,
+                    "message": "Manifest marks artifact as older than the scenario file.",
+                }
+            )
+    warnings.extend(manifest_artifact_warnings)
+
+    checksum_ok = not missing_files and not mismatched_files and not size_mismatches
+    metadata_ok = scenario_metadata_ok and not manifest_artifact_warnings
+    return {
+        "kind": "evidence_bundle_verification",
+        "bundle_dir": str(bundle_dir),
+        "ok": bool(checksum_manifest) and checksum_ok and metadata_ok,
+        "checksum_ok": checksum_ok,
+        "metadata_ok": metadata_ok,
+        "scenario_metadata_ok": scenario_metadata_ok,
+        "checked_files": len(checksum_manifest.get("files", []) or []),
+        "missing_files": missing_files,
+        "mismatched_files": mismatched_files,
+        "size_mismatches": size_mismatches,
+        "warnings": warnings,
+    }
 
 
 def export_operator_evidence_bundle(
@@ -2974,12 +4124,16 @@ def export_operator_evidence_bundle(
     *,
     bundle_dir_name: str = "operator_evidence_bundle",
     cfg: Optional[Dict[str, Any]] = None,
+    command_used: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Copy operator-facing BVLOS evidence artifacts into one review bundle."""
     out_dir = Path(out_dir)
     scenario_path = Path(scenario_path)
     bundle_dir = out_dir / bundle_dir_name
     bundle_dir.mkdir(parents=True, exist_ok=True)
+    generated_timestamp_utc = _utc_now_iso()
+    scenario_sha256 = _file_sha256(scenario_path)
+    scenario_modified_ts = _file_modified_timestamp(scenario_path)
     weather = _weather_metadata(cfg)
     output_cfg = (cfg or {}).get("output", {}) or {}
     flight_exports_enabled = bool(
@@ -2996,6 +4150,9 @@ def export_operator_evidence_bundle(
         else _regulatory_evidence_fields(regulatory)
     )
     regulatory_evidence_status = _regulatory_evidence_status(regulatory, regulatory_evidence)
+    regulatory_documentation_completeness = _regulatory_documentation_completeness(
+        regulatory_evidence_status
+    )
     approval_checklist = _approval_checklist_summary(
         readiness_report,
         regulatory=regulatory,
@@ -3038,6 +4195,18 @@ def export_operator_evidence_bundle(
             "label": "Regulatory readiness report",
             "source": out_dir / "regulatory_readiness_report.md",
             "bundle_name": "regulatory_readiness_report.md",
+        },
+        {
+            "id": "what_if_plan_markdown",
+            "label": "What-if planning report",
+            "source": out_dir / "what_if_plan.md",
+            "bundle_name": "what_if_plan.md",
+        },
+        {
+            "id": "what_if_plan_json",
+            "label": "What-if planning JSON",
+            "source": out_dir / "what_if_plan.json",
+            "bundle_name": "what_if_plan.json",
         },
         {
             "id": "score_breakdown",
@@ -3124,12 +4293,22 @@ def export_operator_evidence_bundle(
                 "source": str(source),
                 "bundle_path": str(destination.relative_to(bundle_dir)),
                 "present": present,
+                "freshness": _artifact_freshness_metadata(
+                    source=source,
+                    destination=destination,
+                    present=present,
+                    scenario_modified_ts=scenario_modified_ts,
+                ),
             }
         )
 
     missing = [entry["id"] for entry in manifest_entries if not entry["present"]]
     missing_ids = set(missing)
     bundle_completeness = _bundle_completeness(manifest_entries)
+    bundle_warnings = _bundle_warnings(
+        manifest_entries,
+        scenario_sha256=scenario_sha256,
+    )
     missing_evidence = _bundle_missing_evidence(
         manifest_entries,
         regulatory_evidence_status,
@@ -3141,6 +4320,33 @@ def export_operator_evidence_bundle(
         or [],
     )
     generated_artifacts = _generated_bundle_artifacts()
+    constraint_audit = _read_json_mapping(out_dir / "inspection_constraint_audit.json")
+    freshness_metadata = {
+        "generated_timestamp_utc": generated_timestamp_utc,
+        "orbital_version": _orbital_version(),
+        "scenario_path": str(scenario_path),
+        "scenario_hash": {
+            "algorithm": "sha256",
+            "value": scenario_sha256,
+        },
+        "scenario_modified_utc": _file_modified_utc(scenario_path),
+        "command": _command_metadata(command_used),
+        "metadata_note": (
+            "Freshness metadata supports evidence review. It does not provide flight "
+            "approval, authorization, legal advice, or operational clearance."
+        ),
+    }
+    review_metadata = {
+        "schema_version": 1,
+        "status": operator_review.get("status"),
+        "requested_status": operator_review.get("requested_status"),
+        "reviewer_name": operator_review.get("reviewer_name"),
+        "review_timestamp_utc": operator_review.get("review_timestamp_utc"),
+        "review_notes": operator_review.get("review_notes"),
+        "operator_decision": operator_review.get("operator_decision"),
+        "documentation_only": True,
+        "notice": operator_review.get("notice"),
+    }
     manifest: Dict[str, Any] = {
         "kind": "operator_evidence_bundle",
         "bundle_dir": str(bundle_dir),
@@ -3149,8 +4355,13 @@ def export_operator_evidence_bundle(
         "missing": missing,
         "bundle_completeness_score": bundle_completeness["score"],
         "bundle_completeness": bundle_completeness,
+        "artifact_completeness": bundle_completeness,
+        "regulatory_documentation_completeness": regulatory_documentation_completeness,
         "missing_evidence": missing_evidence,
+        "bundle_warnings": bundle_warnings,
         "operator_review": operator_review,
+        "review_metadata": review_metadata,
+        "freshness": freshness_metadata,
         "weather": (
             {
                 "source": weather.get("source"),
@@ -3164,6 +4375,18 @@ def export_operator_evidence_bundle(
         ),
         "flight_planning_exports_enabled": flight_exports_enabled,
         "regulatory_metadata": regulatory,
+        "constraint_audit": {
+            "mission_id": constraint_audit.get("mission_id"),
+            "status": constraint_audit.get("status"),
+            "mission_risk": constraint_audit.get("mission_risk"),
+            "top_limiting_constraint": constraint_audit.get("top_limiting_constraint"),
+        },
+        "regulatory_readiness": {
+            "status": readiness_report.get("status"),
+            "readiness_state": readiness_report.get("readiness_state"),
+            "documentation_only": readiness_report.get("documentation_only", True),
+            "not_legal_approval": readiness_report.get("not_legal_approval", True),
+        },
         "regulatory_evidence": regulatory_evidence,
         "regulatory_evidence_status": regulatory_evidence_status,
         "approval_checklist": approval_checklist,
@@ -3197,18 +4420,25 @@ def export_operator_evidence_bundle(
         "review; they are not proof of authorization, legal approval, LAANC, waiver, or "
         "operational clearance.",
         "",
-        "Start with `evidence_bundle_summary.md`, then use `artifact_index.md` to open "
-        "individual artifacts. `checksum_manifest.json` provides lightweight SHA-256 "
-        "checksums for files in this bundle.",
+        "Start with `operator_dashboard.md`, then use `artifact_index.md` to open "
+        "individual artifacts. `evidence_bundle_summary.md` summarizes completeness, "
+        "and `checksum_manifest.json` provides lightweight SHA-256 checksums for files "
+        "in this bundle.",
         "",
         "## Bundle Summary",
         "",
         f"- Completeness score: {_fmt_value(bundle_completeness['score'], '%')}",
+        f"- Artifact completeness score: {_fmt_value(bundle_completeness['score'], '%')}",
+        "- Regulatory documentation completeness score: "
+        f"{_fmt_value(regulatory_documentation_completeness['score'], '%')}",
         f"- Missing evidence items: {len(missing_evidence)}",
+        f"- Bundle warnings: {len(bundle_warnings)}",
         f"- Operator review status: {operator_review['status'].replace('_', ' ')}",
         f"- Reviewer: {operator_review.get('reviewer_name') or 'not provided'}",
         f"- Review timestamp UTC: "
         f"{operator_review.get('review_timestamp_utc') or 'not provided'}",
+        f"- Operator decision: {operator_review.get('operator_decision') or 'not provided'}",
+        f"- Review notes: {operator_review.get('review_notes') or 'not provided'}",
         "",
         "## Contents",
         "",
@@ -3271,6 +4501,10 @@ def export_operator_evidence_bundle(
     )
     (bundle_dir / "evidence_bundle_summary.md").write_text(
         _format_evidence_bundle_summary(manifest),
+        encoding="utf-8",
+    )
+    (bundle_dir / "operator_dashboard.md").write_text(
+        _format_operator_evidence_dashboard(manifest),
         encoding="utf-8",
     )
     (bundle_dir / "artifact_index.md").write_text(

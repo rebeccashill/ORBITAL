@@ -8,13 +8,34 @@
   "bundle_completeness": {
     "score": 100.0,
     "unit": "percent",
-    "present_artifacts": 15,
-    "total_artifacts": 15,
+    "present_artifacts": 17,
+    "total_artifacts": 17,
     "missing_artifacts": 0,
     "complete": true,
     "scoring_note": "Score is based on expected bundle artifacts present at export time. Optional documentation fields are reported separately and do not block planning."
   },
+  "artifact_completeness": {
+    "score": 100.0,
+    "unit": "percent",
+    "present_artifacts": 17,
+    "total_artifacts": 17,
+    "missing_artifacts": 0,
+    "complete": true,
+    "scoring_note": "Score is based on expected bundle artifacts present at export time. Optional documentation fields are reported separately and do not block planning."
+  },
+  "regulatory_documentation_completeness": {
+    "score": 100.0,
+    "unit": "percent",
+    "documented_fields": 8,
+    "total_fields": 8,
+    "missing_fields": 0,
+    "operator_attention_missing_fields": 0,
+    "complete": true,
+    "documentation_only": true,
+    "scoring_note": "Score is based on optional regulatory documentation fields. Missing fields are visible for operator review but do not block planning or imply approval."
+  },
   "missing_evidence": [],
+  "bundle_warnings": [],
   "operator_review": {
     "status": "ready_for_review",
     "requested_status": "ready_for_review",
@@ -25,8 +46,43 @@
     ],
     "reviewer_name": null,
     "review_timestamp_utc": null,
+    "review_notes": "Demo bundle ready for operator review; final approval remains outside ORBITAL.",
+    "operator_decision": "pending operator review",
     "documentation_only": true,
-    "notice": "Operator review status is documentation only. It does not approve a flight, issue an authorization, or replace pilot-in-command release authority."
+    "notice": "Operator review fields are documentation only. They do not approve a flight, issue an authorization, provide legal advice, or replace pilot-in-command release authority."
+  },
+  "review_metadata": {
+    "schema_version": 1,
+    "status": "ready_for_review",
+    "requested_status": "ready_for_review",
+    "reviewer_name": null,
+    "review_timestamp_utc": null,
+    "review_notes": "Demo bundle ready for operator review; final approval remains outside ORBITAL.",
+    "operator_decision": "pending operator review",
+    "documentation_only": true,
+    "notice": "Operator review fields are documentation only. They do not approve a flight, issue an authorization, provide legal advice, or replace pilot-in-command release authority."
+  },
+  "freshness": {
+    "generated_timestamp_utc": "2026-09-12T21:07:41Z",
+    "orbital_version": "1.0.9",
+    "scenario_path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml",
+    "scenario_hash": {
+      "algorithm": "sha256",
+      "value": "fd8b569d37541f1fa3d68bd680fa587461c73e5dd91ad73b16218229926970d5"
+    },
+    "scenario_modified_utc": "2026-09-12T15:06:26Z",
+    "command": {
+      "display": "C:\\Users\\shill\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\python.exe -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml --outdir outputs",
+      "argv": [
+        "C:\\Users\\shill\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\python.exe",
+        "-m",
+        "mission_framework.cli",
+        "examples/bvlos_powerline_inspection_demo.yaml",
+        "--outdir",
+        "outputs"
+      ]
+    },
+    "metadata_note": "Freshness metadata supports evidence review. It does not provide flight approval, authorization, legal advice, or operational clearance."
   },
   "weather": {
     "source": "offline Open-Meteo-shaped sample",
@@ -45,7 +101,7 @@
     "ground_risk_population_note": "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch.",
     "authorization_id": "example authorization reference only",
     "approving_authority_source": "Operator-provided example authority source for documentation-only demo",
-    "authorization_expiration_date": "2026-09-11",
+    "authorization_expiration_date": "2026-12-31",
     "operating_altitude_limit_m": 120.0,
     "operating_time_window": {
       "start_utc": "2026-09-11T16:00:00Z",
@@ -59,6 +115,7 @@
       "Remain within the modeled utility corridor and geofence buffers.",
       "Do not launch if current field weather is below operator minimums."
     ],
+    "emergency_contingency_plan": "Review lost-link, diversion, recovery, flyaway response, and incident-contact procedures before dispatch.",
     "operating_assumptions": [
       "Pilot-in-command verifies current FAA, local, site, NOTAM, TFR, and airspace requirements before launch.",
       "Mission remains within the modeled route, altitude, weather, battery, geofence, and crew constraints.",
@@ -71,11 +128,59 @@
     "documentation_only_notice": "For planning documentation only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, or operational clearance.",
     "decision_support_disclaimer": "ORBITAL provides decision support only and is not legal approval. This report does not provide LAANC, waivers, authorizations, operational clearance, legal advice, or permission to fly. The pilot-in-command and operator remain responsible for all required regulatory review, approvals, and compliance decisions."
   },
+  "constraint_audit": {
+    "mission_id": "BVLOS Powerline Inspection Demo",
+    "status": "go",
+    "mission_risk": "low",
+    "top_limiting_constraint": {
+      "id": "wind_weather",
+      "label": "Wind / weather margin",
+      "category": "weather",
+      "category_label": "Weather / wind margin",
+      "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+      "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+      "margin": {
+        "value": 3.0999999999999996,
+        "unit": "m/s",
+        "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+      },
+      "warning_margin": {
+        "value": 2.0,
+        "unit": "m/s",
+        "source": "wind.warning_margin_mps or default 2.0 m/s"
+      },
+      "risk_points": 14.500000000000002,
+      "observed": {
+        "max_horizontal_wind_mps": 5.9,
+        "weather_audit_wind_mps": 5.9,
+        "max_safe_wind_mps": 9.0,
+        "weather_source": "offline Open-Meteo-shaped sample",
+        "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+        "weather_wind_speed_mps": 4.5,
+        "weather_wind_direction_deg": 285.0,
+        "weather_wind_gust_mps": 5.9,
+        "visibility_m": 16000.0,
+        "precipitation_mm": 0.0,
+        "temperature_C": 18.5,
+        "weather_fallback_used": true
+      },
+      "recommendation": "Wait for better wind or lower mission scope.",
+      "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+    }
+  },
+  "regulatory_readiness": {
+    "status": "operator_action_required",
+    "readiness_state": "operator_action_required",
+    "documentation_only": true,
+    "not_legal_approval": true
+  },
   "regulatory_evidence": {
     "documentation_only": true,
     "authorization_id": "example authorization reference only",
     "approving_authority_source": "Operator-provided example authority source for documentation-only demo",
-    "authorization_expiration_date": "2026-09-11",
+    "authorization_expiration_date": "2026-12-31",
     "operating_altitude_limit_m": 120.0,
     "operating_time_window": {
       "start_utc": "2026-09-11T16:00:00Z",
@@ -89,12 +194,13 @@
       "Remain within the modeled utility corridor and geofence buffers.",
       "Do not launch if current field weather is below operator minimums."
     ],
+    "emergency_contingency_plan": "Review lost-link, diversion, recovery, flyaway response, and incident-contact procedures before dispatch.",
     "notice": "Optional documentation-only evidence fields. ORBITAL records these values for operator review but does not verify, approve, or issue authorizations."
   },
   "regulatory_evidence_status": {
     "documentation_only": true,
     "all_optional_fields_documented": true,
-    "field_count": 7,
+    "field_count": 8,
     "missing_count": 0,
     "operator_attention_missing_count": 0,
     "fields": [
@@ -160,6 +266,15 @@
         "documentation_only": true,
         "recommended_when": "An authorization includes special conditions.",
         "operator_attention_when_missing": false
+      },
+      {
+        "id": "emergency_contingency_plan",
+        "label": "Emergency / contingency plan documentation",
+        "path": "regulatory.emergency_contingency_plan",
+        "present": true,
+        "documentation_only": true,
+        "recommended_when": "BVLOS, authorization-bound, or higher-risk operations are planned.",
+        "operator_attention_when_missing": true
       }
     ],
     "missing": [],
@@ -254,108 +369,282 @@
       "label": "Scenario YAML",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml",
       "bundle_path": "scenario.yaml",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "fd8b569d37541f1fa3d68bd680fa587461c73e5dd91ad73b16218229926970d5",
+        "bundle_sha256": "fd8b569d37541f1fa3d68bd680fa587461c73e5dd91ad73b16218229926970d5",
+        "source_modified_utc": "2026-09-12T15:06:26Z",
+        "bundle_modified_utc": "2026-09-12T15:06:26Z",
+        "source_size_bytes": 6652,
+        "bundle_size_bytes": 6652,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "plan_json",
       "label": "Plan JSON",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\plan.json",
       "bundle_path": "plan.json",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8",
+        "bundle_sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8",
+        "source_modified_utc": "2026-09-12T21:07:41Z",
+        "bundle_modified_utc": "2026-09-12T21:07:41Z",
+        "source_size_bytes": 2542,
+        "bundle_size_bytes": 2542,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "constraint_audit_markdown",
       "label": "Primary constraint-audit report",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\inspection_constraint_audit.md",
       "bundle_path": "inspection_constraint_audit.md",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "18560cf439852b6f6d76eacee535e41e26cbc434a31e9e89b595cc9534f36445",
+        "bundle_sha256": "18560cf439852b6f6d76eacee535e41e26cbc434a31e9e89b595cc9534f36445",
+        "source_modified_utc": "2026-09-12T21:07:37Z",
+        "bundle_modified_utc": "2026-09-12T21:07:37Z",
+        "source_size_bytes": 14776,
+        "bundle_size_bytes": 14776,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "constraint_audit_json",
       "label": "Constraint audit JSON",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\inspection_constraint_audit.json",
       "bundle_path": "inspection_constraint_audit.json",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "aa44245a47bb19b53dacc5de00e6d008fe266eca8e7244c4d551d090448ef46c",
+        "bundle_sha256": "aa44245a47bb19b53dacc5de00e6d008fe266eca8e7244c4d551d090448ef46c",
+        "source_modified_utc": "2026-09-12T21:07:37Z",
+        "bundle_modified_utc": "2026-09-12T21:07:37Z",
+        "source_size_bytes": 50602,
+        "bundle_size_bytes": 50602,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "regulatory_readiness_json",
       "label": "Regulatory readiness JSON",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\regulatory_readiness_report.json",
       "bundle_path": "regulatory_readiness_report.json",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "30412182cf2fb3cb6c33726373a3dc422dfc61be911d15d82ac5eac75aa68551",
+        "bundle_sha256": "30412182cf2fb3cb6c33726373a3dc422dfc61be911d15d82ac5eac75aa68551",
+        "source_modified_utc": "2026-09-12T21:07:37Z",
+        "bundle_modified_utc": "2026-09-12T21:07:37Z",
+        "source_size_bytes": 11029,
+        "bundle_size_bytes": 11029,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "regulatory_readiness_markdown",
       "label": "Regulatory readiness report",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\regulatory_readiness_report.md",
       "bundle_path": "regulatory_readiness_report.md",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "05d976e79a5f11e5803c025926ce4da533a9ebf7142bd0ec2e78912e387ff94c",
+        "bundle_sha256": "05d976e79a5f11e5803c025926ce4da533a9ebf7142bd0ec2e78912e387ff94c",
+        "source_modified_utc": "2026-09-12T21:07:37Z",
+        "bundle_modified_utc": "2026-09-12T21:07:37Z",
+        "source_size_bytes": 5777,
+        "bundle_size_bytes": 5777,
+        "stale_against_scenario": false
+      }
+    },
+    {
+      "id": "what_if_plan_markdown",
+      "label": "What-if planning report",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\what_if_plan.md",
+      "bundle_path": "what_if_plan.md",
+      "present": true,
+      "freshness": {
+        "source_sha256": "97861655f7ecd1c2a3d7af23b1cc6817501ab09573a917ef1aa1af3e491c70e4",
+        "bundle_sha256": "97861655f7ecd1c2a3d7af23b1cc6817501ab09573a917ef1aa1af3e491c70e4",
+        "source_modified_utc": "2026-09-12T21:07:39Z",
+        "bundle_modified_utc": "2026-09-12T21:07:39Z",
+        "source_size_bytes": 2395,
+        "bundle_size_bytes": 2395,
+        "stale_against_scenario": false
+      }
+    },
+    {
+      "id": "what_if_plan_json",
+      "label": "What-if planning JSON",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\what_if_plan.json",
+      "bundle_path": "what_if_plan.json",
+      "present": true,
+      "freshness": {
+        "source_sha256": "3687e83f6db65413f9cc9234a9fdd49a2b36dbb7f5d1069c13d685dc9c960cb7",
+        "bundle_sha256": "3687e83f6db65413f9cc9234a9fdd49a2b36dbb7f5d1069c13d685dc9c960cb7",
+        "source_modified_utc": "2026-09-12T21:07:39Z",
+        "bundle_modified_utc": "2026-09-12T21:07:39Z",
+        "source_size_bytes": 63137,
+        "bundle_size_bytes": 63137,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "score_breakdown",
       "label": "Score breakdown",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\score.json",
       "bundle_path": "score.json",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "e3cb2a7098d4fe8716cd7fcadab220bd74b4f525b5f645b5ff0f2231548e1d10",
+        "bundle_sha256": "e3cb2a7098d4fe8716cd7fcadab220bd74b4f525b5f645b5ff0f2231548e1d10",
+        "source_modified_utc": "2026-09-12T21:07:41Z",
+        "bundle_modified_utc": "2026-09-12T21:07:41Z",
+        "source_size_bytes": 1119,
+        "bundle_size_bytes": 1119,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "flight_path_plot",
       "label": "Flight path plot",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\flight_path.png",
       "bundle_path": "flight_path.png",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "f3d6008bff56d69450532e4d166199c87591cdbe6201a4198031f64b717d56cc",
+        "bundle_sha256": "f3d6008bff56d69450532e4d166199c87591cdbe6201a4198031f64b717d56cc",
+        "source_modified_utc": "2026-09-12T21:07:40Z",
+        "bundle_modified_utc": "2026-09-12T21:07:40Z",
+        "source_size_bytes": 57037,
+        "bundle_size_bytes": 57037,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "robustness_summary",
       "label": "Robustness summary",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\robustness.json",
       "bundle_path": "robustness.json",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "9a1984b6ec530bf6836eb5facfed37ff102d5c19ccf8cf1128c0e6a4020dd82a",
+        "bundle_sha256": "9a1984b6ec530bf6836eb5facfed37ff102d5c19ccf8cf1128c0e6a4020dd82a",
+        "source_modified_utc": "2026-09-12T21:07:41Z",
+        "bundle_modified_utc": "2026-09-12T21:07:41Z",
+        "source_size_bytes": 295,
+        "bundle_size_bytes": 295,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "go_no_go_memo",
       "label": "Plain-English go/no-go memo",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\operator_memo.md",
       "bundle_path": "operator_memo.md",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "0a01dd2eccd98f400c243dbf18e62e193bc1ea0142a97124be084bcf49d80570",
+        "bundle_sha256": "0a01dd2eccd98f400c243dbf18e62e193bc1ea0142a97124be084bcf49d80570",
+        "source_modified_utc": "2026-09-12T21:07:37Z",
+        "bundle_modified_utc": "2026-09-12T21:07:37Z",
+        "source_size_bytes": 2127,
+        "bundle_size_bytes": 2127,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "weather_snapshot",
       "label": "Weather snapshot",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\weather.json",
       "bundle_path": "weather.json",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "7c005ca7f585d6dde21e595aa2ce5c8c1a9968fdec8b3b3df86675c1ace0c027",
+        "bundle_sha256": "7c005ca7f585d6dde21e595aa2ce5c8c1a9968fdec8b3b3df86675c1ace0c027",
+        "source_modified_utc": "2026-09-12T21:07:41Z",
+        "bundle_modified_utc": "2026-09-12T21:07:41Z",
+        "source_size_bytes": 623,
+        "bundle_size_bytes": 623,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "autopilot_mission_csv",
       "label": "Autopilot mission CSV",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\autopilot_mission.csv",
       "bundle_path": "autopilot_mission.csv",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "9189cd93204ddb505dba7b135a9bed0c81b745e8adfcb05d12ea9535bc46bd29",
+        "bundle_sha256": "9189cd93204ddb505dba7b135a9bed0c81b745e8adfcb05d12ea9535bc46bd29",
+        "source_modified_utc": "2026-09-12T21:07:41Z",
+        "bundle_modified_utc": "2026-09-12T21:07:41Z",
+        "source_size_bytes": 2086,
+        "bundle_size_bytes": 2086,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "mission_review_kml",
       "label": "Mission review KML",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\mission_review.kml",
       "bundle_path": "mission_review.kml",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "6ac079f4b22f49eb17330ee67df7bcdd425f694eebe4262c0e8c50d126865179",
+        "bundle_sha256": "6ac079f4b22f49eb17330ee67df7bcdd425f694eebe4262c0e8c50d126865179",
+        "source_modified_utc": "2026-09-12T21:07:41Z",
+        "bundle_modified_utc": "2026-09-12T21:07:41Z",
+        "source_size_bytes": 3394,
+        "bundle_size_bytes": 3394,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "flight_planning_exports_manifest",
       "label": "Flight-planning exports manifest",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\flight_planning_exports.json",
       "bundle_path": "flight_planning_exports.json",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "d0a6a63526594d75c219b912ef3280983bfe79c7c604d4ff19457101f15ba0d3",
+        "bundle_sha256": "d0a6a63526594d75c219b912ef3280983bfe79c7c604d4ff19457101f15ba0d3",
+        "source_modified_utc": "2026-09-12T21:07:41Z",
+        "bundle_modified_utc": "2026-09-12T21:07:41Z",
+        "source_size_bytes": 804,
+        "bundle_size_bytes": 804,
+        "stale_against_scenario": false
+      }
     },
     {
       "id": "flight_planning_exports_readme",
       "label": "Flight-planning exports README",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\flight_planning_exports.md",
       "bundle_path": "flight_planning_exports.md",
-      "present": true
+      "present": true,
+      "freshness": {
+        "source_sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672",
+        "bundle_sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672",
+        "source_modified_utc": "2026-09-12T21:07:41Z",
+        "bundle_modified_utc": "2026-09-12T21:07:41Z",
+        "source_size_bytes": 291,
+        "bundle_size_bytes": 291,
+        "stale_against_scenario": false
+      }
     }
   ],
   "generated_artifacts": [
+    {
+      "id": "operator_dashboard",
+      "label": "Operator evidence dashboard",
+      "bundle_path": "operator_dashboard.md",
+      "present": true,
+      "generated": true
+    },
     {
       "id": "bundle_summary",
       "label": "Evidence bundle summary",

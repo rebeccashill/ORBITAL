@@ -187,16 +187,22 @@ def test_evidence_bundle_review_metadata_is_optional_and_validated() -> None:
         "operator_review_status": "ready_for_review",
         "reviewer_name": "Demo reviewer",
         "review_timestamp_utc": "2026-09-11T19:00:00Z",
+        "review_notes": "Ready for operational review.",
+        "operator_decision": "pending operator review",
     }
 
     assert collect_scenario_validation_issues(cfg) == []
 
     cfg["evidence_bundle"]["operator_review_status"] = "approved"
     cfg["evidence_bundle"]["reviewer_name"] = ""
+    cfg["evidence_bundle"]["review_notes"] = ""
+    cfg["evidence_bundle"]["operator_decision"] = ""
     issues = collect_scenario_validation_issues(cfg)
     paths = _issue_paths(issues)
     assert "evidence_bundle.operator_review_status" in paths
     assert "evidence_bundle.reviewer_name" in paths
+    assert "evidence_bundle.review_notes" in paths
+    assert "evidence_bundle.operator_decision" in paths
 
 
 def test_aircraft_regulatory_metadata_validates_as_documentation_fields() -> None:
@@ -209,7 +215,7 @@ def test_aircraft_regulatory_metadata_validates_as_documentation_fields() -> Non
         "ground_risk_population_note": "Sparse rural corridor.",
         "authorization_id": "sample authorization reference",
         "approving_authority_source": "Example authority source record",
-        "authorization_expiration_date": "2026-09-11",
+        "authorization_expiration_date": "2026-12-31",
         "operating_altitude_limit_m": 120.0,
         "operating_time_window": {
             "start_utc": "2026-09-11T16:00:00Z",
@@ -217,6 +223,7 @@ def test_aircraft_regulatory_metadata_validates_as_documentation_fields() -> Non
         },
         "required_crew_roles": ["Remote pilot in command", "Visual observer"],
         "special_conditions_limitations": ["Remain below authorized altitude."],
+        "emergency_contingency_plan": "Review lost-link and recovery procedures.",
         "operating_assumptions": ["Pilot-in-command verifies local requirements."],
         "unresolved_items": ["Confirm final site access approval."],
         "documentation_only_notice": "Documentation only; not legal approval.",
@@ -231,6 +238,7 @@ def test_aircraft_regulatory_metadata_validates_as_documentation_fields() -> Non
     cfg["regulatory"]["operating_time_window"]["start_utc"] = ""
     cfg["regulatory"]["required_crew_roles"] = [""]
     cfg["regulatory"]["special_conditions_limitations"] = "none"
+    cfg["regulatory"]["emergency_contingency_plan"] = ""
     cfg["regulatory"]["operating_assumptions"] = ["  "]
     cfg["regulatory"]["unresolved_items"] = "Confirm waiver"
     issues = collect_scenario_validation_issues(cfg)
@@ -242,6 +250,7 @@ def test_aircraft_regulatory_metadata_validates_as_documentation_fields() -> Non
     assert "regulatory.operating_time_window.start_utc" in paths
     assert "regulatory.required_crew_roles[0]" in paths
     assert "regulatory.special_conditions_limitations" in paths
+    assert "regulatory.emergency_contingency_plan" in paths
     assert "regulatory.operating_assumptions[0]" in paths
     assert "regulatory.unresolved_items" in paths
 
@@ -269,6 +278,110 @@ def test_bvlos_regulatory_documentation_warnings_do_not_block_planning() -> None
         warning_text
     )
 
+    assert validate_scenario_config(cfg)["scenario"]["type"] == "aircraft"
+
+
+def test_bvlos_regulatory_quality_warnings_do_not_block_planning() -> None:
+    cfg = copy.deepcopy(_load_yaml(EXAMPLES / "bvlos_powerline_inspection_demo.yaml"))
+    cfg["regulatory"]["authorization_expiration_date"] = "2000-01-01"
+    cfg["regulatory"]["operating_altitude_limit_m"] = 999.0
+    cfg["regulatory"]["operating_time_window"] = {
+        "start_utc": "2026-09-11T16:00:00Z",
+        "end_utc": "2026-09-11T15:00:00Z",
+    }
+    cfg["weather"]["timestamp_utc"] = "2026-09-11T15:00:00Z"
+    cfg["regulatory"].pop("emergency_contingency_plan")
+
+    issues = collect_scenario_validation_issues(cfg)
+    warnings = _warning_issues(issues)
+    warning_paths = {warning.path for warning in warnings}
+    warning_text = "\n".join(warning.message for warning in warnings)
+
+    assert _error_issues(issues) == []
+    assert {
+        "regulatory.authorization_expiration_date",
+        "regulatory.operating_time_window",
+        "regulatory.operating_altitude_limit_m",
+        "weather.timestamp_utc",
+        "regulatory.emergency_contingency_plan",
+    } <= warning_paths
+    assert "authorization expiration date is in the past" in warning_text
+    assert "operating time window documentation is malformed" in warning_text
+    assert "operating altitude limit exceeds scenario altitude assumptions" in warning_text
+    assert "weather timestamp is stale for the planned operating window" in warning_text
+    assert "emergency / contingency plan documentation is missing" in warning_text
+
+    assert validate_scenario_config(cfg)["scenario"]["type"] == "aircraft"
+
+
+def test_bvlos_expired_authorization_date_warns_without_blocking() -> None:
+    cfg = copy.deepcopy(_load_yaml(EXAMPLES / "bvlos_powerline_inspection_demo.yaml"))
+    cfg["regulatory"]["authorization_expiration_date"] = "2000-01-01"
+
+    issues = collect_scenario_validation_issues(cfg)
+    warnings = _warning_issues(issues)
+
+    assert _error_issues(issues) == []
+    assert any(
+        warning.path == "regulatory.authorization_expiration_date"
+        and "authorization expiration date is in the past" in warning.message
+        for warning in warnings
+    )
+    assert validate_scenario_config(cfg)["scenario"]["type"] == "aircraft"
+
+
+def test_bvlos_malformed_operating_time_window_warns_without_blocking() -> None:
+    cfg = copy.deepcopy(_load_yaml(EXAMPLES / "bvlos_powerline_inspection_demo.yaml"))
+    cfg["regulatory"]["operating_time_window"] = {
+        "start_utc": "2026-09-11T16:00:00Z",
+        "end_utc": "2026-09-11T15:00:00Z",
+    }
+
+    issues = collect_scenario_validation_issues(cfg)
+    warnings = _warning_issues(issues)
+
+    assert _error_issues(issues) == []
+    assert any(
+        warning.path == "regulatory.operating_time_window"
+        and "operating time window documentation is malformed" in warning.message
+        for warning in warnings
+    )
+    assert validate_scenario_config(cfg)["scenario"]["type"] == "aircraft"
+
+
+def test_bvlos_stale_weather_timestamp_warns_without_blocking() -> None:
+    cfg = copy.deepcopy(_load_yaml(EXAMPLES / "bvlos_powerline_inspection_demo.yaml"))
+    cfg["regulatory"]["operating_time_window"] = {
+        "start_utc": "2026-09-11T16:00:00Z",
+        "end_utc": "2026-09-11T18:00:00Z",
+    }
+    cfg["weather"]["timestamp_utc"] = "2026-09-11T15:00:00Z"
+
+    issues = collect_scenario_validation_issues(cfg)
+    warnings = _warning_issues(issues)
+
+    assert _error_issues(issues) == []
+    assert any(
+        warning.path == "weather.timestamp_utc"
+        and "weather timestamp is stale for the planned operating window" in warning.message
+        for warning in warnings
+    )
+    assert validate_scenario_config(cfg)["scenario"]["type"] == "aircraft"
+
+
+def test_bvlos_missing_operating_time_window_warns_without_blocking() -> None:
+    cfg = copy.deepcopy(_load_yaml(EXAMPLES / "bvlos_powerline_inspection_demo.yaml"))
+    cfg["regulatory"].pop("operating_time_window")
+
+    issues = collect_scenario_validation_issues(cfg)
+    warnings = _warning_issues(issues)
+
+    assert _error_issues(issues) == []
+    assert any(
+        warning.path == "regulatory.operating_time_window"
+        and "operating time window documentation is missing" in warning.message
+        for warning in warnings
+    )
     assert validate_scenario_config(cfg)["scenario"]["type"] == "aircraft"
 
 

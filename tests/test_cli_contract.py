@@ -140,6 +140,8 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
+    assert "Open first:" in result.stdout
+    assert "operator_dashboard.md" in result.stdout
 
     scenario_dir = outdir / "bvlos_powerline_inspection"
     plan_json = scenario_dir / "plan.json"
@@ -154,6 +156,7 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     bundle_dir = scenario_dir / "operator_evidence_bundle"
     manifest_json = bundle_dir / "manifest.json"
     bundle_readme = bundle_dir / "README.md"
+    operator_dashboard = bundle_dir / "operator_dashboard.md"
     bundle_summary = bundle_dir / "evidence_bundle_summary.md"
     artifact_index = bundle_dir / "artifact_index.md"
     checksum_manifest = bundle_dir / "checksum_manifest.json"
@@ -168,6 +171,7 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert report_md.is_file()
     assert manifest_json.is_file()
     assert bundle_readme.is_file()
+    assert operator_dashboard.is_file()
     assert bundle_summary.is_file()
     assert artifact_index.is_file()
     assert checksum_manifest.is_file()
@@ -181,8 +185,35 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert audit["primary_demo_artifact"] is True
     assert audit["operator_question"] == "Can we safely and defensibly fly this mission?"
     assert audit["top_limiting_constraint"]["label"]
+    transparency = audit["model_transparency"]
+    reproducibility = transparency["reproducibility"]
+    assert (
+        reproducibility["scenario_path"]
+        .replace("\\", "/")
+        .endswith("examples/bvlos_powerline_inspection_demo.yaml")
+    )
+    assert reproducibility["seed"] == 0
+    assert reproducibility["iterations"] == 5
+    assert reproducibility["robustness_cases_configured"] == 0
+    assert reproducibility["robustness_cases_run"] == 0
+    assert "mission_framework.cli" in reproducibility["command"]["display"]
+    assert transparency["top_limiting_constraint_selection"]["selected_constraint_id"] == (
+        audit["top_limiting_constraint"]["id"]
+    )
+    assert {item["id"] for item in transparency["assumptions_report"]} >= {
+        "battery",
+        "wind",
+        "geofence",
+        "route_completion",
+        "turn_feasibility",
+        "robustness",
+    }
     assert audit["constraint_groups"]
-    assert "Constraint Group Summary" in audit_md.read_text(encoding="utf-8")
+    audit_markdown = audit_md.read_text(encoding="utf-8")
+    assert "Constraint Group Summary" in audit_markdown
+    assert "Model Transparency" in audit_markdown
+    assert "Scenario path:" in audit_markdown
+    assert "mission_framework.cli" in audit_markdown
 
     what_if = json.loads(what_if_json.read_text(encoding="utf-8"))
     assert what_if["kind"] == "drone_inspection_what_if_plan"
@@ -216,29 +247,130 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert artifact_presence["constraint_audit_json"] is True
     assert artifact_presence["regulatory_readiness_json"] is True
     assert artifact_presence["regulatory_readiness_markdown"] is True
+    assert artifact_presence["what_if_plan_markdown"] is True
+    assert artifact_presence["what_if_plan_json"] is True
     assert artifact_presence["score_breakdown"] is True
+    assert manifest["constraint_audit"]["status"] == "go"
+    assert manifest["constraint_audit"]["mission_risk"] in {"low", "medium", "high"}
+    assert manifest["constraint_audit"]["top_limiting_constraint"]["label"]
+    assert manifest["regulatory_readiness"]["readiness_state"] == "operator_action_required"
+    assert manifest["artifact_completeness"]["score"] == manifest["bundle_completeness_score"]
+    assert manifest["regulatory_documentation_completeness"]["score"] == 100.0
+    assert manifest["review_metadata"]["status"] == "draft"
+    assert manifest["freshness"]["generated_timestamp_utc"].endswith("Z")
+    assert manifest["freshness"]["orbital_version"] != "unknown"
+    assert len(manifest["freshness"]["scenario_hash"]["value"]) == 64
+    assert "mission_framework.cli" in manifest["freshness"]["command"]["display"]
     assert manifest["regulatory_metadata"]["laanc_required"] is True
     assert manifest["approval_checklist"]["item_count"] >= 8
     assert manifest["regulatory_evidence_status"]["missing"] == []
     assert 0.0 < manifest["bundle_completeness_score"] < 100.0
     assert manifest["operator_review"]["status"] == "draft"
+    assert {warning["kind"] for warning in manifest["bundle_warnings"]} >= {"missing_artifact"}
     assert {"flight_path_plot", "robustness_summary"} <= {
         item["id"] for item in manifest["missing_evidence"] if item["kind"] == "artifact"
     }
-    assert "documentation-only" in bundle_readme.read_text(encoding="utf-8")
+    assert "Start with `operator_dashboard.md`" in bundle_readme.read_text(encoding="utf-8")
+    dashboard_text = operator_dashboard.read_text(encoding="utf-8")
+    assert "ORBITAL Operator Evidence Dashboard" in dashboard_text
+    assert "Mission status: GO" in dashboard_text
+    assert "Mission risk:" in dashboard_text
+    assert "Top limiting constraint:" in dashboard_text
+    assert "Regulatory readiness: OPERATOR_ACTION_REQUIRED" in dashboard_text
+    assert "not approval, not authorization, not legal advice" in dashboard_text
+    assert "[what_if_plan.md](what_if_plan.md)" in dashboard_text
+    assert "[manifest.json](manifest.json)" in dashboard_text
+    assert "[checksum_manifest.json](checksum_manifest.json)" in dashboard_text
+    assert "flight_path.png" in dashboard_text
+    assert "[autopilot_mission.csv](autopilot_mission.csv)" in dashboard_text
+    assert "[mission_review.kml](mission_review.kml)" in dashboard_text
     assert "Completeness score:" in bundle_summary.read_text(encoding="utf-8")
     artifact_index_text = artifact_index.read_text(encoding="utf-8")
     assert "Evidence Bundle Artifact Index" in artifact_index_text
     assert "Primary constraint-audit report" in artifact_index_text
+    assert "What-if planning report" in artifact_index_text
     assert "Regulatory readiness report" in artifact_index_text
+    assert "Operator evidence dashboard" in artifact_index_text
     assert "Evidence bundle summary" in artifact_index_text
     checksums = json.loads(checksum_manifest.read_text(encoding="utf-8"))
     assert checksums["algorithm"] == "sha256"
     assert {item["bundle_path"] for item in checksums["files"]} >= {
         "manifest.json",
+        "operator_dashboard.md",
         "evidence_bundle_summary.md",
         "artifact_index.md",
     }
+
+    summary_result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mission_framework.cli",
+            "bundle-summary",
+            str(bundle_dir),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert summary_result.returncode == 0, summary_result.stdout + summary_result.stderr
+    assert "ORBITAL Evidence Bundle Summary" in summary_result.stdout
+    assert "Open first:" in summary_result.stdout
+    assert "operator_dashboard.md" in summary_result.stdout
+    assert "Top limiting constraint:" in summary_result.stdout
+
+    verify_result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mission_framework.cli",
+            "bundle-verify",
+            str(bundle_dir),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert verify_result.returncode == 0, verify_result.stdout + verify_result.stderr
+    assert "Checksum OK: yes" in verify_result.stdout
+    assert "Scenario metadata OK: yes" in verify_result.stdout
+
+    top_result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mission_framework.cli",
+            "bundle-top",
+            str(bundle_dir),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert top_result.returncode == 0, top_result.stdout + top_result.stderr
+    assert "ORBITAL Top Limiting Constraint" in top_result.stdout
+    assert "Recommended operator action:" in top_result.stdout
+    assert "Selection rationale:" in top_result.stdout
+
+    review_result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mission_framework.cli",
+            "bundle-review-validate",
+            str(bundle_dir / "manifest.json"),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert review_result.returncode == 0, review_result.stdout + review_result.stderr
+    assert "Review metadata: VALID" in review_result.stdout
+    assert "Operator review status: draft" in review_result.stdout
 
 
 def test_cli_overrides_yaml_settings_and_accepts_single_dash_aliases(

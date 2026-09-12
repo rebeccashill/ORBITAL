@@ -290,6 +290,16 @@ def _validate_shared_sections(cfg: Mapping[str, Any], issues: list[ValidationIss
             "evidence_bundle.review_timestamp_utc",
             issues,
         )
+        _optional_nonempty_string(
+            evidence_bundle,
+            "evidence_bundle.review_notes",
+            issues,
+        )
+        _optional_nonempty_string(
+            evidence_bundle,
+            "evidence_bundle.operator_decision",
+            issues,
+        )
 
     if robustness is not None:
         _number(robustness, "robustness.cases", issues, required=True, min_value=0, integer=True)
@@ -688,6 +698,7 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
             "authorization_id",
             "approving_authority_source",
             "authorization_expiration_date",
+            "emergency_contingency_plan",
             "documentation_only_notice",
         ):
             _optional_nonempty_string(regulatory, f"regulatory.{key}", issues)
@@ -743,6 +754,14 @@ def _crew_roles_include_observer(value: Any) -> bool:
     return any("observer" in str(item).strip().lower() for item in value)
 
 
+def _authorization_documentation_expected(regulatory: Mapping[str, Any]) -> bool:
+    return (
+        regulatory.get("laanc_required") is True
+        or regulatory.get("waiver_or_authorization_required") is True
+        or _has_text(regulatory.get("authorization_id"))
+    )
+
+
 def _is_bvlos_aircraft_scenario(cfg: Mapping[str, Any]) -> bool:
     candidate_paths = (
         "scenario.name",
@@ -754,13 +773,59 @@ def _is_bvlos_aircraft_scenario(cfg: Mapping[str, Any]) -> bool:
     return any("bvlos" in str(_get_path(cfg, path) or "").lower() for path in candidate_paths)
 
 
+def _scenario_altitude_assumption_ceiling_m(cfg: Mapping[str, Any]) -> Optional[float]:
+    vehicle_ceiling = _coerce_number(_get_path(cfg, "vehicle.z_max_m"))
+    if vehicle_ceiling is not None:
+        return vehicle_ceiling
+
+    values = [
+        _coerce_number(_get_path(cfg, "initial_state.z_m")),
+        _coerce_number(_get_path(cfg, "mission.route_default_z_m")),
+    ]
+    waypoints = _get_path(cfg, "mission.waypoints")
+    if _is_non_string_sequence(waypoints):
+        for waypoint in waypoints:
+            if isinstance(waypoint, Mapping):
+                values.append(_coerce_number(waypoint.get("z_m")))
+    numeric_values = [value for value in values if value is not None]
+    return max(numeric_values) if numeric_values else None
+
+
+def _regulatory_time_window_datetimes(
+    regulatory: Mapping[str, Any],
+) -> tuple[Optional[datetime], Optional[datetime], bool, bool]:
+    window = regulatory.get("operating_time_window")
+    if not isinstance(window, Mapping):
+        return None, None, False, False
+    start_text = window.get("start_utc")
+    end_text = window.get("end_utc")
+    has_required_text = _has_text(start_text) and _has_text(end_text)
+    start = _parse_datetime(start_text)
+    end = _parse_datetime(end_text)
+    valid = bool(has_required_text and start is not None and end is not None and end > start)
+    return start, end, has_required_text, valid
+
+
+def _weather_timestamp(weather: Optional[Mapping[str, Any]]) -> Optional[datetime]:
+    if not weather:
+        return None
+    for path in ("timestamp_utc", "offline.timestamp_utc"):
+        value = _get_path(weather, path)
+        parsed = _parse_datetime(value)
+        if parsed is not None:
+            return parsed
+    return None
+
+
 def _warn_regulatory_documentation_gaps(
     cfg: Mapping[str, Any],
     regulatory: Optional[Mapping[str, Any]],
     issues: list[ValidationIssue],
 ) -> None:
     regulatory = regulatory or {}
-    if _is_bvlos_aircraft_scenario(cfg):
+    is_bvlos = _is_bvlos_aircraft_scenario(cfg)
+    authorization_expected = _authorization_documentation_expected(regulatory)
+    if is_bvlos:
         missing = [
             key
             for key in (
@@ -781,6 +846,72 @@ def _warn_regulatory_documentation_gaps(
                     "Add documentation-only values for: " + ", ".join(missing) + ".",
                 )
             )
+
+    expiration = _parse_datetime(regulatory.get("authorization_expiration_date"))
+    if expiration is not None and expiration.date() < datetime.now(timezone.utc).date():
+        issues.append(
+            _warning(
+                "regulatory.authorization_expiration_date",
+                "authorization expiration date is in the past",
+                "Update or remove expired documentation before operator review; ORBITAL does not verify authorization validity.",
+            )
+        )
+
+    window = regulatory.get("operating_time_window")
+    start, _end, has_window_fields, valid_window = _regulatory_time_window_datetimes(regulatory)
+    if is_bvlos or authorization_expected:
+        if not isinstance(window, Mapping) or not has_window_fields:
+            issues.append(
+                _warning(
+                    "regulatory.operating_time_window",
+                    "operating time window documentation is missing",
+                    "Add regulatory.operating_time_window.start_utc and end_utc for operator review.",
+                )
+            )
+        elif not valid_window:
+            issues.append(
+                _warning(
+                    "regulatory.operating_time_window",
+                    "operating time window documentation is malformed",
+                    "Use ISO-8601 UTC start_utc and end_utc values, with end_utc later than start_utc.",
+                )
+            )
+
+    operating_altitude_limit = _coerce_number(regulatory.get("operating_altitude_limit_m"))
+    altitude_ceiling = _scenario_altitude_assumption_ceiling_m(cfg)
+    if (
+        operating_altitude_limit is not None
+        and altitude_ceiling is not None
+        and operating_altitude_limit > altitude_ceiling
+    ):
+        issues.append(
+            _warning(
+                "regulatory.operating_altitude_limit_m",
+                "operating altitude limit exceeds scenario altitude assumptions",
+                "Confirm authorization altitude documentation against vehicle.z_max_m and planned route altitude assumptions.",
+            )
+        )
+
+    weather_ts = _weather_timestamp(cast(Optional[Mapping[str, Any]], cfg.get("weather")))
+    if start is not None and weather_ts is not None and weather_ts < start:
+        issues.append(
+            _warning(
+                "weather.timestamp_utc",
+                "weather timestamp is stale for the planned operating window",
+                "Refresh weather documentation so the timestamp is at or after the planned operating window start.",
+            )
+        )
+
+    if (is_bvlos or authorization_expected) and not _has_text(
+        regulatory.get("emergency_contingency_plan")
+    ):
+        issues.append(
+            _warning(
+                "regulatory.emergency_contingency_plan",
+                "emergency / contingency plan documentation is missing",
+                "Document lost-link, diversion, recovery, and incident-response assumptions for operator review.",
+            )
+        )
 
     if regulatory.get("laanc_required") is True and not _has_text(
         regulatory.get("authorization_id")

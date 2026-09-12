@@ -1,5 +1,43 @@
 # Release Notes
 
+## v1.0.9 - September 12, 2026
+
+### Changed
+
+- Added an operator evidence dashboard as the first evidence-bundle artifact to
+  open, summarizing mission status, mission risk, top limiting constraint,
+  regulatory readiness, bundle completeness, review fields, and artifact links.
+- Added documentation-only operator review notes and operator decision fields to
+  evidence bundle metadata.
+- Included what-if planning artifacts in the operator evidence bundle so the
+  dashboard can link directly to audit, what-if, regulatory, manifest, checksum,
+  plot, CSV, and KML artifacts.
+- Added artifact freshness metadata to evidence bundle manifests, including
+  generated timestamp, scenario SHA-256, ORBITAL version, and command used.
+- Added checksum verification helper support for evidence bundles, including
+  checksum, file-size, and bundled-scenario hash checks.
+- Added bundle warnings for missing, stale, and scenario-mismatched evidence
+  artifacts.
+- Added non-blocking scenario validation warnings for expired authorization
+  documentation, missing or malformed operating windows, altitude-limit
+  mismatches, stale weather timestamps, and missing emergency / contingency
+  plan documentation, and surfaced that emergency plan note in regulatory
+  evidence metadata.
+- Added model transparency to inspection constraint audits, including
+  assumptions for battery, wind, geofence, route completion, turn feasibility,
+  and robustness; margin units and sources; top-limiter selection rationale;
+  reproducibility metadata; and model limitation language.
+- Added read-only evidence bundle CLI commands for bundle summaries, checksum
+  verification, top-limiting-constraint review, and review metadata validation,
+  plus default run output that points users to the first artifact to open.
+- Refreshed the BVLOS powerline inspection demo outputs and demo script around
+  the v1.0.9 operator-dashboard-first evidence workflow.
+- Preserved the artifact completeness score while reporting regulatory
+  documentation completeness separately in machine-readable and human-readable
+  bundle outputs.
+- Clarified dashboard and review-field language: not approval, not
+  authorization, not legal advice, not LAANC, and not operational clearance.
+
 ## v1.0.8 - September 12, 2026
 
 This documentation release sharpens ORBITAL's product differentiation as a

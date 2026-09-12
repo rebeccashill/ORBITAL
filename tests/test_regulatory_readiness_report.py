@@ -55,6 +55,7 @@ def _regulatory_cfg() -> dict[str, object]:
             },
             "required_crew_roles": ["Remote pilot in command", "Visual observer"],
             "special_conditions_limitations": ["Maintain corridor containment."],
+            "emergency_contingency_plan": "Review lost-link and recovery procedures.",
             "operating_assumptions": ["PIC verifies current restrictions before launch."],
             "unresolved_items": ["Confirm site access approval."],
         },
@@ -94,6 +95,7 @@ def test_regulatory_readiness_report_documents_required_items_and_checklist() ->
     assert evidence["special_conditions_limitations"] == [
         "Maintain corridor containment.",
     ]
+    assert evidence["emergency_contingency_plan"] == "Review lost-link and recovery procedures."
 
     checklist_ids = {item["id"] for item in report["operator_approval_checklist"]}
     assert {
@@ -145,6 +147,7 @@ def test_regulatory_readiness_export_writes_json_and_markdown(tmp_path: Path) ->
     assert "ORBITAL provides decision support only and is not legal approval" in markdown
     assert "unit test authorization reference" in markdown
     assert "Regulatory Evidence Fields" in markdown
+    assert "Review lost-link and recovery procedures." in markdown
     assert "- [ ] Confirm LAANC / controlled-airspace authorization" in markdown
     assert "- [ ] Confirm waiver / authorization coverage" in markdown
     assert "- [ ] Confirm visual observer assignment" in markdown

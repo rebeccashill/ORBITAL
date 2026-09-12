@@ -165,6 +165,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         export_operator_memo,
         export_regulatory_readiness_report,
         export_what_if_plan,
+        verify_evidence_bundle_checksums,
     )
 
     audit = export_inspection_constraint_audit(
@@ -203,6 +204,26 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         in audit["regulatory_metadata"]["documentation_only_notice"]
     )
     assert audit["top_limiting_constraint"] is not None
+    assert audit["top_limiting_constraint_selection"]["selected_constraint_id"] == (
+        audit["top_limiting_constraint"]["id"]
+    )
+    assert "highest risk_points" in audit["top_limiting_constraint_selection"]["explanation"]
+    transparency = audit["model_transparency"]
+    assumption_ids = {item["id"] for item in transparency["assumptions_report"]}
+    assert {
+        "battery",
+        "wind",
+        "geofence",
+        "route_completion",
+        "turn_feasibility",
+        "robustness",
+    } <= assumption_ids
+    assert transparency["reproducibility"]["scenario_path"] == "not provided"
+    assert transparency["reproducibility"]["command"]["display"] == "not provided"
+    assert {item["id"] for item in transparency["model_limitations"]} >= {
+        "offline_sample_weather",
+        "simplified_flight_dynamics",
+    }
     assert len(audit["top_three_risk_drivers"]) == 3
     assert len(audit["constraint_groups"]) == 5
     assert {check["id"] for check in audit["checks"]} >= {
@@ -218,11 +239,20 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         assert group["why_this_matters_to_operator"]
         assert group["recommended_operator_action"]
         assert group["status_meaning"]
+        assert group["margin"]["unit"]
+        assert group["margin"]["source"]
+        assert group["warning_margin"]["source"]
     assert (tmp_path / "inspection_constraint_audit.json").exists()
     assert (tmp_path / "inspection_constraint_audit.md").exists()
     memo_text = (tmp_path / "inspection_constraint_audit.md").read_text(encoding="utf-8")
     assert "Primary demo artifact" in memo_text
     assert "Can we safely and defensibly fly this mission?" in memo_text
+    assert "Selection rationale" in memo_text
+    assert "Model Transparency" in memo_text
+    assert "Assumptions Report" in memo_text
+    assert "Constraint Margin Units And Sources" in memo_text
+    assert "Reproducibility" in memo_text
+    assert "Model Limitations" in memo_text
     assert "Constraint Group Summary" in memo_text
     assert "Why this matters to an operator" in memo_text
     assert "Recommended operator action" in memo_text
@@ -263,7 +293,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         evidence["approving_authority_source"]
         == "Operator-provided example authority source for documentation-only demo"
     )
-    assert evidence["authorization_expiration_date"] == "2026-09-11"
+    assert evidence["authorization_expiration_date"] == "2026-12-31"
     assert evidence["operating_altitude_limit_m"] == 120.0
     assert evidence["operating_time_window"] == {
         "start_utc": "2026-09-11T16:00:00Z",
@@ -274,6 +304,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "Visual observer",
     ]
     assert "modeled utility corridor" in evidence["special_conditions_limitations"][0]
+    assert "lost-link" in evidence["emergency_contingency_plan"]
     assert "does not verify" in evidence["notice"]
     assert regulatory_report["operating_assumptions"]
     unresolved_ids = {item["id"] for item in regulatory_report["unresolved_regulatory_items"]}
@@ -413,10 +444,28 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert evidence["complete"] is True
     assert evidence["bundle_completeness_score"] == 100.0
     assert evidence["bundle_completeness"]["complete"] is True
+    assert evidence["artifact_completeness"]["score"] == 100.0
+    assert evidence["regulatory_documentation_completeness"]["score"] == 100.0
+    assert evidence["regulatory_documentation_completeness"]["documented_fields"] == 8
+    assert evidence["regulatory_documentation_completeness"]["total_fields"] == 8
+    assert evidence["bundle_warnings"] == []
     assert evidence["missing_evidence"] == []
     assert evidence["operator_review"]["status"] == "ready_for_review"
     assert evidence["operator_review"]["reviewer_name"] is None
     assert evidence["operator_review"]["review_timestamp_utc"] is None
+    assert (
+        evidence["operator_review"]["review_notes"]
+        == "Demo bundle ready for operator review; final approval remains outside ORBITAL."
+    )
+    assert evidence["operator_review"]["operator_decision"] == "pending operator review"
+    assert evidence["review_metadata"]["schema_version"] == 1
+    assert evidence["review_metadata"]["status"] == "ready_for_review"
+    assert evidence["review_metadata"]["operator_decision"] == "pending operator review"
+    assert evidence["freshness"]["generated_timestamp_utc"].endswith("Z")
+    assert evidence["freshness"]["orbital_version"] != "unknown"
+    assert evidence["freshness"]["scenario_hash"]["algorithm"] == "sha256"
+    assert len(evidence["freshness"]["scenario_hash"]["value"]) == 64
+    assert evidence["freshness"]["command"]["display"] == "not provided"
     assert evidence["weather"]["source"] == "offline Open-Meteo-shaped sample"
     assert evidence["weather"]["timestamp_utc"] == "2026-09-11T16:00:00Z"
     assert evidence["regulatory_metadata"]["laanc_required"] is True
@@ -426,10 +475,17 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         evidence["regulatory_evidence"]["authorization_id"]
         == "example authorization reference only"
     )
+    assert "lost-link" in evidence["regulatory_metadata"]["emergency_contingency_plan"]
+    assert "lost-link" in evidence["regulatory_evidence"]["emergency_contingency_plan"]
     assert evidence["regulatory_evidence_status"]["missing"] == []
     assert evidence["regulatory_evidence_status"]["all_optional_fields_documented"] is True
     assert evidence["approval_checklist"]["source_artifact"] == "regulatory_readiness_report.json"
     assert evidence["approval_checklist"]["item_count"] == len(checklist)
+    for artifact in evidence["artifacts"]:
+        assert "freshness" in artifact
+        if artifact["present"]:
+            assert artifact["freshness"]["bundle_sha256"]
+            assert artifact["freshness"]["stale_against_scenario"] is False
     manifest_checklist_ids = {item["id"] for item in evidence["approval_checklist"]["items"]}
     assert manifest_checklist_ids >= {
         "laanc_confirmation",
@@ -449,6 +505,8 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "inspection_constraint_audit.json",
         "regulatory_readiness_report.json",
         "regulatory_readiness_report.md",
+        "what_if_plan.md",
+        "what_if_plan.json",
         "score.json",
         "flight_path.png",
         "robustness.json",
@@ -460,32 +518,66 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "flight_planning_exports.md",
         "manifest.json",
         "README.md",
+        "operator_dashboard.md",
         "evidence_bundle_summary.md",
         "artifact_index.md",
         "checksum_manifest.json",
     }
     assert {path.name for path in bundle_dir.iterdir()} >= expected_bundle_files
     bundle_readme = (bundle_dir / "README.md").read_text(encoding="utf-8")
+    operator_dashboard = (bundle_dir / "operator_dashboard.md").read_text(encoding="utf-8")
     bundle_summary = (bundle_dir / "evidence_bundle_summary.md").read_text(encoding="utf-8")
     artifact_index = (bundle_dir / "artifact_index.md").read_text(encoding="utf-8")
+    assert "Start with `operator_dashboard.md`" in bundle_readme
     assert "Regulatory Readiness" in bundle_readme
     assert "Approval Checklist" in bundle_readme
     assert "documentation-only" in bundle_readme
     assert "not proof of authorization" in bundle_readme
+    assert "ORBITAL Operator Evidence Dashboard" in operator_dashboard
+    assert "Mission status: GO" in operator_dashboard
+    assert "Mission risk: LOW" in operator_dashboard
+    assert "Top limiting constraint:" in operator_dashboard
+    assert "Regulatory readiness: OPERATOR_ACTION_REQUIRED" in operator_dashboard
+    assert "Bundle completeness: 100.0 %" in operator_dashboard
+    assert "Operator decision: pending operator review" in operator_dashboard
+    assert "Review notes: Demo bundle ready for operator review" in operator_dashboard
+    assert "not approval, not authorization, not legal advice" in operator_dashboard
+    assert "[what_if_plan.md](what_if_plan.md)" in operator_dashboard
+    assert "[manifest.json](manifest.json)" in operator_dashboard
+    assert "[checksum_manifest.json](checksum_manifest.json)" in operator_dashboard
+    assert "[flight_path.png](flight_path.png)" in operator_dashboard
+    assert "[autopilot_mission.csv](autopilot_mission.csv)" in operator_dashboard
+    assert "[mission_review.kml](mission_review.kml)" in operator_dashboard
     assert "Completeness score: 100.0 %" in bundle_summary
+    assert "Artifact completeness score: 100.0 %" in bundle_summary
+    assert "Regulatory documentation completeness score: 100.0 %" in bundle_summary
+    assert "Generated timestamp UTC:" in bundle_summary
+    assert "Scenario SHA-256:" in bundle_summary
+    assert "Command used: not provided" in bundle_summary
+    assert "Bundle Warnings" in bundle_summary
     assert "Operator review status: ready for review" in bundle_summary
+    assert "Operator decision: pending operator review" in bundle_summary
+    assert "Review notes: Demo bundle ready for operator review" in bundle_summary
     assert "Missing Evidence" in bundle_summary
     assert "[inspection_constraint_audit.md](inspection_constraint_audit.md)" in artifact_index
+    assert "[operator_dashboard.md](operator_dashboard.md)" in artifact_index
+    assert "[what_if_plan.md](what_if_plan.md)" in artifact_index
     checksum_manifest = _load_yaml(bundle_dir / "checksum_manifest.json")
     assert checksum_manifest["algorithm"] == "sha256"
     checksum_paths = {item["bundle_path"] for item in checksum_manifest["files"]}
     assert {
         "manifest.json",
         "README.md",
+        "operator_dashboard.md",
         "evidence_bundle_summary.md",
         "artifact_index.md",
         "inspection_constraint_audit.md",
     } <= checksum_paths
+    verification = verify_evidence_bundle_checksums(bundle_dir)
+    assert verification["ok"] is True
+    assert verification["checksum_ok"] is True
+    assert verification["scenario_metadata_ok"] is True
+    assert verification["warnings"] == []
 
     missing_cfg = copy.deepcopy(cfg)
     missing_cfg.pop("evidence_bundle", None)
@@ -495,6 +587,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "authorization_expiration_date",
         "operating_altitude_limit_m",
         "special_conditions_limitations",
+        "emergency_contingency_plan",
     ):
         missing_cfg["regulatory"].pop(key, None)
     missing_cfg["regulatory"]["operating_time_window"] = {}
@@ -505,6 +598,8 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "plan.json",
         "inspection_constraint_audit.md",
         "inspection_constraint_audit.json",
+        "what_if_plan.md",
+        "what_if_plan.json",
         "score.json",
         "flight_path.png",
         "robustness.json",
@@ -532,6 +627,8 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
 
     assert missing_evidence["complete"] is True
     assert missing_evidence["bundle_completeness_score"] == 100.0
+    assert missing_evidence["artifact_completeness"]["score"] == 100.0
+    assert missing_evidence["regulatory_documentation_completeness"]["score"] == 0.0
     assert missing_evidence["operator_review"]["status"] == "draft"
     assert missing_evidence["regulatory_evidence_status"]["all_optional_fields_documented"] is (
         False
@@ -551,6 +648,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "regulatory.operating_time_window",
         "regulatory.required_crew_roles",
         "regulatory.special_conditions_limitations",
+        "regulatory.emergency_contingency_plan",
     } <= missing_paths
     attention_paths = {
         item["path"]
@@ -559,4 +657,5 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert {
         "regulatory.authorization_id",
         "regulatory.required_crew_roles",
+        "regulatory.emergency_contingency_plan",
     } <= attention_paths

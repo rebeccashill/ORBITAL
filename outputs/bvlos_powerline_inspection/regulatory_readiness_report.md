@@ -31,11 +31,12 @@ Optional documentation-only evidence fields. ORBITAL records these values for op
 
 - Authorization ID / reference number: example authorization reference only
 - Approving authority / source: Operator-provided example authority source for documentation-only demo
-- Authorization expiration date: 2026-09-11
+- Authorization expiration date: 2026-12-31
 - Operating altitude limit: 120.0 m
 - Operating time window: 2026-09-11T16:00:00Z to 2026-09-11T18:00:00Z
 - Required crew roles: Remote pilot in command, Visual observer
 - Special conditions / limitations: Remain within the modeled utility corridor and geofence buffers., Do not launch if current field weather is below operator minimums.
+- Emergency / contingency plan: Review lost-link, diversion, recovery, flyaway response, and incident-contact procedures before dispatch.
 
 ## Operating Assumptions
 

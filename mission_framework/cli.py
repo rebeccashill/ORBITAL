@@ -18,7 +18,9 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
 
@@ -165,6 +167,378 @@ def _read_json_mapping(path: Path) -> Dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
+def _resolve_bundle_dir(bundle_path: str) -> Path:
+    path = Path(bundle_path).resolve()
+    if path.is_file():
+        return path.parent
+    return path
+
+
+def _load_bundle_manifest(bundle_path: str) -> tuple[Path, Dict[str, Any]]:
+    bundle_dir = _resolve_bundle_dir(bundle_path)
+    manifest = _read_json_mapping(bundle_dir / "manifest.json")
+    if not manifest:
+        raise FileNotFoundError(
+            f"Evidence bundle manifest not found: {bundle_dir / 'manifest.json'}"
+        )
+    return bundle_dir, manifest
+
+
+def _bundle_open_first_path(bundle_dir: Path, manifest: Dict[str, Any]) -> Path:
+    for candidate in (
+        "operator_dashboard.md",
+        "evidence_bundle_summary.md",
+        "artifact_index.md",
+        "inspection_constraint_audit.md",
+    ):
+        path = bundle_dir / candidate
+        if path.exists():
+            return path
+    for entry in manifest.get("generated_artifacts", []) or []:
+        if entry.get("present") and entry.get("bundle_path"):
+            return bundle_dir / str(entry["bundle_path"])
+    return bundle_dir / "manifest.json"
+
+
+def _format_cli_value(value: Any, unit: str = "") -> str:
+    if value is None:
+        return "not provided"
+    if isinstance(value, bool):
+        text = "yes" if value else "no"
+    elif isinstance(value, (int, float)):
+        text = f"{float(value):.1f}"
+    else:
+        text = str(value)
+    return f"{text} {unit}".strip() if unit else text
+
+
+def _format_top_constraint(top: Dict[str, Any]) -> str:
+    margin = top.get("margin") or {}
+    label = top.get("label") or "not available"
+    status = str(top.get("status") or "unknown").upper()
+    margin_text = _format_cli_value(margin.get("value"), str(margin.get("unit") or ""))
+    return f"{label}: {status}, margin {margin_text}"
+
+
+def _artifact_present(manifest: Dict[str, Any], artifact_id: str) -> bool:
+    return any(
+        entry.get("id") == artifact_id and bool(entry.get("present"))
+        for entry in manifest.get("artifacts", []) or []
+    )
+
+
+def _bundle_summary_command(argv: Sequence[str]) -> int:
+    ap = argparse.ArgumentParser(description="Summarize an existing ORBITAL evidence bundle.")
+    ap.add_argument("bundle", help="Evidence bundle directory or manifest.json path.")
+    ap.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
+    args = ap.parse_args(list(argv))
+
+    try:
+        bundle_dir, manifest = _load_bundle_manifest(args.bundle)
+    except FileNotFoundError as exc:
+        print(f"INVALID: {exc}", file=sys.stderr)
+        return 2
+
+    audit = manifest.get("constraint_audit") or {}
+    top = audit.get("top_limiting_constraint") or {}
+    readiness = manifest.get("regulatory_readiness") or {}
+    bundle_completeness = (
+        manifest.get("artifact_completeness") or manifest.get("bundle_completeness") or {}
+    )
+    regulatory_completeness = manifest.get("regulatory_documentation_completeness") or {}
+    review = manifest.get("operator_review") or {}
+    missing = manifest.get("missing_evidence") or []
+    warnings = manifest.get("bundle_warnings") or []
+    open_first = _bundle_open_first_path(bundle_dir, manifest)
+
+    payload = {
+        "bundle_dir": str(bundle_dir),
+        "open_first": str(open_first),
+        "mission_id": audit.get("mission_id"),
+        "mission_status": audit.get("status"),
+        "mission_risk": audit.get("mission_risk"),
+        "top_limiting_constraint": top,
+        "regulatory_readiness": readiness,
+        "artifact_completeness_score": bundle_completeness.get("score"),
+        "regulatory_documentation_completeness_score": regulatory_completeness.get("score"),
+        "operator_review_status": review.get("status"),
+        "bundle_warning_count": len(warnings),
+        "missing_evidence_count": len(missing),
+    }
+    if args.json:
+        print(strict_json_dumps(payload, indent=2))
+        return 0
+
+    print("=== ORBITAL Evidence Bundle Summary ===")
+    print(f"Bundle: {bundle_dir}")
+    print(f"Open first: {open_first}")
+    print(f"Mission: {payload['mission_id'] or 'not provided'}")
+    print(f"Mission status: {str(payload['mission_status'] or 'unknown').upper()}")
+    print(f"Mission risk: {str(payload['mission_risk'] or 'unknown').upper()}")
+    print(f"Top limiting constraint: {_format_top_constraint(top)}")
+    print(
+        "Regulatory readiness: "
+        f"{str(readiness.get('readiness_state') or readiness.get('status') or 'unknown').upper()}"
+    )
+    print(
+        "Artifact completeness: "
+        f"{_format_cli_value(payload['artifact_completeness_score'], '%')}"
+    )
+    print(
+        "Regulatory documentation completeness: "
+        f"{_format_cli_value(payload['regulatory_documentation_completeness_score'], '%')}"
+    )
+    print(f"Operator review status: {review.get('status') or 'not provided'}")
+    print(f"Bundle warnings: {len(warnings)}")
+    print(f"Missing evidence items: {len(missing)}")
+    return 0
+
+
+def _bundle_verify_command(argv: Sequence[str]) -> int:
+    ap = argparse.ArgumentParser(description="Verify ORBITAL evidence bundle checksums.")
+    ap.add_argument("bundle", help="Evidence bundle directory or manifest.json path.")
+    ap.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
+    args = ap.parse_args(list(argv))
+
+    bundle_dir = _resolve_bundle_dir(args.bundle)
+    try:
+        from mission_framework.reporting.flight_output import verify_evidence_bundle_checksums
+
+        result = verify_evidence_bundle_checksums(bundle_dir)
+    except Exception as exc:
+        print(f"INVALID: {exc}", file=sys.stderr)
+        return 2
+
+    if args.json:
+        print(strict_json_dumps(result, indent=2))
+    else:
+        print("=== ORBITAL Evidence Bundle Checksum Verification ===")
+        print(f"Bundle: {bundle_dir}")
+        print(f"Status: {'OK' if result.get('ok') else 'FAILED'}")
+        print(f"Checksum OK: {'yes' if result.get('checksum_ok') else 'no'}")
+        print(f"Scenario metadata OK: {'yes' if result.get('scenario_metadata_ok') else 'no'}")
+        print(f"Checked files: {result.get('checked_files', 0)}")
+        warnings = result.get("warnings") or []
+        print(f"Warnings: {len(warnings)}")
+        for warning in warnings:
+            print(f"- {warning.get('id') or warning.get('kind')}: {warning.get('message')}")
+    return 0 if result.get("ok") else 1
+
+
+def _bundle_top_constraint_command(argv: Sequence[str]) -> int:
+    ap = argparse.ArgumentParser(
+        description="Print the top limiting constraint and recommended operator action."
+    )
+    ap.add_argument("bundle", help="Evidence bundle directory or manifest.json path.")
+    ap.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
+    args = ap.parse_args(list(argv))
+
+    try:
+        bundle_dir, manifest = _load_bundle_manifest(args.bundle)
+    except FileNotFoundError as exc:
+        print(f"INVALID: {exc}", file=sys.stderr)
+        return 2
+
+    audit = _read_json_mapping(bundle_dir / "inspection_constraint_audit.json")
+    manifest_audit = manifest.get("constraint_audit") or {}
+    top = (
+        audit.get("top_limiting_constraint") or manifest_audit.get("top_limiting_constraint") or {}
+    )
+    if not top:
+        print("No top limiting constraint found in bundle.", file=sys.stderr)
+        return 1
+    transparency = audit.get("model_transparency") or {}
+    selection = (
+        transparency.get("top_limiting_constraint_selection")
+        or audit.get("top_limiting_constraint_selection")
+        or {}
+    )
+    payload = {
+        "bundle_dir": str(bundle_dir),
+        "top_limiting_constraint": top,
+        "recommended_operator_action": top.get("recommended_operator_action")
+        or top.get("recommendation"),
+        "selection_rationale": selection.get("explanation"),
+    }
+    if args.json:
+        print(strict_json_dumps(payload, indent=2))
+        return 0
+
+    print("=== ORBITAL Top Limiting Constraint ===")
+    print(f"Bundle: {bundle_dir}")
+    print(_format_top_constraint(top))
+    print("Why this matters: " f"{top.get('why_this_matters_to_operator') or 'not provided'}")
+    print(
+        "Recommended operator action: "
+        f"{payload['recommended_operator_action'] or 'not provided'}"
+    )
+    if payload["selection_rationale"]:
+        print(f"Selection rationale: {payload['selection_rationale']}")
+    return 0
+
+
+def _parse_review_timestamp(value: Any) -> bool:
+    if value is None or value == "":
+        return True
+    if not isinstance(value, str):
+        return False
+    text = value.strip()
+    if not text:
+        return False
+    if text.endswith("Z"):
+        text = f"{text[:-1]}+00:00"
+    try:
+        datetime.fromisoformat(text)
+    except ValueError:
+        return False
+    return True
+
+
+def _bundle_review_validate_command(argv: Sequence[str]) -> int:
+    ap = argparse.ArgumentParser(
+        description="Validate evidence bundle review metadata without rerunning optimization."
+    )
+    ap.add_argument("bundle", help="Evidence bundle directory or manifest.json path.")
+    ap.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
+    args = ap.parse_args(list(argv))
+
+    try:
+        bundle_dir, manifest = _load_bundle_manifest(args.bundle)
+    except FileNotFoundError as exc:
+        print(f"INVALID: {exc}", file=sys.stderr)
+        return 2
+
+    review = manifest.get("operator_review") or {}
+    review_metadata = manifest.get("review_metadata") or {}
+    status = review.get("status") or review_metadata.get("status")
+    allowed = set(review.get("allowed_statuses") or ["draft", "ready_for_review", "reviewed"])
+    errors: list[Dict[str, Any]] = []
+    warnings: list[Dict[str, Any]] = []
+
+    if status not in allowed:
+        errors.append(
+            {
+                "path": "operator_review.status",
+                "message": f"status must be one of: {', '.join(sorted(allowed))}",
+            }
+        )
+    if (
+        review_metadata.get("status")
+        and review.get("status")
+        and review_metadata.get("status") != review.get("status")
+    ):
+        errors.append(
+            {
+                "path": "review_metadata.status",
+                "message": "review_metadata.status does not match operator_review.status",
+            }
+        )
+    if not _parse_review_timestamp(review.get("review_timestamp_utc")):
+        errors.append(
+            {
+                "path": "operator_review.review_timestamp_utc",
+                "message": "review timestamp must be ISO-8601 when provided",
+            }
+        )
+    for key in ("reviewer_name", "review_notes", "operator_decision"):
+        value = review.get(key)
+        if value is not None and (not isinstance(value, str) or not value.strip()):
+            errors.append(
+                {
+                    "path": f"operator_review.{key}",
+                    "message": "must be a non-empty string when provided",
+                }
+            )
+    if status == "reviewed" and not review.get("reviewer_name"):
+        warnings.append(
+            {
+                "path": "operator_review.reviewer_name",
+                "message": "reviewed bundles should document reviewer_name",
+            }
+        )
+    if status == "reviewed" and not review.get("review_timestamp_utc"):
+        warnings.append(
+            {
+                "path": "operator_review.review_timestamp_utc",
+                "message": "reviewed bundles should document review_timestamp_utc",
+            }
+        )
+    if manifest.get("bundle_warnings") and status in {"ready_for_review", "reviewed"}:
+        warnings.append(
+            {
+                "path": "bundle_warnings",
+                "message": "bundle has warnings; review status may need attention",
+            }
+        )
+    if manifest.get("missing_evidence") and status in {"ready_for_review", "reviewed"}:
+        warnings.append(
+            {
+                "path": "missing_evidence",
+                "message": "bundle has missing evidence; review status may need attention",
+            }
+        )
+
+    payload = {
+        "bundle_dir": str(bundle_dir),
+        "valid": not errors,
+        "status": status,
+        "documentation_only": bool(review.get("documentation_only", True)),
+        "errors": errors,
+        "warnings": warnings,
+    }
+    if args.json:
+        print(strict_json_dumps(payload, indent=2))
+        return 0 if payload["valid"] else 1
+
+    print("=== ORBITAL Review Metadata Validation ===")
+    print(f"Bundle: {bundle_dir}")
+    print(f"Review metadata: {'VALID' if payload['valid'] else 'INVALID'}")
+    print(f"Operator review status: {status or 'not provided'}")
+    print("Documentation-only: yes")
+    if errors:
+        print("Errors:")
+        for error in errors:
+            print(f"- {error['path']}: {error['message']}")
+    if warnings:
+        print("Warnings:")
+        for warning in warnings:
+            print(f"- {warning['path']}: {warning['message']}")
+    return 0 if payload["valid"] else 1
+
+
+BUNDLE_COMMANDS = {
+    "bundle-summary": _bundle_summary_command,
+    "evidence-summary": _bundle_summary_command,
+    "bundle-verify": _bundle_verify_command,
+    "verify-bundle": _bundle_verify_command,
+    "bundle-top": _bundle_top_constraint_command,
+    "top-constraint": _bundle_top_constraint_command,
+    "bundle-review-validate": _bundle_review_validate_command,
+    "review-validate": _bundle_review_validate_command,
+}
+
+
+def _first_artifact_to_open(outdir: Path, scenario_type: str) -> Optional[Path]:
+    candidates: list[Path]
+    if scenario_type == "aircraft":
+        candidates = [
+            outdir / "operator_evidence_bundle" / "operator_dashboard.md",
+            outdir / "inspection_constraint_audit.md",
+            outdir / "regulatory_readiness_report.md",
+            outdir / "operator_memo.md",
+        ]
+    elif scenario_type == "spacecraft":
+        candidates = [
+            outdir / "mission_timeline.png",
+            outdir / "operations_summary.png",
+            outdir / "schedule.csv",
+            outdir / "plan.json",
+        ]
+    else:
+        candidates = [outdir / "plan.json"]
+    return next((path for path in candidates if path.exists()), None)
+
+
 def _batch_summary_row(scenario_path: Path, outdir: Path, exit_code: int) -> Dict[str, Any]:
     cfg = _load_yaml(scenario_path)
     scenario = cfg.get("scenario", {}) if isinstance(cfg, dict) else {}
@@ -270,6 +644,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return _validate_command(raw_args[1:])
     if raw_args and raw_args[0] == "batch":
         return _batch_command(raw_args[1:])
+    if raw_args and raw_args[0] in BUNDLE_COMMANDS:
+        return BUNDLE_COMMANDS[raw_args[0]](raw_args[1:])
 
     ap = argparse.ArgumentParser(description="Run ORBITAL unified mission planning scenarios.")
     ap.add_argument(
@@ -427,6 +803,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     outdir.mkdir(parents=True, exist_ok=True)
 
     scenario_type = str(cfg.get("scenario", {}).get("type", "")).strip().lower()
+    command_argv = [sys.executable, "-m", "mission_framework.cli", *raw_args]
+    command_used = {
+        "argv": command_argv,
+        "display": subprocess.list2cmdline(command_argv),
+    }
 
     if scenario_type == "aircraft":
         # Optional human-readable output
@@ -459,6 +840,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 outdir,
                 cfg=cfg,
                 robustness=result.robustness,
+                scenario_path=scenario_path,
+                command_used=command_used,
             )
             export_regulatory_readiness_report(
                 result.plan,
@@ -593,11 +976,22 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         try:
             from mission_framework.reporting.flight_output import export_operator_evidence_bundle
 
-            export_operator_evidence_bundle(outdir, scenario_path, cfg=cfg)
+            export_operator_evidence_bundle(
+                outdir,
+                scenario_path,
+                cfg=cfg,
+                command_used=command_used,
+            )
         except Exception as e:
             print(f"(operator evidence bundle skipped: {e})")
 
     print(f"\nWrote outputs to: {outdir}")
+    first_artifact = _first_artifact_to_open(outdir, scenario_type)
+    if first_artifact is not None:
+        print(f"Open first: {first_artifact}")
+    artifact_index = outdir / "operator_evidence_bundle" / "artifact_index.md"
+    if artifact_index.exists():
+        print(f"Artifact index: {artifact_index}")
     return 0
 
 

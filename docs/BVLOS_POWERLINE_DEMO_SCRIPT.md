@@ -26,6 +26,7 @@ python -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml --
 
 Primary files to open:
 
+- `outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_dashboard.md`
 - `outputs/bvlos_powerline_inspection/inspection_constraint_audit.md`
 - `outputs/bvlos_powerline_inspection/what_if_plan.md`
 - `outputs/bvlos_powerline_inspection/regulatory_readiness_report.md`
@@ -34,11 +35,41 @@ Primary files to open:
 
 ## Demo Arc
 
-1. Start with the constraint audit, not the map.
-2. Show the baseline mission feasibility and top limiting constraint.
+1. Start with the operator evidence dashboard, not the map.
+2. Drill into the constraint audit for baseline feasibility and top limiting constraint.
 3. Show what-if alternatives and before/after improvements.
 4. Show regulatory readiness as documentation-only decision support.
 5. Finish with the evidence bundle summary, index, and checksum manifest.
+
+## 0. Operator Evidence Dashboard
+
+Open:
+
+```text
+outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_dashboard.md
+```
+
+Presenter script:
+
+> The first artifact an operator opens is the dashboard. It pulls the mission
+> status, mission risk, top limiting constraint, regulatory readiness, bundle
+> completeness, review fields, and artifact links into one page. This is where
+> a reviewer starts before drilling into the audit, what-if plan, regulatory
+> report, manifest, checksums, plot, CSV, and KML.
+
+Sample output:
+
+```text
+Mission status: GO
+Mission risk: LOW
+Top limiting constraint: Wind / weather margin, PASS, margin 3.1 m/s
+Regulatory readiness: OPERATOR_ACTION_REQUIRED
+Bundle completeness: 100.0 %
+Operator decision: pending operator review
+```
+
+Emphasize the dashboard boundary language: it is not approval, not
+authorization, not legal advice, not LAANC, and not operational clearance.
 
 ## 1. Baseline Mission Feasibility
 
@@ -100,6 +131,23 @@ Top limiting constraint: Wind / weather margin, PASS with margin 3.1 m/s
 Use the top three risk drivers section to explain that "GO" does not mean "stop
 thinking." It means the current modeled plan passes, while the operator can see
 which assumptions deserve the most review before dispatch.
+
+Then open the Model Transparency section in the same audit. It records battery,
+wind, geofence, route completion, turn feasibility, and robustness assumptions;
+lists margin units and sources; explains why the top limiting constraint was
+selected; and captures the scenario path, seed, iterations, robustness cases,
+and command used to reproduce the report. Use the limitations notes to keep the
+demo legally and technically honest about offline/sample weather and simplified
+flight dynamics.
+
+CLI shortcut:
+
+```bash
+python -m mission_framework.cli bundle-top outputs/bvlos_powerline_inspection/operator_evidence_bundle
+```
+
+This prints the top limiting constraint and recommended operator action without
+rerunning optimization.
 
 ## 3. What-If Comparison
 
@@ -184,7 +232,16 @@ minimums, and battery reserve confirmation.
 Open:
 
 ```text
+outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_dashboard.md
 outputs/bvlos_powerline_inspection/operator_evidence_bundle/evidence_bundle_summary.md
+```
+
+CLI shortcuts:
+
+```bash
+python -m mission_framework.cli bundle-summary outputs/bvlos_powerline_inspection/operator_evidence_bundle
+python -m mission_framework.cli bundle-verify outputs/bvlos_powerline_inspection/operator_evidence_bundle
+python -m mission_framework.cli bundle-review-validate outputs/bvlos_powerline_inspection/operator_evidence_bundle
 ```
 
 Presenter script:
@@ -198,7 +255,7 @@ Sample output:
 
 ```text
 Completeness score: 100.0 %
-Artifacts present: 15 / 15
+Artifacts present: 17 / 17
 Missing artifact count: 0
 Operator review status: ready for review
 ```
@@ -227,6 +284,7 @@ For a compact README snippet, use:
 Status: GO
 Mission risk: LOW
 Top limiting constraint: Wind / weather margin, PASS with margin 3.1 m/s
+Open first artifact: operator_evidence_bundle/operator_dashboard.md
 Evidence bundle completeness: 100.0 %
 Regulatory readiness: OPERATOR_ACTION_REQUIRED, documentation-only
 ```

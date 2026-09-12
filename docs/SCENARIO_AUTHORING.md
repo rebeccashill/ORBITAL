@@ -182,6 +182,7 @@ simulation:
 | `regulatory.operating_time_window.end_utc` | string | Optional documentation-only UTC end |
 | `regulatory.required_crew_roles[]` | list of strings | Optional documentation-only crew roles |
 | `regulatory.special_conditions_limitations[]` | list of strings | Optional documentation-only conditions or limitations |
+| `regulatory.emergency_contingency_plan` | string | Optional documentation-only emergency / contingency plan note |
 | `regulatory.operating_assumptions[]` | list of strings | Optional report assumptions |
 | `regulatory.unresolved_items[]` | list of strings | Optional report action items |
 | `regulatory.documentation_only_notice` | string | Optional, non-empty |
@@ -318,29 +319,70 @@ with conditional LAANC, waiver / authorization, and visual observer confirmation
 plus crew briefing, emergency / contingency plan, NOTAM / local restriction,
 weather minimums, and battery reserve confirmation items.
 
+Inspection constraint audits include a Model Transparency section. It reports
+assumptions for battery, wind, geofence, route completion, turn feasibility, and
+robustness; includes units and source fields for major constraint margins;
+explains why the top limiting constraint was selected; records scenario path,
+seed, iterations, robustness cases, and command when provided by the CLI; and
+documents limitations for offline/sample weather and simplified flight dynamics.
+
 Validation emits non-blocking warnings, not errors, when BVLOS regulatory
 documentation is incomplete. Warnings are also emitted when LAANC or waiver /
 authorization is required but no `regulatory.authorization_id` is provided, or
 when a visual observer is required but `regulatory.required_crew_roles` does not
-document that role. These warnings do not prevent planning; they prompt operator
-documentation review.
+document that role. ORBITAL also warns when authorization expiration
+documentation is in the past, operating time-window documentation is missing or
+malformed, documented altitude limits exceed scenario altitude assumptions,
+weather timestamps are stale for the planned operating window, or emergency /
+contingency plan documentation is missing. These warnings do not prevent
+planning; they prompt operator documentation review.
 
-Operator evidence bundles include `evidence_bundle_summary.md`,
-`artifact_index.md`, `manifest.json`, and a lightweight
-`checksum_manifest.json`. The manifest reports a completeness score, missing
-evidence list, and documentation-only operator review metadata. Review metadata
-can be provided with an optional top-level block:
+Operator evidence bundles include `operator_dashboard.md`,
+`evidence_bundle_summary.md`, `artifact_index.md`, `manifest.json`, and a
+lightweight `checksum_manifest.json`. Start with `operator_dashboard.md`; it
+summarizes mission status, mission risk, top limiting constraint, regulatory
+readiness, bundle completeness, operator review fields, and links to audit,
+what-if, regulatory, manifest, checksum, plot, CSV, and KML artifacts. The
+manifest reports artifact freshness metadata, scenario SHA-256, ORBITAL version,
+command used, artifact completeness, regulatory documentation completeness,
+missing evidence, bundle warnings, and documentation-only operator review
+metadata. Review metadata can be provided with an optional top-level block:
 
 ```yaml
 evidence_bundle:
   operator_review_status: "ready_for_review"  # draft, ready_for_review, reviewed
   reviewer_name: "Optional reviewer name"
   review_timestamp_utc: "2026-09-11T19:00:00Z"
+  review_notes: "Optional review notes"
+  operator_decision: "pending operator review"
 ```
 
 These fields are optional and documentation-only. They do not provide flight
-approval, legal approval, LAANC, waivers, authorizations, or operational
-clearance.
+approval, legal approval, legal advice, LAANC, waivers, authorizations, or
+operational clearance.
+
+`bundle_completeness_score` is preserved as the artifact completeness score for
+compatibility. Regulatory documentation completeness is reported separately so
+missing optional documentation fields are visible without being treated as core
+artifact failures. `checksum_manifest.json` can be verified with the reporting
+helper `verify_evidence_bundle_checksums()`; verification checks file hashes,
+file sizes, and whether the bundled scenario still matches the scenario hash
+recorded in `manifest.json`.
+
+Existing evidence bundles can also be inspected without rerunning optimization:
+
+```bash
+python -m mission_framework.cli bundle-summary outputs/bvlos_powerline_inspection/operator_evidence_bundle
+python -m mission_framework.cli bundle-verify outputs/bvlos_powerline_inspection/operator_evidence_bundle
+python -m mission_framework.cli bundle-top outputs/bvlos_powerline_inspection/operator_evidence_bundle
+python -m mission_framework.cli bundle-review-validate outputs/bvlos_powerline_inspection/operator_evidence_bundle
+```
+
+`bundle-summary` shows which artifact to open first, mission status, mission
+risk, top limiting constraint, completeness, warnings, and missing evidence.
+`bundle-verify` checks the checksum manifest. `bundle-top` prints the top
+limiting constraint and recommended operator action. `bundle-review-validate`
+checks review metadata fields without running the planner.
 
 ## Batch Inspection Runs
 

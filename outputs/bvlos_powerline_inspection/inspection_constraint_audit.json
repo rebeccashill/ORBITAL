@@ -33,7 +33,7 @@
     "ground_risk_population_note": "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch.",
     "authorization_id": "example authorization reference only",
     "approving_authority_source": "Operator-provided example authority source for documentation-only demo",
-    "authorization_expiration_date": "2026-09-11",
+    "authorization_expiration_date": "2026-12-31",
     "operating_altitude_limit_m": 120.0,
     "operating_time_window": {
       "start_utc": "2026-09-11T16:00:00Z",
@@ -47,6 +47,7 @@
       "Remain within the modeled utility corridor and geofence buffers.",
       "Do not launch if current field weather is below operator minimums."
     ],
+    "emergency_contingency_plan": "Review lost-link, diversion, recovery, flyaway response, and incident-contact procedures before dispatch.",
     "operating_assumptions": [
       "Pilot-in-command verifies current FAA, local, site, NOTAM, TFR, and airspace requirements before launch.",
       "Mission remains within the modeled route, altitude, weather, battery, geofence, and crew constraints.",
@@ -90,11 +91,13 @@
     "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
     "margin": {
       "value": 3.0999999999999996,
-      "unit": "m/s"
+      "unit": "m/s",
+      "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
     },
     "warning_margin": {
       "value": 2.0,
-      "unit": "m/s"
+      "unit": "m/s",
+      "source": "wind.warning_margin_mps or default 2.0 m/s"
     },
     "risk_points": 14.500000000000002,
     "observed": {
@@ -114,6 +117,87 @@
     "recommendation": "Wait for better wind or lower mission scope.",
     "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
   },
+  "top_limiting_constraint_selection": {
+    "method": "risk_points_descending",
+    "risk_points_definition": "Risk points increase when a constraint fails, is inside its warning band, or has little positive margin relative to its warning threshold.",
+    "selected_constraint_id": "wind_weather",
+    "selected_label": "Wind / weather margin",
+    "selected_status": "pass",
+    "selected_risk_points": 14.500000000000002,
+    "selected_margin": {
+      "value": 3.0999999999999996,
+      "unit": "m/s",
+      "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+    },
+    "selected_warning_margin": {
+      "value": 2.0,
+      "unit": "m/s",
+      "source": "wind.warning_margin_mps or default 2.0 m/s"
+    },
+    "explanation": "Wind / weather margin was selected because it had the highest risk_points value (14.5) among 5 audited constraint groups. Its margin was 3.1 m/s against a warning threshold of 2.0 m/s.",
+    "ranking": [
+      {
+        "rank": 1,
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "status": "pass",
+        "risk_points": 14.500000000000002,
+        "margin": {
+          "value": 3.0999999999999996,
+          "unit": "m/s",
+          "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+        }
+      },
+      {
+        "rank": 2,
+        "id": "battery_reserve",
+        "label": "Battery reserve margin",
+        "status": "pass",
+        "risk_points": 11.13428885267828,
+        "margin": {
+          "value": 132.05997803125206,
+          "unit": "Wh",
+          "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+        }
+      },
+      {
+        "rank": 3,
+        "id": "route_completion",
+        "label": "Route completion status",
+        "status": "pass",
+        "risk_points": 10.000000000000002,
+        "margin": {
+          "value": 1.0,
+          "unit": "completion",
+          "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
+        }
+      },
+      {
+        "rank": 4,
+        "id": "turn_bank_feasibility",
+        "label": "Turn / bank feasibility",
+        "status": "pass",
+        "risk_points": 2.198474442486985,
+        "margin": {
+          "value": 0.1390076277875651,
+          "unit": "rad/s",
+          "source": "constraint_result.bank_angle_turn_limit.min_margin"
+        }
+      },
+      {
+        "rank": 5,
+        "id": "geofence_clearance",
+        "label": "Geofence / no-fly-zone clearance",
+        "status": "pass",
+        "risk_points": 0.0,
+        "margin": {
+          "value": 276.69524979477507,
+          "unit": "m",
+          "source": "constraint_result.geofence_clearance.min_margin with no-entry violation override from constraint_result.geofence_no_entry"
+        }
+      }
+    ]
+  },
   "top_three_risk_drivers": [
     {
       "id": "wind_weather",
@@ -126,11 +210,13 @@
       "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
       "margin": {
         "value": 3.0999999999999996,
-        "unit": "m/s"
+        "unit": "m/s",
+        "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
       },
       "warning_margin": {
         "value": 2.0,
-        "unit": "m/s"
+        "unit": "m/s",
+        "source": "wind.warning_margin_mps or default 2.0 m/s"
       },
       "risk_points": 14.500000000000002,
       "observed": {
@@ -161,11 +247,13 @@
       "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
       "margin": {
         "value": 132.05997803125206,
-        "unit": "Wh"
+        "unit": "Wh",
+        "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
       },
       "warning_margin": {
         "value": 70.0,
-        "unit": "Wh"
+        "unit": "Wh",
+        "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
       },
       "risk_points": 11.13428885267828,
       "observed": {
@@ -186,11 +274,13 @@
       "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
       "margin": {
         "value": 1.0,
-        "unit": "completion"
+        "unit": "completion",
+        "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
       },
       "warning_margin": {
         "value": 0.5,
-        "unit": "completion"
+        "unit": "completion",
+        "source": "fixed 0.5 completion warning band"
       },
       "risk_points": 10.000000000000002,
       "observed": {
@@ -214,11 +304,13 @@
       "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
       "margin": {
         "value": 132.05997803125206,
-        "unit": "Wh"
+        "unit": "Wh",
+        "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
       },
       "warning_margin": {
         "value": 70.0,
-        "unit": "Wh"
+        "unit": "Wh",
+        "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
       },
       "risk_points": 11.13428885267828,
       "observed": {
@@ -239,11 +331,13 @@
       "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
       "margin": {
         "value": 3.0999999999999996,
-        "unit": "m/s"
+        "unit": "m/s",
+        "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
       },
       "warning_margin": {
         "value": 2.0,
-        "unit": "m/s"
+        "unit": "m/s",
+        "source": "wind.warning_margin_mps or default 2.0 m/s"
       },
       "risk_points": 14.500000000000002,
       "observed": {
@@ -274,11 +368,13 @@
       "why_this_matters_to_operator": "Geofence clearance protects people, assets, restricted areas, and customer boundaries when navigation or wind uncertainty appears.",
       "margin": {
         "value": 276.69524979477507,
-        "unit": "m"
+        "unit": "m",
+        "source": "constraint_result.geofence_clearance.min_margin with no-entry violation override from constraint_result.geofence_no_entry"
       },
       "warning_margin": {
         "value": 25.0,
-        "unit": "m"
+        "unit": "m",
+        "source": "max(25 m, 25 percent of geofence.clearance_m)"
       },
       "risk_points": 0.0,
       "observed": {
@@ -300,11 +396,13 @@
       "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
       "margin": {
         "value": 1.0,
-        "unit": "completion"
+        "unit": "completion",
+        "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
       },
       "warning_margin": {
         "value": 0.5,
-        "unit": "completion"
+        "unit": "completion",
+        "source": "fixed 0.5 completion warning band"
       },
       "risk_points": 10.000000000000002,
       "observed": {
@@ -326,11 +424,13 @@
       "why_this_matters_to_operator": "Overly aggressive turns can break route tracking, increase energy use, and reduce safety margins near assets or geofences.",
       "margin": {
         "value": 0.1390076277875651,
-        "unit": "rad/s"
+        "unit": "rad/s",
+        "source": "constraint_result.bank_angle_turn_limit.min_margin"
       },
       "warning_margin": {
         "value": 0.05,
-        "unit": "rad/s"
+        "unit": "rad/s",
+        "source": "vehicle.turn_warning_margin_radps or default 0.05 rad/s"
       },
       "risk_points": 2.198474442486985,
       "observed": {
@@ -352,11 +452,13 @@
       "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
       "margin": {
         "value": 132.05997803125206,
-        "unit": "Wh"
+        "unit": "Wh",
+        "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
       },
       "warning_margin": {
         "value": 70.0,
-        "unit": "Wh"
+        "unit": "Wh",
+        "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
       },
       "risk_points": 11.13428885267828,
       "observed": {
@@ -377,11 +479,13 @@
       "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
       "margin": {
         "value": 3.0999999999999996,
-        "unit": "m/s"
+        "unit": "m/s",
+        "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
       },
       "warning_margin": {
         "value": 2.0,
-        "unit": "m/s"
+        "unit": "m/s",
+        "source": "wind.warning_margin_mps or default 2.0 m/s"
       },
       "risk_points": 14.500000000000002,
       "observed": {
@@ -412,11 +516,13 @@
       "why_this_matters_to_operator": "Geofence clearance protects people, assets, restricted areas, and customer boundaries when navigation or wind uncertainty appears.",
       "margin": {
         "value": 276.69524979477507,
-        "unit": "m"
+        "unit": "m",
+        "source": "constraint_result.geofence_clearance.min_margin with no-entry violation override from constraint_result.geofence_no_entry"
       },
       "warning_margin": {
         "value": 25.0,
-        "unit": "m"
+        "unit": "m",
+        "source": "max(25 m, 25 percent of geofence.clearance_m)"
       },
       "risk_points": 0.0,
       "observed": {
@@ -438,11 +544,13 @@
       "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
       "margin": {
         "value": 1.0,
-        "unit": "completion"
+        "unit": "completion",
+        "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
       },
       "warning_margin": {
         "value": 0.5,
-        "unit": "completion"
+        "unit": "completion",
+        "source": "fixed 0.5 completion warning band"
       },
       "risk_points": 10.000000000000002,
       "observed": {
@@ -464,11 +572,13 @@
       "why_this_matters_to_operator": "Overly aggressive turns can break route tracking, increase energy use, and reduce safety margins near assets or geofences.",
       "margin": {
         "value": 0.1390076277875651,
-        "unit": "rad/s"
+        "unit": "rad/s",
+        "source": "constraint_result.bank_angle_turn_limit.min_margin"
       },
       "warning_margin": {
         "value": 0.05,
-        "unit": "rad/s"
+        "unit": "rad/s",
+        "source": "vehicle.turn_warning_margin_radps or default 0.05 rad/s"
       },
       "risk_points": 2.198474442486985,
       "observed": {
@@ -476,6 +586,617 @@
       },
       "recommendation": "Lower cruise speed or add more turn spacing.",
       "recommended_operator_action": "Keep the planned speed and turn assumptions, then verify they match the aircraft operating envelope."
+    }
+  ],
+  "model_transparency": {
+    "assumptions_report": [
+      {
+        "id": "battery",
+        "label": "Battery / energy model",
+        "source": "scenario.initial_state, scenario.vehicle, simulation scalars, and battery constraints",
+        "inputs": [
+          {
+            "name": "initial battery",
+            "value": 850.0,
+            "unit": "Wh",
+            "source": "initial_state.battery_Wh"
+          },
+          {
+            "name": "battery capacity",
+            "value": 900.0,
+            "unit": "Wh",
+            "source": "vehicle.battery_capacity_Wh"
+          },
+          {
+            "name": "required battery reserve",
+            "value": 700.0,
+            "unit": "Wh",
+            "source": "vehicle.battery_reserve_Wh"
+          },
+          {
+            "name": "final simulated battery",
+            "value": 832.0599780312521,
+            "unit": "Wh",
+            "source": "simulation.scalars.final_battery_Wh"
+          },
+          {
+            "name": "energy used",
+            "value": 17.940021968747942,
+            "unit": "Wh",
+            "source": "simulation.scalars.energy_used_Wh"
+          }
+        ],
+        "assumption": "Battery feasibility is based on the configured capacity, initial charge, reserve policy, and simplified power model coefficients.",
+        "operator_review_note": "Confirm aircraft battery health, payload draw, temperature effects, and abort reserve outside ORBITAL before release."
+      },
+      {
+        "id": "wind",
+        "label": "Wind / weather model",
+        "source": "scenario.wind, scenario.weather, weather.resolved, and simulation wind resources",
+        "inputs": [
+          {
+            "name": "wind model type",
+            "value": "sinusoidal",
+            "unit": "",
+            "source": "wind.type"
+          },
+          {
+            "name": "maximum safe wind",
+            "value": 9.0,
+            "unit": "m/s",
+            "source": "wind.max_safe_wind_mps"
+          },
+          {
+            "name": "weather wind gust",
+            "value": 5.9,
+            "unit": "m/s",
+            "source": "weather.resolved.wind_gust_mps"
+          },
+          {
+            "name": "weather source",
+            "value": "offline Open-Meteo-shaped sample",
+            "unit": "",
+            "source": "weather.resolved.source"
+          },
+          {
+            "name": "weather timestamp",
+            "value": "2026-09-11T16:00:00Z",
+            "unit": "UTC",
+            "source": "weather.resolved.timestamp_utc"
+          }
+        ],
+        "assumption": "Wind feasibility compares the modeled or weather-provided wind exposure against the configured safe operating limit.",
+        "operator_review_note": "Refresh field weather and gust observations close to launch, especially when offline or sample weather is used."
+      },
+      {
+        "id": "geofence",
+        "label": "Geofence / no-fly-zone model",
+        "source": "scenario.geofence, imported GeoJSON zones, and simulation geofence scalars",
+        "inputs": [
+          {
+            "name": "required clearance",
+            "value": 75.0,
+            "unit": "m",
+            "source": "geofence.clearance_m"
+          },
+          {
+            "name": "manual no-fly zones",
+            "value": 1,
+            "unit": "zones",
+            "source": "geofence.no_fly_zones"
+          },
+          {
+            "name": "GeoJSON geofence path",
+            "value": "examples/geojson/bvlos_powerline_geofences.geojson",
+            "unit": "",
+            "source": "geofence.geojson_path"
+          },
+          {
+            "name": "minimum simulated clearance",
+            "value": 351.69524979477507,
+            "unit": "m",
+            "source": "simulation.scalars.geofence_min_clearance_m"
+          }
+        ],
+        "assumption": "Geofence feasibility treats configured polygons and imported GeoJSON zones as the planning boundary source.",
+        "operator_review_note": "Confirm site boundaries, customer buffers, and launch/recovery areas on current maps before export or dispatch."
+      },
+      {
+        "id": "route_completion",
+        "label": "Route completion model",
+        "source": "scenario.mission, route GeoJSON, plan waypoints, and simulation completion scalars",
+        "inputs": [
+          {
+            "name": "route source",
+            "value": "examples\\geojson\\bvlos_powerline_route.geojson",
+            "unit": "",
+            "source": "mission.route_geojson_path or mission.waypoints"
+          },
+          {
+            "name": "fixed route order",
+            "value": true,
+            "unit": "boolean",
+            "source": "mission.fixed_order"
+          },
+          {
+            "name": "inspection waypoints",
+            "value": 6,
+            "unit": "waypoints",
+            "source": "mission.waypoints"
+          },
+          {
+            "name": "waypoints completed",
+            "value": 6.0,
+            "unit": "waypoints",
+            "source": "simulation.scalars.waypoints_completed"
+          },
+          {
+            "name": "route completion enforced",
+            "value": true,
+            "unit": "boolean",
+            "source": "constraints.enforce_inspection_completion"
+          }
+        ],
+        "assumption": "The route is considered complete only when the simulation reaches the required inspection waypoints under the configured reach radius.",
+        "operator_review_note": "Confirm the waypoint list matches the inspection scope and define any acceptable skipped-point policy before dispatch."
+      },
+      {
+        "id": "turn_feasibility",
+        "label": "Turn / bank feasibility model",
+        "source": "scenario.vehicle, simulated yaw-rate resources, and bank-angle constraint margins",
+        "inputs": [
+          {
+            "name": "bank limit",
+            "value": 30.0,
+            "unit": "deg",
+            "source": "vehicle.bank_max_deg"
+          },
+          {
+            "name": "planned cruise speed",
+            "value": 27.407211792031063,
+            "unit": "m/s",
+            "source": "plan.metadata.cruise_speed_mps"
+          },
+          {
+            "name": "minimum airspeed",
+            "value": 12.0,
+            "unit": "m/s",
+            "source": "vehicle.min_speed_mps"
+          },
+          {
+            "name": "maximum airspeed",
+            "value": 28.0,
+            "unit": "m/s",
+            "source": "vehicle.max_speed_mps"
+          }
+        ],
+        "assumption": "Turn feasibility uses a simplified bank-angle/yaw-rate envelope rather than aircraft-specific autopilot tracking or detailed aerodynamics.",
+        "operator_review_note": "Confirm the route geometry, turn spacing, and selected speed are within the aircraft operating envelope."
+      },
+      {
+        "id": "robustness",
+        "label": "Robustness model",
+        "source": "scenario.robustness and planner robustness summary",
+        "inputs": [
+          {
+            "name": "robustness cases configured",
+            "value": 20,
+            "unit": "cases",
+            "source": "robustness.cases"
+          },
+          {
+            "name": "robustness cases run",
+            "value": 20,
+            "unit": "cases",
+            "source": "robustness summary"
+          },
+          {
+            "name": "wind scale range",
+            "value": [
+              0.8,
+              1.2
+            ],
+            "unit": "multiplier",
+            "source": "robustness.wind_scale_range"
+          },
+          {
+            "name": "battery variation",
+            "value": 0.05,
+            "unit": "fraction",
+            "source": "robustness.battery_variation_pct"
+          },
+          {
+            "name": "hard pass rate",
+            "value": 1.0,
+            "unit": "ratio",
+            "source": "robustness summary.hard_pass_rate"
+          }
+        ],
+        "assumption": "Robustness reflects configured Monte Carlo perturbations only; it is not a certification, reliability guarantee, or live safety monitor.",
+        "operator_review_note": "Increase robustness cases or add scenario-specific uncertainty ranges when margin sensitivity matters."
+      }
+    ],
+    "constraint_margin_sources": [
+      {
+        "id": "battery_reserve",
+        "label": "Battery reserve margin",
+        "margin_unit": "Wh",
+        "margin_source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh",
+        "warning_margin_source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
+      },
+      {
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "margin_unit": "m/s",
+        "margin_source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust",
+        "warning_margin_source": "wind.warning_margin_mps or default 2.0 m/s"
+      },
+      {
+        "id": "geofence_clearance",
+        "label": "Geofence / no-fly-zone clearance",
+        "margin_unit": "m",
+        "margin_source": "constraint_result.geofence_clearance.min_margin with no-entry violation override from constraint_result.geofence_no_entry",
+        "warning_margin_source": "max(25 m, 25 percent of geofence.clearance_m)"
+      },
+      {
+        "id": "route_completion",
+        "label": "Route completion status",
+        "margin_unit": "completion",
+        "margin_source": "simulation.metadata.reached_all and simulation.scalars waypoint counts",
+        "warning_margin_source": "fixed 0.5 completion warning band"
+      },
+      {
+        "id": "turn_bank_feasibility",
+        "label": "Turn / bank feasibility",
+        "margin_unit": "rad/s",
+        "margin_source": "constraint_result.bank_angle_turn_limit.min_margin",
+        "warning_margin_source": "vehicle.turn_warning_margin_radps or default 0.05 rad/s"
+      }
+    ],
+    "top_limiting_constraint_selection": {
+      "method": "risk_points_descending",
+      "risk_points_definition": "Risk points increase when a constraint fails, is inside its warning band, or has little positive margin relative to its warning threshold.",
+      "selected_constraint_id": "wind_weather",
+      "selected_label": "Wind / weather margin",
+      "selected_status": "pass",
+      "selected_risk_points": 14.500000000000002,
+      "selected_margin": {
+        "value": 3.0999999999999996,
+        "unit": "m/s",
+        "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+      },
+      "selected_warning_margin": {
+        "value": 2.0,
+        "unit": "m/s",
+        "source": "wind.warning_margin_mps or default 2.0 m/s"
+      },
+      "explanation": "Wind / weather margin was selected because it had the highest risk_points value (14.5) among 5 audited constraint groups. Its margin was 3.1 m/s against a warning threshold of 2.0 m/s.",
+      "ranking": [
+        {
+          "rank": 1,
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "status": "pass",
+          "risk_points": 14.500000000000002,
+          "margin": {
+            "value": 3.0999999999999996,
+            "unit": "m/s",
+            "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+          }
+        },
+        {
+          "rank": 2,
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "status": "pass",
+          "risk_points": 11.13428885267828,
+          "margin": {
+            "value": 132.05997803125206,
+            "unit": "Wh",
+            "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+          }
+        },
+        {
+          "rank": 3,
+          "id": "route_completion",
+          "label": "Route completion status",
+          "status": "pass",
+          "risk_points": 10.000000000000002,
+          "margin": {
+            "value": 1.0,
+            "unit": "completion",
+            "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
+          }
+        },
+        {
+          "rank": 4,
+          "id": "turn_bank_feasibility",
+          "label": "Turn / bank feasibility",
+          "status": "pass",
+          "risk_points": 2.198474442486985,
+          "margin": {
+            "value": 0.1390076277875651,
+            "unit": "rad/s",
+            "source": "constraint_result.bank_angle_turn_limit.min_margin"
+          }
+        },
+        {
+          "rank": 5,
+          "id": "geofence_clearance",
+          "label": "Geofence / no-fly-zone clearance",
+          "status": "pass",
+          "risk_points": 0.0,
+          "margin": {
+            "value": 276.69524979477507,
+            "unit": "m",
+            "source": "constraint_result.geofence_clearance.min_margin with no-entry violation override from constraint_result.geofence_no_entry"
+          }
+        }
+      ]
+    },
+    "reproducibility": {
+      "scenario_path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml",
+      "seed": 7,
+      "iterations": 300,
+      "restarts": 1,
+      "robustness_cases_configured": 20,
+      "robustness_cases_run": 20,
+      "command": {
+        "display": "C:\\Users\\shill\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\python.exe -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml --outdir outputs",
+        "argv": [
+          "C:\\Users\\shill\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\python.exe",
+          "-m",
+          "mission_framework.cli",
+          "examples/bvlos_powerline_inspection_demo.yaml",
+          "--outdir",
+          "outputs"
+        ]
+      },
+      "orbital_version": "1.0.9"
+    },
+    "model_limitations": [
+      {
+        "id": "offline_sample_weather",
+        "applies": true,
+        "limitation": "Weather may come from offline, fallback, or sample inputs. ORBITAL records the source and timestamp, but the operator must verify current field weather before release."
+      },
+      {
+        "id": "simplified_flight_dynamics",
+        "applies": true,
+        "limitation": "Aircraft dynamics are simplified for feasibility planning. ORBITAL does not model every autopilot behavior, controller response, payload effect, battery aging factor, sensor constraint, or emergency maneuver."
+      },
+      {
+        "id": "decision_support_only",
+        "applies": true,
+        "limitation": "Constraint margins are planning evidence for operator review. They do not approve a flight, issue authorization, or replace pilot-in-command judgment."
+      }
+    ]
+  },
+  "assumptions_report": [
+    {
+      "id": "battery",
+      "label": "Battery / energy model",
+      "source": "scenario.initial_state, scenario.vehicle, simulation scalars, and battery constraints",
+      "inputs": [
+        {
+          "name": "initial battery",
+          "value": 850.0,
+          "unit": "Wh",
+          "source": "initial_state.battery_Wh"
+        },
+        {
+          "name": "battery capacity",
+          "value": 900.0,
+          "unit": "Wh",
+          "source": "vehicle.battery_capacity_Wh"
+        },
+        {
+          "name": "required battery reserve",
+          "value": 700.0,
+          "unit": "Wh",
+          "source": "vehicle.battery_reserve_Wh"
+        },
+        {
+          "name": "final simulated battery",
+          "value": 832.0599780312521,
+          "unit": "Wh",
+          "source": "simulation.scalars.final_battery_Wh"
+        },
+        {
+          "name": "energy used",
+          "value": 17.940021968747942,
+          "unit": "Wh",
+          "source": "simulation.scalars.energy_used_Wh"
+        }
+      ],
+      "assumption": "Battery feasibility is based on the configured capacity, initial charge, reserve policy, and simplified power model coefficients.",
+      "operator_review_note": "Confirm aircraft battery health, payload draw, temperature effects, and abort reserve outside ORBITAL before release."
+    },
+    {
+      "id": "wind",
+      "label": "Wind / weather model",
+      "source": "scenario.wind, scenario.weather, weather.resolved, and simulation wind resources",
+      "inputs": [
+        {
+          "name": "wind model type",
+          "value": "sinusoidal",
+          "unit": "",
+          "source": "wind.type"
+        },
+        {
+          "name": "maximum safe wind",
+          "value": 9.0,
+          "unit": "m/s",
+          "source": "wind.max_safe_wind_mps"
+        },
+        {
+          "name": "weather wind gust",
+          "value": 5.9,
+          "unit": "m/s",
+          "source": "weather.resolved.wind_gust_mps"
+        },
+        {
+          "name": "weather source",
+          "value": "offline Open-Meteo-shaped sample",
+          "unit": "",
+          "source": "weather.resolved.source"
+        },
+        {
+          "name": "weather timestamp",
+          "value": "2026-09-11T16:00:00Z",
+          "unit": "UTC",
+          "source": "weather.resolved.timestamp_utc"
+        }
+      ],
+      "assumption": "Wind feasibility compares the modeled or weather-provided wind exposure against the configured safe operating limit.",
+      "operator_review_note": "Refresh field weather and gust observations close to launch, especially when offline or sample weather is used."
+    },
+    {
+      "id": "geofence",
+      "label": "Geofence / no-fly-zone model",
+      "source": "scenario.geofence, imported GeoJSON zones, and simulation geofence scalars",
+      "inputs": [
+        {
+          "name": "required clearance",
+          "value": 75.0,
+          "unit": "m",
+          "source": "geofence.clearance_m"
+        },
+        {
+          "name": "manual no-fly zones",
+          "value": 1,
+          "unit": "zones",
+          "source": "geofence.no_fly_zones"
+        },
+        {
+          "name": "GeoJSON geofence path",
+          "value": "examples/geojson/bvlos_powerline_geofences.geojson",
+          "unit": "",
+          "source": "geofence.geojson_path"
+        },
+        {
+          "name": "minimum simulated clearance",
+          "value": 351.69524979477507,
+          "unit": "m",
+          "source": "simulation.scalars.geofence_min_clearance_m"
+        }
+      ],
+      "assumption": "Geofence feasibility treats configured polygons and imported GeoJSON zones as the planning boundary source.",
+      "operator_review_note": "Confirm site boundaries, customer buffers, and launch/recovery areas on current maps before export or dispatch."
+    },
+    {
+      "id": "route_completion",
+      "label": "Route completion model",
+      "source": "scenario.mission, route GeoJSON, plan waypoints, and simulation completion scalars",
+      "inputs": [
+        {
+          "name": "route source",
+          "value": "examples\\geojson\\bvlos_powerline_route.geojson",
+          "unit": "",
+          "source": "mission.route_geojson_path or mission.waypoints"
+        },
+        {
+          "name": "fixed route order",
+          "value": true,
+          "unit": "boolean",
+          "source": "mission.fixed_order"
+        },
+        {
+          "name": "inspection waypoints",
+          "value": 6,
+          "unit": "waypoints",
+          "source": "mission.waypoints"
+        },
+        {
+          "name": "waypoints completed",
+          "value": 6.0,
+          "unit": "waypoints",
+          "source": "simulation.scalars.waypoints_completed"
+        },
+        {
+          "name": "route completion enforced",
+          "value": true,
+          "unit": "boolean",
+          "source": "constraints.enforce_inspection_completion"
+        }
+      ],
+      "assumption": "The route is considered complete only when the simulation reaches the required inspection waypoints under the configured reach radius.",
+      "operator_review_note": "Confirm the waypoint list matches the inspection scope and define any acceptable skipped-point policy before dispatch."
+    },
+    {
+      "id": "turn_feasibility",
+      "label": "Turn / bank feasibility model",
+      "source": "scenario.vehicle, simulated yaw-rate resources, and bank-angle constraint margins",
+      "inputs": [
+        {
+          "name": "bank limit",
+          "value": 30.0,
+          "unit": "deg",
+          "source": "vehicle.bank_max_deg"
+        },
+        {
+          "name": "planned cruise speed",
+          "value": 27.407211792031063,
+          "unit": "m/s",
+          "source": "plan.metadata.cruise_speed_mps"
+        },
+        {
+          "name": "minimum airspeed",
+          "value": 12.0,
+          "unit": "m/s",
+          "source": "vehicle.min_speed_mps"
+        },
+        {
+          "name": "maximum airspeed",
+          "value": 28.0,
+          "unit": "m/s",
+          "source": "vehicle.max_speed_mps"
+        }
+      ],
+      "assumption": "Turn feasibility uses a simplified bank-angle/yaw-rate envelope rather than aircraft-specific autopilot tracking or detailed aerodynamics.",
+      "operator_review_note": "Confirm the route geometry, turn spacing, and selected speed are within the aircraft operating envelope."
+    },
+    {
+      "id": "robustness",
+      "label": "Robustness model",
+      "source": "scenario.robustness and planner robustness summary",
+      "inputs": [
+        {
+          "name": "robustness cases configured",
+          "value": 20,
+          "unit": "cases",
+          "source": "robustness.cases"
+        },
+        {
+          "name": "robustness cases run",
+          "value": 20,
+          "unit": "cases",
+          "source": "robustness summary"
+        },
+        {
+          "name": "wind scale range",
+          "value": [
+            0.8,
+            1.2
+          ],
+          "unit": "multiplier",
+          "source": "robustness.wind_scale_range"
+        },
+        {
+          "name": "battery variation",
+          "value": 0.05,
+          "unit": "fraction",
+          "source": "robustness.battery_variation_pct"
+        },
+        {
+          "name": "hard pass rate",
+          "value": 1.0,
+          "unit": "ratio",
+          "source": "robustness summary.hard_pass_rate"
+        }
+      ],
+      "assumption": "Robustness reflects configured Monte Carlo perturbations only; it is not a certification, reliability guarantee, or live safety monitor.",
+      "operator_review_note": "Increase robustness cases or add scenario-specific uncertainty ranges when margin sensitivity matters."
     }
   ],
   "robustness": {

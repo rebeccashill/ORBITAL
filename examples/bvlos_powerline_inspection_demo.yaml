@@ -148,7 +148,7 @@ regulatory:
   ground_risk_population_note: "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch."
   authorization_id: "example authorization reference only"
   approving_authority_source: "Operator-provided example authority source for documentation-only demo"
-  authorization_expiration_date: "2026-09-11"
+  authorization_expiration_date: "2026-12-31"
   operating_altitude_limit_m: 120.0
   operating_time_window:
     start_utc: "2026-09-11T16:00:00Z"
@@ -159,6 +159,7 @@ regulatory:
   special_conditions_limitations:
     - "Remain within the modeled utility corridor and geofence buffers."
     - "Do not launch if current field weather is below operator minimums."
+  emergency_contingency_plan: "Review lost-link, diversion, recovery, flyaway response, and incident-contact procedures before dispatch."
   operating_assumptions:
     - "Pilot-in-command verifies current FAA, local, site, NOTAM, TFR, and airspace requirements before launch."
     - "Mission remains within the modeled route, altitude, weather, battery, geofence, and crew constraints."
@@ -225,6 +226,8 @@ evidence_bundle:
   operator_review_status: "ready_for_review"
   reviewer_name:
   review_timestamp_utc:
+  review_notes: "Demo bundle ready for operator review; final approval remains outside ORBITAL."
+  operator_decision: "pending operator review"
 
 simulation:
   t_max_s: 2400.0

@@ -10,6 +10,8 @@ Links are relative to this evidence bundle folder.
 | Constraint audit JSON | included | [inspection_constraint_audit.json](inspection_constraint_audit.json) | expected |
 | Regulatory readiness JSON | included | [regulatory_readiness_report.json](regulatory_readiness_report.json) | expected |
 | Regulatory readiness report | included | [regulatory_readiness_report.md](regulatory_readiness_report.md) | expected |
+| What-if planning report | included | [what_if_plan.md](what_if_plan.md) | expected |
+| What-if planning JSON | included | [what_if_plan.json](what_if_plan.json) | expected |
 | Score breakdown | included | [score.json](score.json) | expected |
 | Flight path plot | included | [flight_path.png](flight_path.png) | expected |
 | Robustness summary | included | [robustness.json](robustness.json) | expected |
@@ -19,6 +21,7 @@ Links are relative to this evidence bundle folder.
 | Mission review KML | included | [mission_review.kml](mission_review.kml) | expected |
 | Flight-planning exports manifest | included | [flight_planning_exports.json](flight_planning_exports.json) | expected |
 | Flight-planning exports README | included | [flight_planning_exports.md](flight_planning_exports.md) | expected |
+| Operator evidence dashboard | included | [operator_dashboard.md](operator_dashboard.md) | generated |
 | Evidence bundle summary | included | [evidence_bundle_summary.md](evidence_bundle_summary.md) | generated |
 | Evidence bundle artifact index | included | [artifact_index.md](artifact_index.md) | generated |
 | Evidence bundle manifest | included | [manifest.json](manifest.json) | generated |
