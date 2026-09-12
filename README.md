@@ -42,7 +42,7 @@ Representative use cases:
 - Solar, wind, mining, and industrial-site inspection
 - Emergency infrastructure assessment after storms or outages
 
-HBS one-liner:
+One-liner:
 
 > ORBITAL helps drone inspection teams know whether a BVLOS mission is feasible
 > before sending a crew into the field.
