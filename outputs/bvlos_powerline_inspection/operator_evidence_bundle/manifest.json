@@ -4,6 +4,30 @@
   "scenario_path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml",
   "complete": true,
   "missing": [],
+  "bundle_completeness_score": 100.0,
+  "bundle_completeness": {
+    "score": 100.0,
+    "unit": "percent",
+    "present_artifacts": 15,
+    "total_artifacts": 15,
+    "missing_artifacts": 0,
+    "complete": true,
+    "scoring_note": "Score is based on expected bundle artifacts present at export time. Optional documentation fields are reported separately and do not block planning."
+  },
+  "missing_evidence": [],
+  "operator_review": {
+    "status": "ready_for_review",
+    "requested_status": "ready_for_review",
+    "allowed_statuses": [
+      "draft",
+      "ready_for_review",
+      "reviewed"
+    ],
+    "reviewer_name": null,
+    "review_timestamp_utc": null,
+    "documentation_only": true,
+    "notice": "Operator review status is documentation only. It does not approve a flight, issue an authorization, or replace pilot-in-command release authority."
+  },
   "weather": {
     "source": "offline Open-Meteo-shaped sample",
     "provider": "open_meteo",
@@ -240,6 +264,13 @@
       "present": true
     },
     {
+      "id": "constraint_audit_markdown",
+      "label": "Primary constraint-audit report",
+      "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\inspection_constraint_audit.md",
+      "bundle_path": "inspection_constraint_audit.md",
+      "present": true
+    },
+    {
       "id": "constraint_audit_json",
       "label": "Constraint audit JSON",
       "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\inspection_constraint_audit.json",
@@ -324,5 +355,49 @@
       "present": true
     }
   ],
+  "generated_artifacts": [
+    {
+      "id": "bundle_summary",
+      "label": "Evidence bundle summary",
+      "bundle_path": "evidence_bundle_summary.md",
+      "present": true,
+      "generated": true
+    },
+    {
+      "id": "artifact_index",
+      "label": "Evidence bundle artifact index",
+      "bundle_path": "artifact_index.md",
+      "present": true,
+      "generated": true
+    },
+    {
+      "id": "manifest_json",
+      "label": "Evidence bundle manifest",
+      "bundle_path": "manifest.json",
+      "present": true,
+      "generated": true
+    },
+    {
+      "id": "readme",
+      "label": "Evidence bundle README",
+      "bundle_path": "README.md",
+      "present": true,
+      "generated": true
+    },
+    {
+      "id": "checksum_manifest",
+      "label": "Evidence bundle checksum manifest",
+      "bundle_path": "checksum_manifest.json",
+      "present": true,
+      "generated": true
+    }
+  ],
+  "checksum_manifest": {
+    "algorithm": "sha256",
+    "bundle_path": "checksum_manifest.json",
+    "excludes": [
+      "checksum_manifest.json"
+    ]
+  },
   "documentation_only_notice": "This bundle supports operator review and audit evidence only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance."
 }

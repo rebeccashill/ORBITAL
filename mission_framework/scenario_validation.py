@@ -212,6 +212,7 @@ def _validate_shared_sections(cfg: Mapping[str, Any], issues: list[ValidationIss
     output = _require_mapping(cfg, "output", issues)
     robustness = _require_mapping(cfg, "robustness", issues)
     objective = _optional_mapping(cfg, "objective", issues)
+    evidence_bundle = _optional_mapping(cfg, "evidence_bundle", issues)
 
     if planner is not None:
         _number(planner, "planner.iterations", issues, required=True, min_value=1, integer=True)
@@ -264,6 +265,31 @@ def _validate_shared_sections(cfg: Mapping[str, Any], issues: list[ValidationIss
                         "Use true or false.",
                     )
                 )
+
+    if evidence_bundle is not None:
+        review_status = evidence_bundle.get("operator_review_status")
+        if review_status is not None:
+            normalized_status = (
+                str(review_status).strip().lower().replace(" ", "_").replace("-", "_")
+            )
+            if normalized_status not in {"draft", "ready_for_review", "reviewed"}:
+                issues.append(
+                    ValidationIssue(
+                        "evidence_bundle.operator_review_status",
+                        "must be draft, ready_for_review, or reviewed",
+                        "Use draft before the bundle is ready, ready_for_review for operator review, or reviewed after review.",
+                    )
+                )
+        _optional_nonempty_string(
+            evidence_bundle,
+            "evidence_bundle.reviewer_name",
+            issues,
+        )
+        _optional_nonempty_string(
+            evidence_bundle,
+            "evidence_bundle.review_timestamp_utc",
+            issues,
+        )
 
     if robustness is not None:
         _number(robustness, "robustness.cases", issues, required=True, min_value=0, integer=True)

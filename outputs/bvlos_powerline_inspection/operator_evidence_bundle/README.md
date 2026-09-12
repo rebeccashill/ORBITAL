@@ -6,10 +6,21 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 
 Regulatory metadata, authorization references, approval checklist items, and evidence fields in this bundle are documentation-only. They support operator review; they are not proof of authorization, legal approval, LAANC, waiver, or operational clearance.
 
+Start with `evidence_bundle_summary.md`, then use `artifact_index.md` to open individual artifacts. `checksum_manifest.json` provides lightweight SHA-256 checksums for files in this bundle.
+
+## Bundle Summary
+
+- Completeness score: 100.0 %
+- Missing evidence items: 0
+- Operator review status: ready for review
+- Reviewer: not provided
+- Review timestamp UTC: not provided
+
 ## Contents
 
 - Scenario YAML: `scenario.yaml` (included)
 - Plan JSON: `plan.json` (included)
+- Primary constraint-audit report: `inspection_constraint_audit.md` (included)
 - Constraint audit JSON: `inspection_constraint_audit.json` (included)
 - Regulatory readiness JSON: `regulatory_readiness_report.json` (included)
 - Regulatory readiness report: `regulatory_readiness_report.md` (included)

@@ -113,7 +113,7 @@ def test_cli_seed_reproducibly_writes_same_artifacts(tmp_path: Path) -> None:
         assert (first / artifact).read_bytes() == (second / artifact).read_bytes()
 
 
-def test_cli_bvlos_demo_writes_regulatory_readiness_artifacts(tmp_path: Path) -> None:
+def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) -> None:
     outdir = tmp_path / "runs"
     result = subprocess.run(
         [
@@ -142,14 +142,54 @@ def test_cli_bvlos_demo_writes_regulatory_readiness_artifacts(tmp_path: Path) ->
     assert result.returncode == 0, result.stdout + result.stderr
 
     scenario_dir = outdir / "bvlos_powerline_inspection"
+    plan_json = scenario_dir / "plan.json"
+    score_json = scenario_dir / "score.json"
+    constraints_json = scenario_dir / "constraints.json"
+    audit_json = scenario_dir / "inspection_constraint_audit.json"
+    audit_md = scenario_dir / "inspection_constraint_audit.md"
+    what_if_json = scenario_dir / "what_if_plan.json"
+    what_if_md = scenario_dir / "what_if_plan.md"
     report_json = scenario_dir / "regulatory_readiness_report.json"
     report_md = scenario_dir / "regulatory_readiness_report.md"
-    manifest_json = scenario_dir / "operator_evidence_bundle" / "manifest.json"
-    bundle_readme = scenario_dir / "operator_evidence_bundle" / "README.md"
+    bundle_dir = scenario_dir / "operator_evidence_bundle"
+    manifest_json = bundle_dir / "manifest.json"
+    bundle_readme = bundle_dir / "README.md"
+    bundle_summary = bundle_dir / "evidence_bundle_summary.md"
+    artifact_index = bundle_dir / "artifact_index.md"
+    checksum_manifest = bundle_dir / "checksum_manifest.json"
+    assert plan_json.is_file()
+    assert score_json.is_file()
+    assert constraints_json.is_file()
+    assert audit_json.is_file()
+    assert audit_md.is_file()
+    assert what_if_json.is_file()
+    assert what_if_md.is_file()
     assert report_json.is_file()
     assert report_md.is_file()
     assert manifest_json.is_file()
     assert bundle_readme.is_file()
+    assert bundle_summary.is_file()
+    assert artifact_index.is_file()
+    assert checksum_manifest.is_file()
+
+    plan = json.loads(plan_json.read_text(encoding="utf-8"))
+    assert plan["kind"] == "aircraft"
+    assert plan["waypoints"]
+
+    audit = json.loads(audit_json.read_text(encoding="utf-8"))
+    assert audit["kind"] == "drone_inspection_constraint_audit"
+    assert audit["primary_demo_artifact"] is True
+    assert audit["operator_question"] == "Can we safely and defensibly fly this mission?"
+    assert audit["top_limiting_constraint"]["label"]
+    assert audit["constraint_groups"]
+    assert "Constraint Group Summary" in audit_md.read_text(encoding="utf-8")
+
+    what_if = json.loads(what_if_json.read_text(encoding="utf-8"))
+    assert what_if["kind"] == "drone_inspection_what_if_plan"
+    assert what_if["baseline"]["id"] == "baseline"
+    assert what_if["baseline"]["feasible"] is True
+    assert what_if["variants"]
+    assert "Baseline" in what_if_md.read_text(encoding="utf-8")
 
     report = json.loads(report_json.read_text(encoding="utf-8"))
     assert report["kind"] == "regulatory_readiness_report"
@@ -171,12 +211,34 @@ def test_cli_bvlos_demo_writes_regulatory_readiness_artifacts(tmp_path: Path) ->
 
     manifest = json.loads(manifest_json.read_text(encoding="utf-8"))
     artifact_presence = {artifact["id"]: artifact["present"] for artifact in manifest["artifacts"]}
+    assert artifact_presence["plan_json"] is True
+    assert artifact_presence["constraint_audit_markdown"] is True
+    assert artifact_presence["constraint_audit_json"] is True
     assert artifact_presence["regulatory_readiness_json"] is True
     assert artifact_presence["regulatory_readiness_markdown"] is True
+    assert artifact_presence["score_breakdown"] is True
     assert manifest["regulatory_metadata"]["laanc_required"] is True
     assert manifest["approval_checklist"]["item_count"] >= 8
     assert manifest["regulatory_evidence_status"]["missing"] == []
+    assert 0.0 < manifest["bundle_completeness_score"] < 100.0
+    assert manifest["operator_review"]["status"] == "draft"
+    assert {"flight_path_plot", "robustness_summary"} <= {
+        item["id"] for item in manifest["missing_evidence"] if item["kind"] == "artifact"
+    }
     assert "documentation-only" in bundle_readme.read_text(encoding="utf-8")
+    assert "Completeness score:" in bundle_summary.read_text(encoding="utf-8")
+    artifact_index_text = artifact_index.read_text(encoding="utf-8")
+    assert "Evidence Bundle Artifact Index" in artifact_index_text
+    assert "Primary constraint-audit report" in artifact_index_text
+    assert "Regulatory readiness report" in artifact_index_text
+    assert "Evidence bundle summary" in artifact_index_text
+    checksums = json.loads(checksum_manifest.read_text(encoding="utf-8"))
+    assert checksums["algorithm"] == "sha256"
+    assert {item["bundle_path"] for item in checksums["files"]} >= {
+        "manifest.json",
+        "evidence_bundle_summary.md",
+        "artifact_index.md",
+    }
 
 
 def test_cli_overrides_yaml_settings_and_accepts_single_dash_aliases(

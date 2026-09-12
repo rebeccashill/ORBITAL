@@ -21,6 +21,7 @@ Reporting guidance:
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import math
 from copy import deepcopy
@@ -677,6 +678,164 @@ def _risk_points(margin: Optional[float], warning_margin: float) -> float:
     return float(max(0.0, 30.0 * (1.0 - min(float(margin) / (3.0 * warn), 1.0))))
 
 
+CONSTRAINT_GROUP_DETAILS: Dict[str, Dict[str, Any]] = {
+    "battery_reserve": {
+        "category": "energy",
+        "category_label": "Energy / battery reserve",
+        "plain_english": (
+            "Checks whether the planned sortie lands with the operator-required battery "
+            "reserve still available."
+        ),
+        "why_this_matters_to_operator": (
+            "A BVLOS inspection needs enough remaining energy for delay, diversion, "
+            "recovery, and conservative abort decisions."
+        ),
+        "operator_actions": {
+            "pass": (
+                "Keep the reserve assumption, confirm launch battery state, and brief "
+                "abort reserve before dispatch."
+            ),
+            "warning": (
+                "Review payload draw and route length; trim inspection scope or stage a "
+                "battery swap before release."
+            ),
+            "fail": (
+                "Do not fly as modeled; shorten the mission, add a relaunch / battery "
+                "swap, or use a higher-endurance aircraft."
+            ),
+            "unknown": (
+                "Document battery capacity, reserve policy, and simulated final battery "
+                "before operator review."
+            ),
+        },
+    },
+    "wind_weather": {
+        "category": "weather",
+        "category_label": "Weather / wind margin",
+        "plain_english": (
+            "Checks whether modeled or forecast wind stays below the configured safe "
+            "operating limit."
+        ),
+        "why_this_matters_to_operator": (
+            "Wind reduces endurance, increases tracking error, and can turn a feasible "
+            "route into a recovery or containment problem."
+        ),
+        "operator_actions": {
+            "pass": (
+                "Confirm launch-time weather against operator minimums and keep the "
+                "forecast source with the mission package."
+            ),
+            "warning": (
+                "Delay launch, lower mission scope, or require a field weather update "
+                "before final go/no-go."
+            ),
+            "fail": (
+                "Do not fly as modeled; wait for safer weather or redesign the sortie "
+                "for lower exposure."
+            ),
+            "unknown": (
+                "Add a weather source, timestamp, and wind assumptions before operator " "review."
+            ),
+        },
+    },
+    "geofence_clearance": {
+        "category": "airspace_geometry",
+        "category_label": "Geofence / no-fly-zone clearance",
+        "plain_english": (
+            "Checks whether the route remains outside no-fly zones and preserves the "
+            "configured stand-off buffer."
+        ),
+        "why_this_matters_to_operator": (
+            "Geofence clearance protects people, assets, restricted areas, and customer "
+            "boundaries when navigation or wind uncertainty appears."
+        ),
+        "operator_actions": {
+            "pass": (
+                "Keep the geofence file and route review in the evidence bundle, then "
+                "confirm site boundaries before flight."
+            ),
+            "warning": (
+                "Move waypoints farther from the boundary or increase the clearance "
+                "buffer before release."
+            ),
+            "fail": (
+                "Do not fly as modeled; reroute around the violation or redefine the "
+                "operating area."
+            ),
+            "unknown": ("Document geofence inputs and minimum clearance before operator review."),
+        },
+    },
+    "route_completion": {
+        "category": "mission_completion",
+        "category_label": "Route completion",
+        "plain_english": (
+            "Checks whether the candidate plan reaches all required inspection points."
+        ),
+        "why_this_matters_to_operator": (
+            "Incomplete route coverage can waste a crew deployment and create pressure "
+            "to improvise in the field."
+        ),
+        "operator_actions": {
+            "pass": (
+                "Confirm the waypoint list matches the inspection scope and brief any "
+                "acceptable skipped-point policy."
+            ),
+            "warning": (
+                "Review the missed-point risk and consider splitting the route into "
+                "shorter sorties."
+            ),
+            "fail": (
+                "Do not treat the plan as inspection-ready; reduce scope, split sorties, "
+                "or move the launch point."
+            ),
+            "unknown": (
+                "Document required waypoints and simulated completion status before "
+                "operator review."
+            ),
+        },
+    },
+    "turn_bank_feasibility": {
+        "category": "flight_dynamics",
+        "category_label": "Turn / bank feasibility",
+        "plain_english": (
+            "Checks whether planned turns stay within configured bank-angle and turn-rate "
+            "capability."
+        ),
+        "why_this_matters_to_operator": (
+            "Overly aggressive turns can break route tracking, increase energy use, and "
+            "reduce safety margins near assets or geofences."
+        ),
+        "operator_actions": {
+            "pass": (
+                "Keep the planned speed and turn assumptions, then verify they match the "
+                "aircraft operating envelope."
+            ),
+            "warning": (
+                "Lower cruise speed, add waypoint spacing, or smooth the route before " "release."
+            ),
+            "fail": (
+                "Do not fly as modeled; redesign the route geometry or aircraft speed " "profile."
+            ),
+            "unknown": (
+                "Document bank-angle limits, speed assumptions, and route geometry before "
+                "operator review."
+            ),
+        },
+    },
+}
+
+
+def _constraint_status_meaning(status: str) -> str:
+    normalized = str(status).lower()
+    if normalized == "pass":
+        return "Modeled margin is outside the warning band."
+    if normalized == "warning":
+        return "Modeled margin is positive but close enough to require operator review."
+    if normalized == "fail":
+        return "Modeled margin is negative; the mission should be modified before release."
+    return "ORBITAL does not have enough data to classify this constraint group."
+
+
 def _check(
     *,
     check_id: str,
@@ -688,15 +847,37 @@ def _check(
     recommendation: str,
 ) -> Dict[str, Any]:
     points = _risk_points(margin, warning_margin)
+    status = _status_from_margin(margin, warning_margin)
+    group = CONSTRAINT_GROUP_DETAILS.get(
+        check_id,
+        {
+            "category": "other",
+            "category_label": label,
+            "plain_english": "Reviews an operator-defined mission feasibility constraint.",
+            "why_this_matters_to_operator": (
+                "This constraint may affect whether the mission can be safely and "
+                "defensibly released."
+            ),
+            "operator_actions": {},
+        },
+    )
+    actions = group.get("operator_actions") or {}
+    recommended_operator_action = str(actions.get(status) or recommendation)
     return {
         "id": check_id,
         "label": label,
-        "status": _status_from_margin(margin, warning_margin),
+        "category": group.get("category"),
+        "category_label": group.get("category_label", label),
+        "status": status,
+        "status_meaning": _constraint_status_meaning(status),
+        "plain_english": group.get("plain_english"),
+        "why_this_matters_to_operator": group.get("why_this_matters_to_operator"),
         "margin": {"value": margin, "unit": unit},
         "warning_margin": {"value": float(warning_margin), "unit": unit},
         "risk_points": float(points),
         "observed": observed,
         "recommendation": recommendation,
+        "recommended_operator_action": recommended_operator_action,
     }
 
 
@@ -848,15 +1029,24 @@ def build_inspection_constraint_audit(
 
     return {
         "kind": "drone_inspection_constraint_audit",
+        "primary_demo_artifact": True,
+        "operator_question": "Can we safely and defensibly fly this mission?",
         "mission_id": plan.metadata.get("mission_id", "aircraft_mission"),
         "status": "go" if hard_pass else "modify",
         "mission_risk": mission_risk,
+        "status_legend": {
+            "pass": "Modeled margin is outside the warning band.",
+            "warning": "Modeled margin is positive but close enough to require operator review.",
+            "fail": "Modeled margin is negative; modify the mission before release.",
+            "unknown": "ORBITAL does not have enough data to classify this group.",
+        },
         "mission_metadata": mission_metadata,
         "fleet_metadata": fleet_metadata,
         "regulatory_metadata": _regulatory_metadata(cfg),
         "weather_metadata": weather,
         "top_limiting_constraint": checks_sorted[0] if checks_sorted else None,
         "top_three_risk_drivers": checks_sorted[:3],
+        "constraint_groups": checks,
         "checks": checks,
         "robustness": robustness or {},
         "summary": {
@@ -868,6 +1058,11 @@ def build_inspection_constraint_audit(
     }
 
 
+def _markdown_cell(value: Any) -> str:
+    text = "not provided" if value is None else str(value)
+    return text.replace("|", "\\|").replace("\n", " ").strip()
+
+
 def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
     """Render the drone inspection audit payload as Markdown."""
     top = audit.get("top_limiting_constraint") or {}
@@ -875,68 +1070,115 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
     weather = audit.get("weather_metadata") or {}
     mission_metadata = audit.get("mission_metadata") or {}
     fleet_metadata = audit.get("fleet_metadata") or {}
+    constraint_groups = audit.get("constraint_groups") or audit.get("checks", []) or []
+
     lines = [
         "# Drone Inspection Constraint Audit",
+        "",
+        "Primary demo artifact: this report is the operator-facing feasibility "
+        "case for the modeled BVLOS inspection mission.",
+        "",
+        f"Core question: {audit.get('operator_question', 'Can we safely fly this mission?')}",
         "",
         f"Mission: {audit.get('mission_id', 'aircraft_mission')}",
         f"Status: {str(audit.get('status', 'unknown')).upper()}",
         f"Mission risk: {str(audit.get('mission_risk', 'unknown')).upper()}",
         "",
-        "## Top Limiting Constraint",
-        "",
-        (
-            "- n/a"
-            if not top
-            else "- {label}: {status} with margin {margin} {unit}".format(
-                label=top.get("label", "unknown"),
-                status=str(top.get("status", "unknown")).upper(),
-                margin=_fmt_value((top.get("margin") or {}).get("value")),
-                unit=(top.get("margin") or {}).get("unit", ""),
-            )
-        ),
-        "",
-        "## Mission / Fleet Metadata",
-        "",
-        f"- Operator: {mission_metadata.get('operator') or 'not provided'}",
-        f"- Aircraft ID: {mission_metadata.get('aircraft_id') or 'not provided'}",
-        f"- Pilot: {mission_metadata.get('pilot') or 'not provided'}",
-        f"- Organization: {mission_metadata.get('organization') or 'not provided'}",
-        f"- Asset owner: {mission_metadata.get('asset_owner') or 'not provided'}",
-        f"- Drone model: {fleet_metadata.get('drone_model') or 'not provided'}",
-        f"- Battery pack ID: {fleet_metadata.get('battery_pack_id') or 'not provided'}",
-        f"- Sensor payload: {fleet_metadata.get('sensor_payload') or 'not provided'}",
-        f"- Inspection type: {fleet_metadata.get('inspection_type') or 'not provided'}",
-        "",
-        "## Regulatory Metadata",
-        "",
-        f"- LAANC required: {_yes_no_unknown(regulatory.get('laanc_required'))}",
-        "- Waiver / authorization required: "
-        f"{_yes_no_unknown(regulatory.get('waiver_or_authorization_required'))}",
-        f"- Airspace class: {regulatory.get('airspace_class') or 'unknown'}",
-        f"- Visual observer required: {_yes_no_unknown(regulatory.get('visual_observer_required'))}",
-        "- Ground-risk / population note: "
-        f"{regulatory.get('ground_risk_population_note') or 'not provided'}",
-        f"- Documentation-only notice: {regulatory.get('documentation_only_notice')}",
-        "",
-        "## Weather Metadata",
-        "",
-        f"- Source: {weather.get('source') or 'not provided'}",
-        f"- Provider: {weather.get('provider') or 'not provided'}",
-        f"- Timestamp: {weather.get('timestamp_utc') or 'not provided'}",
-        f"- Location: {weather.get('location_name') or 'not provided'}",
-        f"- Forecast window start: {weather.get('forecast_window_start_utc') or 'not provided'}",
-        f"- Forecast window hours: {_fmt_value(weather.get('forecast_window_hours'))}",
-        f"- Wind speed: {_fmt_value(weather.get('wind_speed_mps'), 'm/s')}",
-        f"- Wind direction: {_fmt_value(weather.get('wind_direction_deg'), 'deg')}",
-        f"- Wind gust: {_fmt_value(weather.get('wind_gust_mps'), 'm/s')}",
-        f"- Visibility: {_fmt_value(weather.get('visibility_m'), 'm')}",
-        f"- Precipitation: {_fmt_value(weather.get('precipitation_mm'), 'mm')}",
-        f"- Temperature: {_fmt_value(weather.get('temperature_C'), 'C')}",
-        f"- Fallback used: {_yes_no_unknown(weather.get('fallback_used'))}",
-        "",
-        "## Top Three Risk Drivers",
+        "## Status Legend",
         "",
     ]
+    legend = audit.get("status_legend") or {}
+    for status in ("pass", "warning", "fail", "unknown"):
+        meaning = legend.get(status) or _constraint_status_meaning(status)
+        lines.append(f"- {status.upper()}: {meaning}")
+
+    lines.extend(
+        [
+            "",
+            "## Top Limiting Constraint",
+            "",
+            (
+                "- n/a"
+                if not top
+                else "- {label}: {status} with margin {margin} {unit}".format(
+                    label=top.get("label", "unknown"),
+                    status=str(top.get("status", "unknown")).upper(),
+                    margin=_fmt_value((top.get("margin") or {}).get("value")),
+                    unit=(top.get("margin") or {}).get("unit", ""),
+                )
+            ),
+            "",
+            "## Constraint Group Summary",
+            "",
+            "| Group | Status | Margin | Why this matters | Recommended operator action |",
+            "| --- | --- | ---: | --- | --- |",
+        ]
+    )
+    for check in constraint_groups:
+        margin = check.get("margin") or {}
+        margin_text = f"{_fmt_value(margin.get('value'))} {margin.get('unit', '')}".strip()
+        lines.append(
+            "| {group} | {status} | {margin} | {why} | {action} |".format(
+                group=_markdown_cell(check.get("category_label") or check.get("label")),
+                status=_markdown_cell(str(check.get("status", "unknown")).upper()),
+                margin=_markdown_cell(margin_text),
+                why=_markdown_cell(check.get("why_this_matters_to_operator")),
+                action=_markdown_cell(
+                    check.get("recommended_operator_action")
+                    or check.get("recommendation")
+                    or "Review mission plan."
+                ),
+            )
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Mission / Fleet Metadata",
+            "",
+            f"- Operator: {mission_metadata.get('operator') or 'not provided'}",
+            f"- Aircraft ID: {mission_metadata.get('aircraft_id') or 'not provided'}",
+            f"- Pilot: {mission_metadata.get('pilot') or 'not provided'}",
+            f"- Organization: {mission_metadata.get('organization') or 'not provided'}",
+            f"- Asset owner: {mission_metadata.get('asset_owner') or 'not provided'}",
+            f"- Drone model: {fleet_metadata.get('drone_model') or 'not provided'}",
+            f"- Battery pack ID: {fleet_metadata.get('battery_pack_id') or 'not provided'}",
+            f"- Sensor payload: {fleet_metadata.get('sensor_payload') or 'not provided'}",
+            f"- Inspection type: {fleet_metadata.get('inspection_type') or 'not provided'}",
+            "",
+            "## Regulatory Metadata",
+            "",
+            f"- LAANC required: {_yes_no_unknown(regulatory.get('laanc_required'))}",
+            "- Waiver / authorization required: "
+            f"{_yes_no_unknown(regulatory.get('waiver_or_authorization_required'))}",
+            f"- Airspace class: {regulatory.get('airspace_class') or 'unknown'}",
+            f"- Visual observer required: "
+            f"{_yes_no_unknown(regulatory.get('visual_observer_required'))}",
+            "- Ground-risk / population note: "
+            f"{regulatory.get('ground_risk_population_note') or 'not provided'}",
+            f"- Documentation-only notice: {regulatory.get('documentation_only_notice')}",
+            "",
+            "## Weather Metadata",
+            "",
+            f"- Source: {weather.get('source') or 'not provided'}",
+            f"- Provider: {weather.get('provider') or 'not provided'}",
+            f"- Timestamp: {weather.get('timestamp_utc') or 'not provided'}",
+            f"- Location: {weather.get('location_name') or 'not provided'}",
+            f"- Forecast window start: "
+            f"{weather.get('forecast_window_start_utc') or 'not provided'}",
+            f"- Forecast window hours: {_fmt_value(weather.get('forecast_window_hours'))}",
+            f"- Wind speed: {_fmt_value(weather.get('wind_speed_mps'), 'm/s')}",
+            f"- Wind direction: {_fmt_value(weather.get('wind_direction_deg'), 'deg')}",
+            f"- Wind gust: {_fmt_value(weather.get('wind_gust_mps'), 'm/s')}",
+            f"- Visibility: {_fmt_value(weather.get('visibility_m'), 'm')}",
+            f"- Precipitation: {_fmt_value(weather.get('precipitation_mm'), 'mm')}",
+            f"- Temperature: {_fmt_value(weather.get('temperature_C'), 'C')}",
+            f"- Fallback used: {_yes_no_unknown(weather.get('fallback_used'))}",
+            "",
+            "## Top Three Risk Drivers",
+            "",
+        ]
+    )
     for driver in audit.get("top_three_risk_drivers", []) or []:
         margin = driver.get("margin") or {}
         lines.append(
@@ -950,20 +1192,26 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
         )
 
     lines.extend(["", "## Full Constraint Audit", ""])
-    for check in audit.get("checks", []) or []:
+    for check in constraint_groups:
         margin = check.get("margin") or {}
         observed = check.get("observed") or {}
         lines.extend(
             [
                 f"### {check.get('label', 'Constraint')}",
                 "",
+                f"- Group: {check.get('category_label') or check.get('category') or 'not provided'}",
+                f"- What this checks: {check.get('plain_english') or 'Not provided.'}",
+                "- Why this matters to an operator: "
+                f"{check.get('why_this_matters_to_operator') or 'Not provided.'}",
                 f"- Status: {str(check.get('status', 'unknown')).upper()}",
+                f"- Status meaning: {check.get('status_meaning') or 'Not provided.'}",
                 f"- Margin: {_fmt_value(margin.get('value'))} {margin.get('unit', '')}",
                 f"- Warning margin: "
                 f"{_fmt_value((check.get('warning_margin') or {}).get('value'))} "
                 f"{(check.get('warning_margin') or {}).get('unit', '')}",
                 f"- Observed: `{strict_json_dumps(observed, sort_keys=True)}`",
-                f"- Recommended action: {check.get('recommendation', 'Review mission plan.')}",
+                "- Recommended operator action: "
+                f"{check.get('recommended_operator_action') or check.get('recommendation') or 'Review mission plan.'}",
                 "",
             ]
         )
@@ -1888,6 +2136,119 @@ def _risk_rank(risk: str) -> int:
     return {"low": 0, "medium": 1, "high": 2}.get(str(risk).lower(), 3)
 
 
+WHAT_IF_IMPROVEMENT_METRICS = [
+    ("battery_reserve_margin_Wh", "Battery reserve margin", "Wh"),
+    ("wind_weather_margin_mps", "Wind / weather margin", "m/s"),
+    ("geofence_clearance_margin_m", "Geofence clearance margin", "m"),
+    ("route_completion_margin", "Route completion margin", "completion"),
+    ("turn_bank_margin_radps", "Turn / bank margin", "rad/s"),
+]
+
+
+def _metric_improvement(
+    *,
+    metric_id: str,
+    label: str,
+    unit: str,
+    baseline: Dict[str, Any],
+    variant: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    before = baseline.get(metric_id)
+    after = variant.get(metric_id)
+    if before is None or after is None:
+        return None
+    delta = float(after) - float(before)
+    if delta <= 1e-9:
+        return None
+    return {
+        "metric": metric_id,
+        "label": label,
+        "unit": unit,
+        "before": float(before),
+        "after": float(after),
+        "delta": delta,
+    }
+
+
+def _what_if_before_after_improvements(
+    baseline: Dict[str, Any], variants: Iterable[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
+    improvements: List[Dict[str, Any]] = []
+    baseline_risk_rank = _risk_rank(str(baseline.get("mission_risk", "unknown")))
+    baseline_feasible = bool(baseline.get("feasible"))
+
+    for variant in variants:
+        variant_improvements: List[Dict[str, Any]] = []
+        if not baseline_feasible and bool(variant.get("feasible")):
+            variant_improvements.append(
+                {
+                    "metric": "feasibility",
+                    "label": "Feasibility",
+                    "unit": "status",
+                    "before": "not feasible",
+                    "after": "feasible",
+                    "delta": "improved",
+                }
+            )
+
+        variant_risk_rank = _risk_rank(str(variant.get("mission_risk", "unknown")))
+        if variant_risk_rank < baseline_risk_rank:
+            variant_improvements.append(
+                {
+                    "metric": "mission_risk",
+                    "label": "Mission risk",
+                    "unit": "risk",
+                    "before": str(baseline.get("mission_risk", "unknown")),
+                    "after": str(variant.get("mission_risk", "unknown")),
+                    "delta": "lower",
+                }
+            )
+
+        for metric_id, label, unit in WHAT_IF_IMPROVEMENT_METRICS:
+            improvement = _metric_improvement(
+                metric_id=metric_id,
+                label=label,
+                unit=unit,
+                baseline=baseline,
+                variant=variant,
+            )
+            if improvement is not None:
+                variant_improvements.append(improvement)
+
+        if variant_improvements:
+            improvements.append(
+                {
+                    "variant_id": variant.get("id"),
+                    "label": variant.get("label"),
+                    "description": variant.get("description"),
+                    "improvements": variant_improvements,
+                    "summary": _what_if_improvement_summary(variant_improvements),
+                }
+            )
+
+    return improvements
+
+
+def _what_if_improvement_summary(improvements: List[Dict[str, Any]]) -> str:
+    labels = [str(item.get("label")) for item in improvements[:3] if item.get("label")]
+    if not labels:
+        return "Improves feasibility evidence versus the baseline."
+    if len(labels) == 1:
+        return f"Improves {labels[0].lower()} versus the baseline."
+    return (
+        "Improves "
+        + ", ".join(label.lower() for label in labels[:-1])
+        + (f", and {labels[-1].lower()} versus the baseline.")
+    )
+
+
+def _fmt_improvement_value(value: Any, unit: str = "") -> str:
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return _fmt_value(float(value), unit)
+    suffix = f" {unit}" if unit and str(unit).lower() not in {"status", "risk"} else ""
+    return f"{value}{suffix}"
+
+
 def _dedupe_risk_drivers(drivers: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
     by_id: Dict[str, Dict[str, Any]] = {}
     for driver in drivers:
@@ -2224,11 +2585,13 @@ def build_what_if_plan(
     if relaunch is not None:
         variants.append(relaunch)
 
+    before_after_improvements = _what_if_before_after_improvements(baseline, variants)
     return {
         "kind": "drone_inspection_what_if_plan",
         "mission_id": plan.metadata.get("mission_id", "aircraft_mission"),
         "baseline": baseline,
         "variants": variants,
+        "before_after_improvements": before_after_improvements,
     }
 
 
@@ -2283,6 +2646,49 @@ def format_what_if_plan(payload: Dict[str, Any]) -> str:
             )
         )
 
+    improvements = payload.get("before_after_improvements") or []
+    if improvements:
+        lines.extend(
+            [
+                "",
+                "## Before / After Improvements",
+                "",
+                "These scenarios improve at least one feasibility or audit margin versus "
+                "the baseline plan.",
+                "",
+                "| Scenario | Improved metric | Baseline | After | Delta |",
+                "| --- | --- | ---: | ---: | ---: |",
+            ]
+        )
+        for scenario in improvements:
+            for improvement in scenario.get("improvements", []) or []:
+                unit = str(improvement.get("unit") or "")
+                lines.append(
+                    "| {scenario} | {metric} | {before} | {after} | {delta} |".format(
+                        scenario=_markdown_cell(scenario.get("label") or "Scenario"),
+                        metric=_markdown_cell(improvement.get("label") or "Metric"),
+                        before=_markdown_cell(
+                            _fmt_improvement_value(improvement.get("before"), unit)
+                        ),
+                        after=_markdown_cell(
+                            _fmt_improvement_value(improvement.get("after"), unit)
+                        ),
+                        delta=_markdown_cell(
+                            _fmt_improvement_value(improvement.get("delta"), unit)
+                        ),
+                    )
+                )
+    else:
+        lines.extend(
+            [
+                "",
+                "## Before / After Improvements",
+                "",
+                "No what-if scenario improved a feasibility or audit margin versus the "
+                "baseline plan.",
+            ]
+        )
+
     lines.extend(["", "## Notes", ""])
     for variant in payload.get("variants", []) or []:
         lines.append(f"- {variant.get('label', 'Scenario')}: {variant.get('description', '')}")
@@ -2312,6 +2718,254 @@ def export_what_if_plan(
     write_strict_json(out_dir / "what_if_plan.json", payload)
     (out_dir / "what_if_plan.md").write_text(format_what_if_plan(payload), encoding="utf-8")
     return payload
+
+
+def _evidence_bundle_review_metadata(
+    cfg: Optional[Dict[str, Any]],
+    *,
+    artifacts_complete: bool,
+    missing_regulatory_evidence: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    bundle_cfg = (cfg or {}).get("evidence_bundle", {}) or {}
+    configured_status = bundle_cfg.get("operator_review_status") or bundle_cfg.get("review_status")
+    requested_status = None
+    if configured_status is None:
+        status = (
+            "ready_for_review"
+            if artifacts_complete and not missing_regulatory_evidence
+            else "draft"
+        )
+    else:
+        requested_status = (
+            str(configured_status).strip().lower().replace(" ", "_").replace("-", "_")
+        )
+        status = requested_status
+    if status not in {"draft", "ready_for_review", "reviewed"}:
+        status = "draft"
+    if not artifacts_complete or missing_regulatory_evidence:
+        status = "draft"
+    return {
+        "status": status,
+        "requested_status": requested_status,
+        "allowed_statuses": ["draft", "ready_for_review", "reviewed"],
+        "reviewer_name": bundle_cfg.get("reviewer_name"),
+        "review_timestamp_utc": bundle_cfg.get("review_timestamp_utc"),
+        "documentation_only": True,
+        "notice": (
+            "Operator review status is documentation only. It does not approve a flight, "
+            "issue an authorization, or replace pilot-in-command release authority."
+        ),
+    }
+
+
+def _bundle_completeness(manifest_entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+    total = len(manifest_entries)
+    present = sum(1 for entry in manifest_entries if entry.get("present"))
+    missing = total - present
+    score = 100.0 if total == 0 else round((present / total) * 100.0, 1)
+    return {
+        "score": score,
+        "unit": "percent",
+        "present_artifacts": present,
+        "total_artifacts": total,
+        "missing_artifacts": missing,
+        "complete": missing == 0,
+        "scoring_note": (
+            "Score is based on expected bundle artifacts present at export time. "
+            "Optional documentation fields are reported separately and do not block planning."
+        ),
+    }
+
+
+def _bundle_missing_evidence(
+    manifest_entries: List[Dict[str, Any]],
+    regulatory_evidence_status: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    missing: List[Dict[str, Any]] = []
+    for entry in manifest_entries:
+        if entry.get("present"):
+            continue
+        missing.append(
+            {
+                "kind": "artifact",
+                "id": entry.get("id"),
+                "label": entry.get("label"),
+                "bundle_path": entry.get("bundle_path"),
+                "documentation_only": False,
+                "operator_attention": True,
+                "note": "Expected evidence artifact is missing from the bundle.",
+            }
+        )
+    for item in regulatory_evidence_status.get("missing", []) or []:
+        missing.append(
+            {
+                "kind": "regulatory_documentation",
+                "id": item.get("id"),
+                "label": item.get("label"),
+                "path": item.get("path"),
+                "documentation_only": True,
+                "operator_attention": bool(item.get("operator_attention")),
+                "note": item.get("note"),
+            }
+        )
+    return missing
+
+
+def _generated_bundle_artifacts() -> List[Dict[str, Any]]:
+    return [
+        {
+            "id": "bundle_summary",
+            "label": "Evidence bundle summary",
+            "bundle_path": "evidence_bundle_summary.md",
+            "present": True,
+            "generated": True,
+        },
+        {
+            "id": "artifact_index",
+            "label": "Evidence bundle artifact index",
+            "bundle_path": "artifact_index.md",
+            "present": True,
+            "generated": True,
+        },
+        {
+            "id": "manifest_json",
+            "label": "Evidence bundle manifest",
+            "bundle_path": "manifest.json",
+            "present": True,
+            "generated": True,
+        },
+        {
+            "id": "readme",
+            "label": "Evidence bundle README",
+            "bundle_path": "README.md",
+            "present": True,
+            "generated": True,
+        },
+        {
+            "id": "checksum_manifest",
+            "label": "Evidence bundle checksum manifest",
+            "bundle_path": "checksum_manifest.json",
+            "present": True,
+            "generated": True,
+        },
+    ]
+
+
+def _artifact_link(bundle_path: Any, label: Any = None) -> str:
+    path = str(bundle_path or "").strip()
+    text = str(label or path or "artifact").strip()
+    if not path:
+        return text
+    href = path.replace("\\", "/").replace(" ", "%20")
+    return f"[{text}]({href})"
+
+
+def _format_missing_evidence_list(missing_evidence: List[Dict[str, Any]]) -> List[str]:
+    if not missing_evidence:
+        return ["- none"]
+    lines = []
+    for item in missing_evidence:
+        label = item.get("label") or item.get("id") or "Missing evidence"
+        location = item.get("bundle_path") or item.get("path") or "not provided"
+        kind = item.get("kind") or "evidence"
+        note = item.get("note") or "Review before operator acceptance."
+        lines.append(f"- {label} ({kind}, {location}): {note}")
+    return lines
+
+
+def _format_evidence_bundle_summary(manifest: Dict[str, Any]) -> str:
+    completeness = manifest.get("bundle_completeness") or {}
+    review = manifest.get("operator_review") or {}
+    missing_evidence = manifest.get("missing_evidence") or []
+    lines = [
+        "# Evidence Bundle Summary",
+        "",
+        f"Mission: {Path(str(manifest.get('scenario_path', 'scenario.yaml'))).stem}",
+        f"Completeness score: {_fmt_value(completeness.get('score'), '%')}",
+        f"Artifacts present: {completeness.get('present_artifacts', 0)} / "
+        f"{completeness.get('total_artifacts', 0)}",
+        f"Missing artifact count: {completeness.get('missing_artifacts', 0)}",
+        f"Operator review status: {str(review.get('status', 'draft')).replace('_', ' ')}",
+        f"Reviewer: {review.get('reviewer_name') or 'not provided'}",
+        f"Review timestamp UTC: {review.get('review_timestamp_utc') or 'not provided'}",
+        "",
+        "ORBITAL evidence bundles are decision-support packages. Bundle completeness, "
+        "review status, and checksums do not provide legal approval, LAANC, waivers, "
+        "authorizations, operational clearance, or permission to fly.",
+        "",
+        "## Start Here",
+        "",
+        "- Primary constraint audit: "
+        f"{_artifact_link('inspection_constraint_audit.md', 'inspection_constraint_audit.md')}",
+        f"- Artifact index: {_artifact_link('artifact_index.md', 'artifact_index.md')}",
+        f"- Manifest JSON: {_artifact_link('manifest.json', 'manifest.json')}",
+        f"- Checksum manifest: {_artifact_link('checksum_manifest.json', 'checksum_manifest.json')}",
+        "",
+        "## Missing Evidence",
+        "",
+    ]
+    lines.extend(_format_missing_evidence_list(missing_evidence))
+    lines.extend(
+        [
+            "",
+            "## Regulatory Documentation",
+            "",
+            f"- Missing optional documentation fields: "
+            f"{len((manifest.get('regulatory_evidence_status') or {}).get('missing', []) or [])}",
+            f"- Approval checklist items: "
+            f"{(manifest.get('approval_checklist') or {}).get('item_count', 0)}",
+            "",
+        ]
+    )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _format_artifact_index(manifest: Dict[str, Any]) -> str:
+    lines = [
+        "# Evidence Bundle Artifact Index",
+        "",
+        "Links are relative to this evidence bundle folder.",
+        "",
+        "| Artifact | Status | Link | Type |",
+        "| --- | --- | --- | --- |",
+    ]
+    for entry in manifest.get("artifacts", []) or []:
+        status = "included" if entry.get("present") else "missing"
+        lines.append(
+            "| {label} | {status} | {link} | expected |".format(
+                label=_markdown_cell(entry.get("label") or entry.get("id")),
+                status=status,
+                link=(
+                    _artifact_link(entry.get("bundle_path"))
+                    if entry.get("present")
+                    else _markdown_cell(entry.get("bundle_path"))
+                ),
+            )
+        )
+    for entry in manifest.get("generated_artifacts", []) or []:
+        lines.append(
+            "| {label} | included | {link} | generated |".format(
+                label=_markdown_cell(entry.get("label") or entry.get("id")),
+                link=_artifact_link(entry.get("bundle_path")),
+            )
+        )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _bundle_checksum_entries(bundle_dir: Path) -> List[Dict[str, Any]]:
+    entries: List[Dict[str, Any]] = []
+    for path in sorted(bundle_dir.rglob("*")):
+        if not path.is_file() or path.name == "checksum_manifest.json":
+            continue
+        data = path.read_bytes()
+        entries.append(
+            {
+                "bundle_path": str(path.relative_to(bundle_dir)).replace("\\", "/"),
+                "sha256": hashlib.sha256(data).hexdigest(),
+                "size_bytes": len(data),
+            }
+        )
+    return entries
 
 
 def export_operator_evidence_bundle(
@@ -2360,6 +3014,12 @@ def export_operator_evidence_bundle(
             "label": "Plan JSON",
             "source": out_dir / "plan.json",
             "bundle_name": "plan.json",
+        },
+        {
+            "id": "constraint_audit_markdown",
+            "label": "Primary constraint-audit report",
+            "source": out_dir / "inspection_constraint_audit.md",
+            "bundle_name": "inspection_constraint_audit.md",
         },
         {
             "id": "constraint_audit_json",
@@ -2469,12 +3129,28 @@ def export_operator_evidence_bundle(
 
     missing = [entry["id"] for entry in manifest_entries if not entry["present"]]
     missing_ids = set(missing)
+    bundle_completeness = _bundle_completeness(manifest_entries)
+    missing_evidence = _bundle_missing_evidence(
+        manifest_entries,
+        regulatory_evidence_status,
+    )
+    operator_review = _evidence_bundle_review_metadata(
+        cfg,
+        artifacts_complete=not missing,
+        missing_regulatory_evidence=regulatory_evidence_status.get("operator_attention_missing", [])
+        or [],
+    )
+    generated_artifacts = _generated_bundle_artifacts()
     manifest: Dict[str, Any] = {
         "kind": "operator_evidence_bundle",
         "bundle_dir": str(bundle_dir),
         "scenario_path": str(scenario_path),
         "complete": not missing,
         "missing": missing,
+        "bundle_completeness_score": bundle_completeness["score"],
+        "bundle_completeness": bundle_completeness,
+        "missing_evidence": missing_evidence,
+        "operator_review": operator_review,
         "weather": (
             {
                 "source": weather.get("source"),
@@ -2492,6 +3168,12 @@ def export_operator_evidence_bundle(
         "regulatory_evidence_status": regulatory_evidence_status,
         "approval_checklist": approval_checklist,
         "artifacts": manifest_entries,
+        "generated_artifacts": generated_artifacts,
+        "checksum_manifest": {
+            "algorithm": "sha256",
+            "bundle_path": "checksum_manifest.json",
+            "excludes": ["checksum_manifest.json"],
+        },
         "documentation_only_notice": (
             "This bundle supports operator review and audit evidence only. ORBITAL does not "
             "provide LAANC, waivers, authorizations, legal approval, autopilot control, or "
@@ -2514,6 +3196,19 @@ def export_operator_evidence_bundle(
         "evidence fields in this bundle are documentation-only. They support operator "
         "review; they are not proof of authorization, legal approval, LAANC, waiver, or "
         "operational clearance.",
+        "",
+        "Start with `evidence_bundle_summary.md`, then use `artifact_index.md` to open "
+        "individual artifacts. `checksum_manifest.json` provides lightweight SHA-256 "
+        "checksums for files in this bundle.",
+        "",
+        "## Bundle Summary",
+        "",
+        f"- Completeness score: {_fmt_value(bundle_completeness['score'], '%')}",
+        f"- Missing evidence items: {len(missing_evidence)}",
+        f"- Operator review status: {operator_review['status'].replace('_', ' ')}",
+        f"- Reviewer: {operator_review.get('reviewer_name') or 'not provided'}",
+        f"- Review timestamp UTC: "
+        f"{operator_review.get('review_timestamp_utc') or 'not provided'}",
         "",
         "## Contents",
         "",
@@ -2570,7 +3265,25 @@ def export_operator_evidence_bundle(
             ]
         )
 
-    (bundle_dir / "README.md").write_text("\n".join(readme_lines).rstrip() + "\n", encoding="utf-8")
+    (bundle_dir / "README.md").write_text(
+        "\n".join(readme_lines).rstrip() + "\n",
+        encoding="utf-8",
+    )
+    (bundle_dir / "evidence_bundle_summary.md").write_text(
+        _format_evidence_bundle_summary(manifest),
+        encoding="utf-8",
+    )
+    (bundle_dir / "artifact_index.md").write_text(
+        _format_artifact_index(manifest),
+        encoding="utf-8",
+    )
+    checksum_payload = {
+        "kind": "evidence_bundle_checksum_manifest",
+        "algorithm": "sha256",
+        "excludes": ["checksum_manifest.json"],
+        "files": _bundle_checksum_entries(bundle_dir),
+    }
+    write_strict_json(bundle_dir / "checksum_manifest.json", checksum_payload)
     return manifest
 
 

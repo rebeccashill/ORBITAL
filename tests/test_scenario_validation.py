@@ -180,6 +180,25 @@ def test_aircraft_validation_allows_named_output_folder() -> None:
     assert "output.run_dir_name" in _issue_paths(issues)
 
 
+def test_evidence_bundle_review_metadata_is_optional_and_validated() -> None:
+    cfg = copy.deepcopy(_load_yaml(EXAMPLES / "aircraft_uav_demo.yaml"))
+    cfg["vehicle"]["battery_reserve_Wh"] = 100.0
+    cfg["evidence_bundle"] = {
+        "operator_review_status": "ready_for_review",
+        "reviewer_name": "Demo reviewer",
+        "review_timestamp_utc": "2026-09-11T19:00:00Z",
+    }
+
+    assert collect_scenario_validation_issues(cfg) == []
+
+    cfg["evidence_bundle"]["operator_review_status"] = "approved"
+    cfg["evidence_bundle"]["reviewer_name"] = ""
+    issues = collect_scenario_validation_issues(cfg)
+    paths = _issue_paths(issues)
+    assert "evidence_bundle.operator_review_status" in paths
+    assert "evidence_bundle.reviewer_name" in paths
+
+
 def test_aircraft_regulatory_metadata_validates_as_documentation_fields() -> None:
     cfg = copy.deepcopy(_load_yaml(EXAMPLES / "aircraft_uav_demo.yaml"))
     cfg["regulatory"] = {

@@ -177,6 +177,8 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     )
 
     assert audit["kind"] == "drone_inspection_constraint_audit"
+    assert audit["primary_demo_artifact"] is True
+    assert audit["operator_question"] == "Can we safely and defensibly fly this mission?"
     assert audit["mission_risk"] in {"low", "medium", "high"}
     assert audit["mission_metadata"]["operator"] == "ORBITAL Demo Operations"
     assert audit["mission_metadata"]["aircraft_id"] == "UAV-BVLOS-104"
@@ -202,6 +204,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     )
     assert audit["top_limiting_constraint"] is not None
     assert len(audit["top_three_risk_drivers"]) == 3
+    assert len(audit["constraint_groups"]) == 5
     assert {check["id"] for check in audit["checks"]} >= {
         "battery_reserve",
         "wind_weather",
@@ -209,9 +212,20 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "route_completion",
         "turn_bank_feasibility",
     }
+    for group in audit["constraint_groups"]:
+        assert group["status"] in {"pass", "warning", "fail", "unknown"}
+        assert group["plain_english"]
+        assert group["why_this_matters_to_operator"]
+        assert group["recommended_operator_action"]
+        assert group["status_meaning"]
     assert (tmp_path / "inspection_constraint_audit.json").exists()
     assert (tmp_path / "inspection_constraint_audit.md").exists()
     memo_text = (tmp_path / "inspection_constraint_audit.md").read_text(encoding="utf-8")
+    assert "Primary demo artifact" in memo_text
+    assert "Can we safely and defensibly fly this mission?" in memo_text
+    assert "Constraint Group Summary" in memo_text
+    assert "Why this matters to an operator" in memo_text
+    assert "Recommended operator action" in memo_text
     assert "ORBITAL Demo Operations" in memo_text
     assert "Powerline corridor inspection" in memo_text
 
@@ -354,8 +368,17 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "larger_battery_reserve",
         "relaunch_battery_swap",
     }
+    assert what_if["before_after_improvements"]
+    assert {item["variant_id"] for item in what_if["before_after_improvements"]} & {
+        "fewer_waypoints",
+        "lower_speed",
+        "relaunch_battery_swap",
+    }
     assert (tmp_path / "what_if_plan.json").exists()
     assert (tmp_path / "what_if_plan.md").exists()
+    what_if_md = (tmp_path / "what_if_plan.md").read_text(encoding="utf-8")
+    assert "Before / After Improvements" in what_if_md
+    assert "Battery reserve margin" in what_if_md
 
     flight_exports = export_flight_planning_artifacts(result.plan, tmp_path, cfg=cfg)
 
@@ -388,6 +411,12 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
 
     assert evidence["kind"] == "operator_evidence_bundle"
     assert evidence["complete"] is True
+    assert evidence["bundle_completeness_score"] == 100.0
+    assert evidence["bundle_completeness"]["complete"] is True
+    assert evidence["missing_evidence"] == []
+    assert evidence["operator_review"]["status"] == "ready_for_review"
+    assert evidence["operator_review"]["reviewer_name"] is None
+    assert evidence["operator_review"]["review_timestamp_utc"] is None
     assert evidence["weather"]["source"] == "offline Open-Meteo-shaped sample"
     assert evidence["weather"]["timestamp_utc"] == "2026-09-11T16:00:00Z"
     assert evidence["regulatory_metadata"]["laanc_required"] is True
@@ -416,6 +445,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     expected_bundle_files = {
         "scenario.yaml",
         "plan.json",
+        "inspection_constraint_audit.md",
         "inspection_constraint_audit.json",
         "regulatory_readiness_report.json",
         "regulatory_readiness_report.md",
@@ -430,15 +460,35 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "flight_planning_exports.md",
         "manifest.json",
         "README.md",
+        "evidence_bundle_summary.md",
+        "artifact_index.md",
+        "checksum_manifest.json",
     }
     assert {path.name for path in bundle_dir.iterdir()} >= expected_bundle_files
     bundle_readme = (bundle_dir / "README.md").read_text(encoding="utf-8")
+    bundle_summary = (bundle_dir / "evidence_bundle_summary.md").read_text(encoding="utf-8")
+    artifact_index = (bundle_dir / "artifact_index.md").read_text(encoding="utf-8")
     assert "Regulatory Readiness" in bundle_readme
     assert "Approval Checklist" in bundle_readme
     assert "documentation-only" in bundle_readme
     assert "not proof of authorization" in bundle_readme
+    assert "Completeness score: 100.0 %" in bundle_summary
+    assert "Operator review status: ready for review" in bundle_summary
+    assert "Missing Evidence" in bundle_summary
+    assert "[inspection_constraint_audit.md](inspection_constraint_audit.md)" in artifact_index
+    checksum_manifest = _load_yaml(bundle_dir / "checksum_manifest.json")
+    assert checksum_manifest["algorithm"] == "sha256"
+    checksum_paths = {item["bundle_path"] for item in checksum_manifest["files"]}
+    assert {
+        "manifest.json",
+        "README.md",
+        "evidence_bundle_summary.md",
+        "artifact_index.md",
+        "inspection_constraint_audit.md",
+    } <= checksum_paths
 
     missing_cfg = copy.deepcopy(cfg)
+    missing_cfg.pop("evidence_bundle", None)
     for key in (
         "authorization_id",
         "approving_authority_source",
@@ -453,6 +503,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     missing_dir.mkdir()
     for artifact_name in (
         "plan.json",
+        "inspection_constraint_audit.md",
         "inspection_constraint_audit.json",
         "score.json",
         "flight_path.png",
@@ -480,9 +531,15 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     )
 
     assert missing_evidence["complete"] is True
+    assert missing_evidence["bundle_completeness_score"] == 100.0
+    assert missing_evidence["operator_review"]["status"] == "draft"
     assert missing_evidence["regulatory_evidence_status"]["all_optional_fields_documented"] is (
         False
     )
+    assert {item["id"] for item in missing_evidence["missing_evidence"]} >= {
+        "authorization_id",
+        "required_crew_roles",
+    }
     missing_paths = {
         item["path"] for item in missing_evidence["regulatory_evidence_status"]["missing"]
     }

@@ -1,0 +1,104 @@
+{
+  "kind": "evidence_bundle_checksum_manifest",
+  "algorithm": "sha256",
+  "excludes": [
+    "checksum_manifest.json"
+  ],
+  "files": [
+    {
+      "bundle_path": "artifact_index.md",
+      "sha256": "257695c1eaed374feb681422aafe1cd196fc977de6ab5acf1eb7b3e313611d72",
+      "size_bytes": 2098
+    },
+    {
+      "bundle_path": "autopilot_mission.csv",
+      "sha256": "9189cd93204ddb505dba7b135a9bed0c81b745e8adfcb05d12ea9535bc46bd29",
+      "size_bytes": 2086
+    },
+    {
+      "bundle_path": "evidence_bundle_summary.md",
+      "sha256": "472e86bf4734641b84004102d723fc95754532d80bedc6cfe5e87ca8518213cd",
+      "size_bytes": 906
+    },
+    {
+      "bundle_path": "flight_path.png",
+      "sha256": "f3d6008bff56d69450532e4d166199c87591cdbe6201a4198031f64b717d56cc",
+      "size_bytes": 57037
+    },
+    {
+      "bundle_path": "flight_planning_exports.json",
+      "sha256": "d0a6a63526594d75c219b912ef3280983bfe79c7c604d4ff19457101f15ba0d3",
+      "size_bytes": 804
+    },
+    {
+      "bundle_path": "flight_planning_exports.md",
+      "sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672",
+      "size_bytes": 291
+    },
+    {
+      "bundle_path": "inspection_constraint_audit.json",
+      "sha256": "df172835e6e48494082f5c70be55ba7303d5fc521590b27bacacb844ef472525",
+      "size_bytes": 21547
+    },
+    {
+      "bundle_path": "inspection_constraint_audit.md",
+      "sha256": "bf67c62e88e9faf31d9f0705067209509c61467f3f8db94e6a701af2d58cd1ce",
+      "size_bytes": 7489
+    },
+    {
+      "bundle_path": "manifest.json",
+      "sha256": "57714eeaf7989a256d6a4e76952eeb8bb5e6fde7487fa77341b6dc48c330ba34",
+      "size_bytes": 17176
+    },
+    {
+      "bundle_path": "mission_review.kml",
+      "sha256": "6ac079f4b22f49eb17330ee67df7bcdd425f694eebe4262c0e8c50d126865179",
+      "size_bytes": 3394
+    },
+    {
+      "bundle_path": "operator_memo.md",
+      "sha256": "0a01dd2eccd98f400c243dbf18e62e193bc1ea0142a97124be084bcf49d80570",
+      "size_bytes": 2127
+    },
+    {
+      "bundle_path": "plan.json",
+      "sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8",
+      "size_bytes": 2542
+    },
+    {
+      "bundle_path": "README.md",
+      "sha256": "933e20284adb6f3ffe1a97534572b18cf71fecb3747edd40af9fea485fe19310",
+      "size_bytes": 2924
+    },
+    {
+      "bundle_path": "regulatory_readiness_report.json",
+      "sha256": "6ff5bbc3e330bf0f2aae360bb157a383682ac8681fc4da27787ec3540686176e",
+      "size_bytes": 10885
+    },
+    {
+      "bundle_path": "regulatory_readiness_report.md",
+      "sha256": "613722513747ee93caf70eca01ddfcfc04e3c1637fe28f376ceca695af776d74",
+      "size_bytes": 5638
+    },
+    {
+      "bundle_path": "robustness.json",
+      "sha256": "9a1984b6ec530bf6836eb5facfed37ff102d5c19ccf8cf1128c0e6a4020dd82a",
+      "size_bytes": 295
+    },
+    {
+      "bundle_path": "scenario.yaml",
+      "sha256": "4b3f8272fb522b82b06b0520b2c81463b2b2c0dbbf3b6532ead7b68de7cb9e72",
+      "size_bytes": 6370
+    },
+    {
+      "bundle_path": "score.json",
+      "sha256": "e3cb2a7098d4fe8716cd7fcadab220bd74b4f525b5f645b5ff0f2231548e1d10",
+      "size_bytes": 1119
+    },
+    {
+      "bundle_path": "weather.json",
+      "sha256": "7c005ca7f585d6dde21e595aa2ce5c8c1a9968fdec8b3b3df86675c1ace0c027",
+      "size_bytes": 623
+    }
+  ]
+}

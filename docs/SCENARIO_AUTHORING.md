@@ -325,6 +325,23 @@ when a visual observer is required but `regulatory.required_crew_roles` does not
 document that role. These warnings do not prevent planning; they prompt operator
 documentation review.
 
+Operator evidence bundles include `evidence_bundle_summary.md`,
+`artifact_index.md`, `manifest.json`, and a lightweight
+`checksum_manifest.json`. The manifest reports a completeness score, missing
+evidence list, and documentation-only operator review metadata. Review metadata
+can be provided with an optional top-level block:
+
+```yaml
+evidence_bundle:
+  operator_review_status: "ready_for_review"  # draft, ready_for_review, reviewed
+  reviewer_name: "Optional reviewer name"
+  review_timestamp_utc: "2026-09-11T19:00:00Z"
+```
+
+These fields are optional and documentation-only. They do not provide flight
+approval, legal approval, LAANC, waivers, authorizations, or operational
+clearance.
+
 ## Batch Inspection Runs
 
 Run multiple inspection scenarios and write a portfolio summary:

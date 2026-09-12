@@ -1,8 +1,16 @@
 {
   "kind": "drone_inspection_constraint_audit",
+  "primary_demo_artifact": true,
+  "operator_question": "Can we safely and defensibly fly this mission?",
   "mission_id": "BVLOS Powerline Inspection Demo",
   "status": "go",
   "mission_risk": "low",
+  "status_legend": {
+    "pass": "Modeled margin is outside the warning band.",
+    "warning": "Modeled margin is positive but close enough to require operator review.",
+    "fail": "Modeled margin is negative; modify the mission before release.",
+    "unknown": "ORBITAL does not have enough data to classify this group."
+  },
   "mission_metadata": {
     "operator": "ORBITAL Demo Operations",
     "aircraft_id": "UAV-BVLOS-104",
@@ -74,7 +82,12 @@
   "top_limiting_constraint": {
     "id": "wind_weather",
     "label": "Wind / weather margin",
+    "category": "weather",
+    "category_label": "Weather / wind margin",
     "status": "pass",
+    "status_meaning": "Modeled margin is outside the warning band.",
+    "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+    "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
     "margin": {
       "value": 3.0999999999999996,
       "unit": "m/s"
@@ -98,13 +111,19 @@
       "temperature_C": 18.5,
       "weather_fallback_used": true
     },
-    "recommendation": "Wait for better wind or lower mission scope."
+    "recommendation": "Wait for better wind or lower mission scope.",
+    "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
   },
   "top_three_risk_drivers": [
     {
       "id": "wind_weather",
       "label": "Wind / weather margin",
+      "category": "weather",
+      "category_label": "Weather / wind margin",
       "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+      "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
       "margin": {
         "value": 3.0999999999999996,
         "unit": "m/s"
@@ -128,12 +147,18 @@
         "temperature_C": 18.5,
         "weather_fallback_used": true
       },
-      "recommendation": "Wait for better wind or lower mission scope."
+      "recommendation": "Wait for better wind or lower mission scope.",
+      "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
     },
     {
       "id": "battery_reserve",
       "label": "Battery reserve margin",
+      "category": "energy",
+      "category_label": "Energy / battery reserve",
       "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+      "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
       "margin": {
         "value": 132.05997803125206,
         "unit": "Wh"
@@ -147,12 +172,18 @@
         "final_battery_Wh": 832.0599780312521,
         "required_reserve_Wh": 700.0
       },
-      "recommendation": "Reduce route length or plan a relaunch / battery swap."
+      "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+      "recommended_operator_action": "Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch."
     },
     {
       "id": "route_completion",
       "label": "Route completion status",
+      "category": "mission_completion",
+      "category_label": "Route completion",
       "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
+      "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
       "margin": {
         "value": 1.0,
         "unit": "completion"
@@ -167,14 +198,20 @@
         "waypoints_total": 6.0,
         "reached_all": true
       },
-      "recommendation": "Split the inspection into shorter sorties."
+      "recommendation": "Split the inspection into shorter sorties.",
+      "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
     }
   ],
-  "checks": [
+  "constraint_groups": [
     {
       "id": "battery_reserve",
       "label": "Battery reserve margin",
+      "category": "energy",
+      "category_label": "Energy / battery reserve",
       "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+      "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
       "margin": {
         "value": 132.05997803125206,
         "unit": "Wh"
@@ -188,12 +225,18 @@
         "final_battery_Wh": 832.0599780312521,
         "required_reserve_Wh": 700.0
       },
-      "recommendation": "Reduce route length or plan a relaunch / battery swap."
+      "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+      "recommended_operator_action": "Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch."
     },
     {
       "id": "wind_weather",
       "label": "Wind / weather margin",
+      "category": "weather",
+      "category_label": "Weather / wind margin",
       "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+      "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
       "margin": {
         "value": 3.0999999999999996,
         "unit": "m/s"
@@ -217,12 +260,18 @@
         "temperature_C": 18.5,
         "weather_fallback_used": true
       },
-      "recommendation": "Wait for better wind or lower mission scope."
+      "recommendation": "Wait for better wind or lower mission scope.",
+      "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
     },
     {
       "id": "geofence_clearance",
       "label": "Geofence / no-fly-zone clearance",
+      "category": "airspace_geometry",
+      "category_label": "Geofence / no-fly-zone clearance",
       "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether the route remains outside no-fly zones and preserves the configured stand-off buffer.",
+      "why_this_matters_to_operator": "Geofence clearance protects people, assets, restricted areas, and customer boundaries when navigation or wind uncertainty appears.",
       "margin": {
         "value": 276.69524979477507,
         "unit": "m"
@@ -237,12 +286,18 @@
         "min_clearance_m": 351.69524979477507,
         "geofence_violated": false
       },
-      "recommendation": "Adjust route geometry or increase no-fly-zone clearance."
+      "recommendation": "Adjust route geometry or increase no-fly-zone clearance.",
+      "recommended_operator_action": "Keep the geofence file and route review in the evidence bundle, then confirm site boundaries before flight."
     },
     {
       "id": "route_completion",
       "label": "Route completion status",
+      "category": "mission_completion",
+      "category_label": "Route completion",
       "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
+      "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
       "margin": {
         "value": 1.0,
         "unit": "completion"
@@ -257,12 +312,18 @@
         "waypoints_total": 6.0,
         "reached_all": true
       },
-      "recommendation": "Split the inspection into shorter sorties."
+      "recommendation": "Split the inspection into shorter sorties.",
+      "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
     },
     {
       "id": "turn_bank_feasibility",
       "label": "Turn / bank feasibility",
+      "category": "flight_dynamics",
+      "category_label": "Turn / bank feasibility",
       "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether planned turns stay within configured bank-angle and turn-rate capability.",
+      "why_this_matters_to_operator": "Overly aggressive turns can break route tracking, increase energy use, and reduce safety margins near assets or geofences.",
       "margin": {
         "value": 0.1390076277875651,
         "unit": "rad/s"
@@ -275,7 +336,146 @@
       "observed": {
         "bank_max_deg": 30.0
       },
-      "recommendation": "Lower cruise speed or add more turn spacing."
+      "recommendation": "Lower cruise speed or add more turn spacing.",
+      "recommended_operator_action": "Keep the planned speed and turn assumptions, then verify they match the aircraft operating envelope."
+    }
+  ],
+  "checks": [
+    {
+      "id": "battery_reserve",
+      "label": "Battery reserve margin",
+      "category": "energy",
+      "category_label": "Energy / battery reserve",
+      "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+      "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
+      "margin": {
+        "value": 132.05997803125206,
+        "unit": "Wh"
+      },
+      "warning_margin": {
+        "value": 70.0,
+        "unit": "Wh"
+      },
+      "risk_points": 11.13428885267828,
+      "observed": {
+        "final_battery_Wh": 832.0599780312521,
+        "required_reserve_Wh": 700.0
+      },
+      "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+      "recommended_operator_action": "Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch."
+    },
+    {
+      "id": "wind_weather",
+      "label": "Wind / weather margin",
+      "category": "weather",
+      "category_label": "Weather / wind margin",
+      "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+      "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+      "margin": {
+        "value": 3.0999999999999996,
+        "unit": "m/s"
+      },
+      "warning_margin": {
+        "value": 2.0,
+        "unit": "m/s"
+      },
+      "risk_points": 14.500000000000002,
+      "observed": {
+        "max_horizontal_wind_mps": 5.9,
+        "weather_audit_wind_mps": 5.9,
+        "max_safe_wind_mps": 9.0,
+        "weather_source": "offline Open-Meteo-shaped sample",
+        "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+        "weather_wind_speed_mps": 4.5,
+        "weather_wind_direction_deg": 285.0,
+        "weather_wind_gust_mps": 5.9,
+        "visibility_m": 16000.0,
+        "precipitation_mm": 0.0,
+        "temperature_C": 18.5,
+        "weather_fallback_used": true
+      },
+      "recommendation": "Wait for better wind or lower mission scope.",
+      "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+    },
+    {
+      "id": "geofence_clearance",
+      "label": "Geofence / no-fly-zone clearance",
+      "category": "airspace_geometry",
+      "category_label": "Geofence / no-fly-zone clearance",
+      "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether the route remains outside no-fly zones and preserves the configured stand-off buffer.",
+      "why_this_matters_to_operator": "Geofence clearance protects people, assets, restricted areas, and customer boundaries when navigation or wind uncertainty appears.",
+      "margin": {
+        "value": 276.69524979477507,
+        "unit": "m"
+      },
+      "warning_margin": {
+        "value": 25.0,
+        "unit": "m"
+      },
+      "risk_points": 0.0,
+      "observed": {
+        "required_clearance_m": 75.0,
+        "min_clearance_m": 351.69524979477507,
+        "geofence_violated": false
+      },
+      "recommendation": "Adjust route geometry or increase no-fly-zone clearance.",
+      "recommended_operator_action": "Keep the geofence file and route review in the evidence bundle, then confirm site boundaries before flight."
+    },
+    {
+      "id": "route_completion",
+      "label": "Route completion status",
+      "category": "mission_completion",
+      "category_label": "Route completion",
+      "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
+      "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
+      "margin": {
+        "value": 1.0,
+        "unit": "completion"
+      },
+      "warning_margin": {
+        "value": 0.5,
+        "unit": "completion"
+      },
+      "risk_points": 10.000000000000002,
+      "observed": {
+        "waypoints_completed": 6.0,
+        "waypoints_total": 6.0,
+        "reached_all": true
+      },
+      "recommendation": "Split the inspection into shorter sorties.",
+      "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
+    },
+    {
+      "id": "turn_bank_feasibility",
+      "label": "Turn / bank feasibility",
+      "category": "flight_dynamics",
+      "category_label": "Turn / bank feasibility",
+      "status": "pass",
+      "status_meaning": "Modeled margin is outside the warning band.",
+      "plain_english": "Checks whether planned turns stay within configured bank-angle and turn-rate capability.",
+      "why_this_matters_to_operator": "Overly aggressive turns can break route tracking, increase energy use, and reduce safety margins near assets or geofences.",
+      "margin": {
+        "value": 0.1390076277875651,
+        "unit": "rad/s"
+      },
+      "warning_margin": {
+        "value": 0.05,
+        "unit": "rad/s"
+      },
+      "risk_points": 2.198474442486985,
+      "observed": {
+        "bank_max_deg": 30.0
+      },
+      "recommendation": "Lower cruise speed or add more turn spacing.",
+      "recommended_operator_action": "Keep the planned speed and turn assumptions, then verify they match the aircraft operating envelope."
     }
   ],
   "robustness": {

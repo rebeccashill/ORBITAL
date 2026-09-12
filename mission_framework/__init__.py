@@ -1,6 +1,6 @@
 """ORBITAL mission planning framework."""
 
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 
 from mission_framework.core.constraints import (
     Constraint,

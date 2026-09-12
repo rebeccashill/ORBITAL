@@ -5,7 +5,7 @@
 **Operational Reusable Backend for Integrated Trajectory and Logistics**  
 Constraint-Aware BVLOS Inspection Mission Planning
 
-Current release: `v1.0.7`
+Current release: `v1.0.8`
 
 ORBITAL helps drone operators plan constraint-aware BVLOS inspection missions
 under battery, weather, geofence, and regulatory constraints. It is built on a
@@ -13,13 +13,15 @@ domain-agnostic mission planning engine that can simulate candidate plans,
 evaluate hard and soft constraints, compare objective tradeoffs, and export
 auditable planning evidence before a crew commits field time.
 
-Current v1.0.7 focus: make the drone/BVLOS inspection workflow feel complete
-for operator review while keeping ORBITAL legally honest as decision support.
+Current v1.0.8 focus: make ORBITAL's product differentiation explicit as a
+constraint-aware BVLOS inspection feasibility and audit evidence layer.
 
 ORBITAL supports:
 
 - Drone and aircraft multi-waypoint optimization
 - Battery, wind, geofence, and route feasibility checks
+- Primary constraint-audit reports with pass / warning / fail groups,
+  operator-facing explanations, and recommended actions
 - Spacecraft 7-day scheduling and operations planning as technical depth
 - Simulation-based optimization with constraints
 - Monte Carlo robustness analysis
@@ -53,6 +55,20 @@ it is a preflight feasibility and evidence layer. The goal is to show the
 operator which constraints are binding, whether the plan is likely to complete,
 and what tradeoffs are available before the mission is attempted.
 
+See [Differentiation](docs/DIFFERENTIATION.md) for the full positioning story,
+comparison table, and product-category boundary. See
+[Market Proof](docs/MARKET_PROOF.md) for the inspection-operator problem
+statement, buyer and user assumptions, target customer profiles, and top
+alternatives.
+
+For a presenter-ready BVLOS walkthrough, see the
+[BVLOS powerline demo script](docs/BVLOS_POWERLINE_DEMO_SCRIPT.md). The live
+demo starts with
+`outputs/bvlos_powerline_inspection/inspection_constraint_audit.md`. That
+constraint-audit report is the primary demo artifact: it translates modeled
+battery, weather, geofence, route-completion, and turn-feasibility constraints
+into operator-readable status, impact, and recommended action.
+
 ORBITAL's current differentiators are:
 
 - Constraint-first planning rather than map-first planning
@@ -68,6 +84,8 @@ ORBITAL's current differentiators are:
 - Evidence bundle manifests that surface regulatory metadata, approval
   checklist status, and missing documentation-only evidence fields for operator
   review without treating them as approvals
+- Evidence bundle summaries, artifact indexes, completeness scores, review
+  status, and SHA-256 checksum manifests for operator audit packages
 
 ## What ORBITAL Is Not
 
@@ -161,6 +179,26 @@ and `-no-plots`.
 
 ## Example Outputs
 
+### BVLOS Powerline Demo Snapshot
+
+The BVLOS demo leads with feasibility and evidence, not just a map:
+
+```text
+Status: GO
+Mission risk: LOW
+Top limiting constraint: Wind / weather margin, PASS with margin 3.1 m/s
+Evidence bundle completeness: 100.0 %
+Regulatory readiness: OPERATOR_ACTION_REQUIRED, documentation-only
+```
+
+![BVLOS powerline flight path](outputs/bvlos_powerline_inspection/flight_path.png)
+
+See the [BVLOS powerline demo script](docs/BVLOS_POWERLINE_DEMO_SCRIPT.md) for
+the baseline feasibility, limiting constraint, what-if comparison, regulatory
+readiness, and evidence bundle walkthrough.
+
+### Standard Domain Outputs
+
 | Aircraft flight path | Spacecraft mission timeline |
 | --- | --- |
 | ![Aircraft flight path](outputs/aircraft/flight_path.png) | ![Spacecraft mission timeline](outputs/spacecraft/mission_timeline.png) |
@@ -174,6 +212,13 @@ and `-no-plots`.
 ## Project Artifacts
 
 - Release notes: `docs/RELEASE_NOTES.md`
+- Differentiation story: `docs/DIFFERENTIATION.md`
+- Market proof: `docs/MARKET_PROOF.md`
+- BVLOS demo narrative: `docs/BVLOS_POWERLINE_DEMO_SCRIPT.md`
+- Primary BVLOS demo audit:
+  `outputs/bvlos_powerline_inspection/inspection_constraint_audit.md`
+- BVLOS evidence bundle summary:
+  `outputs/bvlos_powerline_inspection/operator_evidence_bundle/evidence_bundle_summary.md`
 - Technical report artifacts: `docs/`
 - Results bundle: `outputs/`
 - Reproducible outputs: `runs/` after executing `python run_all.py`

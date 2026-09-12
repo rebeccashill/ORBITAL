@@ -19,6 +19,21 @@ Mission: BVLOS Powerline Inspection Demo
 | Larger battery reserve requirement | MEDIUM | yes | 140.0 | 0.0 | 18.0 | 27.0 | Battery reserve margin |
 | Relaunch / battery swap | LOW | yes | 150.0 | 10.0 | 16.8 | 141.6 | Wind / weather margin |
 
+## Before / After Improvements
+
+These scenarios improve at least one feasibility or audit margin versus the baseline plan.
+
+| Scenario | Improved metric | Baseline | After | Delta |
+| --- | --- | ---: | ---: | ---: |
+| Fewer waypoints | Battery reserve margin | 132.1 Wh | 138.2 Wh | 6.2 Wh |
+| Fewer waypoints | Geofence clearance margin | 276.7 m | 278.4 m | 1.7 m |
+| Lower speed | Battery reserve margin | 132.1 Wh | 137.7 Wh | 5.6 Wh |
+| Lower speed | Geofence clearance margin | 276.7 m | 284.4 m | 7.7 m |
+| Lower speed | Turn / bank margin | 0.139 rad/s | 0.254 rad/s | 0.115 rad/s |
+| Alternate launch point | Geofence clearance margin | 276.7 m | 277.3 m | 0.576 m |
+| Relaunch / battery swap | Battery reserve margin | 132.1 Wh | 141.6 Wh | 9.5 Wh |
+| Relaunch / battery swap | Turn / bank margin | 0.139 rad/s | 0.144 rad/s | 0.00463 rad/s |
+
 ## Notes
 
 - Fewer waypoints: Drop the final inspection points to compare a shorter sortie.

@@ -1,5 +1,54 @@
 # Release Notes
 
+## v1.0.8 - September 12, 2026
+
+This documentation release sharpens ORBITAL's product differentiation as a
+constraint-aware BVLOS inspection feasibility and audit evidence layer.
+
+### Changed
+
+- Added `docs/DIFFERENTIATION.md` with ORBITAL's category definition,
+  product-boundary narrative, comparison table, differentiation pillars, and
+  HBS-ready positioning paragraph.
+- Added `docs/MARKET_PROOF.md` with the inspection-operator problem statement,
+  buyer and user assumptions, target customer profiles, and top alternatives
+  that clarify why ORBITAL differs from generic planning tools.
+- Added `docs/BVLOS_POWERLINE_DEMO_SCRIPT.md` with a presenter-ready demo
+  narrative for the BVLOS powerline inspection scenario, covering baseline
+  feasibility, the top limiting constraint, what-if comparison, regulatory
+  readiness, final evidence bundle, and README-ready sample outputs.
+- Clarified that ORBITAL's core operator question is: "Can we safely and
+  defensibly fly this mission?"
+- Explained how ORBITAL differs from generic route planners, fleet tools,
+  autopilots, LAANC providers, and GIS viewers.
+- Made the constraint-audit report the primary BVLOS demo artifact, with
+  pass / warning / fail constraint groups, plain-English explanations, operator
+  impact language, and recommended actions.
+- Added what-if before/after improvement summaries when an alternative improves
+  feasibility or audit margins.
+- Included the Markdown constraint-audit report in the operator evidence bundle.
+- Added evidence bundle summary and artifact index pages, a completeness score,
+  a combined missing-evidence list, documentation-only operator review status,
+  optional reviewer fields, and a lightweight SHA-256 checksum manifest.
+- Updated README release metadata and project artifact links for `v1.0.8`.
+- Bumped package metadata to `v1.0.8`.
+
+### Verified
+
+- Added version metadata coverage for `v1.0.8`.
+- Added focused coverage for evidence bundle completeness scoring and evidence
+  artifact index generation.
+- Added end-to-end coverage for the enhanced constraint-audit workflow and
+  what-if improvement summaries.
+- Added end-to-end and CLI coverage for evidence bundle summary, index,
+  completeness, missing evidence, review status, and checksums.
+- Added CLI end-to-end coverage that the BVLOS demo generates baseline plan,
+  score, and constraint artifacts plus audit, what-if, regulatory readiness, and
+  evidence bundle artifacts.
+- Ran `python -m pytest`, `python -m ruff check .`,
+  `python -m mypy --python-version 3.12 mission_framework`, and
+  `python run_all.py --fast --no-plots`.
+
 ## v1.0.7 - September 11, 2026
 
 This patch release adds a dedicated regulatory readiness report for aircraft /
