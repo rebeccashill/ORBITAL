@@ -1,6 +1,17 @@
 # Evidence Bundle Artifact Index
 
-Links are relative to this evidence bundle folder.
+Links are relative to this evidence bundle folder. Open the dashboard first, then use this index when you need a specific artifact.
+
+## Recommended Opening Order
+
+1. [operator_dashboard.md](operator_dashboard.md)
+2. [inspection_constraint_audit.md](inspection_constraint_audit.md)
+3. [what_if_plan.md](what_if_plan.md)
+4. [regulatory_readiness_report.md](regulatory_readiness_report.md)
+5. [manifest.json](manifest.json)
+6. [checksum_manifest.json](checksum_manifest.json)
+
+## All Bundle Artifacts
 
 | Artifact | Status | Link | Type |
 | --- | --- | --- | --- |

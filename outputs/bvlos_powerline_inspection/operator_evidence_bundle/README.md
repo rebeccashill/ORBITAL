@@ -8,6 +8,14 @@ Regulatory metadata, authorization references, approval checklist items, and evi
 
 Start with `operator_dashboard.md`, then use `artifact_index.md` to open individual artifacts. `evidence_bundle_summary.md` summarizes completeness, and `checksum_manifest.json` provides lightweight SHA-256 checksums for files in this bundle.
 
+Recommended opening order:
+
+1. `operator_dashboard.md` for the 10-second mission read.
+2. `inspection_constraint_audit.md` for feasibility and top-limiter rationale.
+3. `what_if_plan.md` for improvement options.
+4. `regulatory_readiness_report.md` for documentation-only regulatory review.
+5. `manifest.json` and `checksum_manifest.json` for archive checks.
+
 ## Bundle Summary
 
 - Completeness score: 100.0 %

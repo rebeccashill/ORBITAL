@@ -1,5 +1,35 @@
 # Release Notes
 
+## v1.0.10 - September 12, 2026
+
+### Changed
+
+- Improved the operator evidence dashboard visual hierarchy with a
+  10-second mission read, at-a-glance status table, recommended opening
+  sequence, grouped artifact shortcuts, and clearer operator review metadata.
+- Made mission status, mission risk, top limiting constraint, regulatory
+  readiness, bundle completeness, missing evidence, and bundle warnings
+  scannable at the top of the dashboard.
+- Improved the human-readable evidence bundle summary with a reviewer snapshot,
+  recommended review flow, clearer completeness breakdown, and direct links to
+  dashboard, audit, what-if, regulatory, manifest, and checksum artifacts.
+- Made the constraint-audit Markdown more operator-friendly with an operator
+  handoff table and a constraint summary that explains what ORBITAL checked,
+  why it matters, and the recommended operator action.
+- Added a recommended opening order to the artifact index and bundle README.
+- Added `docs/BVLOS_DEMO_SCREENSHOT_SET.md` for polished demo screenshot and
+  artifact capture planning.
+- Updated README and BVLOS demo script sample output to use the dashboard-first
+  v1.0.10 UX flow.
+- Bumped package metadata to `v1.0.10`.
+
+### Verified
+
+- Added formatter, CLI, and end-to-end coverage for the refreshed dashboard,
+  evidence summary, artifact index, and generated BVLOS evidence workflow.
+- Regenerated the BVLOS powerline inspection outputs for the v1.0.10 dashboard
+  and screenshot-set workflow.
+
 ## v1.0.9 - September 12, 2026
 
 ### Changed

@@ -5,7 +5,7 @@
 **Operational Reusable Backend for Integrated Trajectory and Logistics**  
 Constraint-Aware BVLOS Inspection Mission Planning
 
-Current release: `v1.0.9`
+Current release: `v1.0.10`
 
 ORBITAL helps drone operators plan constraint-aware BVLOS inspection missions
 under battery, weather, geofence, and regulatory constraints. It is built on a
@@ -13,8 +13,9 @@ domain-agnostic mission planning engine that can simulate candidate plans,
 evaluate hard and soft constraints, compare objective tradeoffs, and export
 auditable planning evidence before a crew commits field time.
 
-Current v1.0.9 focus: make ORBITAL's BVLOS evidence workflow easier to review,
-verify, reproduce, and keep legally honest as decision support.
+Current v1.0.10 focus: make ORBITAL's BVLOS evidence workflow faster to scan,
+clearer to demo, and more operator-friendly before customer-discovery and
+Foundry-readiness work.
 
 ORBITAL supports:
 
@@ -65,6 +66,8 @@ For a presenter-ready BVLOS walkthrough, see the
 [BVLOS powerline demo script](docs/BVLOS_POWERLINE_DEMO_SCRIPT.md). The live
 operator review starts with
 `outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_dashboard.md`.
+For screenshot planning, see the
+[BVLOS demo screenshot set](docs/BVLOS_DEMO_SCREENSHOT_SET.md).
 The constraint-audit report remains the primary feasibility artifact: it
 translates modeled battery, weather, geofence, route-completion, and
 turn-feasibility constraints into operator-readable status, impact, and
@@ -185,6 +188,7 @@ and `-no-plots`.
 The BVLOS demo leads with feasibility and evidence, not just a map:
 
 ```text
+10-second mission read
 Status: GO
 Mission risk: LOW
 Top limiting constraint: Wind / weather margin, PASS with margin 3.1 m/s
@@ -194,11 +198,13 @@ Evidence bundle completeness: 100.0 %
 Regulatory readiness: OPERATOR_ACTION_REQUIRED, documentation-only
 ```
 
-![BVLOS powerline flight path](outputs/bvlos_powerline_inspection/flight_path.png)
+![BVLOS mission overview](outputs/bvlos_powerline_inspection/mission_overview.png)
 
 See the [BVLOS powerline demo script](docs/BVLOS_POWERLINE_DEMO_SCRIPT.md) for
 the baseline feasibility, limiting constraint, what-if comparison, regulatory
-readiness, and evidence bundle walkthrough.
+readiness, and evidence bundle walkthrough. See the
+[BVLOS demo screenshot set](docs/BVLOS_DEMO_SCREENSHOT_SET.md) for dashboard,
+summary, audit, regulatory, index, and plot capture guidance.
 
 Evidence bundle quick checks do not rerun optimization:
 
@@ -235,6 +241,7 @@ python -m mission_framework.cli bundle-review-validate outputs/bvlos_powerline_i
   `outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_dashboard.md`
 - BVLOS evidence bundle summary:
   `outputs/bvlos_powerline_inspection/operator_evidence_bundle/evidence_bundle_summary.md`
+- BVLOS demo screenshot set: `docs/BVLOS_DEMO_SCREENSHOT_SET.md`
 - Technical report artifacts: `docs/`
 - Results bundle: `outputs/`
 - Reproducible outputs: `runs/` after executing `python run_all.py`

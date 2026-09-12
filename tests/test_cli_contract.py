@@ -273,6 +273,8 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert "Start with `operator_dashboard.md`" in bundle_readme.read_text(encoding="utf-8")
     dashboard_text = operator_dashboard.read_text(encoding="utf-8")
     assert "ORBITAL Operator Evidence Dashboard" in dashboard_text
+    assert "10-Second Mission Read" in dashboard_text
+    assert "Recommended Opening Sequence" in dashboard_text
     assert "Mission status: GO" in dashboard_text
     assert "Mission risk:" in dashboard_text
     assert "Top limiting constraint:" in dashboard_text
@@ -284,9 +286,13 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert "flight_path.png" in dashboard_text
     assert "[autopilot_mission.csv](autopilot_mission.csv)" in dashboard_text
     assert "[mission_review.kml](mission_review.kml)" in dashboard_text
-    assert "Completeness score:" in bundle_summary.read_text(encoding="utf-8")
+    bundle_summary_text = bundle_summary.read_text(encoding="utf-8")
+    assert "Completeness score:" in bundle_summary_text
+    assert "Reviewer Snapshot" in bundle_summary_text
+    assert "Recommended Review Flow" in bundle_summary_text
     artifact_index_text = artifact_index.read_text(encoding="utf-8")
     assert "Evidence Bundle Artifact Index" in artifact_index_text
+    assert "Recommended Opening Order" in artifact_index_text
     assert "Primary constraint-audit report" in artifact_index_text
     assert "What-if planning report" in artifact_index_text
     assert "Regulatory readiness report" in artifact_index_text

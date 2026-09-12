@@ -39,7 +39,7 @@
         "category": "weather",
         "category_label": "Weather / wind margin",
         "status": "pass",
-        "status_meaning": "Modeled margin is outside the warning band.",
+        "status_meaning": "Modeled margin is above the configured review threshold.",
         "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
         "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
         "margin": {
@@ -77,7 +77,7 @@
           "category": "weather",
           "category_label": "Weather / wind margin",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
           "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
           "margin": {
@@ -114,7 +114,7 @@
           "category": "energy",
           "category_label": "Energy / battery reserve",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
           "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
           "margin": {
@@ -141,7 +141,7 @@
           "category": "mission_completion",
           "category_label": "Route completion",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
           "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
           "margin": {
@@ -190,7 +190,7 @@
         "category": "weather",
         "category_label": "Weather / wind margin",
         "status": "pass",
-        "status_meaning": "Modeled margin is outside the warning band.",
+        "status_meaning": "Modeled margin is above the configured review threshold.",
         "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
         "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
         "margin": {
@@ -228,7 +228,7 @@
           "category": "weather",
           "category_label": "Weather / wind margin",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
           "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
           "margin": {
@@ -265,7 +265,7 @@
           "category": "energy",
           "category_label": "Energy / battery reserve",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
           "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
           "margin": {
@@ -292,7 +292,7 @@
           "category": "mission_completion",
           "category_label": "Route completion",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
           "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
           "margin": {
@@ -341,7 +341,7 @@
         "category": "weather",
         "category_label": "Weather / wind margin",
         "status": "pass",
-        "status_meaning": "Modeled margin is outside the warning band.",
+        "status_meaning": "Modeled margin is above the configured review threshold.",
         "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
         "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
         "margin": {
@@ -379,7 +379,7 @@
           "category": "weather",
           "category_label": "Weather / wind margin",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
           "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
           "margin": {
@@ -416,7 +416,7 @@
           "category": "energy",
           "category_label": "Energy / battery reserve",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
           "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
           "margin": {
@@ -443,7 +443,7 @@
           "category": "mission_completion",
           "category_label": "Route completion",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
           "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
           "margin": {
@@ -492,7 +492,7 @@
         "category": "weather",
         "category_label": "Weather / wind margin",
         "status": "pass",
-        "status_meaning": "Modeled margin is outside the warning band.",
+        "status_meaning": "Modeled margin is above the configured review threshold.",
         "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
         "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
         "margin": {
@@ -530,7 +530,7 @@
           "category": "weather",
           "category_label": "Weather / wind margin",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
           "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
           "margin": {
@@ -567,7 +567,7 @@
           "category": "energy",
           "category_label": "Energy / battery reserve",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
           "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
           "margin": {
@@ -594,7 +594,7 @@
           "category": "mission_completion",
           "category_label": "Route completion",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
           "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
           "margin": {
@@ -643,7 +643,7 @@
         "category": "energy",
         "category_label": "Energy / battery reserve",
         "status": "warning",
-        "status_meaning": "Modeled margin is positive but close enough to require operator review.",
+        "status_meaning": "Modeled margin is positive, but close enough to require operator review.",
         "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
         "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
         "margin": {
@@ -671,7 +671,7 @@
           "category": "energy",
           "category_label": "Energy / battery reserve",
           "status": "warning",
-          "status_meaning": "Modeled margin is positive but close enough to require operator review.",
+          "status_meaning": "Modeled margin is positive, but close enough to require operator review.",
           "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
           "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
           "margin": {
@@ -698,7 +698,7 @@
           "category": "weather",
           "category_label": "Weather / wind margin",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
           "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
           "margin": {
@@ -735,7 +735,7 @@
           "category": "mission_completion",
           "category_label": "Route completion",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
           "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
           "margin": {
@@ -784,7 +784,7 @@
         "category": "weather",
         "category_label": "Weather / wind margin",
         "status": "pass",
-        "status_meaning": "Modeled margin is outside the warning band.",
+        "status_meaning": "Modeled margin is above the configured review threshold.",
         "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
         "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
         "margin": {
@@ -822,7 +822,7 @@
           "category": "weather",
           "category_label": "Weather / wind margin",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
           "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
           "margin": {
@@ -859,7 +859,7 @@
           "category": "mission_completion",
           "category_label": "Route completion",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
           "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
           "margin": {
@@ -887,7 +887,7 @@
           "category": "energy",
           "category_label": "Energy / battery reserve",
           "status": "pass",
-          "status_meaning": "Modeled margin is outside the warning band.",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
           "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
           "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
           "margin": {
@@ -931,7 +931,7 @@
             "category": "weather",
             "category_label": "Weather / wind margin",
             "status": "pass",
-            "status_meaning": "Modeled margin is outside the warning band.",
+            "status_meaning": "Modeled margin is above the configured review threshold.",
             "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
             "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
             "margin": {
@@ -969,7 +969,7 @@
               "category": "weather",
               "category_label": "Weather / wind margin",
               "status": "pass",
-              "status_meaning": "Modeled margin is outside the warning band.",
+              "status_meaning": "Modeled margin is above the configured review threshold.",
               "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
               "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
               "margin": {
@@ -1006,7 +1006,7 @@
               "category": "mission_completion",
               "category_label": "Route completion",
               "status": "pass",
-              "status_meaning": "Modeled margin is outside the warning band.",
+              "status_meaning": "Modeled margin is above the configured review threshold.",
               "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
               "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
               "margin": {
@@ -1034,7 +1034,7 @@
               "category": "energy",
               "category_label": "Energy / battery reserve",
               "status": "pass",
-              "status_meaning": "Modeled margin is outside the warning band.",
+              "status_meaning": "Modeled margin is above the configured review threshold.",
               "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
               "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
               "margin": {
@@ -1082,7 +1082,7 @@
             "category": "weather",
             "category_label": "Weather / wind margin",
             "status": "pass",
-            "status_meaning": "Modeled margin is outside the warning band.",
+            "status_meaning": "Modeled margin is above the configured review threshold.",
             "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
             "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
             "margin": {
@@ -1120,7 +1120,7 @@
               "category": "weather",
               "category_label": "Weather / wind margin",
               "status": "pass",
-              "status_meaning": "Modeled margin is outside the warning band.",
+              "status_meaning": "Modeled margin is above the configured review threshold.",
               "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
               "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
               "margin": {
@@ -1157,7 +1157,7 @@
               "category": "mission_completion",
               "category_label": "Route completion",
               "status": "pass",
-              "status_meaning": "Modeled margin is outside the warning band.",
+              "status_meaning": "Modeled margin is above the configured review threshold.",
               "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
               "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
               "margin": {
@@ -1185,7 +1185,7 @@
               "category": "energy",
               "category_label": "Energy / battery reserve",
               "status": "pass",
-              "status_meaning": "Modeled margin is outside the warning band.",
+              "status_meaning": "Modeled margin is above the configured review threshold.",
               "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
               "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
               "margin": {

@@ -8,6 +8,7 @@ from mission_framework.reporting.flight_output import (
     _artifact_freshness_metadata,
     _bundle_completeness,
     _format_artifact_index,
+    _format_evidence_bundle_summary,
     _format_operator_evidence_dashboard,
     _regulatory_documentation_completeness,
     verify_evidence_bundle_checksums,
@@ -144,6 +145,8 @@ def test_artifact_index_lists_expected_and_generated_bundle_artifacts() -> None:
     )
 
     assert "# Evidence Bundle Artifact Index" in markdown
+    assert "Recommended Opening Order" in markdown
+    assert "1. [operator_dashboard.md](operator_dashboard.md)" in markdown
     assert "| Artifact | Status | Link | Type |" in markdown
     assert "| Scenario YAML | included | [scenario.yaml](scenario.yaml) | expected |" in markdown
     assert "| Flight path plot | missing | flight path.png | expected |" in markdown
@@ -245,18 +248,24 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
     )
 
     assert "# ORBITAL Operator Evidence Dashboard" in markdown
+    assert "10-Second Mission Read" in markdown
     assert "Mission status: GO" in markdown
     assert "Mission risk: LOW" in markdown
     assert "Top limiting constraint: Wind / weather margin, PASS, margin 3.1 m/s" in markdown
     assert "Regulatory readiness: OPERATOR_ACTION_REQUIRED" in markdown
     assert "Bundle completeness: 100.0 % (17 / 17 artifacts present)" in markdown
     assert "Regulatory documentation completeness: 100.0 % (7 / 7 fields documented)" in markdown
+    assert "| Signal | Current value | What to do next |" in markdown
+    assert "Recommended Opening Sequence" in markdown
     assert "Bundle warnings: 0" in markdown
     assert "Review status: ready for review" in markdown
     assert "Reviewer name: Demo reviewer" in markdown
     assert "Operator decision: pending operator review" in markdown
     assert "Review notes: Ready for operational review." in markdown
     assert "not approval, not authorization, not legal advice" in markdown
+    assert "Feasibility And Decision Support" in markdown
+    assert "Evidence Package" in markdown
+    assert "Route, Export, And Field-Use Artifacts" in markdown
     assert "[inspection_constraint_audit.md](inspection_constraint_audit.md)" in markdown
     assert "[what_if_plan.md](what_if_plan.md)" in markdown
     assert "[regulatory_readiness_report.md](regulatory_readiness_report.md)" in markdown
@@ -265,6 +274,56 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
     assert "[flight_path.png](flight_path.png)" in markdown
     assert "[autopilot_mission.csv](autopilot_mission.csv)" in markdown
     assert "[mission_review.kml](mission_review.kml)" in markdown
+
+
+def test_evidence_bundle_summary_highlights_reviewer_snapshot_and_flow() -> None:
+    markdown = _format_evidence_bundle_summary(
+        {
+            "scenario_path": "examples/bvlos_powerline_inspection_demo.yaml",
+            "bundle_completeness": {
+                "score": 100.0,
+                "present_artifacts": 17,
+                "total_artifacts": 17,
+                "missing_artifacts": 0,
+            },
+            "artifact_completeness": {
+                "score": 100.0,
+                "present_artifacts": 17,
+                "total_artifacts": 17,
+            },
+            "regulatory_documentation_completeness": {
+                "score": 85.7,
+                "documented_fields": 6,
+                "total_fields": 7,
+            },
+            "operator_review": {
+                "status": "ready_for_review",
+                "operator_decision": "pending operator review",
+                "reviewer_name": "Demo reviewer",
+                "review_timestamp_utc": "2026-09-12T18:00:00Z",
+                "review_notes": "Ready for operational review.",
+            },
+            "missing_evidence": [],
+            "bundle_warnings": [],
+            "freshness": {
+                "generated_timestamp_utc": "2026-09-12T18:00:00Z",
+                "orbital_version": "1.0.10",
+                "scenario_hash": {"value": "a" * 64},
+                "command": {"display": "python -m mission_framework.cli demo.yaml"},
+            },
+            "regulatory_evidence_status": {"missing": []},
+            "approval_checklist": {"item_count": 9},
+        }
+    )
+
+    assert "# Evidence Bundle Summary" in markdown
+    assert "Reviewer Snapshot" in markdown
+    assert "| Open first | [operator_dashboard.md](operator_dashboard.md)" in markdown
+    assert "Recommended Review Flow" in markdown
+    assert "Open the operator dashboard for the 10-second mission read." in markdown
+    assert "What-if plan: [what_if_plan.md](what_if_plan.md)" in markdown
+    assert "Regulatory readiness report: [regulatory_readiness_report.md]" in markdown
+    assert "ORBITAL version: 1.0.10" in markdown
 
 
 def test_verify_evidence_bundle_checksums_detects_clean_and_tampered_bundle(tmp_path) -> None:

@@ -273,14 +273,33 @@ file, manifest, summary, README, and checksum manifest.
 
 ## Screenshots And Sample Outputs
 
-The generated flight path plot is the simplest visual screenshot for README or
-demo docs:
+Use the screenshot set for polished README, demo, and Foundry-style capture
+planning:
+
+```text
+docs/BVLOS_DEMO_SCREENSHOT_SET.md
+```
+
+The operator dashboard should be the first captured artifact because it shows
+mission status, mission risk, the top limiting constraint, regulatory readiness,
+bundle completeness, and review metadata on one page. Then capture the
+constraint audit, what-if report, regulatory report, artifact index, and the
+generated visuals below.
+
+The generated mission overview is the strongest visual lead for README or demo
+docs:
+
+![BVLOS mission overview](../outputs/bvlos_powerline_inspection/mission_overview.png)
+
+The generated flight path plot remains useful when you need a simple route
+visual:
 
 ![BVLOS powerline flight path](../outputs/bvlos_powerline_inspection/flight_path.png)
 
 For a compact README snippet, use:
 
 ```text
+10-second mission read
 Status: GO
 Mission risk: LOW
 Top limiting constraint: Wind / weather margin, PASS with margin 3.1 m/s

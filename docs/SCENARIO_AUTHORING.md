@@ -343,6 +343,9 @@ lightweight `checksum_manifest.json`. Start with `operator_dashboard.md`; it
 summarizes mission status, mission risk, top limiting constraint, regulatory
 readiness, bundle completeness, operator review fields, and links to audit,
 what-if, regulatory, manifest, checksum, plot, CSV, and KML artifacts. The
+v1.0.10 dashboard starts with a 10-second mission read, recommended opening
+sequence, grouped artifact shortcuts, and documentation-only review fields so
+operators can quickly decide where to focus their review. The
 manifest reports artifact freshness metadata, scenario SHA-256, ORBITAL version,
 command used, artifact completeness, regulatory documentation completeness,
 missing evidence, bundle warnings, and documentation-only operator review

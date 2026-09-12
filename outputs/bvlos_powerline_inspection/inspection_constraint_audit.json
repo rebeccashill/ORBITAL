@@ -6,8 +6,8 @@
   "status": "go",
   "mission_risk": "low",
   "status_legend": {
-    "pass": "Modeled margin is outside the warning band.",
-    "warning": "Modeled margin is positive but close enough to require operator review.",
+    "pass": "Modeled margin is above the configured review threshold.",
+    "warning": "Modeled margin is positive, but close enough to require operator review.",
     "fail": "Modeled margin is negative; modify the mission before release.",
     "unknown": "ORBITAL does not have enough data to classify this group."
   },
@@ -86,7 +86,7 @@
     "category": "weather",
     "category_label": "Weather / wind margin",
     "status": "pass",
-    "status_meaning": "Modeled margin is outside the warning band.",
+    "status_meaning": "Modeled margin is above the configured review threshold.",
     "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
     "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
     "margin": {
@@ -205,7 +205,7 @@
       "category": "weather",
       "category_label": "Weather / wind margin",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
       "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
       "margin": {
@@ -242,7 +242,7 @@
       "category": "energy",
       "category_label": "Energy / battery reserve",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
       "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
       "margin": {
@@ -269,7 +269,7 @@
       "category": "mission_completion",
       "category_label": "Route completion",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
       "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
       "margin": {
@@ -299,7 +299,7 @@
       "category": "energy",
       "category_label": "Energy / battery reserve",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
       "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
       "margin": {
@@ -326,7 +326,7 @@
       "category": "weather",
       "category_label": "Weather / wind margin",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
       "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
       "margin": {
@@ -363,7 +363,7 @@
       "category": "airspace_geometry",
       "category_label": "Geofence / no-fly-zone clearance",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether the route remains outside no-fly zones and preserves the configured stand-off buffer.",
       "why_this_matters_to_operator": "Geofence clearance protects people, assets, restricted areas, and customer boundaries when navigation or wind uncertainty appears.",
       "margin": {
@@ -391,7 +391,7 @@
       "category": "mission_completion",
       "category_label": "Route completion",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
       "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
       "margin": {
@@ -419,7 +419,7 @@
       "category": "flight_dynamics",
       "category_label": "Turn / bank feasibility",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether planned turns stay within configured bank-angle and turn-rate capability.",
       "why_this_matters_to_operator": "Overly aggressive turns can break route tracking, increase energy use, and reduce safety margins near assets or geofences.",
       "margin": {
@@ -447,7 +447,7 @@
       "category": "energy",
       "category_label": "Energy / battery reserve",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
       "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
       "margin": {
@@ -474,7 +474,7 @@
       "category": "weather",
       "category_label": "Weather / wind margin",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
       "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
       "margin": {
@@ -511,7 +511,7 @@
       "category": "airspace_geometry",
       "category_label": "Geofence / no-fly-zone clearance",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether the route remains outside no-fly zones and preserves the configured stand-off buffer.",
       "why_this_matters_to_operator": "Geofence clearance protects people, assets, restricted areas, and customer boundaries when navigation or wind uncertainty appears.",
       "margin": {
@@ -539,7 +539,7 @@
       "category": "mission_completion",
       "category_label": "Route completion",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
       "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
       "margin": {
@@ -567,7 +567,7 @@
       "category": "flight_dynamics",
       "category_label": "Turn / bank feasibility",
       "status": "pass",
-      "status_meaning": "Modeled margin is outside the warning band.",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
       "plain_english": "Checks whether planned turns stay within configured bank-angle and turn-rate capability.",
       "why_this_matters_to_operator": "Overly aggressive turns can break route tracking, increase energy use, and reduce safety margins near assets or geofences.",
       "margin": {
@@ -952,7 +952,7 @@
           "outputs"
         ]
       },
-      "orbital_version": "1.0.9"
+      "orbital_version": "1.0.10"
     },
     "model_limitations": [
       {

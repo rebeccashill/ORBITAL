@@ -534,6 +534,8 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "documentation-only" in bundle_readme
     assert "not proof of authorization" in bundle_readme
     assert "ORBITAL Operator Evidence Dashboard" in operator_dashboard
+    assert "10-Second Mission Read" in operator_dashboard
+    assert "Recommended Opening Sequence" in operator_dashboard
     assert "Mission status: GO" in operator_dashboard
     assert "Mission risk: LOW" in operator_dashboard
     assert "Top limiting constraint:" in operator_dashboard
@@ -542,6 +544,8 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "Operator decision: pending operator review" in operator_dashboard
     assert "Review notes: Demo bundle ready for operator review" in operator_dashboard
     assert "not approval, not authorization, not legal advice" in operator_dashboard
+    assert "Feasibility And Decision Support" in operator_dashboard
+    assert "Route, Export, And Field-Use Artifacts" in operator_dashboard
     assert "[what_if_plan.md](what_if_plan.md)" in operator_dashboard
     assert "[manifest.json](manifest.json)" in operator_dashboard
     assert "[checksum_manifest.json](checksum_manifest.json)" in operator_dashboard
@@ -549,6 +553,8 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "[autopilot_mission.csv](autopilot_mission.csv)" in operator_dashboard
     assert "[mission_review.kml](mission_review.kml)" in operator_dashboard
     assert "Completeness score: 100.0 %" in bundle_summary
+    assert "Reviewer Snapshot" in bundle_summary
+    assert "Recommended Review Flow" in bundle_summary
     assert "Artifact completeness score: 100.0 %" in bundle_summary
     assert "Regulatory documentation completeness score: 100.0 %" in bundle_summary
     assert "Generated timestamp UTC:" in bundle_summary
@@ -559,6 +565,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "Operator decision: pending operator review" in bundle_summary
     assert "Review notes: Demo bundle ready for operator review" in bundle_summary
     assert "Missing Evidence" in bundle_summary
+    assert "Recommended Opening Order" in artifact_index
     assert "[inspection_constraint_audit.md](inspection_constraint_audit.md)" in artifact_index
     assert "[operator_dashboard.md](operator_dashboard.md)" in artifact_index
     assert "[what_if_plan.md](what_if_plan.md)" in artifact_index

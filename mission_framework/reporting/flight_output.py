@@ -831,11 +831,11 @@ CONSTRAINT_GROUP_DETAILS: Dict[str, Dict[str, Any]] = {
 def _constraint_status_meaning(status: str) -> str:
     normalized = str(status).lower()
     if normalized == "pass":
-        return "Modeled margin is outside the warning band."
+        return "Modeled margin is above the configured review threshold."
     if normalized == "warning":
-        return "Modeled margin is positive but close enough to require operator review."
+        return "Modeled margin is positive, but close enough to require operator review."
     if normalized == "fail":
-        return "Modeled margin is negative; the mission should be modified before release."
+        return "Modeled margin is negative; modify the mission before release."
     return "ORBITAL does not have enough data to classify this constraint group."
 
 
@@ -1508,8 +1508,8 @@ def build_inspection_constraint_audit(
         "status": "go" if hard_pass else "modify",
         "mission_risk": mission_risk,
         "status_legend": {
-            "pass": "Modeled margin is outside the warning band.",
-            "warning": "Modeled margin is positive but close enough to require operator review.",
+            "pass": "Modeled margin is above the configured review threshold.",
+            "warning": "Modeled margin is positive, but close enough to require operator review.",
             "fail": "Modeled margin is negative; modify the mission before release.",
             "unknown": "ORBITAL does not have enough data to classify this group.",
         },
@@ -1557,14 +1557,37 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
     lines = [
         "# Drone Inspection Constraint Audit",
         "",
-        "Primary demo artifact: this report is the operator-facing feasibility "
-        "case for the modeled BVLOS inspection mission.",
+        "Primary demo artifact: this report is the operator-facing feasibility case "
+        "for the modeled BVLOS inspection mission.",
         "",
         f"Core question: {audit.get('operator_question', 'Can we safely fly this mission?')}",
         "",
         f"Mission: {audit.get('mission_id', 'aircraft_mission')}",
         f"Status: {str(audit.get('status', 'unknown')).upper()}",
         f"Mission risk: {str(audit.get('mission_risk', 'unknown')).upper()}",
+        "",
+        "## Operator Handoff",
+        "",
+        "| Signal | Value | How to use it |",
+        "| --- | --- | --- |",
+        "| Mission status | {status} | First feasibility read from the modeled constraints. |".format(
+            status=str(audit.get("status", "unknown")).upper()
+        ),
+        "| Mission risk | {risk} | Higher risk means the operator should spend more time on the top drivers. |".format(
+            risk=str(audit.get("mission_risk", "unknown")).upper()
+        ),
+        "| Top limiting constraint | {constraint} | Start the detailed review here before changing or releasing the mission. |".format(
+            constraint=_markdown_cell(
+                "n/a"
+                if not top
+                else "{label}, {status}, margin {margin} {unit}".format(
+                    label=top.get("label", "unknown"),
+                    status=str(top.get("status", "unknown")).upper(),
+                    margin=_fmt_value((top.get("margin") or {}).get("value")),
+                    unit=(top.get("margin") or {}).get("unit", ""),
+                )
+            )
+        ),
         "",
         "## Status Legend",
         "",
@@ -1595,18 +1618,19 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
             "",
             "## Constraint Group Summary",
             "",
-            "| Group | Status | Margin | Why this matters | Recommended operator action |",
-            "| --- | --- | ---: | --- | --- |",
+            "| Group | Status | Margin | What ORBITAL checked | Why this matters | Recommended operator action |",
+            "| --- | --- | ---: | --- | --- | --- |",
         ]
     )
     for check in constraint_groups:
         margin = check.get("margin") or {}
         margin_text = f"{_fmt_value(margin.get('value'))} {margin.get('unit', '')}".strip()
         lines.append(
-            "| {group} | {status} | {margin} | {why} | {action} |".format(
+            "| {group} | {status} | {margin} | {checked} | {why} | {action} |".format(
                 group=_markdown_cell(check.get("category_label") or check.get("label")),
                 status=_markdown_cell(str(check.get("status", "unknown")).upper()),
                 margin=_markdown_cell(margin_text),
+                checked=_markdown_cell(check.get("plain_english")),
                 why=_markdown_cell(check.get("why_this_matters_to_operator")),
                 action=_markdown_cell(
                     check.get("recommended_operator_action")
@@ -3647,8 +3671,26 @@ def _format_evidence_bundle_summary(manifest: Dict[str, Any]) -> str:
     missing_evidence = manifest.get("missing_evidence") or []
     freshness = manifest.get("freshness") or {}
     warnings = manifest.get("bundle_warnings") or []
+    open_first = _artifact_link("operator_dashboard.md", "operator_dashboard.md")
+    completeness_text = (
+        f"{_fmt_value(completeness.get('score'), '%')} "
+        f"({completeness.get('present_artifacts', 0)} / "
+        f"{completeness.get('total_artifacts', 0)} artifacts present)"
+    )
+    artifact_completeness_text = (
+        f"{_fmt_value(artifact_completeness.get('score'), '%')} "
+        f"({artifact_completeness.get('present_artifacts', 0)} / "
+        f"{artifact_completeness.get('total_artifacts', 0)} artifacts present)"
+    )
+    regulatory_completeness_text = (
+        f"{_fmt_value(regulatory_completeness.get('score'), '%')} "
+        f"({regulatory_completeness.get('documented_fields', 0)} / "
+        f"{regulatory_completeness.get('total_fields', 0)} fields documented)"
+    )
     lines = [
         "# Evidence Bundle Summary",
+        "",
+        "Human-readable review summary for the operator evidence bundle.",
         "",
         f"Mission: {Path(str(manifest.get('scenario_path', 'scenario.yaml'))).stem}",
         f"Completeness score: {_fmt_value(completeness.get('score'), '%')}",
@@ -3674,14 +3716,40 @@ def _format_evidence_bundle_summary(manifest: Dict[str, Any]) -> str:
         "legal approval, LAANC, waivers, authorizations, operational clearance, legal "
         "advice, or permission to fly.",
         "",
+        "## Reviewer Snapshot",
+        "",
+        "| Signal | Value | Reviewer use |",
+        "| --- | --- | --- |",
+        f"| Open first | {open_first} | Start here for the fastest mission read. |",
+        f"| Bundle completeness | {completeness_text} | Confirms expected files are present. |",
+        f"| Artifact completeness | {artifact_completeness_text} | Separates file presence from regulatory documentation quality. |",
+        "| Regulatory documentation completeness | "
+        f"{regulatory_completeness_text} | Shows optional evidence fields captured for review. |",
+        f"| Missing evidence | {len(missing_evidence)} item(s) | Review before accepting or archiving the bundle. |",
+        f"| Bundle warnings | {len(warnings)} warning(s) | Resolve stale, missing, or mismatched artifacts. |",
+        "| Review status | "
+        f"{str(review.get('status', 'draft')).replace('_', ' ')} | Current operator review state. |",
+        f"| Operator decision | {review.get('operator_decision') or 'not provided'} | Documentation-only review outcome. |",
+        "",
         "## Start Here",
         "",
-        f"- Operator dashboard: {_artifact_link('operator_dashboard.md', 'operator_dashboard.md')}",
+        f"- Operator dashboard: {open_first}",
         "- Primary constraint audit: "
         f"{_artifact_link('inspection_constraint_audit.md', 'inspection_constraint_audit.md')}",
+        f"- What-if plan: {_artifact_link('what_if_plan.md', 'what_if_plan.md')}",
+        "- Regulatory readiness report: "
+        f"{_artifact_link('regulatory_readiness_report.md', 'regulatory_readiness_report.md')}",
         f"- Artifact index: {_artifact_link('artifact_index.md', 'artifact_index.md')}",
         f"- Manifest JSON: {_artifact_link('manifest.json', 'manifest.json')}",
         f"- Checksum manifest: {_artifact_link('checksum_manifest.json', 'checksum_manifest.json')}",
+        "",
+        "## Recommended Review Flow",
+        "",
+        "1. Open the operator dashboard for the 10-second mission read.",
+        "2. Confirm the top limiting constraint in the primary constraint audit.",
+        "3. Review what-if changes if a margin is tight or a mission assumption changes.",
+        "4. Confirm regulatory readiness outside ORBITAL.",
+        "5. Verify the manifest and checksum manifest before archiving or sharing.",
         "",
         "## Missing Evidence",
         "",
@@ -3762,8 +3830,19 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
     regulatory_state = str(
         regulatory.get("readiness_state") or regulatory.get("status") or "unknown"
     ).upper()
+    top_summary = _top_constraint_summary(top)
+    bundle_completeness_text = (
+        f"{_fmt_value(completeness.get('score'), '%')} "
+        f"({completeness.get('present_artifacts', 0)} / "
+        f"{completeness.get('total_artifacts', 0)} artifacts present)"
+    )
+    regulatory_completeness_text = (
+        f"{_fmt_value(regulatory_completeness.get('score'), '%')} "
+        f"({regulatory_completeness.get('documented_fields', 0)} / "
+        f"{regulatory_completeness.get('total_fields', 0)} fields documented)"
+    )
 
-    links = [
+    primary_links = [
         (
             "Primary constraint audit",
             _artifact_reference(
@@ -3788,6 +3867,8 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
                 "regulatory_readiness_report.md",
             ),
         ),
+    ]
+    evidence_links = [
         (
             "Bundle manifest",
             _artifact_reference(manifest, "manifest_json", "manifest.json", "manifest.json"),
@@ -3801,6 +3882,14 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
                 "checksum_manifest.json",
             ),
         ),
+        (
+            "Artifact index",
+            _artifact_reference(
+                manifest, "artifact_index", "artifact_index.md", "artifact_index.md"
+            ),
+        ),
+    ]
+    route_export_links = [
         (
             "Flight path plot",
             _artifact_reference(manifest, "flight_path_plot", "flight_path.png", "flight_path.png"),
@@ -3820,12 +3909,6 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
                 manifest, "mission_review_kml", "mission_review.kml", "mission_review.kml"
             ),
         ),
-        (
-            "Artifact index",
-            _artifact_reference(
-                manifest, "artifact_index", "artifact_index.md", "artifact_index.md"
-            ),
-        ),
     ]
 
     missing_evidence = manifest.get("missing_evidence") or []
@@ -3833,46 +3916,104 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
     lines = [
         "# ORBITAL Operator Evidence Dashboard",
         "",
-        "First artifact to open for operator review.",
+        "First artifact to open for operator review. Use this page for the fast "
+        "mission read, then drill into the linked evidence artifacts.",
         "",
         "ORBITAL provides decision support only. This dashboard is not approval, "
         "not authorization, not legal advice, not LAANC, and not operational clearance. "
         "The pilot-in-command and operator retain final responsibility for release.",
+        "",
+        "## 10-Second Mission Read",
+        "",
+        f"**Mission status: {mission_status}**",
+        f"**Mission risk: {mission_risk}**",
+        f"**Top limiting constraint: {top_summary}**",
+        f"**Regulatory readiness: {regulatory_state}**",
+        f"**Bundle completeness: {bundle_completeness_text}**",
+        "",
+        "| Signal | Current value | What to do next |",
+        "| --- | --- | --- |",
+        f"| Mission status | {mission_status} | Use as the first feasibility read from the constraint audit. |",
+        f"| Mission risk | {mission_risk} | Treat higher risk as a cue for additional operator review. |",
+        f"| Top limiting constraint | {_markdown_cell(top_summary)} | Review this constraint before changing or releasing the mission. |",
+        f"| Regulatory readiness | {regulatory_state} | Confirm required approvals, waivers, roles, and restrictions outside ORBITAL. |",
+        f"| Bundle completeness | {bundle_completeness_text} | Confirm expected artifacts are present before sharing. |",
+        "| Regulatory documentation completeness | "
+        f"{regulatory_completeness_text} | Confirm optional evidence fields are documented where needed. |",
+        f"| Missing evidence | {len(missing_evidence)} item(s) | Resolve or document before reviewer acceptance. |",
+        f"| Bundle warnings | {len(warnings)} warning(s) | Investigate stale, missing, or mismatched artifacts. |",
+        "",
+        "## Recommended Opening Sequence",
+        "",
+        "1. Start here with the dashboard.",
+        "2. Open the primary constraint audit for feasibility and top-limiter rationale.",
+        "3. Open the what-if plan to see how mission changes affect feasibility.",
+        "4. Open regulatory readiness to confirm documentation-only action items.",
+        "5. Open the manifest, artifact index, and checksum manifest before archiving.",
         "",
         "## Mission Snapshot",
         "",
         f"- Mission: {audit.get('mission_id') or Path(str(manifest.get('scenario_path', 'scenario.yaml'))).stem}",
         f"- Mission status: {mission_status}",
         f"- Mission risk: {mission_risk}",
-        f"- Top limiting constraint: {_top_constraint_summary(top)}",
+        f"- Top limiting constraint: {top_summary}",
         f"- Regulatory readiness: {regulatory_state}",
-        f"- Bundle completeness: {_fmt_value(completeness.get('score'), '%')} "
-        f"({completeness.get('present_artifacts', 0)} / "
-        f"{completeness.get('total_artifacts', 0)} artifacts present)",
-        "- Regulatory documentation completeness: "
-        f"{_fmt_value(regulatory_completeness.get('score'), '%')} "
-        f"({regulatory_completeness.get('documented_fields', 0)} / "
-        f"{regulatory_completeness.get('total_fields', 0)} fields documented)",
+        f"- Bundle completeness: {bundle_completeness_text}",
+        f"- Regulatory documentation completeness: {regulatory_completeness_text}",
         f"- Missing evidence items: {len(missing_evidence)}",
         f"- Bundle warnings: {len(warnings)}",
         "",
         "## Operator Review",
         "",
-        f"- Review status: {str(review.get('status', 'draft')).replace('_', ' ')}",
-        f"- Reviewer name: {review.get('reviewer_name') or 'not provided'}",
-        f"- Review timestamp UTC: {review.get('review_timestamp_utc') or 'not provided'}",
-        f"- Operator decision: {review.get('operator_decision') or 'not provided'}",
-        f"- Review notes: {review.get('review_notes') or 'not provided'}",
+        f"Review status: {str(review.get('status', 'draft')).replace('_', ' ')}",
+        f"Reviewer name: {review.get('reviewer_name') or 'not provided'}",
+        f"Review timestamp UTC: {review.get('review_timestamp_utc') or 'not provided'}",
+        f"Operator decision: {review.get('operator_decision') or 'not provided'}",
+        f"Review notes: {review.get('review_notes') or 'not provided'}",
+        "",
+        "| Field | Value |",
+        "| --- | --- |",
+        f"| Review status | {str(review.get('status', 'draft')).replace('_', ' ')} |",
+        f"| Reviewer name | {review.get('reviewer_name') or 'not provided'} |",
+        "| Review timestamp UTC | " f"{review.get('review_timestamp_utc') or 'not provided'} |",
+        f"| Operator decision | {review.get('operator_decision') or 'not provided'} |",
+        f"| Review notes | {review.get('review_notes') or 'not provided'} |",
         "",
         "Review fields are documentation-only. They do not approve a flight, issue an "
         "authorization, provide legal advice, or replace pilot-in-command release authority.",
         "",
-        "## Open Artifacts",
+        "## Artifact Shortcuts",
+        "",
+        "### Feasibility And Decision Support",
         "",
         "| Artifact | Link |",
         "| --- | --- |",
     ]
-    for label, link in links:
+    for label, link in primary_links:
+        lines.append(f"| {_markdown_cell(label)} | {link} |")
+
+    lines.extend(
+        [
+            "",
+            "### Evidence Package",
+            "",
+            "| Artifact | Link |",
+            "| --- | --- |",
+        ]
+    )
+    for label, link in evidence_links:
+        lines.append(f"| {_markdown_cell(label)} | {link} |")
+
+    lines.extend(
+        [
+            "",
+            "### Route, Export, And Field-Use Artifacts",
+            "",
+            "| Artifact | Link |",
+            "| --- | --- |",
+        ]
+    )
+    for label, link in route_export_links:
         lines.append(f"| {_markdown_cell(label)} | {link} |")
 
     lines.extend(["", "## Missing Evidence", ""])
@@ -3907,7 +4048,19 @@ def _format_artifact_index(manifest: Dict[str, Any]) -> str:
     lines = [
         "# Evidence Bundle Artifact Index",
         "",
-        "Links are relative to this evidence bundle folder.",
+        "Links are relative to this evidence bundle folder. Open the dashboard first, "
+        "then use this index when you need a specific artifact.",
+        "",
+        "## Recommended Opening Order",
+        "",
+        "1. [operator_dashboard.md](operator_dashboard.md)",
+        "2. [inspection_constraint_audit.md](inspection_constraint_audit.md)",
+        "3. [what_if_plan.md](what_if_plan.md)",
+        "4. [regulatory_readiness_report.md](regulatory_readiness_report.md)",
+        "5. [manifest.json](manifest.json)",
+        "6. [checksum_manifest.json](checksum_manifest.json)",
+        "",
+        "## All Bundle Artifacts",
         "",
         "| Artifact | Status | Link | Type |",
         "| --- | --- | --- | --- |",
@@ -4424,6 +4577,14 @@ def export_operator_evidence_bundle(
         "individual artifacts. `evidence_bundle_summary.md` summarizes completeness, "
         "and `checksum_manifest.json` provides lightweight SHA-256 checksums for files "
         "in this bundle.",
+        "",
+        "Recommended opening order:",
+        "",
+        "1. `operator_dashboard.md` for the 10-second mission read.",
+        "2. `inspection_constraint_audit.md` for feasibility and top-limiter rationale.",
+        "3. `what_if_plan.md` for improvement options.",
+        "4. `regulatory_readiness_report.md` for documentation-only regulatory review.",
+        "5. `manifest.json` and `checksum_manifest.json` for archive checks.",
         "",
         "## Bundle Summary",
         "",
