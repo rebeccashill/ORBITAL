@@ -23,7 +23,33 @@
     "airspace_class": "Class D",
     "visual_observer_required": true,
     "ground_risk_population_note": "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch.",
-    "documentation_only_notice": "For planning documentation only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, or operational clearance."
+    "authorization_id": "example authorization reference only",
+    "approving_authority_source": "Operator-provided example authority source for documentation-only demo",
+    "authorization_expiration_date": "2026-09-11",
+    "operating_altitude_limit_m": 120.0,
+    "operating_time_window": {
+      "start_utc": "2026-09-11T16:00:00Z",
+      "end_utc": "2026-09-11T18:00:00Z"
+    },
+    "required_crew_roles": [
+      "Remote pilot in command",
+      "Visual observer"
+    ],
+    "special_conditions_limitations": [
+      "Remain within the modeled utility corridor and geofence buffers.",
+      "Do not launch if current field weather is below operator minimums."
+    ],
+    "operating_assumptions": [
+      "Pilot-in-command verifies current FAA, local, site, NOTAM, TFR, and airspace requirements before launch.",
+      "Mission remains within the modeled route, altitude, weather, battery, geofence, and crew constraints.",
+      "Visual observer staffing and crew communications are confirmed before dispatch."
+    ],
+    "unresolved_items": [
+      "Confirm utility owner site-access approval for the planned inspection window.",
+      "Confirm launch and recovery area permissions with the local site contact."
+    ],
+    "documentation_only_notice": "For planning documentation only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, or operational clearance.",
+    "decision_support_disclaimer": "ORBITAL provides decision support only and is not legal approval. This report does not provide LAANC, waivers, authorizations, operational clearance, legal advice, or permission to fly. The pilot-in-command and operator remain responsible for all required regulatory review, approvals, and compliance decisions."
   },
   "weather_metadata": {
     "provider": "open_meteo",

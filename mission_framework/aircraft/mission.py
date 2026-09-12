@@ -300,9 +300,7 @@ def build_problem_from_config(cfg: Dict[str, Any]) -> Problem:
     if not fixed_order:
         decision_vars.append(PermutationVar("visit_order", items=wp_ids))
     decision_vars.append(ContinuousVar("cruise_speed_mps", bounds=Bounds(min_v, max_v)))
-    ds = DecisionSpace(
-        variables=decision_vars
-    )
+    ds = DecisionSpace(variables=decision_vars)
 
     # --- Wind model ---
     wcfg = cfg.get("wind", {}) or {}

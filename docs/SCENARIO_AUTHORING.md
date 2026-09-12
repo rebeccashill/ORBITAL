@@ -109,6 +109,7 @@ Common optional aircraft sections:
 wind:
 weather:
 geofence:
+regulatory:
 simulation:
 ```
 
@@ -168,6 +169,22 @@ simulation:
 | `weather.offline.visibility_m` | number | Optional, `>= 0` |
 | `weather.offline.precipitation_mm` | number | Optional, `>= 0` |
 | `weather.offline.temperature_C` | number | Optional |
+| `regulatory.laanc_required` | boolean | Optional planning metadata |
+| `regulatory.waiver_or_authorization_required` | boolean | Optional planning metadata |
+| `regulatory.airspace_class` | string | Optional, non-empty |
+| `regulatory.visual_observer_required` | boolean | Optional planning metadata |
+| `regulatory.ground_risk_population_note` | string | Optional, non-empty |
+| `regulatory.authorization_id` | string | Optional documentation-only authorization/reference ID |
+| `regulatory.approving_authority_source` | string | Optional documentation-only authority/source |
+| `regulatory.authorization_expiration_date` | string | Optional documentation-only expiration date |
+| `regulatory.operating_altitude_limit_m` | number | Optional documentation-only altitude limit, meters |
+| `regulatory.operating_time_window.start_utc` | string | Optional documentation-only UTC start |
+| `regulatory.operating_time_window.end_utc` | string | Optional documentation-only UTC end |
+| `regulatory.required_crew_roles[]` | list of strings | Optional documentation-only crew roles |
+| `regulatory.special_conditions_limitations[]` | list of strings | Optional documentation-only conditions or limitations |
+| `regulatory.operating_assumptions[]` | list of strings | Optional report assumptions |
+| `regulatory.unresolved_items[]` | list of strings | Optional report action items |
+| `regulatory.documentation_only_notice` | string | Optional, non-empty |
 
 Supported aircraft wind types:
 
@@ -290,6 +307,23 @@ writes `autopilot_mission.csv` and `export_kml` writes `mission_review.kml`.
 These files are planning artifacts for review or downstream ingestion. They are
 not direct flight authorization, autopilot control, LAANC, waivers, or legal
 approval.
+
+Aircraft runs also write `regulatory_readiness_report.json` and
+`regulatory_readiness_report.md`. These summarize configured LAANC, waiver /
+authorization, airspace, visual observer, ground-risk metadata, optional
+authorization evidence fields, operating assumptions, and unresolved regulatory
+items. They are decision-support artifacts only and are not legal approval or
+operational clearance. The same report includes an operator approval checklist
+with conditional LAANC, waiver / authorization, and visual observer confirmations
+plus crew briefing, emergency / contingency plan, NOTAM / local restriction,
+weather minimums, and battery reserve confirmation items.
+
+Validation emits non-blocking warnings, not errors, when BVLOS regulatory
+documentation is incomplete. Warnings are also emitted when LAANC or waiver /
+authorization is required but no `regulatory.authorization_id` is provided, or
+when a visual observer is required but `regulatory.required_crew_roles` does not
+document that role. These warnings do not prevent planning; they prompt operator
+documentation review.
 
 ## Batch Inspection Runs
 

@@ -81,7 +81,9 @@ def _mapping(value: Any) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
 
 
-def _location(weather_cfg: Mapping[str, Any]) -> Tuple[Optional[str], Optional[float], Optional[float]]:
+def _location(
+    weather_cfg: Mapping[str, Any],
+) -> Tuple[Optional[str], Optional[float], Optional[float]]:
     location = _mapping(weather_cfg.get("location"))
     return (
         str(location.get("name")).strip() if location.get("name") is not None else None,
@@ -111,10 +113,7 @@ def _offline_snapshot(
     location_name, lat, lon = _location(weather_cfg)
     start_utc, hours = _forecast_window(weather_cfg)
     timestamp = (
-        offline.get("timestamp_utc")
-        or weather_cfg.get("timestamp_utc")
-        or start_utc
-        or _now_utc()
+        offline.get("timestamp_utc") or weather_cfg.get("timestamp_utc") or start_utc or _now_utc()
     )
     return WeatherSnapshot(
         provider=str(weather_cfg.get("provider", "offline")).strip().lower() or "offline",
@@ -271,7 +270,9 @@ def apply_weather_to_config(cfg: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         wind_cfg["mean_east_mps"] = east
         wind_cfg["mean_north_mps"] = north
         wind_cfg.setdefault("mean_up_mps", 0.0)
-        gust_delta = max(0.0, float(snapshot.wind_gust_mps or 0.0) - float(snapshot.wind_speed_mps or 0.0))
+        gust_delta = max(
+            0.0, float(snapshot.wind_gust_mps or 0.0) - float(snapshot.wind_speed_mps or 0.0)
+        )
         gust_east, gust_north = wind_components_from_speed_direction(
             gust_delta,
             snapshot.wind_direction_deg,

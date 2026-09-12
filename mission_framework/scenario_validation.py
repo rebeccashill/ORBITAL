@@ -33,11 +33,21 @@ class ValidationIssue:
     path: str
     message: str
     hint: Optional[str] = None
+    severity: str = "error"
+
+    @property
+    def is_warning(self) -> bool:
+        return self.severity == "warning"
+
+    @property
+    def is_error(self) -> bool:
+        return not self.is_warning
 
     def __str__(self) -> str:
+        prefix = "WARNING: " if self.is_warning else ""
         if self.hint:
-            return f"{self.path}: {self.message} Hint: {self.hint}"
-        return f"{self.path}: {self.message}"
+            return f"{prefix}{self.path}: {self.message} Hint: {self.hint}"
+        return f"{prefix}{self.path}: {self.message}"
 
 
 class ScenarioValidationError(ValueError):
@@ -140,8 +150,9 @@ def validate_scenario_config(
 ) -> dict[str, Any]:
     """Validate a parsed YAML scenario config and return it on success."""
     issues = collect_scenario_validation_issues(cfg, expected_type=expected_type)
-    if issues:
-        raise ScenarioValidationError(issues)
+    errors = [issue for issue in issues if issue.is_error]
+    if errors:
+        raise ScenarioValidationError(errors)
     return dict(cfg)
 
 
@@ -648,9 +659,135 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
         for key in (
             "airspace_class",
             "ground_risk_population_note",
+            "authorization_id",
+            "approving_authority_source",
+            "authorization_expiration_date",
             "documentation_only_notice",
         ):
             _optional_nonempty_string(regulatory, f"regulatory.{key}", issues)
+        _number(cfg, "regulatory.operating_altitude_limit_m", issues, min_value=0.0)
+        operating_time_window = _optional_mapping(
+            regulatory,
+            "regulatory.operating_time_window",
+            issues,
+        )
+        if operating_time_window is not None:
+            for key in ("start_utc", "end_utc"):
+                _optional_nonempty_string(
+                    cfg,
+                    f"regulatory.operating_time_window.{key}",
+                    issues,
+                )
+        for key in (
+            "operating_assumptions",
+            "unresolved_items",
+            "required_crew_roles",
+            "special_conditions_limitations",
+        ):
+            entries = _optional_sequence(regulatory, f"regulatory.{key}", issues)
+            if entries is not None:
+                for index, item in enumerate(entries):
+                    if not isinstance(item, str) or not item.strip():
+                        issues.append(
+                            ValidationIssue(
+                                f"regulatory.{key}[{index}]",
+                                "must be a non-empty string",
+                            )
+                        )
+        _warn_regulatory_documentation_gaps(cfg, regulatory, issues)
+    else:
+        _warn_regulatory_documentation_gaps(cfg, None, issues)
+
+
+def _warning(path: str, message: str, hint: Optional[str] = None) -> ValidationIssue:
+    return ValidationIssue(path, message, hint, severity="warning")
+
+
+def _has_text(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _has_nonempty_string_entry(value: Any) -> bool:
+    return _is_non_string_sequence(value) and any(_has_text(item) for item in value)
+
+
+def _crew_roles_include_observer(value: Any) -> bool:
+    if not _is_non_string_sequence(value):
+        return False
+    return any("observer" in str(item).strip().lower() for item in value)
+
+
+def _is_bvlos_aircraft_scenario(cfg: Mapping[str, Any]) -> bool:
+    candidate_paths = (
+        "scenario.name",
+        "fleet_metadata.inspection_type",
+        "mission_metadata.aircraft_id",
+        "mission.route_geojson_path",
+        "geofence.geojson_path",
+    )
+    return any("bvlos" in str(_get_path(cfg, path) or "").lower() for path in candidate_paths)
+
+
+def _warn_regulatory_documentation_gaps(
+    cfg: Mapping[str, Any],
+    regulatory: Optional[Mapping[str, Any]],
+    issues: list[ValidationIssue],
+) -> None:
+    regulatory = regulatory or {}
+    if _is_bvlos_aircraft_scenario(cfg):
+        missing = [
+            key
+            for key in (
+                "laanc_required",
+                "waiver_or_authorization_required",
+                "airspace_class",
+                "visual_observer_required",
+                "ground_risk_population_note",
+            )
+            if regulatory.get(key) is None
+            or (isinstance(regulatory.get(key), str) and not str(regulatory.get(key)).strip())
+        ]
+        if missing:
+            issues.append(
+                _warning(
+                    "regulatory",
+                    "BVLOS regulatory metadata is incomplete",
+                    "Add documentation-only values for: " + ", ".join(missing) + ".",
+                )
+            )
+
+    if regulatory.get("laanc_required") is True and not _has_text(
+        regulatory.get("authorization_id")
+    ):
+        issues.append(
+            _warning(
+                "regulatory.authorization_id",
+                "LAANC is required but no authorization reference is supplied",
+                "Add regulatory.authorization_id for operator documentation; ORBITAL will not verify it.",
+            )
+        )
+
+    if regulatory.get("waiver_or_authorization_required") is True and not _has_text(
+        regulatory.get("authorization_id")
+    ):
+        issues.append(
+            _warning(
+                "regulatory.authorization_id",
+                "waiver / authorization is required but no reference is supplied",
+                "Add regulatory.authorization_id for operator documentation; ORBITAL will not verify it.",
+            )
+        )
+
+    if regulatory.get("visual_observer_required") is True and not _crew_roles_include_observer(
+        regulatory.get("required_crew_roles")
+    ):
+        issues.append(
+            _warning(
+                "regulatory.required_crew_roles",
+                "visual observer is required but no visual observer crew role is documented",
+                "Add a required_crew_roles entry such as 'Visual observer'.",
+            )
+        )
 
 
 def _validate_spacecraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) -> None:
@@ -1284,9 +1421,9 @@ def _is_non_string_sequence(value: Any) -> bool:
 
 def _dedupe_issues(issues: Sequence[ValidationIssue]) -> list[ValidationIssue]:
     deduped: list[ValidationIssue] = []
-    seen: set[tuple[str, str, Optional[str]]] = set()
+    seen: set[tuple[str, str, Optional[str], str]] = set()
     for issue in issues:
-        key = (issue.path, issue.message, issue.hint)
+        key = (issue.path, issue.message, issue.hint, issue.severity)
         if key in seen:
             continue
         seen.add(key)

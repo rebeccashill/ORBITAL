@@ -21,6 +21,7 @@ Reporting guidance:
 from __future__ import annotations
 
 import csv
+import json
 import math
 from copy import deepcopy
 from pathlib import Path
@@ -39,6 +40,13 @@ from mission_framework.core.types import Plan, SimResult, Trajectory
 FLIGHT_PLANNING_EXPORT_NOTICE = (
     "Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, "
     "legal approval, autopilot control, or operational clearance."
+)
+
+REGULATORY_READINESS_DISCLAIMER = (
+    "ORBITAL provides decision support only and is not legal approval. This report does "
+    "not provide LAANC, waivers, authorizations, operational clearance, legal advice, "
+    "or permission to fly. The pilot-in-command and operator remain responsible for all "
+    "required regulatory review, approvals, and compliance decisions."
 )
 
 
@@ -421,10 +429,12 @@ def export_flight_planning_artifacts(
 def _scalar(sim: Optional[SimResult], key: str, default: Optional[float] = None) -> Optional[float]:
     if sim is None:
         return default
-    if key in sim.scalars:
-        return float(sim.scalars[key])
-    if key in sim.resources:
-        values = np.asarray(sim.resources[key], dtype=float).reshape(-1)
+    scalars = getattr(sim, "scalars", {}) or {}
+    resources = getattr(sim, "resources", {}) or {}
+    if key in scalars:
+        return float(scalars[key])
+    if key in resources:
+        values = np.asarray(resources[key], dtype=float).reshape(-1)
         if values.size:
             return float(values[-1])
     return default
@@ -487,9 +497,13 @@ def _recommended_actions(constraints: Any) -> List[str]:
         )
         low_reserve = next((r for r in hard if str(r.name) == "battery_reserve"), None)
         if low_reserve is not None and float(low_reserve.min_margin) < 75.0:
-            actions.append("Reduce route length or plan a relaunch / battery swap to widen reserve.")
+            actions.append(
+                "Reduce route length or plan a relaunch / battery swap to widen reserve."
+            )
         actions.append("Wait for better wind if observed conditions exceed the scenario model.")
-        actions.append("Maintain the modeled geofence clearance before export to any flight system.")
+        actions.append(
+            "Maintain the modeled geofence clearance before export to any flight system."
+        )
         return actions
 
     if any("battery" in name for name in failed_names):
@@ -510,6 +524,32 @@ def _yes_no_unknown(value: Any) -> str:
     return "yes" if bool(value) else "no"
 
 
+def _string_list(value: Any) -> List[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        item = value.strip()
+        return [item] if item else []
+    if isinstance(value, Iterable) and not isinstance(value, (dict, bytes)):
+        items = []
+        for item in value:
+            text = str(item).strip()
+            if text:
+                items.append(text)
+        return items
+    return []
+
+
+def _regulatory_time_window(regulatory: Dict[str, Any]) -> Dict[str, Any]:
+    window = regulatory.get("operating_time_window")
+    if not isinstance(window, dict):
+        return {}
+    return {
+        "start_utc": window.get("start_utc"),
+        "end_utc": window.get("end_utc"),
+    }
+
+
 def _regulatory_metadata(cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     regulatory = (cfg or {}).get("regulatory", {}) or {}
     notice = regulatory.get(
@@ -520,13 +560,23 @@ def _regulatory_metadata(cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     return {
         "documentation_only": True,
         "laanc_required": regulatory.get("laanc_required"),
-        "waiver_or_authorization_required": regulatory.get(
-            "waiver_or_authorization_required"
-        ),
+        "waiver_or_authorization_required": regulatory.get("waiver_or_authorization_required"),
         "airspace_class": regulatory.get("airspace_class"),
         "visual_observer_required": regulatory.get("visual_observer_required"),
         "ground_risk_population_note": regulatory.get("ground_risk_population_note"),
+        "authorization_id": regulatory.get("authorization_id"),
+        "approving_authority_source": regulatory.get("approving_authority_source"),
+        "authorization_expiration_date": regulatory.get("authorization_expiration_date"),
+        "operating_altitude_limit_m": regulatory.get("operating_altitude_limit_m"),
+        "operating_time_window": _regulatory_time_window(regulatory),
+        "required_crew_roles": _string_list(regulatory.get("required_crew_roles")),
+        "special_conditions_limitations": _string_list(
+            regulatory.get("special_conditions_limitations")
+        ),
+        "operating_assumptions": _string_list(regulatory.get("operating_assumptions")),
+        "unresolved_items": _string_list(regulatory.get("unresolved_items")),
         "documentation_only_notice": notice,
+        "decision_support_disclaimer": REGULATORY_READINESS_DISCLAIMER,
     }
 
 
@@ -785,13 +835,13 @@ def build_inspection_constraint_audit(
     hard_pass = bool(getattr(constraints, "hard_pass", False))
     robust_pass_rate = None if not robustness else robustness.get("hard_pass_rate")
     top_points = float(checks_sorted[0]["risk_points"]) if checks_sorted else 0.0
-    if (not hard_pass) or top_points >= 70.0 or (
-        robust_pass_rate is not None and float(robust_pass_rate) < 0.95
+    if (
+        (not hard_pass)
+        or top_points >= 70.0
+        or (robust_pass_rate is not None and float(robust_pass_rate) < 0.95)
     ):
         mission_risk = "high"
-    elif top_points >= 35.0 or (
-        robust_pass_rate is not None and float(robust_pass_rate) < 1.0
-    ):
+    elif top_points >= 35.0 or (robust_pass_rate is not None and float(robust_pass_rate) < 1.0):
         mission_risk = "medium"
     else:
         mission_risk = "low"
@@ -945,6 +995,833 @@ def export_inspection_constraint_audit(
         encoding="utf-8",
     )
     return audit
+
+
+def _regulatory_summary_item(
+    *,
+    key: str,
+    label: str,
+    value: Any,
+    yes_summary: str,
+    no_summary: str,
+    unknown_summary: str,
+) -> Dict[str, Any]:
+    if value is None:
+        summary = unknown_summary
+    elif bool(value):
+        summary = yes_summary
+    else:
+        summary = no_summary
+    if value is None:
+        status = "unknown"
+    elif bool(value):
+        status = "required"
+    else:
+        status = "not_required_as_configured"
+    return {
+        "id": key,
+        "label": label,
+        "value": value,
+        "configured": value,
+        "status": status,
+        "summary": summary,
+    }
+
+
+def _regulatory_readiness_state(regulatory: Dict[str, Any]) -> str:
+    required_or_unknown = (
+        regulatory.get("laanc_required") is not False
+        or regulatory.get("waiver_or_authorization_required") is not False
+        or regulatory.get("visual_observer_required") is not False
+        or not regulatory.get("airspace_class")
+        or not regulatory.get("ground_risk_population_note")
+    )
+    if required_or_unknown:
+        return "operator_action_required"
+    return "documented_review_required"
+
+
+def _regulatory_operating_assumptions(regulatory: Dict[str, Any]) -> List[str]:
+    configured = list(regulatory.get("operating_assumptions") or [])
+    if configured:
+        return configured
+
+    airspace = regulatory.get("airspace_class") or "unknown airspace class"
+    ground_note = regulatory.get("ground_risk_population_note") or "not provided"
+    assumptions = [
+        "Regulatory fields are scenario-provided documentation inputs; ORBITAL does not "
+        "query or validate official FAA, LAANC, UTM, NOTAM, TFR, or local authority systems.",
+        f"The mission is treated as operating in {airspace} for planning context only.",
+        "Route, battery, weather, geofence, and constraint results support operator review, "
+        "not regulatory clearance.",
+        f"Ground-risk / population context is operator-provided: {ground_note}",
+        "The pilot-in-command and operator remain responsible for final mission release, "
+        "crew readiness, site permissions, and all required approvals.",
+    ]
+    if regulatory.get("visual_observer_required") is True:
+        assumptions.append(
+            "The scenario assumes visual observer support is required; ORBITAL does not "
+            "verify observer placement, communications, or staffing."
+        )
+    return assumptions
+
+
+def _regulatory_unresolved_items(regulatory: Dict[str, Any]) -> List[Dict[str, str]]:
+    items: List[Dict[str, str]] = [
+        {
+            "id": f"operator_provided_item_{idx}",
+            "label": "Operator-provided unresolved item",
+            "status": "operator_action_required",
+            "note": item,
+        }
+        for idx, item in enumerate(regulatory.get("unresolved_items") or [], start=1)
+    ]
+    if regulatory.get("laanc_required") is True:
+        items.append(
+            {
+                "id": "laanc_authorization_confirmation",
+                "label": "LAANC / airspace authorization confirmation",
+                "status": "operator_action_required",
+                "note": "Scenario indicates LAANC is required; authorization evidence must be obtained and checked outside ORBITAL before flight.",
+            }
+        )
+    elif regulatory.get("laanc_required") is None:
+        items.append(
+            {
+                "id": "laanc_required_status_unknown",
+                "label": "LAANC required status",
+                "status": "incomplete",
+                "note": "Scenario does not state whether LAANC is required.",
+            }
+        )
+
+    if regulatory.get("waiver_or_authorization_required") is True:
+        items.append(
+            {
+                "id": "waiver_or_authorization_confirmation",
+                "label": "Waiver / authorization confirmation",
+                "status": "operator_action_required",
+                "note": "Scenario indicates a waiver or authorization is required; document ID, scope, dates, and operating conditions remain outside ORBITAL.",
+            }
+        )
+    elif regulatory.get("waiver_or_authorization_required") is None:
+        items.append(
+            {
+                "id": "waiver_or_authorization_status_unknown",
+                "label": "Waiver / authorization required status",
+                "status": "incomplete",
+                "note": "Scenario does not state whether a waiver or authorization is required.",
+            }
+        )
+
+    if not regulatory.get("airspace_class"):
+        items.append(
+            {
+                "id": "airspace_class_missing",
+                "label": "Airspace class",
+                "status": "incomplete",
+                "note": "Scenario does not provide an airspace class for planning documentation.",
+            }
+        )
+
+    if regulatory.get("visual_observer_required") is True:
+        items.append(
+            {
+                "id": "visual_observer_staffing_plan",
+                "label": "Visual observer staffing plan",
+                "status": "operator_action_required",
+                "note": "Scenario indicates a visual observer is required; crew assignment, placement, and communications plan must be confirmed by the operator.",
+            }
+        )
+    elif regulatory.get("visual_observer_required") is None:
+        items.append(
+            {
+                "id": "visual_observer_status_unknown",
+                "label": "Visual observer requirement",
+                "status": "incomplete",
+                "note": "Scenario does not state whether visual observer support is required.",
+            }
+        )
+
+    if not regulatory.get("ground_risk_population_note"):
+        items.append(
+            {
+                "id": "ground_risk_population_note_missing",
+                "label": "Ground-risk / population note",
+                "status": "incomplete",
+                "note": "Scenario does not include a ground-risk or population context note.",
+            }
+        )
+
+    items.extend(
+        [
+            {
+                "id": "current_airspace_status",
+                "label": "Current airspace, NOTAM/TFR, and local restrictions",
+                "status": "operator_action_required",
+                "note": "Current restrictions, UAS facility map limits, site permissions, and local rules must be checked outside ORBITAL close to flight time.",
+            },
+            {
+                "id": "pic_final_acceptance",
+                "label": "Pilot-in-command final acceptance",
+                "status": "operator_action_required",
+                "note": "Final operational approval, crew briefing, and go/no-go authority remain with the pilot-in-command and operator.",
+            },
+        ]
+    )
+    return items
+
+
+def _regulatory_evidence_fields(regulatory: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "documentation_only": True,
+        "authorization_id": regulatory.get("authorization_id"),
+        "approving_authority_source": regulatory.get("approving_authority_source"),
+        "authorization_expiration_date": regulatory.get("authorization_expiration_date"),
+        "operating_altitude_limit_m": regulatory.get("operating_altitude_limit_m"),
+        "operating_time_window": regulatory.get("operating_time_window") or {},
+        "required_crew_roles": list(regulatory.get("required_crew_roles") or []),
+        "special_conditions_limitations": list(
+            regulatory.get("special_conditions_limitations") or []
+        ),
+        "notice": (
+            "Optional documentation-only evidence fields. ORBITAL records these values "
+            "for operator review but does not verify, approve, or issue authorizations."
+        ),
+    }
+
+
+def _documentation_value_present(value: Any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, dict):
+        return any(_documentation_value_present(item) for item in value.values())
+    if isinstance(value, Iterable) and not isinstance(value, (bytes, dict, str)):
+        return any(_documentation_value_present(item) for item in value)
+    return True
+
+
+def _regulatory_evidence_status(
+    regulatory: Dict[str, Any], evidence: Dict[str, Any]
+) -> Dict[str, Any]:
+    authorization_needed = (
+        regulatory.get("laanc_required") is True
+        or regulatory.get("waiver_or_authorization_required") is True
+    )
+    visual_observer_needed = regulatory.get("visual_observer_required") is True
+    time_window = evidence.get("operating_time_window")
+    if not isinstance(time_window, dict):
+        time_window = {}
+    time_window_present = _documentation_value_present(
+        time_window.get("start_utc")
+    ) and _documentation_value_present(time_window.get("end_utc"))
+
+    field_specs = [
+        {
+            "id": "authorization_id",
+            "label": "Authorization ID / reference number",
+            "path": "regulatory.authorization_id",
+            "present": _documentation_value_present(evidence.get("authorization_id")),
+            "recommended_when": "LAANC or waiver / authorization is required.",
+            "operator_attention_when_missing": authorization_needed,
+        },
+        {
+            "id": "approving_authority_source",
+            "label": "Approving authority / source",
+            "path": "regulatory.approving_authority_source",
+            "present": _documentation_value_present(evidence.get("approving_authority_source")),
+            "recommended_when": "Authorization evidence is referenced.",
+            "operator_attention_when_missing": authorization_needed,
+        },
+        {
+            "id": "authorization_expiration_date",
+            "label": "Authorization expiration date",
+            "path": "regulatory.authorization_expiration_date",
+            "present": _documentation_value_present(evidence.get("authorization_expiration_date")),
+            "recommended_when": "Authorization evidence is referenced.",
+            "operator_attention_when_missing": authorization_needed,
+        },
+        {
+            "id": "operating_altitude_limit_m",
+            "label": "Operating altitude limit",
+            "path": "regulatory.operating_altitude_limit_m",
+            "present": _documentation_value_present(evidence.get("operating_altitude_limit_m")),
+            "recommended_when": "An authorization or operational limit applies.",
+            "operator_attention_when_missing": authorization_needed,
+        },
+        {
+            "id": "operating_time_window",
+            "label": "Operating time window",
+            "path": "regulatory.operating_time_window",
+            "present": time_window_present,
+            "recommended_when": "An authorization or time-bounded operation applies.",
+            "operator_attention_when_missing": authorization_needed,
+        },
+        {
+            "id": "required_crew_roles",
+            "label": "Required crew roles",
+            "path": "regulatory.required_crew_roles",
+            "present": _documentation_value_present(evidence.get("required_crew_roles")),
+            "recommended_when": "Crew-role constraints or visual observer support apply.",
+            "operator_attention_when_missing": visual_observer_needed,
+        },
+        {
+            "id": "special_conditions_limitations",
+            "label": "Special conditions / limitations",
+            "path": "regulatory.special_conditions_limitations",
+            "present": _documentation_value_present(evidence.get("special_conditions_limitations")),
+            "recommended_when": "An authorization includes special conditions.",
+            "operator_attention_when_missing": False,
+        },
+    ]
+
+    fields: List[Dict[str, Any]] = []
+    missing: List[Dict[str, Any]] = []
+    operator_attention_missing: List[Dict[str, Any]] = []
+    for spec in field_specs:
+        present = bool(spec["present"])
+        entry = {
+            "id": spec["id"],
+            "label": spec["label"],
+            "path": spec["path"],
+            "present": present,
+            "documentation_only": True,
+            "recommended_when": spec["recommended_when"],
+            "operator_attention_when_missing": bool(spec["operator_attention_when_missing"]),
+        }
+        fields.append(entry)
+        if not present:
+            missing_entry = {
+                "id": entry["id"],
+                "label": entry["label"],
+                "path": entry["path"],
+                "documentation_only": True,
+                "recommended_when": entry["recommended_when"],
+                "operator_attention": entry["operator_attention_when_missing"],
+                "note": (
+                    "Documentation-only field is not supplied; this is visible for "
+                    "operator review and does not block planning by itself."
+                ),
+            }
+            missing.append(missing_entry)
+            if missing_entry["operator_attention"]:
+                operator_attention_missing.append(missing_entry)
+
+    return {
+        "documentation_only": True,
+        "all_optional_fields_documented": not missing,
+        "field_count": len(fields),
+        "missing_count": len(missing),
+        "operator_attention_missing_count": len(operator_attention_missing),
+        "fields": fields,
+        "missing": missing,
+        "operator_attention_missing": operator_attention_missing,
+        "notice": (
+            "Regulatory evidence fields are optional documentation. Missing fields are "
+            "reported for operator review but do not make ORBITAL an approval system "
+            "or block planning by themselves."
+        ),
+    }
+
+
+def _read_json_mapping(path: Path) -> Dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _approval_checklist_summary(
+    readiness_report: Dict[str, Any],
+    *,
+    regulatory: Dict[str, Any],
+    cfg: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    checklist = readiness_report.get("operator_approval_checklist")
+    source_artifact = "regulatory_readiness_report.json"
+    if not isinstance(checklist, list):
+        checklist = _operator_approval_checklist(
+            regulatory=regulatory,
+            cfg=cfg,
+            sim=None,
+            constraints=None,
+        )
+        source_artifact = "scenario regulatory metadata"
+
+    items: List[Dict[str, Any]] = []
+    for item in checklist:
+        if not isinstance(item, dict):
+            continue
+        items.append(
+            {
+                "id": item.get("id"),
+                "label": item.get("label"),
+                "category": item.get("category"),
+                "checked": bool(item.get("checked", False)),
+                "status": item.get("status"),
+                "source": item.get("source"),
+                "note": item.get("note"),
+            }
+        )
+
+    return {
+        "documentation_only": True,
+        "included": bool(items),
+        "source_artifact": source_artifact,
+        "item_count": len(items),
+        "pending_count": sum(1 for item in items if not item.get("checked")),
+        "items": items,
+        "notice": (
+            "Checklist items support operator review only. Checking an item is not "
+            "legal approval, LAANC, a waiver, or operational clearance."
+        ),
+    }
+
+
+def _approval_checklist_item(
+    *,
+    check_id: str,
+    label: str,
+    note: str,
+    source: str,
+    category: str,
+) -> Dict[str, Any]:
+    return {
+        "id": check_id,
+        "label": label,
+        "category": category,
+        "checked": False,
+        "status": "operator_confirmation_required",
+        "source": source,
+        "note": note,
+    }
+
+
+def _battery_reserve_checklist_note(
+    cfg: Optional[Dict[str, Any]],
+    sim: Optional[SimResult],
+    constraints: Any,
+) -> str:
+    vehicle = (cfg or {}).get("vehicle", {}) or {}
+    reserve = vehicle.get("battery_reserve_Wh")
+    final_battery = _scalar(sim, "final_battery_Wh") if sim is not None else None
+    margin = _named_margin(constraints, "battery_reserve") if constraints is not None else None
+    details: List[str] = []
+    if reserve is not None:
+        details.append(f"required reserve {_fmt_value(reserve, 'Wh')}")
+    if final_battery is not None:
+        details.append(f"planned final battery {_fmt_value(final_battery, 'Wh')}")
+    if margin is not None:
+        details.append(f"modeled reserve margin {_fmt_value(margin, 'Wh')}")
+    suffix = f" ({'; '.join(details)})" if details else ""
+    return (
+        "Confirm launch battery, reserve policy, payload draw, and abort reserve meet "
+        f"operator requirements before release{suffix}."
+    )
+
+
+def _weather_minimums_checklist_note(cfg: Optional[Dict[str, Any]]) -> str:
+    weather = _weather_metadata(cfg)
+    details: List[str] = []
+    if weather.get("source"):
+        details.append(f"source {weather['source']}")
+    if weather.get("timestamp_utc"):
+        details.append(f"timestamp {weather['timestamp_utc']}")
+    if weather.get("wind_speed_mps") is not None:
+        details.append(f"wind {_fmt_value(weather.get('wind_speed_mps'), 'm/s')}")
+    if weather.get("wind_gust_mps") is not None:
+        details.append(f"gust {_fmt_value(weather.get('wind_gust_mps'), 'm/s')}")
+    suffix = f" Current planning weather: {'; '.join(details)}." if details else ""
+    return (
+        "Confirm launch-time weather and operator minimums, including wind, gusts, "
+        f"visibility, precipitation, and temperature, before flight.{suffix}"
+    )
+
+
+def _operator_approval_checklist(
+    *,
+    regulatory: Dict[str, Any],
+    cfg: Optional[Dict[str, Any]],
+    sim: Optional[SimResult],
+    constraints: Any,
+) -> List[Dict[str, Any]]:
+    checklist: List[Dict[str, Any]] = []
+    if regulatory.get("laanc_required") is True:
+        checklist.append(
+            _approval_checklist_item(
+                check_id="laanc_confirmation",
+                label="Confirm LAANC / controlled-airspace authorization",
+                note=(
+                    "Scenario sets laanc_required=true; verify authorization evidence, "
+                    "flight window, altitude limits, and operating area outside ORBITAL."
+                ),
+                source="regulatory.laanc_required",
+                category="regulatory",
+            )
+        )
+    if regulatory.get("waiver_or_authorization_required") is True:
+        checklist.append(
+            _approval_checklist_item(
+                check_id="waiver_authorization_confirmation",
+                label="Confirm waiver / authorization coverage",
+                note=(
+                    "Scenario indicates a waiver or authorization is required; verify "
+                    "document scope, dates, conditions, and mission fit outside ORBITAL."
+                ),
+                source="regulatory.waiver_or_authorization_required",
+                category="regulatory",
+            )
+        )
+    if regulatory.get("visual_observer_required") is True:
+        checklist.append(
+            _approval_checklist_item(
+                check_id="visual_observer_assignment",
+                label="Confirm visual observer assignment",
+                note=(
+                    "Assign visual observer coverage, station locations, communications, "
+                    "handoff rules, and responsibilities before dispatch."
+                ),
+                source="regulatory.visual_observer_required",
+                category="crew",
+            )
+        )
+
+    checklist.extend(
+        [
+            _approval_checklist_item(
+                check_id="crew_briefing",
+                label="Confirm crew briefing completed",
+                note=(
+                    "Brief route, roles, communications, geofences, weather, abort "
+                    "criteria, lost-link procedures, and final go/no-go authority."
+                ),
+                source="operator_review",
+                category="crew",
+            ),
+            _approval_checklist_item(
+                check_id="emergency_contingency_plan",
+                label="Confirm emergency / contingency plan",
+                note=(
+                    "Review lost-link response, diversion or landing zones, flyaway "
+                    "response, incident contacts, and recovery responsibilities."
+                ),
+                source="operator_review",
+                category="safety",
+            ),
+            _approval_checklist_item(
+                check_id="notam_local_restriction_review",
+                label="Confirm NOTAM / local restriction review",
+                note=(
+                    "Review current NOTAMs, TFRs, local restrictions, site permissions, "
+                    "and customer constraints close to flight time."
+                ),
+                source="operator_review",
+                category="regulatory",
+            ),
+            _approval_checklist_item(
+                check_id="weather_minimums_confirmation",
+                label="Confirm weather minimums",
+                note=_weather_minimums_checklist_note(cfg),
+                source="weather",
+                category="weather",
+            ),
+            _approval_checklist_item(
+                check_id="battery_reserve_confirmation",
+                label="Confirm battery reserve",
+                note=_battery_reserve_checklist_note(cfg, sim, constraints),
+                source="vehicle.battery_reserve_Wh",
+                category="energy",
+            ),
+        ]
+    )
+    return checklist
+
+
+def build_regulatory_readiness_report(
+    plan: Plan,
+    sim: Optional[SimResult] = None,
+    constraints: Any = None,
+    *,
+    cfg: Optional[Dict[str, Any]] = None,
+    robustness: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Build a regulatory readiness report for operator review, not approval."""
+    regulatory = _regulatory_metadata(cfg)
+    mission_metadata = _mission_metadata(cfg)
+    fleet_metadata = _fleet_metadata(cfg)
+    regulatory_evidence = _regulatory_evidence_fields(regulatory)
+
+    regulatory_summary = {
+        "laanc_required": _regulatory_summary_item(
+            key="laanc_required",
+            label="LAANC required",
+            value=regulatory.get("laanc_required"),
+            yes_summary="Scenario indicates LAANC or controlled-airspace authorization is required before flight.",
+            no_summary="Scenario indicates LAANC is not required, subject to operator verification against current airspace data.",
+            unknown_summary="Scenario does not state whether LAANC is required.",
+        ),
+        "waiver_or_authorization_required": _regulatory_summary_item(
+            key="waiver_or_authorization_required",
+            label="Waiver / authorization required",
+            value=regulatory.get("waiver_or_authorization_required"),
+            yes_summary="Scenario indicates a waiver or authorization is required before flight.",
+            no_summary="Scenario indicates no waiver or authorization requirement was identified, subject to operator verification.",
+            unknown_summary="Scenario does not state whether a waiver or authorization is required.",
+        ),
+        "airspace_class": {
+            "id": "airspace_class",
+            "label": "Airspace class",
+            "value": regulatory.get("airspace_class"),
+            "configured": regulatory.get("airspace_class"),
+            "status": "provided" if regulatory.get("airspace_class") else "unknown",
+            "summary": (
+                f"Scenario airspace class is {regulatory.get('airspace_class')}."
+                if regulatory.get("airspace_class")
+                else "Scenario does not provide an airspace class."
+            ),
+        },
+        "visual_observer_required": _regulatory_summary_item(
+            key="visual_observer_required",
+            label="Visual observer required",
+            value=regulatory.get("visual_observer_required"),
+            yes_summary="Scenario indicates visual observer support is required.",
+            no_summary="Scenario indicates visual observer support is not required, subject to operator verification.",
+            unknown_summary="Scenario does not state whether visual observer support is required.",
+        ),
+        "ground_risk_population_note": {
+            "id": "ground_risk_population_note",
+            "label": "Ground-risk / population note",
+            "value": regulatory.get("ground_risk_population_note"),
+            "configured": regulatory.get("ground_risk_population_note"),
+            "status": "provided" if regulatory.get("ground_risk_population_note") else "missing",
+            "summary": regulatory.get("ground_risk_population_note")
+            or "Ground-risk / population note was not provided.",
+        },
+    }
+
+    unresolved_items = _regulatory_unresolved_items(regulatory)
+    readiness_state = _regulatory_readiness_state(regulatory)
+    return {
+        "kind": "regulatory_readiness_report",
+        "mission_id": plan.metadata.get("mission_id", "aircraft_mission"),
+        "status": readiness_state,
+        "readiness_state": readiness_state,
+        "documentation_only": True,
+        "decision_support_only": True,
+        "not_legal_approval": True,
+        "disclaimer": REGULATORY_READINESS_DISCLAIMER,
+        "not_legal_approval_disclaimer": REGULATORY_READINESS_DISCLAIMER,
+        "mission_metadata": mission_metadata,
+        "fleet_metadata": fleet_metadata,
+        "regulatory_summary": regulatory_summary,
+        "regulatory_evidence": regulatory_evidence,
+        "operating_assumptions": _regulatory_operating_assumptions(regulatory),
+        "unresolved_regulatory_items": unresolved_items,
+        "operator_approval_checklist": _operator_approval_checklist(
+            regulatory=regulatory,
+            cfg=cfg,
+            sim=sim,
+            constraints=constraints,
+        ),
+        "documentation_only_notice": regulatory.get("documentation_only_notice"),
+        "operator_review_required": True,
+        "mission_context": {
+            "hard_constraints_pass": (
+                None if constraints is None else bool(getattr(constraints, "hard_pass", False))
+            ),
+            "inspection_points": max(0, len(plan.waypoints or []) - 1),
+            "estimated_time_s": _scalar(sim, "t_end_s") if sim is not None else None,
+            "energy_used_Wh": _scalar(sim, "energy_used_Wh") if sim is not None else None,
+            "waypoints_completed": _scalar(sim, "waypoints_completed") if sim is not None else None,
+            "waypoints_total": _scalar(sim, "waypoints_total") if sim is not None else None,
+        },
+        "robustness": robustness or {},
+    }
+
+
+def format_regulatory_readiness_report(report: Dict[str, Any]) -> str:
+    """Render the regulatory readiness report as Markdown."""
+    summary = report.get("regulatory_summary") or {}
+    evidence = report.get("regulatory_evidence") or {}
+    mission_metadata = report.get("mission_metadata") or {}
+    fleet_metadata = report.get("fleet_metadata") or {}
+
+    def fmt_list(values: Any) -> str:
+        items = [str(item) for item in values or [] if str(item).strip()]
+        return ", ".join(items) if items else "not provided"
+
+    def fmt_time_window(window: Any) -> str:
+        if not isinstance(window, dict) or not window:
+            return "not provided"
+        start = window.get("start_utc") or "not provided"
+        end = window.get("end_utc") or "not provided"
+        return f"{start} to {end}"
+
+    def display_status(key: str, item: Dict[str, Any]) -> str:
+        if key in {
+            "laanc_required",
+            "waiver_or_authorization_required",
+            "visual_observer_required",
+        }:
+            return _yes_no_unknown(item.get("value"))
+        if key == "airspace_class":
+            return str(item.get("value") or "unknown")
+        return str(item.get("status", "unknown"))
+
+    lines = [
+        "# Regulatory Readiness Report",
+        "",
+        f"Mission: {report.get('mission_id', 'aircraft_mission')}",
+        f"Readiness state: {str(report.get('readiness_state', 'unknown')).upper()}",
+        "",
+        "## Not Legal Approval",
+        "",
+        str(report.get("not_legal_approval_disclaimer") or REGULATORY_READINESS_DISCLAIMER),
+        "",
+        "## Mission / Fleet Context",
+        "",
+        f"- Operator: {mission_metadata.get('operator') or 'not provided'}",
+        f"- Aircraft ID: {mission_metadata.get('aircraft_id') or 'not provided'}",
+        f"- Pilot: {mission_metadata.get('pilot') or 'not provided'}",
+        f"- Organization: {mission_metadata.get('organization') or 'not provided'}",
+        f"- Asset owner: {mission_metadata.get('asset_owner') or 'not provided'}",
+        f"- Drone model: {fleet_metadata.get('drone_model') or 'not provided'}",
+        f"- Inspection type: {fleet_metadata.get('inspection_type') or 'not provided'}",
+        "",
+        "## Regulatory Summary",
+        "",
+    ]
+    for key in (
+        "laanc_required",
+        "waiver_or_authorization_required",
+        "airspace_class",
+        "visual_observer_required",
+        "ground_risk_population_note",
+    ):
+        item = summary.get(key) or {}
+        lines.append(
+            "- {label}: {status} - {detail}".format(
+                label=item.get("label", key),
+                status=display_status(key, item),
+                detail=item.get("summary", "not provided"),
+            )
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Regulatory Evidence Fields",
+            "",
+            str(
+                evidence.get("notice")
+                or "Optional documentation-only evidence fields; ORBITAL does not verify them."
+            ),
+            "",
+            "- Authorization ID / reference number: "
+            f"{evidence.get('authorization_id') or 'not provided'}",
+            "- Approving authority / source: "
+            f"{evidence.get('approving_authority_source') or 'not provided'}",
+            "- Authorization expiration date: "
+            f"{evidence.get('authorization_expiration_date') or 'not provided'}",
+            "- Operating altitude limit: "
+            f"{_fmt_value(evidence.get('operating_altitude_limit_m'), 'm')}",
+            "- Operating time window: " f"{fmt_time_window(evidence.get('operating_time_window'))}",
+            f"- Required crew roles: {fmt_list(evidence.get('required_crew_roles'))}",
+            "- Special conditions / limitations: "
+            f"{fmt_list(evidence.get('special_conditions_limitations'))}",
+        ]
+    )
+
+    lines.extend(
+        [
+            "",
+            "## Operating Assumptions",
+            "",
+        ]
+    )
+    for assumption in report.get("operating_assumptions", []) or []:
+        lines.append(f"- {assumption}")
+
+    lines.extend(
+        [
+            "",
+            "## Operator Approval Checklist",
+            "",
+            "These items are operator confirmations only; checking them does not make "
+            "ORBITAL a legal approval or clearance system.",
+            "",
+        ]
+    )
+    checklist = report.get("operator_approval_checklist") or []
+    if checklist:
+        for item in checklist:
+            lines.append(
+                "- [ ] {label}: {note}".format(
+                    label=item.get("label", "Operator confirmation"),
+                    note=item.get("note", "Operator confirmation required."),
+                )
+            )
+    else:
+        lines.append("- [ ] Complete operator review before flight.")
+
+    lines.extend(
+        [
+            "",
+            "## Unresolved Regulatory Items",
+            "",
+        ]
+    )
+    unresolved = report.get("unresolved_regulatory_items", []) or []
+    if unresolved:
+        for item in unresolved:
+            lines.append(
+                "- {label}: {status} - {note}".format(
+                    label=item.get("label", "Regulatory item"),
+                    status=str(item.get("status", "unknown")).upper(),
+                    note=item.get("note", "Operator review required."),
+                )
+            )
+    else:
+        lines.append("- No scenario-specific unresolved items were identified by ORBITAL.")
+
+    lines.extend(
+        [
+            "",
+            "## Documentation-Only Notice",
+            "",
+            str(report.get("documentation_only_notice") or "Not provided."),
+        ]
+    )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def export_regulatory_readiness_report(
+    plan: Plan,
+    sim: Optional[SimResult],
+    constraints: Any,
+    out_dir: Path,
+    *,
+    cfg: Optional[Dict[str, Any]] = None,
+    robustness: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Write regulatory readiness JSON and Markdown artifacts."""
+    report = build_regulatory_readiness_report(
+        plan,
+        sim,
+        constraints,
+        cfg=cfg,
+        robustness=robustness,
+    )
+    out_dir.mkdir(parents=True, exist_ok=True)
+    write_strict_json(out_dir / "regulatory_readiness_report.json", report)
+    (out_dir / "regulatory_readiness_report.md").write_text(
+        format_regulatory_readiness_report(report),
+        encoding="utf-8",
+    )
+    return report
 
 
 def _what_if_planner_config(cfg: Dict[str, Any], seed: int) -> PlannerConfig:
@@ -1456,6 +2333,20 @@ def export_operator_evidence_bundle(
         or output_cfg.get("export_autopilot_csv", False)
         or output_cfg.get("export_kml", False)
     )
+    regulatory = _regulatory_metadata(cfg)
+    readiness_report = _read_json_mapping(out_dir / "regulatory_readiness_report.json")
+    readiness_evidence = readiness_report.get("regulatory_evidence")
+    regulatory_evidence = (
+        readiness_evidence
+        if isinstance(readiness_evidence, dict)
+        else _regulatory_evidence_fields(regulatory)
+    )
+    regulatory_evidence_status = _regulatory_evidence_status(regulatory, regulatory_evidence)
+    approval_checklist = _approval_checklist_summary(
+        readiness_report,
+        regulatory=regulatory,
+        cfg=cfg,
+    )
 
     artifacts: List[Dict[str, Any]] = [
         {
@@ -1475,6 +2366,18 @@ def export_operator_evidence_bundle(
             "label": "Constraint audit JSON",
             "source": out_dir / "inspection_constraint_audit.json",
             "bundle_name": "inspection_constraint_audit.json",
+        },
+        {
+            "id": "regulatory_readiness_json",
+            "label": "Regulatory readiness JSON",
+            "source": out_dir / "regulatory_readiness_report.json",
+            "bundle_name": "regulatory_readiness_report.json",
+        },
+        {
+            "id": "regulatory_readiness_markdown",
+            "label": "Regulatory readiness report",
+            "source": out_dir / "regulatory_readiness_report.md",
+            "bundle_name": "regulatory_readiness_report.md",
         },
         {
             "id": "score_breakdown",
@@ -1565,22 +2468,29 @@ def export_operator_evidence_bundle(
         )
 
     missing = [entry["id"] for entry in manifest_entries if not entry["present"]]
+    missing_ids = set(missing)
     manifest: Dict[str, Any] = {
         "kind": "operator_evidence_bundle",
         "bundle_dir": str(bundle_dir),
         "scenario_path": str(scenario_path),
         "complete": not missing,
         "missing": missing,
-        "weather": {
-            "source": weather.get("source"),
-            "provider": weather.get("provider"),
-            "timestamp_utc": weather.get("timestamp_utc"),
-            "fallback_used": weather.get("fallback_used"),
-            "live_fetch_enabled": weather.get("live_fetch_enabled"),
-        }
-        if weather
-        else {},
+        "weather": (
+            {
+                "source": weather.get("source"),
+                "provider": weather.get("provider"),
+                "timestamp_utc": weather.get("timestamp_utc"),
+                "fallback_used": weather.get("fallback_used"),
+                "live_fetch_enabled": weather.get("live_fetch_enabled"),
+            }
+            if weather
+            else {}
+        ),
         "flight_planning_exports_enabled": flight_exports_enabled,
+        "regulatory_metadata": regulatory,
+        "regulatory_evidence": regulatory_evidence,
+        "regulatory_evidence_status": regulatory_evidence_status,
+        "approval_checklist": approval_checklist,
         "artifacts": manifest_entries,
         "documentation_only_notice": (
             "This bundle supports operator review and audit evidence only. ORBITAL does not "
@@ -1600,12 +2510,44 @@ def export_operator_evidence_bundle(
         "provider, autopilot, waiver system, legal approval system, or operational "
         "clearance system.",
         "",
+        "Regulatory metadata, authorization references, approval checklist items, and "
+        "evidence fields in this bundle are documentation-only. They support operator "
+        "review; they are not proof of authorization, legal approval, LAANC, waiver, or "
+        "operational clearance.",
+        "",
         "## Contents",
         "",
     ]
     for entry in manifest_entries:
         status = "included" if entry["present"] else "missing"
         readme_lines.append(f"- {entry['label']}: `{entry['bundle_path']}` ({status})")
+
+    missing_evidence = regulatory_evidence_status["missing"]
+    missing_evidence_text = (
+        ", ".join(item["label"] for item in missing_evidence) if missing_evidence else "none"
+    )
+    readme_lines.extend(
+        [
+            "",
+            "## Regulatory Readiness",
+            "",
+            "- Readiness report JSON: "
+            f"{'missing' if 'regulatory_readiness_json' in missing_ids else 'included'}",
+            "- Readiness report Markdown: "
+            f"{'missing' if 'regulatory_readiness_markdown' in missing_ids else 'included'}",
+            "- Approval checklist source: "
+            f"{approval_checklist.get('source_artifact') or 'not provided'}",
+            f"- Approval checklist items: {approval_checklist['item_count']}",
+            f"- Missing documentation-only evidence fields: {missing_evidence_text}",
+            "- Documentation-only status: regulatory evidence and checklist items are "
+            "operator review aids, not approvals.",
+        ]
+    )
+    if approval_checklist["items"]:
+        readme_lines.extend(["", "## Approval Checklist", ""])
+        for item in approval_checklist["items"]:
+            label = item.get("label") or item.get("id") or "Checklist item"
+            readme_lines.append(f"- [ ] {label}")
     if weather:
         readme_lines.extend(
             [

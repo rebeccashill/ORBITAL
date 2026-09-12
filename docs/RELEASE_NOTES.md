@@ -1,5 +1,49 @@
 # Release Notes
 
+## v1.0.7 - September 11, 2026
+
+This patch release adds a dedicated regulatory readiness report for aircraft /
+BVLOS inspection planning while preserving ORBITAL's role as decision support,
+not an approval system.
+
+### Changed
+
+- Added `regulatory_readiness_report.json` and
+  `regulatory_readiness_report.md` for aircraft runs.
+- Summarized LAANC-required status, waiver / authorization-required status,
+  airspace class, visual observer requirements, and ground-risk / population
+  notes in a dedicated regulatory artifact.
+- Added operating assumptions and unresolved regulatory items to the report,
+  with optional scenario fields for operator-provided assumptions and action
+  items.
+- Added an operator-facing approval checklist with conditional LAANC, waiver /
+  authorization, and visual observer confirmations plus crew briefing,
+  emergency / contingency plan, NOTAM / local restriction, weather minimums, and
+  battery reserve confirmation items.
+- Added optional documentation-only regulatory evidence fields for authorization
+  ID/reference, approving authority/source, expiration date, operating altitude
+  limit, operating time window, required crew roles, and special conditions /
+  limitations.
+- Added non-blocking validation warnings for incomplete BVLOS regulatory
+  metadata, missing authorization references when required, and missing visual
+  observer crew-role documentation.
+- Included an explicit disclaimer that ORBITAL provides decision support only
+  and is not legal approval.
+- Added the regulatory readiness report, approval checklist summary, regulatory
+  metadata, and documentation-only missing-evidence status to the operator
+  evidence bundle manifest and README.
+- Bumped package and README release metadata to `v1.0.7`.
+
+### Verified
+
+- Added validation coverage for regulatory evidence fields, assumptions,
+  unresolved-item lists, and non-blocking warning behavior.
+- Added unit coverage for regulatory readiness report JSON/Markdown content,
+  evidence fields, disclaimers, and approval checklist behavior.
+- Added CLI and end-to-end coverage for automatic regulatory report generation,
+  artifact writing, evidence-bundle inclusion, approval checklist manifest data,
+  and missing regulatory evidence visibility.
+
 ## v1.0.6 - September 11, 2026
 
 This patch release connects the BVLOS planning workflow to operational weather,

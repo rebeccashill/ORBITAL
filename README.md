@@ -5,7 +5,7 @@
 **Operational Reusable Backend for Integrated Trajectory and Logistics**  
 Constraint-Aware BVLOS Inspection Mission Planning
 
-Current release: `v1.0.5`
+Current release: `v1.0.7`
 
 ORBITAL helps drone operators plan constraint-aware BVLOS inspection missions
 under battery, weather, geofence, and regulatory constraints. It is built on a
@@ -13,8 +13,8 @@ domain-agnostic mission planning engine that can simulate candidate plans,
 evaluate hard and soft constraints, compare objective tradeoffs, and export
 auditable planning evidence before a crew commits field time.
 
-Current v1.0.4 focus: make the drone/BVLOS inspection workflow the flagship
-story while keeping the existing aircraft and spacecraft engine intact.
+Current v1.0.7 focus: make the drone/BVLOS inspection workflow feel complete
+for operator review while keeping ORBITAL legally honest as decision support.
 
 ORBITAL supports:
 
@@ -60,6 +60,14 @@ ORBITAL's current differentiators are:
 - Battery, wind, geofence, and route-completion evidence
 - Monte Carlo robustness checks for uncertain mission conditions
 - Exportable JSON/CSV artifacts for operator review and audit trails
+- Regulatory readiness reports that document LAANC, waiver/authorization,
+  airspace, visual observer, ground-risk, authorization evidence, assumptions,
+  and unresolved items without implying legal approval
+- Operator approval checklists that keep final confirmations with the pilot-in-
+  command and operator
+- Evidence bundle manifests that surface regulatory metadata, approval
+  checklist status, and missing documentation-only evidence fields for operator
+  review without treating them as approvals
 
 ## What ORBITAL Is Not
 

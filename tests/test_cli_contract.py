@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import copy
 import json
@@ -65,6 +65,8 @@ def test_cli_no_plots_writes_core_artifacts_without_pngs(tmp_path: Path) -> None
     assert (scenario_dir / "constraints.json").is_file()
     assert (scenario_dir / "plan.json").is_file()
     assert (scenario_dir / "waypoints.csv").is_file()
+    assert (scenario_dir / "regulatory_readiness_report.json").is_file()
+    assert (scenario_dir / "regulatory_readiness_report.md").is_file()
     assert not list(scenario_dir.glob("*.png"))
 
 
@@ -100,8 +102,81 @@ def test_cli_seed_reproducibly_writes_same_artifacts(tmp_path: Path) -> None:
 
     first = output_roots[0] / "aircraft_uav_demo"
     second = output_roots[1] / "aircraft_uav_demo"
-    for artifact in ("score.json", "constraints.json", "plan.json", "waypoints.csv"):
+    for artifact in (
+        "score.json",
+        "constraints.json",
+        "plan.json",
+        "waypoints.csv",
+        "regulatory_readiness_report.json",
+        "regulatory_readiness_report.md",
+    ):
         assert (first / artifact).read_bytes() == (second / artifact).read_bytes()
+
+
+def test_cli_bvlos_demo_writes_regulatory_readiness_artifacts(tmp_path: Path) -> None:
+    outdir = tmp_path / "runs"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mission_framework.cli",
+            "examples/bvlos_powerline_inspection_demo.yaml",
+            "--iterations",
+            "5",
+            "--restarts",
+            "1",
+            "--robustness",
+            "0",
+            "--seed",
+            "0",
+            "--no-plots",
+            "--outdir",
+            str(outdir),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=90,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+    scenario_dir = outdir / "bvlos_powerline_inspection"
+    report_json = scenario_dir / "regulatory_readiness_report.json"
+    report_md = scenario_dir / "regulatory_readiness_report.md"
+    manifest_json = scenario_dir / "operator_evidence_bundle" / "manifest.json"
+    bundle_readme = scenario_dir / "operator_evidence_bundle" / "README.md"
+    assert report_json.is_file()
+    assert report_md.is_file()
+    assert manifest_json.is_file()
+    assert bundle_readme.is_file()
+
+    report = json.loads(report_json.read_text(encoding="utf-8"))
+    assert report["kind"] == "regulatory_readiness_report"
+    assert report["not_legal_approval"] is True
+    assert (
+        report["regulatory_evidence"]["authorization_id"] == "example authorization reference only"
+    )
+    checklist_ids = {item["id"] for item in report["operator_approval_checklist"]}
+    assert {
+        "laanc_confirmation",
+        "waiver_authorization_confirmation",
+        "visual_observer_assignment",
+    } <= checklist_ids
+
+    markdown = report_md.read_text(encoding="utf-8")
+    assert "Regulatory Readiness Report" in markdown
+    assert "example authorization reference only" in markdown
+    assert "not legal approval" in markdown.lower()
+
+    manifest = json.loads(manifest_json.read_text(encoding="utf-8"))
+    artifact_presence = {artifact["id"]: artifact["present"] for artifact in manifest["artifacts"]}
+    assert artifact_presence["regulatory_readiness_json"] is True
+    assert artifact_presence["regulatory_readiness_markdown"] is True
+    assert manifest["regulatory_metadata"]["laanc_required"] is True
+    assert manifest["approval_checklist"]["item_count"] >= 8
+    assert manifest["regulatory_evidence_status"]["missing"] == []
+    assert "documentation-only" in bundle_readme.read_text(encoding="utf-8")
 
 
 def test_cli_overrides_yaml_settings_and_accepts_single_dash_aliases(

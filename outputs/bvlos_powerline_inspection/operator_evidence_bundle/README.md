@@ -4,11 +4,15 @@ This folder collects the artifacts an operator can review before a BVLOS inspect
 
 ORBITAL is preflight decision support and audit evidence. It is not a LAANC provider, autopilot, waiver system, legal approval system, or operational clearance system.
 
+Regulatory metadata, authorization references, approval checklist items, and evidence fields in this bundle are documentation-only. They support operator review; they are not proof of authorization, legal approval, LAANC, waiver, or operational clearance.
+
 ## Contents
 
 - Scenario YAML: `scenario.yaml` (included)
 - Plan JSON: `plan.json` (included)
 - Constraint audit JSON: `inspection_constraint_audit.json` (included)
+- Regulatory readiness JSON: `regulatory_readiness_report.json` (included)
+- Regulatory readiness report: `regulatory_readiness_report.md` (included)
 - Score breakdown: `score.json` (included)
 - Flight path plot: `flight_path.png` (included)
 - Robustness summary: `robustness.json` (included)
@@ -18,6 +22,26 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 - Mission review KML: `mission_review.kml` (included)
 - Flight-planning exports manifest: `flight_planning_exports.json` (included)
 - Flight-planning exports README: `flight_planning_exports.md` (included)
+
+## Regulatory Readiness
+
+- Readiness report JSON: included
+- Readiness report Markdown: included
+- Approval checklist source: regulatory_readiness_report.json
+- Approval checklist items: 8
+- Missing documentation-only evidence fields: none
+- Documentation-only status: regulatory evidence and checklist items are operator review aids, not approvals.
+
+## Approval Checklist
+
+- [ ] Confirm LAANC / controlled-airspace authorization
+- [ ] Confirm waiver / authorization coverage
+- [ ] Confirm visual observer assignment
+- [ ] Confirm crew briefing completed
+- [ ] Confirm emergency / contingency plan
+- [ ] Confirm NOTAM / local restriction review
+- [ ] Confirm weather minimums
+- [ ] Confirm battery reserve
 
 ## Weather Source
 

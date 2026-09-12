@@ -29,7 +29,11 @@ from mission_framework.core.decision_variables import MutationConfig
 from mission_framework.core.json_utils import strict_json_dumps, write_strict_json
 from mission_framework.core.objective import RobustAggregation, ScoreConfig
 from mission_framework.core.planner import Planner, PlannerConfig, Problem
-from mission_framework.scenario_validation import ScenarioValidationError, validate_scenario_config
+from mission_framework.scenario_validation import (
+    ScenarioValidationError,
+    collect_scenario_validation_issues,
+    validate_scenario_config,
+)
 from mission_framework.simulation.feasibility import format_feasibility_report
 
 
@@ -41,6 +45,19 @@ def _load_yaml(path: Path) -> Dict[str, Any]:
 def _print_validation_error(path: Path, exc: Exception) -> None:
     print(f"INVALID: {path}", file=sys.stderr)
     print(str(exc), file=sys.stderr)
+
+
+def _print_validation_warnings(path: Path, cfg: Any, expected_type: Optional[str] = None) -> None:
+    warnings = [
+        issue
+        for issue in collect_scenario_validation_issues(cfg, expected_type=expected_type)
+        if issue.is_warning
+    ]
+    if not warnings:
+        return
+    print(f"WARNING: {path}", file=sys.stderr)
+    for warning in warnings:
+        print(f"- {warning}", file=sys.stderr)
 
 
 def _validate_command(argv: Sequence[str]) -> int:
@@ -61,6 +78,7 @@ def _validate_command(argv: Sequence[str]) -> int:
         if isinstance(cfg, dict):
             cfg["_scenario_dir"] = str(scenario_path.parent)
         validate_scenario_config(cfg, expected_type=args.type)
+        _print_validation_warnings(scenario_path, cfg, expected_type=args.type)
     except (OSError, yaml.YAMLError, ScenarioValidationError) as exc:
         _print_validation_error(scenario_path, exc)
         return 2
@@ -348,6 +366,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     try:
         validate_scenario_config(cfg)
+        _print_validation_warnings(scenario_path, cfg)
     except ScenarioValidationError as exc:
         _print_validation_error(scenario_path, exc)
         return 2
@@ -415,6 +434,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             from mission_framework.reporting.flight_output import (
                 export_inspection_constraint_audit,
                 export_operator_memo,
+                export_regulatory_readiness_report,
                 export_waypoints_csv,
                 export_what_if_plan,
                 print_flight_plan,
@@ -433,6 +453,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 cfg=cfg,
             )
             export_inspection_constraint_audit(
+                result.plan,
+                result.sim_result,
+                result.constraints,
+                outdir,
+                cfg=cfg,
+                robustness=result.robustness,
+            )
+            export_regulatory_readiness_report(
                 result.plan,
                 result.sim_result,
                 result.constraints,
@@ -508,7 +536,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
     if result.robustness is not None:
         _write_json(outdir / "robustness.json", result.robustness)
-    weather_metadata = ((cfg.get("weather", {}) or {}).get("resolved", {}) or {})
+    weather_metadata = (cfg.get("weather", {}) or {}).get("resolved", {}) or {}
     if scenario_type == "aircraft" and weather_metadata:
         _write_json(outdir / "weather.json", weather_metadata)
 

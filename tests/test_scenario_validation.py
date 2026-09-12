@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import copy
 import subprocess
@@ -29,6 +29,14 @@ def _load_yaml(path: Path) -> dict:
 
 def _issue_paths(issues) -> set[str]:
     return {issue.path for issue in issues}
+
+
+def _error_issues(issues):
+    return [issue for issue in issues if issue.is_error]
+
+
+def _warning_issues(issues):
+    return [issue for issue in issues if issue.is_warning]
 
 
 def test_schema_definitions_cover_shared_and_domain_fields() -> None:
@@ -180,6 +188,18 @@ def test_aircraft_regulatory_metadata_validates_as_documentation_fields() -> Non
         "airspace_class": "Class G",
         "visual_observer_required": True,
         "ground_risk_population_note": "Sparse rural corridor.",
+        "authorization_id": "sample authorization reference",
+        "approving_authority_source": "Example authority source record",
+        "authorization_expiration_date": "2026-09-11",
+        "operating_altitude_limit_m": 120.0,
+        "operating_time_window": {
+            "start_utc": "2026-09-11T16:00:00Z",
+            "end_utc": "2026-09-11T18:00:00Z",
+        },
+        "required_crew_roles": ["Remote pilot in command", "Visual observer"],
+        "special_conditions_limitations": ["Remain below authorized altitude."],
+        "operating_assumptions": ["Pilot-in-command verifies local requirements."],
+        "unresolved_items": ["Confirm final site access approval."],
         "documentation_only_notice": "Documentation only; not legal approval.",
     }
 
@@ -187,10 +207,50 @@ def test_aircraft_regulatory_metadata_validates_as_documentation_fields() -> Non
 
     cfg["regulatory"]["laanc_required"] = "yes"
     cfg["regulatory"]["airspace_class"] = ""
+    cfg["regulatory"]["authorization_id"] = ""
+    cfg["regulatory"]["operating_altitude_limit_m"] = -1
+    cfg["regulatory"]["operating_time_window"]["start_utc"] = ""
+    cfg["regulatory"]["required_crew_roles"] = [""]
+    cfg["regulatory"]["special_conditions_limitations"] = "none"
+    cfg["regulatory"]["operating_assumptions"] = ["  "]
+    cfg["regulatory"]["unresolved_items"] = "Confirm waiver"
     issues = collect_scenario_validation_issues(cfg)
     paths = _issue_paths(issues)
     assert "regulatory.laanc_required" in paths
     assert "regulatory.airspace_class" in paths
+    assert "regulatory.authorization_id" in paths
+    assert "regulatory.operating_altitude_limit_m" in paths
+    assert "regulatory.operating_time_window.start_utc" in paths
+    assert "regulatory.required_crew_roles[0]" in paths
+    assert "regulatory.special_conditions_limitations" in paths
+    assert "regulatory.operating_assumptions[0]" in paths
+    assert "regulatory.unresolved_items" in paths
+
+
+def test_bvlos_regulatory_documentation_warnings_do_not_block_planning() -> None:
+    cfg = copy.deepcopy(_load_yaml(EXAMPLES / "bvlos_powerline_inspection_demo.yaml"))
+    del cfg["regulatory"]["authorization_id"]
+    del cfg["regulatory"]["airspace_class"]
+    cfg["regulatory"]["required_crew_roles"] = ["Remote pilot in command"]
+
+    issues = collect_scenario_validation_issues(cfg)
+    warnings = _warning_issues(issues)
+
+    assert _error_issues(issues) == []
+    assert {warning.path for warning in warnings} >= {
+        "regulatory",
+        "regulatory.authorization_id",
+        "regulatory.required_crew_roles",
+    }
+    warning_text = "\n".join(warning.message for warning in warnings)
+    assert "BVLOS regulatory metadata is incomplete" in warning_text
+    assert "LAANC is required but no authorization reference is supplied" in warning_text
+    assert "waiver / authorization is required but no reference is supplied" in warning_text
+    assert "visual observer is required but no visual observer crew role is documented" in (
+        warning_text
+    )
+
+    assert validate_scenario_config(cfg)["scenario"]["type"] == "aircraft"
 
 
 def test_aircraft_weather_metadata_validates_provider_fields() -> None:

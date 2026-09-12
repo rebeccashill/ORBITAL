@@ -103,7 +103,9 @@ def aircraft_exhaustive_assignments(
     speeds = np.linspace(min_speed, max_speed, num=speed_grid, dtype=float)
 
     assignments: list[DecisionAssignment] = []
-    orders: Sequence[Sequence[str]] = [waypoint_ids] if fixed_order else itertools.permutations(waypoint_ids)
+    orders: Sequence[Sequence[str]] = (
+        [waypoint_ids] if fixed_order else itertools.permutations(waypoint_ids)
+    )
     for order in orders:
         for speed in speeds:
             values: Dict[str, Any] = {"cruise_speed_mps": np.array([float(speed)], dtype=float)}

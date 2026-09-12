@@ -1,4 +1,4 @@
-# tests/test_aircraft_end_to_end.py
+﻿# tests/test_aircraft_end_to_end.py
 """
 Aircraft end-to-end smoke test.
 
@@ -14,6 +14,7 @@ Run:
 
 from __future__ import annotations
 
+import copy
 from pathlib import Path
 from typing import Any, Dict
 
@@ -162,6 +163,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         export_inspection_constraint_audit,
         export_operator_evidence_bundle,
         export_operator_memo,
+        export_regulatory_readiness_report,
         export_what_if_plan,
     )
 
@@ -194,9 +196,10 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert audit["weather_metadata"]["timestamp_utc"] == "2026-09-11T16:00:00Z"
     assert audit["weather_metadata"]["fallback_used"] is False
     assert audit["weather_metadata"]["applied_to_wind"] is True
-    assert "ORBITAL does not provide LAANC" in audit["regulatory_metadata"][
-        "documentation_only_notice"
-    ]
+    assert (
+        "ORBITAL does not provide LAANC"
+        in audit["regulatory_metadata"]["documentation_only_notice"]
+    )
     assert audit["top_limiting_constraint"] is not None
     assert len(audit["top_three_risk_drivers"]) == 3
     assert {check["id"] for check in audit["checks"]} >= {
@@ -211,6 +214,113 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     memo_text = (tmp_path / "inspection_constraint_audit.md").read_text(encoding="utf-8")
     assert "ORBITAL Demo Operations" in memo_text
     assert "Powerline corridor inspection" in memo_text
+
+    regulatory_report = export_regulatory_readiness_report(
+        result.plan,
+        result.sim_result,
+        result.constraints,
+        tmp_path,
+        cfg=cfg,
+        robustness=result.robustness,
+    )
+
+    assert regulatory_report["kind"] == "regulatory_readiness_report"
+    assert regulatory_report["status"] == "operator_action_required"
+    assert regulatory_report["decision_support_only"] is True
+    assert regulatory_report["not_legal_approval"] is True
+    assert "decision support only and is not legal approval" in regulatory_report["disclaimer"]
+    assert regulatory_report["regulatory_summary"]["laanc_required"]["status"] == "required"
+    assert (
+        regulatory_report["regulatory_summary"]["waiver_or_authorization_required"]["status"]
+        == "required"
+    )
+    assert regulatory_report["regulatory_summary"]["airspace_class"]["configured"] == "Class D"
+    assert regulatory_report["regulatory_summary"]["visual_observer_required"]["status"] == (
+        "required"
+    )
+    assert (
+        "Utility corridor inspection"
+        in regulatory_report["regulatory_summary"]["ground_risk_population_note"]["summary"]
+    )
+    evidence = regulatory_report["regulatory_evidence"]
+    assert evidence["documentation_only"] is True
+    assert evidence["authorization_id"] == "example authorization reference only"
+    assert (
+        evidence["approving_authority_source"]
+        == "Operator-provided example authority source for documentation-only demo"
+    )
+    assert evidence["authorization_expiration_date"] == "2026-09-11"
+    assert evidence["operating_altitude_limit_m"] == 120.0
+    assert evidence["operating_time_window"] == {
+        "start_utc": "2026-09-11T16:00:00Z",
+        "end_utc": "2026-09-11T18:00:00Z",
+    }
+    assert evidence["required_crew_roles"] == [
+        "Remote pilot in command",
+        "Visual observer",
+    ]
+    assert "modeled utility corridor" in evidence["special_conditions_limitations"][0]
+    assert "does not verify" in evidence["notice"]
+    assert regulatory_report["operating_assumptions"]
+    unresolved_ids = {item["id"] for item in regulatory_report["unresolved_regulatory_items"]}
+    assert "laanc_authorization_confirmation" in unresolved_ids
+    assert "waiver_or_authorization_confirmation" in unresolved_ids
+    assert "visual_observer_staffing_plan" in unresolved_ids
+    checklist = regulatory_report["operator_approval_checklist"]
+    checklist_ids = {item["id"] for item in checklist}
+    assert checklist_ids >= {
+        "laanc_confirmation",
+        "waiver_authorization_confirmation",
+        "visual_observer_assignment",
+        "crew_briefing",
+        "emergency_contingency_plan",
+        "notam_local_restriction_review",
+        "weather_minimums_confirmation",
+        "battery_reserve_confirmation",
+    }
+    assert all(item["checked"] is False for item in checklist)
+    assert all(item["status"] == "operator_confirmation_required" for item in checklist)
+    assert (tmp_path / "regulatory_readiness_report.json").exists()
+    assert (tmp_path / "regulatory_readiness_report.md").exists()
+    regulatory_md = (tmp_path / "regulatory_readiness_report.md").read_text(encoding="utf-8")
+    assert "Regulatory Readiness Report" in regulatory_md
+    assert "Regulatory Evidence Fields" in regulatory_md
+    assert "example authorization reference only" in regulatory_md
+    assert "Operating altitude limit: 120.0 m" in regulatory_md
+    assert "Remote pilot in command, Visual observer" in regulatory_md
+    assert "Operator Approval Checklist" in regulatory_md
+    assert "- [ ] Confirm crew briefing completed" in regulatory_md
+    assert "- [ ] Confirm emergency / contingency plan" in regulatory_md
+    assert "- [ ] Confirm NOTAM / local restriction review" in regulatory_md
+    assert "- [ ] Confirm weather minimums" in regulatory_md
+    assert "- [ ] Confirm battery reserve" in regulatory_md
+    assert "not legal approval" in regulatory_md.lower()
+
+    no_conditional_cfg = copy.deepcopy(cfg)
+    no_conditional_cfg["regulatory"]["laanc_required"] = False
+    no_conditional_cfg["regulatory"]["waiver_or_authorization_required"] = False
+    no_conditional_cfg["regulatory"]["visual_observer_required"] = False
+    no_conditional_report = export_regulatory_readiness_report(
+        result.plan,
+        result.sim_result,
+        result.constraints,
+        tmp_path / "no_conditional_regulatory",
+        cfg=no_conditional_cfg,
+        robustness=result.robustness,
+    )
+    no_conditional_ids = {
+        item["id"] for item in no_conditional_report["operator_approval_checklist"]
+    }
+    assert "laanc_confirmation" not in no_conditional_ids
+    assert "waiver_authorization_confirmation" not in no_conditional_ids
+    assert "visual_observer_assignment" not in no_conditional_ids
+    assert no_conditional_ids >= {
+        "crew_briefing",
+        "emergency_contingency_plan",
+        "notam_local_restriction_review",
+        "weather_minimums_confirmation",
+        "battery_reserve_confirmation",
+    }
 
     export_operator_memo(
         result.plan,
@@ -280,11 +390,35 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert evidence["complete"] is True
     assert evidence["weather"]["source"] == "offline Open-Meteo-shaped sample"
     assert evidence["weather"]["timestamp_utc"] == "2026-09-11T16:00:00Z"
+    assert evidence["regulatory_metadata"]["laanc_required"] is True
+    assert evidence["regulatory_metadata"]["waiver_or_authorization_required"] is True
+    assert evidence["regulatory_metadata"]["airspace_class"] == "Class D"
+    assert (
+        evidence["regulatory_evidence"]["authorization_id"]
+        == "example authorization reference only"
+    )
+    assert evidence["regulatory_evidence_status"]["missing"] == []
+    assert evidence["regulatory_evidence_status"]["all_optional_fields_documented"] is True
+    assert evidence["approval_checklist"]["source_artifact"] == "regulatory_readiness_report.json"
+    assert evidence["approval_checklist"]["item_count"] == len(checklist)
+    manifest_checklist_ids = {item["id"] for item in evidence["approval_checklist"]["items"]}
+    assert manifest_checklist_ids >= {
+        "laanc_confirmation",
+        "waiver_authorization_confirmation",
+        "visual_observer_assignment",
+        "crew_briefing",
+        "emergency_contingency_plan",
+        "notam_local_restriction_review",
+        "weather_minimums_confirmation",
+        "battery_reserve_confirmation",
+    }
     bundle_dir = tmp_path / "operator_evidence_bundle"
     expected_bundle_files = {
         "scenario.yaml",
         "plan.json",
         "inspection_constraint_audit.json",
+        "regulatory_readiness_report.json",
+        "regulatory_readiness_report.md",
         "score.json",
         "flight_path.png",
         "robustness.json",
@@ -298,3 +432,74 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "README.md",
     }
     assert {path.name for path in bundle_dir.iterdir()} >= expected_bundle_files
+    bundle_readme = (bundle_dir / "README.md").read_text(encoding="utf-8")
+    assert "Regulatory Readiness" in bundle_readme
+    assert "Approval Checklist" in bundle_readme
+    assert "documentation-only" in bundle_readme
+    assert "not proof of authorization" in bundle_readme
+
+    missing_cfg = copy.deepcopy(cfg)
+    for key in (
+        "authorization_id",
+        "approving_authority_source",
+        "authorization_expiration_date",
+        "operating_altitude_limit_m",
+        "special_conditions_limitations",
+    ):
+        missing_cfg["regulatory"].pop(key, None)
+    missing_cfg["regulatory"]["operating_time_window"] = {}
+    missing_cfg["regulatory"]["required_crew_roles"] = []
+    missing_dir = tmp_path / "missing_regulatory_evidence"
+    missing_dir.mkdir()
+    for artifact_name in (
+        "plan.json",
+        "inspection_constraint_audit.json",
+        "score.json",
+        "flight_path.png",
+        "robustness.json",
+        "operator_memo.md",
+        "weather.json",
+        "autopilot_mission.csv",
+        "mission_review.kml",
+        "flight_planning_exports.json",
+        "flight_planning_exports.md",
+    ):
+        (missing_dir / artifact_name).write_bytes((tmp_path / artifact_name).read_bytes())
+    export_regulatory_readiness_report(
+        result.plan,
+        result.sim_result,
+        result.constraints,
+        missing_dir,
+        cfg=missing_cfg,
+        robustness=result.robustness,
+    )
+    missing_evidence = export_operator_evidence_bundle(
+        missing_dir,
+        EXAMPLES_DIR / "bvlos_powerline_inspection_demo.yaml",
+        cfg=missing_cfg,
+    )
+
+    assert missing_evidence["complete"] is True
+    assert missing_evidence["regulatory_evidence_status"]["all_optional_fields_documented"] is (
+        False
+    )
+    missing_paths = {
+        item["path"] for item in missing_evidence["regulatory_evidence_status"]["missing"]
+    }
+    assert {
+        "regulatory.authorization_id",
+        "regulatory.approving_authority_source",
+        "regulatory.authorization_expiration_date",
+        "regulatory.operating_altitude_limit_m",
+        "regulatory.operating_time_window",
+        "regulatory.required_crew_roles",
+        "regulatory.special_conditions_limitations",
+    } <= missing_paths
+    attention_paths = {
+        item["path"]
+        for item in missing_evidence["regulatory_evidence_status"]["operator_attention_missing"]
+    }
+    assert {
+        "regulatory.authorization_id",
+        "regulatory.required_crew_roles",
+    } <= attention_paths
