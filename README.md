@@ -7,7 +7,7 @@
 Constraint audits, what-if planning, regulatory readiness, and evidence bundles
 for drone inspection operators.
 
-Current release: `v1.0.11`
+Current release: `v1.0.12`
 
 > ORBITAL tells inspection teams whether a BVLOS mission is feasible before
 > they send a crew.
@@ -220,7 +220,8 @@ Status: GO
 Mission risk: LOW
 Top limiting constraint: Wind / weather margin, PASS with margin 3.1 m/s
 Model transparency: assumptions, margin sources, top-limiter rationale, and reproducibility
-Open first artifact: operator_evidence_bundle/operator_dashboard.md
+Open first page: operator_review_ui.html
+Open first source artifact: operator_dashboard.md
 Evidence bundle completeness: 100.0 %
 Regulatory readiness: OPERATOR_ACTION_REQUIRED, documentation-only
 ```
@@ -230,12 +231,14 @@ Regulatory readiness: OPERATOR_ACTION_REQUIRED, documentation-only
 See the [BVLOS powerline demo script](docs/BVLOS_POWERLINE_DEMO_SCRIPT.md) for
 the baseline feasibility, limiting constraint, what-if comparison, regulatory
 readiness, and evidence bundle walkthrough. See the
-[BVLOS demo screenshot set](docs/BVLOS_DEMO_SCREENSHOT_SET.md) for captured
-dashboard, audit, what-if, regulatory, index, and plot visuals with captions.
+[BVLOS demo screenshot set](docs/BVLOS_DEMO_SCREENSHOT_SET.md) for captured UI
+dashboard, artifact navigation, trust / defensibility, Markdown dashboard,
+audit, what-if, regulatory, index, and plot visuals with captions.
 
 Evidence bundle quick checks do not rerun optimization:
 
 ```bash
+python -m mission_framework.cli serve-ui
 python -m mission_framework.cli open-first outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli verdict outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli top outputs/bvlos_powerline_inspection/operator_evidence_bundle
@@ -244,6 +247,29 @@ python -m mission_framework.cli bundle-verify outputs/bvlos_powerline_inspection
 python -m mission_framework.cli bundle-top outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli bundle-review-validate outputs/bvlos_powerline_inspection/operator_evidence_bundle
 ```
+
+`serve-ui` uses Python's built-in static file server to serve the generated
+BVLOS demo bundle from
+`outputs/bvlos_powerline_inspection/operator_evidence_bundle`. Open
+`operator_review_ui.html` first for the lightweight local review surface; open
+`operator_dashboard.md` first when reviewing the raw evidence artifacts. No
+database, accounts, auth, build step, or manual file copying is required.
+
+UI-first demo flow:
+
+1. Regenerate the demo bundle with
+   `python -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml --outdir outputs`.
+2. Launch the read-only local UI with `python -m mission_framework.cli serve-ui`
+   and open the printed `operator_review_ui.html` URL.
+3. Scan the mission verdict, modeled status, risk, top limiting constraint,
+   next operator action, readiness, completeness, weather fallback, robustness,
+   and evidence warnings in the first screen.
+4. Use the artifact links to open `operator_dashboard.md`,
+   `inspection_constraint_audit.md`, `what_if_plan.md`, and
+   `regulatory_readiness_report.md`. The Markdown, JSON, CSV, KML, and checksum
+   files remain the source of truth; the UI is a read-only review surface.
+5. Close with `python -m mission_framework.cli bundle-verify
+   outputs/bvlos_powerline_inspection/operator_evidence_bundle`.
 
 The short commands mirror the dashboard language: `open-first` prints the first
 artifact to open, `verdict` prints the mission verdict and next operator action,

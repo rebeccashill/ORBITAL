@@ -1,5 +1,49 @@
 # Release Notes
 
+## v1.0.12 - September 13, 2026
+
+### Changed
+
+- Finished the lightweight read-only operator review web UI for BVLOS evidence
+  bundles.
+- Made the first screen emphasize mission verdict, modeled status, risk, top
+  limiting constraint, next operator action, regulatory readiness, evidence
+  completeness, regulatory documentation completeness, weather fallback,
+  robustness / uncertainty, missing evidence count, and stale / missing /
+  mismatched evidence warning count.
+- Added compact review sections for feasibility, regulatory readiness, evidence
+  completeness, trust / defensibility, warnings, artifact navigation, and
+  operator review metadata.
+- Completed evidence bundle navigation with links to the dashboard, audit,
+  what-if, regulatory, summary, index, manifest, checksum, route image, CSV,
+  and KML artifacts, including an obvious open-first dashboard callout and
+  unavailable states for missing artifacts.
+- Added static manifest loading from `manifest.json`, with an embedded fallback
+  snapshot and graceful status messages for missing or malformed manifest data.
+- Added a one-command local launch path with `serve-ui`, backed by Python's
+  built-in static file server and the generated BVLOS demo bundle.
+- Updated README and BVLOS demo documentation with a UI-first launch flow,
+  read-only/source-of-truth boundary language, and refreshed UI dashboard,
+  artifact-navigation, and trust/defensibility screenshots.
+- Tightened the review UI visual style with compact mission cards, clearer
+  verdict/status/warning styling, neutral documentation-only fields, and
+  restrained laptop/tablet-friendly layout.
+- Added stronger local-review, decision-support-only, source-of-truth, demo /
+  discovery, and no-approval-workflow boundary language above the fold.
+- Regenerated `outputs/bvlos_powerline_inspection/` and its operator evidence
+  bundle for the v1.0.12 UI, launch, screenshot, and checksum workflow.
+- Bumped package and README release metadata to `v1.0.12`.
+
+### Verified
+
+- Ran `python -m black --check .`.
+- Ran `python -m ruff check .`.
+- Ran `python -m mypy --python-version 3.12 mission_framework`.
+- Ran `python -m pytest`.
+- Ran `python run_all.py --fast --no-plots`.
+- Ran `python scripts/focused_secret_scan.py`.
+- Ran `python -m mission_framework.cli bundle-verify outputs\bvlos_powerline_inspection\operator_evidence_bundle`.
+
 ## v1.0.11 - September 13, 2026
 
 ### Changed

@@ -142,6 +142,10 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert result.returncode == 0, result.stdout + result.stderr
     assert "Open first artifact:" in result.stdout
     assert "operator_dashboard.md" in result.stdout
+    assert "Local review UI:" in result.stdout
+    assert "First review page: operator_review_ui.html" in result.stdout
+    assert "Launch review UI:" in result.stdout
+    assert "serve-ui" in result.stdout
 
     scenario_dir = outdir / "bvlos_powerline_inspection"
     plan_json = scenario_dir / "plan.json"
@@ -459,6 +463,38 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert review_result.returncode == 0, review_result.stdout + review_result.stderr
     assert "Review metadata: VALID" in review_result.stdout
     assert "Operator review status: draft" in review_result.stdout
+
+    serve_result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mission_framework.cli",
+            "serve-ui",
+            str(bundle_dir),
+            "--port",
+            "8765",
+            "--dry-run",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert serve_result.returncode == 0, serve_result.stdout + serve_result.stderr
+    assert "ORBITAL Operator Review UI" in serve_result.stdout
+    assert "First page to open: operator_review_ui.html" in serve_result.stdout
+    assert "Local review URL: http://127.0.0.1:8765/operator_review_ui.html" in (
+        serve_result.stdout
+    )
+    assert "First evidence artifact:" in serve_result.stdout
+    assert "operator_dashboard.md" in serve_result.stdout
+    assert "Primary manifest data: manifest.json" in serve_result.stdout
+    assert "Manifest status: available" in serve_result.stdout
+    assert "Serving static evidence bundle files only." in serve_result.stdout
+    assert "No backend database, accounts, auth, editing workflow, or file copying required." in (
+        serve_result.stdout
+    )
+    assert "Dry run: server not started." in serve_result.stdout
 
 
 def test_cli_overrides_yaml_settings_and_accepts_single_dash_aliases(

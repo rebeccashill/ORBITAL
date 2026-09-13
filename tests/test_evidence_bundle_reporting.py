@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import os
+import re
 
 from mission_framework.reporting.flight_output import (
     _artifact_freshness_metadata,
@@ -15,6 +17,165 @@ from mission_framework.reporting.flight_output import (
     verify_evidence_bundle_checksums,
 )
 from mission_framework.reporting.operator_review_ui import format_operator_review_ui_html
+
+
+def _deep_update(base: dict, updates: dict) -> dict:
+    for key, value in updates.items():
+        if isinstance(value, dict) and isinstance(base.get(key), dict):
+            _deep_update(base[key], value)
+        else:
+            base[key] = value
+    return base
+
+
+def _sample_operator_review_manifest(**updates) -> dict:
+    manifest = {
+        "scenario_path": "examples/bvlos_powerline_inspection_demo.yaml",
+        "constraint_audit": {
+            "mission_id": "BVLOS Powerline Inspection Demo",
+            "status": "go",
+            "mission_risk": "low",
+            "top_limiting_constraint": {
+                "label": "Wind / weather margin",
+                "status": "pass",
+                "margin": {"value": 3.1, "unit": "m/s"},
+            },
+        },
+        "regulatory_readiness": {"readiness_state": "ready"},
+        "bundle_completeness": {
+            "score": 100.0,
+            "present_artifacts": 17,
+            "total_artifacts": 17,
+        },
+        "regulatory_documentation_completeness": {
+            "score": 100.0,
+            "documented_fields": 8,
+            "total_fields": 8,
+        },
+        "operator_review": {
+            "status": "ready_for_review",
+            "reviewer_name": "Demo reviewer",
+            "review_timestamp_utc": "2026-09-12T18:00:00Z",
+            "operator_decision": "pending operator review",
+        },
+        "missing_evidence": [],
+        "bundle_warnings": [],
+        "trust_defensibility": {
+            "weather_fallback_status": {
+                "status": "fallback_used",
+                "summary": "Fallback weather sample was used.",
+            },
+            "uncertainty_robustness_status": {
+                "status": "pass",
+                "summary": "Robustness cases passed.",
+            },
+            "evidence_warning_summary": {
+                "status": "clear",
+                "summary": (
+                    "CLEAR: 0 missing artifact(s), 0 stale artifact(s), "
+                    "0 missing evidence item(s), 0 bundle warning(s)"
+                ),
+                "missing_artifacts": 0,
+                "stale_artifacts": 0,
+                "missing_evidence": 0,
+                "bundle_warnings": 0,
+            },
+            "sample_data_demo_note": {"note": "Sample data / demo scenario: demo inputs only."},
+        },
+        "artifacts": [
+            {
+                "id": "flight_path_plot",
+                "label": "Flight path plot",
+                "bundle_path": "flight_path.png",
+                "present": True,
+            },
+            {
+                "id": "what_if_plan_markdown",
+                "label": "What-if planning report",
+                "bundle_path": "what_if_plan.md",
+                "present": True,
+            },
+            {
+                "id": "regulatory_readiness_markdown",
+                "label": "Regulatory readiness report",
+                "bundle_path": "regulatory_readiness_report.md",
+                "present": True,
+            },
+            {
+                "id": "autopilot_mission_csv",
+                "label": "Autopilot mission CSV",
+                "bundle_path": "autopilot_mission.csv",
+                "present": True,
+            },
+            {
+                "id": "mission_review_kml",
+                "label": "Mission review KML",
+                "bundle_path": "mission_review.kml",
+                "present": True,
+            },
+        ],
+        "generated_artifacts": [
+            {
+                "id": "operator_dashboard",
+                "label": "Operator evidence dashboard",
+                "bundle_path": "operator_dashboard.md",
+                "present": True,
+                "generated": True,
+            },
+            {
+                "id": "constraint_audit_markdown",
+                "label": "Primary constraint-audit report",
+                "bundle_path": "inspection_constraint_audit.md",
+                "present": True,
+                "generated": True,
+            },
+            {
+                "id": "bundle_summary",
+                "label": "Evidence bundle summary",
+                "bundle_path": "evidence_bundle_summary.md",
+                "present": True,
+                "generated": True,
+            },
+            {
+                "id": "artifact_index",
+                "label": "Evidence bundle artifact index",
+                "bundle_path": "artifact_index.md",
+                "present": True,
+                "generated": True,
+            },
+            {
+                "id": "manifest_json",
+                "label": "Evidence bundle manifest",
+                "bundle_path": "manifest.json",
+                "present": True,
+                "generated": True,
+            },
+            {
+                "id": "checksum_manifest",
+                "label": "Evidence bundle checksum manifest",
+                "bundle_path": "checksum_manifest.json",
+                "present": True,
+                "generated": True,
+            },
+        ],
+    }
+    return _deep_update(copy.deepcopy(manifest), updates)
+
+
+def _embedded_manifest_snapshot(html: str) -> dict:
+    match = re.search(
+        r'<script type="application/json" id="manifest-snapshot">(.*?)</script>',
+        html,
+        re.S,
+    )
+    assert match is not None
+    return json.loads(match.group(1))
+
+
+def _rendered_verdict_label(html: str) -> str:
+    match = re.search(r'data-field="verdict-label">([^<]+)</span>', html)
+    assert match is not None
+    return match.group(1)
 
 
 def test_bundle_completeness_score_counts_present_expected_artifacts() -> None:
@@ -444,7 +605,31 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
                     "label": "Flight path plot",
                     "bundle_path": "flight_path.png",
                     "present": True,
-                }
+                },
+                {
+                    "id": "what_if_plan_markdown",
+                    "label": "What-if planning report",
+                    "bundle_path": "what_if_plan.md",
+                    "present": True,
+                },
+                {
+                    "id": "regulatory_readiness_markdown",
+                    "label": "Regulatory readiness report",
+                    "bundle_path": "regulatory_readiness_report.md",
+                    "present": True,
+                },
+                {
+                    "id": "autopilot_mission_csv",
+                    "label": "Autopilot mission CSV",
+                    "bundle_path": "autopilot_mission.csv",
+                    "present": True,
+                },
+                {
+                    "id": "mission_review_kml",
+                    "label": "Mission review KML",
+                    "bundle_path": "mission_review.kml",
+                    "present": True,
+                },
             ],
             "generated_artifacts": [
                 {
@@ -458,6 +643,20 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
                     "id": "constraint_audit_markdown",
                     "label": "Primary constraint-audit report",
                     "bundle_path": "inspection_constraint_audit.md",
+                    "present": True,
+                    "generated": True,
+                },
+                {
+                    "id": "bundle_summary",
+                    "label": "Evidence bundle summary",
+                    "bundle_path": "evidence_bundle_summary.md",
+                    "present": True,
+                    "generated": True,
+                },
+                {
+                    "id": "artifact_index",
+                    "label": "Evidence bundle artifact index",
+                    "bundle_path": "artifact_index.md",
                     "present": True,
                     "generated": True,
                 },
@@ -491,18 +690,248 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "Regulatory documentation" in html
     assert "Weather fallback" in html
     assert "Robustness / uncertainty" in html
-    assert "Missing evidence" in html
+    assert "Missing evidence count" in html
+    assert "Stale / missing / mismatched evidence" in html
     assert "Evidence warnings" in html
+    assert "warning-signal" in html
+    assert "documentation-signal" in html
+    assert ".verdict-badge" in html
+    assert ".signal.status-review" in html
+    assert "Read-only demo / discovery aid" in html
     assert "local review surface" in html
+    assert "source of truth" in html
     assert "decision support, not approval" in html
     assert "not approval, authorization, LAANC, legal advice, or operational clearance" in html
     assert "does not approve a mission" in html
     assert "documentation-only" in html
+    assert "No accounts, databases, auth, editing workflows" in html
     assert "Markdown, JSON, CSV, KML, and checksum artifacts remain accessible" in html
+    assert "Feasibility" in html
+    assert "Regulatory Readiness" in html
+    assert "Evidence Completeness" in html
+    assert "Trust / Defensibility" in html
+    assert "Warnings" in html
+    assert "Artifact Navigation" in html
+    assert "Operator Review Metadata" in html
+    assert "Open first" in html
+    assert "Start here for the verdict, next action, and 30-second mission read." in html
+    assert "Data Loading" in html
+    assert "outputs/bvlos_powerline_inspection/operator_evidence_bundle/manifest.json" in html
+    assert "Loading primary data from manifest.json" in html
+    assert "Loaded primary data from manifest.json" in html
+    assert "Using embedded fallback snapshot" in html
+    assert "Manifest JSON could not be loaded or parsed" in html
+    assert "read-only UI; no bundle mutation" in html
+    assert "no backend database required" in html
+    assert 'id="manifest-snapshot"' in html
+    assert "without replacing Markdown, JSON, CSV, KML, or checksum files" in html
+    assert "Review metadata is documentation-only and does not change release authority." in html
     assert 'src="flight_path.png"' in html
     assert 'href="operator_dashboard.md"' in html
+    assert 'href="inspection_constraint_audit.md"' in html
+    assert 'href="what_if_plan.md"' in html
+    assert 'href="regulatory_readiness_report.md"' in html
+    assert 'href="evidence_bundle_summary.md"' in html
+    assert 'href="artifact_index.md"' in html
     assert 'href="manifest.json"' in html
+    assert 'href="checksum_manifest.json"' in html
+    assert 'href="flight_path.png"' in html
+    assert 'href="autopilot_mission.csv"' in html
+    assert 'href="mission_review.kml"' in html
     assert "Demo reviewer" in html
+
+
+def test_operator_review_ui_marks_missing_artifacts_unavailable() -> None:
+    html = format_operator_review_ui_html(
+        {
+            "constraint_audit": {"status": "go"},
+            "artifacts": [
+                {
+                    "id": "what_if_plan_markdown",
+                    "label": "What-if planning report",
+                    "bundle_path": "what_if_plan.md",
+                    "present": False,
+                }
+            ],
+            "generated_artifacts": [
+                {
+                    "id": "operator_dashboard",
+                    "label": "Operator evidence dashboard",
+                    "bundle_path": "operator_dashboard.md",
+                    "present": True,
+                    "generated": True,
+                }
+            ],
+        }
+    )
+
+    assert "what_if_plan.md unavailable" in html
+    assert 'href="what_if_plan.md"' not in html
+    assert "No weather fallback status captured." in html
+    assert "No robustness / uncertainty status captured." in html
+    assert "n/a (0 / 0 fields)" in html
+
+
+def test_operator_review_ui_embeds_manifest_loader_and_snapshot() -> None:
+    manifest = _sample_operator_review_manifest()
+    html = format_operator_review_ui_html(manifest)
+    snapshot = _embedded_manifest_snapshot(html)
+
+    assert snapshot["constraint_audit"]["mission_id"] == "BVLOS Powerline Inspection Demo"
+    assert snapshot["trust_defensibility"]["weather_fallback_status"]["summary"] == (
+        "Fallback weather sample was used."
+    )
+    assert 'const manifestUrl = "manifest.json";' in html
+    assert 'fetch(manifestUrl, { cache: "no-store" })' in html
+    assert "Loaded primary data from manifest.json. No backend database is required." in html
+    assert "Using embedded fallback snapshot" in html
+
+
+def test_operator_review_ui_handles_missing_optional_fields() -> None:
+    html = format_operator_review_ui_html({"scenario_path": "examples/minimal_demo.yaml"})
+
+    assert "ORBITAL Operator Review UI" in html
+    assert _rendered_verdict_label(html) == "MODIFY"
+    assert "minimal_demo" in html
+    assert "UNKNOWN" in html
+    assert "not available" in html
+    assert "n/a (0 / 0 artifacts)" in html
+    assert "n/a (0 / 0 fields)" in html
+    assert "No weather fallback status captured." in html
+    assert "No robustness / uncertainty status captured." in html
+    assert "Verify scenario inputs before operational use." in html
+    assert "operator_dashboard.md unavailable" in html
+
+
+def test_operator_review_ui_includes_malformed_manifest_fallback_handling() -> None:
+    html = format_operator_review_ui_html(_sample_operator_review_manifest())
+
+    assert "manifest.json returned HTTP " in html
+    assert "await response.json()" in html
+    assert (
+        "Using embedded fallback snapshot because manifest.json could not be loaded or parsed"
+        in html
+    )
+    assert (
+        "Manifest JSON could not be loaded or parsed, and the embedded fallback snapshot "
+        "is unavailable"
+    ) in html
+    assert "fallbackManifest()" in html
+
+
+def test_operator_review_ui_renders_verdict_status_variants() -> None:
+    go_html = format_operator_review_ui_html(_sample_operator_review_manifest())
+    review_html = format_operator_review_ui_html(
+        _sample_operator_review_manifest(
+            regulatory_readiness={"readiness_state": "operator_action_required"}
+        )
+    )
+    modify_html = format_operator_review_ui_html(
+        _sample_operator_review_manifest(constraint_audit={"status": "modify"})
+    )
+
+    assert _rendered_verdict_label(go_html) == "GO"
+    assert 'class="verdict-badge status-good"' in go_html
+    assert "Proceed to normal operator review" in go_html
+    assert _rendered_verdict_label(review_html) == "REVIEW REQUIRED"
+    assert 'class="verdict-badge status-review"' in review_html
+    assert "Complete the listed review items" in review_html
+    assert _rendered_verdict_label(modify_html) == "MODIFY"
+    assert 'class="verdict-badge status-bad"' in modify_html
+    assert "Modify the route, assumptions, or constraints" in modify_html
+
+
+def test_operator_review_ui_resolves_artifact_links_and_escapes_paths() -> None:
+    html = format_operator_review_ui_html(
+        _sample_operator_review_manifest(
+            generated_artifacts=[
+                {
+                    "id": "operator_dashboard",
+                    "label": "Operator evidence dashboard",
+                    "bundle_path": "review files/operator dashboard.md",
+                    "present": True,
+                    "generated": True,
+                },
+                {
+                    "id": "manifest_json",
+                    "label": "Evidence bundle manifest",
+                    "bundle_path": "manifest.json",
+                    "present": True,
+                    "generated": True,
+                },
+            ],
+            artifacts=[
+                {
+                    "id": "flight_path_plot",
+                    "label": "Flight path plot",
+                    "bundle_path": "route preview/flight path.png",
+                    "present": True,
+                }
+            ],
+        )
+    )
+
+    assert 'href="review%20files/operator%20dashboard.md"' in html
+    assert 'src="route%20preview/flight%20path.png"' in html
+    assert 'href="route%20preview/flight%20path.png"' in html
+
+
+def test_operator_review_ui_unavailable_artifacts_are_not_valid_links() -> None:
+    html = format_operator_review_ui_html(
+        _sample_operator_review_manifest(
+            artifacts=[
+                {
+                    "id": "flight_path_plot",
+                    "label": "Flight path plot",
+                    "bundle_path": "flight_path.png",
+                    "present": False,
+                },
+                {
+                    "id": "what_if_plan_markdown",
+                    "label": "What-if planning report",
+                    "bundle_path": "what_if_plan.md",
+                    "present": False,
+                },
+            ],
+            generated_artifacts=[],
+        )
+    )
+
+    assert '<span class="unavailable">flight_path.png unavailable</span>' in html
+    assert '<span class="unavailable">what_if_plan.md unavailable</span>' in html
+    assert 'href="flight_path.png"' not in html
+    assert 'href="what_if_plan.md"' not in html
+    assert 'src="flight_path.png"' not in html
+    assert "Route preview unavailable" in html
+
+
+def test_operator_review_ui_trust_defensibility_fallbacks_are_visible() -> None:
+    html = format_operator_review_ui_html(
+        _sample_operator_review_manifest(trust_defensibility=None)
+    )
+
+    assert "Trust / Defensibility" in html
+    assert "No weather fallback status captured." in html
+    assert "No robustness / uncertainty status captured." in html
+    assert "Verify scenario inputs before operational use." in html
+    assert "0 missing artifact(s), 0 stale artifact(s)" in html
+    assert "Stale / missing / mismatched evidence" in html
+
+
+def test_operator_review_ui_generated_html_smoke() -> None:
+    html = format_operator_review_ui_html(_sample_operator_review_manifest())
+
+    assert html.startswith("<!doctype html>")
+    assert html.rstrip().endswith("</html>")
+    assert "<title>ORBITAL Operator Review</title>" in html
+    assert 'id="source-artifacts"' in html
+    assert 'id="artifact-navigation"' in html
+    assert 'id="trust-defensibility"' in html
+    assert ">undefined<" not in html
+    assert ">None<" not in html
+    assert _embedded_manifest_snapshot(html)["scenario_path"].endswith(
+        "bvlos_powerline_inspection_demo.yaml"
+    )
 
 
 def test_evidence_bundle_summary_highlights_reviewer_snapshot_and_flow() -> None:

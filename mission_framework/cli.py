@@ -17,7 +17,10 @@ from __future__ import annotations
 
 import argparse
 import csv
+import functools
+import http.server
 import json
+import socketserver
 import subprocess
 import sys
 from datetime import datetime
@@ -37,6 +40,11 @@ from mission_framework.scenario_validation import (
     validate_scenario_config,
 )
 from mission_framework.simulation.feasibility import format_feasibility_report
+
+DEFAULT_BVLOS_REVIEW_BUNDLE = (
+    Path("outputs") / "bvlos_powerline_inspection" / "operator_evidence_bundle"
+)
+OPERATOR_REVIEW_UI_FILE = "operator_review_ui.html"
 
 
 def _load_yaml(path: Path) -> Dict[str, Any]:
@@ -167,7 +175,7 @@ def _read_json_mapping(path: Path) -> Dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def _resolve_bundle_dir(bundle_path: str) -> Path:
+def _resolve_bundle_dir(bundle_path: str | Path) -> Path:
     path = Path(bundle_path).resolve()
     if path.is_file():
         return path.parent
@@ -198,6 +206,75 @@ def _bundle_open_first_path(bundle_dir: Path, manifest: Dict[str, Any]) -> Path:
         if entry.get("present") and entry.get("bundle_path"):
             return bundle_dir / str(entry["bundle_path"])
     return bundle_dir / "manifest.json"
+
+
+def _format_serve_ui_command(bundle_dir: Path) -> str:
+    return subprocess.list2cmdline(
+        ["python", "-m", "mission_framework.cli", "serve-ui", str(bundle_dir)]
+    )
+
+
+def _display_host(host: str) -> str:
+    if host in {"", "0.0.0.0", "::"}:
+        return "127.0.0.1"
+    return host
+
+
+class _ReusableThreadingTCPServer(socketserver.ThreadingTCPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+
+def _bind_static_bundle_server(
+    bundle_dir: Path, host: str, preferred_port: int, port_search: int
+) -> tuple[_ReusableThreadingTCPServer, int]:
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(bundle_dir))
+    candidates = (
+        [preferred_port]
+        if preferred_port == 0
+        else range(preferred_port, min(65536, preferred_port + max(1, port_search)))
+    )
+    last_error: Optional[OSError] = None
+    for port in candidates:
+        try:
+            server = _ReusableThreadingTCPServer((host, port), handler)
+        except OSError as exc:
+            last_error = exc
+            continue
+        return server, int(server.server_address[1])
+    message = f"Could not bind local review UI server on {host}:{preferred_port}"
+    if last_error is not None:
+        message = f"{message}: {last_error}"
+    raise OSError(message)
+
+
+def _print_review_ui_launch_details(
+    *,
+    bundle_dir: Path,
+    url: str,
+    open_first: Path,
+    manifest_available: bool,
+    dry_run: bool,
+) -> None:
+    print("=== ORBITAL Operator Review UI ===")
+    print(f"Bundle: {bundle_dir}")
+    print(f"First page to open: {OPERATOR_REVIEW_UI_FILE}")
+    print(f"Local review URL: {url}")
+    print(f"First evidence artifact: {open_first}")
+    print("Primary manifest data: manifest.json")
+    print(
+        "Manifest status: "
+        f"{'available' if manifest_available else 'missing or malformed; UI fallback may be used'}"
+    )
+    print("Serving static evidence bundle files only.")
+    print("No backend database, accounts, auth, editing workflow, or file copying required.")
+    print(
+        "Decision-support boundary: local review surface only; reviewing does not approve a mission."
+    )
+    if dry_run:
+        print("Dry run: server not started.")
+    else:
+        print("Press Ctrl+C to stop.")
 
 
 def _format_cli_value(value: Any, unit: str = "") -> str:
@@ -421,6 +498,96 @@ def _bundle_open_first_command(argv: Sequence[str]) -> int:
     print(f"Bundle: {bundle_dir}")
     print(f"Open first artifact: {open_first}")
     print(f"Why: {payload['reason']}")
+    return 0
+
+
+def _bundle_serve_ui_command(argv: Sequence[str]) -> int:
+    ap = argparse.ArgumentParser(
+        description=("Serve the generated ORBITAL operator review UI from a local evidence bundle.")
+    )
+    ap.add_argument(
+        "bundle",
+        nargs="?",
+        default=str(DEFAULT_BVLOS_REVIEW_BUNDLE),
+        help=(
+            "Evidence bundle directory or manifest.json path. Defaults to the generated "
+            "BVLOS demo bundle."
+        ),
+    )
+    ap.add_argument("--host", default="127.0.0.1", help="Local interface to bind.")
+    ap.add_argument("--port", type=int, default=8000, help="Preferred local port.")
+    ap.add_argument(
+        "--port-search",
+        type=int,
+        default=10,
+        help="Number of sequential ports to try when the preferred port is busy.",
+    )
+    ap.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print launch details without starting the blocking server.",
+    )
+    args = ap.parse_args(list(argv))
+
+    if args.port < 0 or args.port > 65535:
+        print("INVALID: --port must be between 0 and 65535.", file=sys.stderr)
+        return 2
+
+    bundle_dir = _resolve_bundle_dir(args.bundle)
+    ui_path = bundle_dir / OPERATOR_REVIEW_UI_FILE
+    manifest = _read_json_mapping(bundle_dir / "manifest.json")
+    open_first = _bundle_open_first_path(bundle_dir, manifest)
+
+    if not bundle_dir.is_dir():
+        print(f"INVALID: evidence bundle directory not found: {bundle_dir}", file=sys.stderr)
+        print(
+            "Generate the BVLOS demo first, for example: "
+            "python -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml "
+            "--outdir outputs",
+            file=sys.stderr,
+        )
+        return 2
+    if not ui_path.is_file():
+        print(f"INVALID: operator review UI not found: {ui_path}", file=sys.stderr)
+        print(
+            "Regenerate the evidence bundle so operator_review_ui.html is present.",
+            file=sys.stderr,
+        )
+        return 2
+
+    display_url = f"http://{_display_host(args.host)}:{args.port}/{OPERATOR_REVIEW_UI_FILE}"
+    if args.dry_run:
+        _print_review_ui_launch_details(
+            bundle_dir=bundle_dir,
+            url=display_url,
+            open_first=open_first,
+            manifest_available=bool(manifest),
+            dry_run=True,
+        )
+        return 0
+
+    try:
+        server, port = _bind_static_bundle_server(
+            bundle_dir, args.host, args.port, args.port_search
+        )
+    except OSError as exc:
+        print(f"INVALID: {exc}", file=sys.stderr)
+        return 2
+
+    display_url = f"http://{_display_host(args.host)}:{port}/{OPERATOR_REVIEW_UI_FILE}"
+    _print_review_ui_launch_details(
+        bundle_dir=bundle_dir,
+        url=display_url,
+        open_first=open_first,
+        manifest_available=bool(manifest),
+        dry_run=False,
+    )
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nStopped local operator review UI server.")
+    finally:
+        server.server_close()
     return 0
 
 
@@ -685,6 +852,9 @@ BUNDLE_COMMANDS = {
     "open-first": _bundle_open_first_command,
     "first-artifact": _bundle_open_first_command,
     "first": _bundle_open_first_command,
+    "serve-ui": _bundle_serve_ui_command,
+    "bundle-serve": _bundle_serve_ui_command,
+    "serve-bundle": _bundle_serve_ui_command,
     "bundle-verdict": _bundle_verdict_command,
     "mission-verdict": _bundle_verdict_command,
     "verdict": _bundle_verdict_command,
@@ -1174,6 +1344,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     artifact_index = outdir / "operator_evidence_bundle" / "artifact_index.md"
     if artifact_index.exists():
         print(f"Artifact index: {artifact_index}")
+    review_ui = outdir / "operator_evidence_bundle" / OPERATOR_REVIEW_UI_FILE
+    if review_ui.exists():
+        review_bundle = review_ui.parent
+        print(f"Local review UI: {review_ui}")
+        print(f"First review page: {OPERATOR_REVIEW_UI_FILE}")
+        print(f"Launch review UI: {_format_serve_ui_command(review_bundle)}")
     return 0
 
 

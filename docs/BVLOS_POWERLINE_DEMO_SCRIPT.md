@@ -24,7 +24,23 @@ For a text-only refresh without PNG plots:
 python -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml --outdir outputs --no-plots
 ```
 
-Primary files to open:
+Launch the lightweight local review UI:
+
+```bash
+python -m mission_framework.cli serve-ui
+```
+
+Open the printed `operator_review_ui.html` URL first. The command serves the
+generated BVLOS evidence bundle directly from
+`outputs/bvlos_powerline_inspection/operator_evidence_bundle` with Python's
+built-in static file server; there is no database, account setup, auth flow,
+build step, or file-copying step.
+
+Primary review surface:
+
+- `outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_review_ui.html`
+
+Primary source artifacts to open from the UI or filesystem:
 
 - `outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_dashboard.md`
 - `outputs/bvlos_powerline_inspection/inspection_constraint_audit.md`
@@ -35,41 +51,52 @@ Primary files to open:
 
 ## Demo Arc
 
-1. Start with the operator evidence dashboard, not the map.
-2. Drill into the constraint audit for baseline feasibility and top limiting constraint.
-3. Show what-if alternatives and before/after improvements.
-4. Show regulatory readiness as documentation-only decision support.
-5. Finish with the evidence bundle summary, index, and checksum manifest.
+1. Start with the local operator review UI, not the map.
+2. Use the first screen for the 30-second read: verdict, modeled status, risk,
+   top constraint, next action, readiness, completeness, weather fallback,
+   robustness, and evidence warnings.
+3. Open the Markdown dashboard and audit artifacts to show that the evidence
+   bundle remains the source of truth and the UI is read-only.
+4. Drill into the constraint audit for baseline feasibility and top limiting
+   constraint.
+5. Show what-if alternatives and before/after improvements.
+6. Show regulatory readiness as documentation-only decision support.
+7. Finish with the evidence bundle summary, index, and checksum manifest.
 
-## 0. Operator Evidence Dashboard
+## 0. Operator Review UI
 
-Open:
+Launch and open:
 
-```text
-outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_dashboard.md
+```bash
+python -m mission_framework.cli serve-ui
 ```
 
 Presenter script:
 
-> The first artifact an operator opens is the dashboard. It pulls the mission
-> status, mission risk, top limiting constraint, regulatory readiness, bundle
-> completeness, review fields, and artifact links into one page. This is where
-> a reviewer starts before drilling into the audit, what-if plan, regulatory
-> report, manifest, checksums, plot, CSV, and KML.
+> The first screen is a local, read-only review surface for the generated
+> evidence bundle. It pulls the mission verdict, modeled status, risk, top
+> limiting constraint, next operator action, regulatory readiness, evidence
+> completeness, regulatory documentation completeness, weather fallback,
+> robustness, missing evidence, and warning counts into one scannable view. It
+> is a demo and discovery aid, not a SaaS workflow and not an approval system.
 
 Sample output:
 
 ```text
-Mission status: GO
+Mission Verdict: REVIEW REQUIRED
+Modeled mission status: GO
 Mission risk: LOW
 Top limiting constraint: Wind / weather margin, PASS, margin 3.1 m/s
 Regulatory readiness: OPERATOR_ACTION_REQUIRED
-Bundle completeness: 100.0 %
-Operator decision: pending operator review
+Evidence completeness: 100.0 %
+Next operator action: Complete review items outside ORBITAL.
 ```
 
-Emphasize the dashboard boundary language: it is not approval, not
-authorization, not legal advice, not LAANC, and not operational clearance.
+Emphasize the UI boundary language: it is read-only, it does not approve a
+mission, and it does not replace approval, authorization, legal advice, LAANC,
+or operational clearance. Then use the Source Artifacts links to open the
+Markdown dashboard and supporting files. The Markdown, JSON, CSV, KML, and
+checksum artifacts remain the evidence bundle's source of truth.
 
 ## 1. Baseline Mission Feasibility
 
@@ -239,6 +266,7 @@ outputs/bvlos_powerline_inspection/operator_evidence_bundle/evidence_bundle_summ
 CLI shortcuts:
 
 ```bash
+python -m mission_framework.cli serve-ui
 python -m mission_framework.cli open-first outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli verdict outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli top outputs/bvlos_powerline_inspection/operator_evidence_bundle
@@ -252,7 +280,9 @@ Presenter script:
 > The end product is an evidence package an operator can review, store, and hand
 > to stakeholders. It is not just a plan. It is a bundle with the constraint
 > audit, regulatory readiness report, route artifacts, weather snapshot,
-> downstream planning exports, manifest, index, and checksums.
+> downstream planning exports, manifest, index, and checksums. The browser UI
+> helps reviewers discover and scan those artifacts, but it does not edit them
+> or replace them as the record.
 
 Sample output:
 
@@ -282,11 +312,15 @@ Use the screenshot set for polished README, demo, and Foundry-style visuals:
 docs/BVLOS_DEMO_SCREENSHOT_SET.md
 ```
 
-The operator dashboard should be the first captured artifact because it shows
-mission status, mission risk, the top limiting constraint, regulatory readiness,
-bundle completeness, and review metadata on one page. Then capture the
-constraint audit, what-if report, regulatory report, artifact index, and the
-generated visuals below.
+The operator review UI should be the first captured artifact because it shows
+the mission verdict, modeled mission status, mission risk, top limiting
+constraint, regulatory readiness, bundle completeness, weather fallback,
+robustness, warnings, and artifact links on one page. Then capture the Markdown
+operator dashboard, constraint audit, what-if report, regulatory report,
+artifact index, and the generated visuals below. Include focused UI screenshots
+for the dashboard, Source Artifacts navigation, and Trust / Defensibility
+section. The UI is read-only; the Markdown evidence bundle remains the source
+of truth.
 
 The generated mission overview is the strongest visual lead for README or demo
 docs:
@@ -302,10 +336,12 @@ For a compact README snippet, use:
 
 ```text
 10-second mission read
-Status: GO
+Mission verdict: REVIEW REQUIRED
+Modeled mission status: GO
 Mission risk: LOW
 Top limiting constraint: Wind / weather margin, PASS with margin 3.1 m/s
-Open first artifact: operator_evidence_bundle/operator_dashboard.md
+Open first page: operator_review_ui.html
+Open first source artifact: operator_dashboard.md
 Evidence bundle completeness: 100.0 %
 Regulatory readiness: OPERATOR_ACTION_REQUIRED, documentation-only
 ```

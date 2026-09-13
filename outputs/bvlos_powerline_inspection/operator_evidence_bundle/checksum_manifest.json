@@ -17,13 +17,13 @@
     },
     {
       "bundle_path": "evidence_bundle_summary.md",
-      "sha256": "26335c327280177ee48f5bf6436ddba2310958b2edf936099db2a25dac1ae6ca",
-      "size_bytes": 4560
+      "sha256": "631ce9cf08374d1389170a275d3dda89e0e3e09894c687e965fab8a83afd4561",
+      "size_bytes": 4512
     },
     {
       "bundle_path": "flight_path.png",
-      "sha256": "f3d6008bff56d69450532e4d166199c87591cdbe6201a4198031f64b717d56cc",
-      "size_bytes": 57037
+      "sha256": "3fe518d198cfb992ac5cf0cc4d2dc652a3caf56cabf725b78f477aa17cf1e77f",
+      "size_bytes": 57053
     },
     {
       "bundle_path": "flight_planning_exports.json",
@@ -37,18 +37,18 @@
     },
     {
       "bundle_path": "inspection_constraint_audit.json",
-      "sha256": "d21cc15f3257bab0c685f34bfb2db71ca6d5b9101e7e2f387b89bfd884cfaa77",
-      "size_bytes": 50801
+      "sha256": "a96657a945dc7db166b287f1c0da9f8b8b70526dfcd3938a784a9d7634ed527c",
+      "size_bytes": 50705
     },
     {
       "bundle_path": "inspection_constraint_audit.md",
-      "sha256": "952fc3443a897306efb6eb05fe64ececa42875f61da6b98d6907264cebde6cd6",
-      "size_bytes": 17270
+      "sha256": "e5237d4c8c3dd1712085b727f39c2d0f0ac639143fb38bf744fdaa12f7f9ed68",
+      "size_bytes": 17222
     },
     {
       "bundle_path": "manifest.json",
-      "sha256": "8fa81aaab7228e0849a5f7ebed9cb451023a3c8bf4885774b79165841fd4c80b",
-      "size_bytes": 36438
+      "sha256": "7cf5da701f7a46412bf05a30f1b0a22c5da958d9b214fb1461d26b1d8e613cfe",
+      "size_bytes": 36342
     },
     {
       "bundle_path": "mission_review.kml",
@@ -67,8 +67,8 @@
     },
     {
       "bundle_path": "operator_review_ui.html",
-      "sha256": "7586c70976502deb3245fec06e7db4e977b89c2b1460b0dc432bde711a6c4576",
-      "size_bytes": 8508
+      "sha256": "36ee8980efc08b5e12e91a254f7dc953a08c92973e48ec65e030f2f644547863",
+      "size_bytes": 74019
     },
     {
       "bundle_path": "plan.json",

@@ -942,9 +942,9 @@
       "robustness_cases_configured": 20,
       "robustness_cases_run": 20,
       "command": {
-        "display": "C:\\Users\\shill\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\python.exe -m mission_framework.cli examples\\bvlos_powerline_inspection_demo.yaml --outdir outputs",
+        "display": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\.venv\\Scripts\\python.exe -m mission_framework.cli examples\\bvlos_powerline_inspection_demo.yaml --outdir outputs",
         "argv": [
-          "C:\\Users\\shill\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\python.exe",
+          "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\.venv\\Scripts\\python.exe",
           "-m",
           "mission_framework.cli",
           "examples\\bvlos_powerline_inspection_demo.yaml",
@@ -952,7 +952,7 @@
           "outputs"
         ]
       },
-      "orbital_version": "1.0.11"
+      "orbital_version": "1.0.12"
     },
     "model_limitations": [
       {
