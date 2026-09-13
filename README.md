@@ -7,7 +7,7 @@
 Constraint audits, what-if planning, regulatory readiness, and evidence bundles
 for drone inspection operators.
 
-Current release: `v1.0.10`
+Current release: `v1.0.11`
 
 > ORBITAL tells inspection teams whether a BVLOS mission is feasible before
 > they send a crew.

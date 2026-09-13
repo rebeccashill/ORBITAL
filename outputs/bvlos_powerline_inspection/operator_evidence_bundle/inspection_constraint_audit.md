@@ -159,7 +159,7 @@ Mission risk: LOW
 - Robustness cases configured: 20
 - Robustness cases run: 20
 - Command: C:\Users\shill\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml --outdir outputs
-- ORBITAL version: 1.0.10
+- ORBITAL version: 1.0.11
 
 ### Model Limitations
 

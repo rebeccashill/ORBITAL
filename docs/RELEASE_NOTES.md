@@ -1,5 +1,44 @@
 # Release Notes
 
+## v1.0.11 - September 13, 2026
+
+### Changed
+
+- Polished the operator dashboard so the mission verdict, risk, top limiting
+  constraint, regulatory readiness, evidence completeness, weather fallback
+  status, robustness status, and evidence warning status are visible in the
+  first review surface.
+- Added trust and defensibility signals to the evidence workflow, including a
+  model assumptions summary, known limitations summary, sample-data / demo
+  scenario note, weather fallback status, uncertainty / robustness status, and
+  stale or missing evidence warning summary.
+- Improved the evidence bundle review flow with clearer README, artifact index,
+  review, archive, completeness, and checksum language.
+- Added short CLI demo commands and README examples for opening the first
+  artifact, printing the mission verdict, and printing the top limiting
+  constraint.
+- Tightened README positioning with a sharper one-liner, audience, problem,
+  generic-tool gap, why-now, and decision-support-not-approval sections.
+- Added a committed BVLOS screenshot gallery and refreshed the dashboard
+  screenshot to show the new trust signals.
+- Added `scripts/focused_secret_scan.py` and documented it as a required
+  release check before tagging or pushing.
+- Regenerated the BVLOS powerline inspection evidence bundle for the v1.0.11
+  dashboard and trust/defensibility workflow.
+- Bumped package and README release metadata to `v1.0.11`.
+
+### Verified
+
+- Added focused formatter and end-to-end coverage for the changed dashboard,
+  evidence summary, manifest trust metadata, and evidence bundle behavior.
+- Ran `python -m black --check .`.
+- Ran `python -m ruff check .`.
+- Ran `python -m mypy --python-version 3.12 mission_framework`.
+- Ran `python -m pytest`.
+- Ran `python run_all.py --fast --no-plots`.
+- Ran `python scripts/focused_secret_scan.py`.
+- Ran `python -m mission_framework.cli bundle-verify outputs\bvlos_powerline_inspection\operator_evidence_bundle`.
+
 ## v1.0.10 - September 12, 2026
 
 ### Changed

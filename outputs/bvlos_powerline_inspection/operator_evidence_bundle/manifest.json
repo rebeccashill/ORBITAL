@@ -63,8 +63,8 @@
     "notice": "Operator review fields are documentation only. They do not approve a flight, issue an authorization, provide legal advice, or replace pilot-in-command release authority."
   },
   "freshness": {
-    "generated_timestamp_utc": "2026-09-13T03:20:42Z",
-    "orbital_version": "1.0.10",
+    "generated_timestamp_utc": "2026-09-13T03:23:21Z",
+    "orbital_version": "1.0.11",
     "scenario_path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml",
     "scenario_hash": {
       "algorithm": "sha256",
@@ -484,8 +484,8 @@
       "freshness": {
         "source_sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8",
         "bundle_sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8",
-        "source_modified_utc": "2026-09-13T03:20:42Z",
-        "bundle_modified_utc": "2026-09-13T03:20:42Z",
+        "source_modified_utc": "2026-09-13T03:23:21Z",
+        "bundle_modified_utc": "2026-09-13T03:23:21Z",
         "source_size_bytes": 2542,
         "bundle_size_bytes": 2542,
         "stale_against_scenario": false
@@ -498,10 +498,10 @@
       "bundle_path": "inspection_constraint_audit.md",
       "present": true,
       "freshness": {
-        "source_sha256": "c5fb40b2393bda7d2d5fc20780d4e62ead6a46c1aa5dfe54ec16eccba4975070",
-        "bundle_sha256": "c5fb40b2393bda7d2d5fc20780d4e62ead6a46c1aa5dfe54ec16eccba4975070",
-        "source_modified_utc": "2026-09-13T03:20:40Z",
-        "bundle_modified_utc": "2026-09-13T03:20:40Z",
+        "source_sha256": "0eef0f78d1d1db9ab2dd4eca497f7afaa3464b92114dd2740fcd4b74df576b57",
+        "bundle_sha256": "0eef0f78d1d1db9ab2dd4eca497f7afaa3464b92114dd2740fcd4b74df576b57",
+        "source_modified_utc": "2026-09-13T03:23:18Z",
+        "bundle_modified_utc": "2026-09-13T03:23:18Z",
         "source_size_bytes": 17270,
         "bundle_size_bytes": 17270,
         "stale_against_scenario": false
@@ -514,10 +514,10 @@
       "bundle_path": "inspection_constraint_audit.json",
       "present": true,
       "freshness": {
-        "source_sha256": "d7bdd19b3f0f858285468fcf191b4ca6278f4b3a8df32fbcf84f8cddf350d95a",
-        "bundle_sha256": "d7bdd19b3f0f858285468fcf191b4ca6278f4b3a8df32fbcf84f8cddf350d95a",
-        "source_modified_utc": "2026-09-13T03:20:40Z",
-        "bundle_modified_utc": "2026-09-13T03:20:40Z",
+        "source_sha256": "95e7ca1d5373f3a12336ba26ddf2f708976a4fe1a85e2757073330614090e6d9",
+        "bundle_sha256": "95e7ca1d5373f3a12336ba26ddf2f708976a4fe1a85e2757073330614090e6d9",
+        "source_modified_utc": "2026-09-13T03:23:18Z",
+        "bundle_modified_utc": "2026-09-13T03:23:18Z",
         "source_size_bytes": 50799,
         "bundle_size_bytes": 50799,
         "stale_against_scenario": false
@@ -532,8 +532,8 @@
       "freshness": {
         "source_sha256": "30412182cf2fb3cb6c33726373a3dc422dfc61be911d15d82ac5eac75aa68551",
         "bundle_sha256": "30412182cf2fb3cb6c33726373a3dc422dfc61be911d15d82ac5eac75aa68551",
-        "source_modified_utc": "2026-09-13T03:20:40Z",
-        "bundle_modified_utc": "2026-09-13T03:20:40Z",
+        "source_modified_utc": "2026-09-13T03:23:18Z",
+        "bundle_modified_utc": "2026-09-13T03:23:18Z",
         "source_size_bytes": 11029,
         "bundle_size_bytes": 11029,
         "stale_against_scenario": false
@@ -548,8 +548,8 @@
       "freshness": {
         "source_sha256": "05d976e79a5f11e5803c025926ce4da533a9ebf7142bd0ec2e78912e387ff94c",
         "bundle_sha256": "05d976e79a5f11e5803c025926ce4da533a9ebf7142bd0ec2e78912e387ff94c",
-        "source_modified_utc": "2026-09-13T03:20:40Z",
-        "bundle_modified_utc": "2026-09-13T03:20:40Z",
+        "source_modified_utc": "2026-09-13T03:23:18Z",
+        "bundle_modified_utc": "2026-09-13T03:23:18Z",
         "source_size_bytes": 5777,
         "bundle_size_bytes": 5777,
         "stale_against_scenario": false
@@ -564,8 +564,8 @@
       "freshness": {
         "source_sha256": "163f7e2475d12eed2e8c8698d5ef1f13fcb7392a75a37fa9d5731cff05dd8685",
         "bundle_sha256": "163f7e2475d12eed2e8c8698d5ef1f13fcb7392a75a37fa9d5731cff05dd8685",
-        "source_modified_utc": "2026-09-13T03:20:41Z",
-        "bundle_modified_utc": "2026-09-13T03:20:41Z",
+        "source_modified_utc": "2026-09-13T03:23:20Z",
+        "bundle_modified_utc": "2026-09-13T03:23:20Z",
         "source_size_bytes": 2791,
         "bundle_size_bytes": 2791,
         "stale_against_scenario": false
@@ -580,8 +580,8 @@
       "freshness": {
         "source_sha256": "03e9abda42d20b469093fa8c1a90565323640556d1ad73de8005213031ffbc61",
         "bundle_sha256": "03e9abda42d20b469093fa8c1a90565323640556d1ad73de8005213031ffbc61",
-        "source_modified_utc": "2026-09-13T03:20:41Z",
-        "bundle_modified_utc": "2026-09-13T03:20:41Z",
+        "source_modified_utc": "2026-09-13T03:23:20Z",
+        "bundle_modified_utc": "2026-09-13T03:23:20Z",
         "source_size_bytes": 63529,
         "bundle_size_bytes": 63529,
         "stale_against_scenario": false
@@ -596,8 +596,8 @@
       "freshness": {
         "source_sha256": "e3cb2a7098d4fe8716cd7fcadab220bd74b4f525b5f645b5ff0f2231548e1d10",
         "bundle_sha256": "e3cb2a7098d4fe8716cd7fcadab220bd74b4f525b5f645b5ff0f2231548e1d10",
-        "source_modified_utc": "2026-09-13T03:20:42Z",
-        "bundle_modified_utc": "2026-09-13T03:20:42Z",
+        "source_modified_utc": "2026-09-13T03:23:21Z",
+        "bundle_modified_utc": "2026-09-13T03:23:21Z",
         "source_size_bytes": 1119,
         "bundle_size_bytes": 1119,
         "stale_against_scenario": false
@@ -612,8 +612,8 @@
       "freshness": {
         "source_sha256": "f3d6008bff56d69450532e4d166199c87591cdbe6201a4198031f64b717d56cc",
         "bundle_sha256": "f3d6008bff56d69450532e4d166199c87591cdbe6201a4198031f64b717d56cc",
-        "source_modified_utc": "2026-09-13T03:20:42Z",
-        "bundle_modified_utc": "2026-09-13T03:20:42Z",
+        "source_modified_utc": "2026-09-13T03:23:21Z",
+        "bundle_modified_utc": "2026-09-13T03:23:21Z",
         "source_size_bytes": 57037,
         "bundle_size_bytes": 57037,
         "stale_against_scenario": false
@@ -628,8 +628,8 @@
       "freshness": {
         "source_sha256": "9a1984b6ec530bf6836eb5facfed37ff102d5c19ccf8cf1128c0e6a4020dd82a",
         "bundle_sha256": "9a1984b6ec530bf6836eb5facfed37ff102d5c19ccf8cf1128c0e6a4020dd82a",
-        "source_modified_utc": "2026-09-13T03:20:42Z",
-        "bundle_modified_utc": "2026-09-13T03:20:42Z",
+        "source_modified_utc": "2026-09-13T03:23:21Z",
+        "bundle_modified_utc": "2026-09-13T03:23:21Z",
         "source_size_bytes": 295,
         "bundle_size_bytes": 295,
         "stale_against_scenario": false
@@ -644,8 +644,8 @@
       "freshness": {
         "source_sha256": "0a01dd2eccd98f400c243dbf18e62e193bc1ea0142a97124be084bcf49d80570",
         "bundle_sha256": "0a01dd2eccd98f400c243dbf18e62e193bc1ea0142a97124be084bcf49d80570",
-        "source_modified_utc": "2026-09-13T03:20:40Z",
-        "bundle_modified_utc": "2026-09-13T03:20:40Z",
+        "source_modified_utc": "2026-09-13T03:23:18Z",
+        "bundle_modified_utc": "2026-09-13T03:23:18Z",
         "source_size_bytes": 2127,
         "bundle_size_bytes": 2127,
         "stale_against_scenario": false
@@ -660,8 +660,8 @@
       "freshness": {
         "source_sha256": "7c005ca7f585d6dde21e595aa2ce5c8c1a9968fdec8b3b3df86675c1ace0c027",
         "bundle_sha256": "7c005ca7f585d6dde21e595aa2ce5c8c1a9968fdec8b3b3df86675c1ace0c027",
-        "source_modified_utc": "2026-09-13T03:20:42Z",
-        "bundle_modified_utc": "2026-09-13T03:20:42Z",
+        "source_modified_utc": "2026-09-13T03:23:21Z",
+        "bundle_modified_utc": "2026-09-13T03:23:21Z",
         "source_size_bytes": 623,
         "bundle_size_bytes": 623,
         "stale_against_scenario": false
@@ -676,8 +676,8 @@
       "freshness": {
         "source_sha256": "9189cd93204ddb505dba7b135a9bed0c81b745e8adfcb05d12ea9535bc46bd29",
         "bundle_sha256": "9189cd93204ddb505dba7b135a9bed0c81b745e8adfcb05d12ea9535bc46bd29",
-        "source_modified_utc": "2026-09-13T03:20:42Z",
-        "bundle_modified_utc": "2026-09-13T03:20:42Z",
+        "source_modified_utc": "2026-09-13T03:23:21Z",
+        "bundle_modified_utc": "2026-09-13T03:23:21Z",
         "source_size_bytes": 2086,
         "bundle_size_bytes": 2086,
         "stale_against_scenario": false
@@ -692,8 +692,8 @@
       "freshness": {
         "source_sha256": "6ac079f4b22f49eb17330ee67df7bcdd425f694eebe4262c0e8c50d126865179",
         "bundle_sha256": "6ac079f4b22f49eb17330ee67df7bcdd425f694eebe4262c0e8c50d126865179",
-        "source_modified_utc": "2026-09-13T03:20:42Z",
-        "bundle_modified_utc": "2026-09-13T03:20:42Z",
+        "source_modified_utc": "2026-09-13T03:23:21Z",
+        "bundle_modified_utc": "2026-09-13T03:23:21Z",
         "source_size_bytes": 3394,
         "bundle_size_bytes": 3394,
         "stale_against_scenario": false
@@ -708,8 +708,8 @@
       "freshness": {
         "source_sha256": "d0a6a63526594d75c219b912ef3280983bfe79c7c604d4ff19457101f15ba0d3",
         "bundle_sha256": "d0a6a63526594d75c219b912ef3280983bfe79c7c604d4ff19457101f15ba0d3",
-        "source_modified_utc": "2026-09-13T03:20:42Z",
-        "bundle_modified_utc": "2026-09-13T03:20:42Z",
+        "source_modified_utc": "2026-09-13T03:23:21Z",
+        "bundle_modified_utc": "2026-09-13T03:23:21Z",
         "source_size_bytes": 804,
         "bundle_size_bytes": 804,
         "stale_against_scenario": false
@@ -724,8 +724,8 @@
       "freshness": {
         "source_sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672",
         "bundle_sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672",
-        "source_modified_utc": "2026-09-13T03:20:42Z",
-        "bundle_modified_utc": "2026-09-13T03:20:42Z",
+        "source_modified_utc": "2026-09-13T03:23:21Z",
+        "bundle_modified_utc": "2026-09-13T03:23:21Z",
         "source_size_bytes": 291,
         "bundle_size_bytes": 291,
         "stale_against_scenario": false
