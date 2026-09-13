@@ -2446,6 +2446,207 @@ def _bundle_warnings(
     return warnings
 
 
+def _percent_text(value: Any) -> str:
+    number = _float_or_none(value)
+    if number is None:
+        return "n/a"
+    if 0.0 <= number <= 1.0:
+        number *= 100.0
+    return _fmt_value(number, "%")
+
+
+def _weather_fallback_summary(weather: Dict[str, Any]) -> Dict[str, Any]:
+    if not weather:
+        return {
+            "status": "UNKNOWN",
+            "summary": "No weather metadata was captured in the evidence bundle.",
+            "operator_action": "Confirm current field weather before release.",
+        }
+    fallback_used = weather.get("fallback_used")
+    if fallback_used is True:
+        status = "FALLBACK USED"
+        operator_action = "Refresh current field weather and keep the source with the bundle."
+    elif fallback_used is False:
+        status = "CONFIGURED SOURCE"
+        operator_action = "Confirm the weather timestamp is still valid for the operating window."
+    else:
+        status = "UNKNOWN"
+        operator_action = "Confirm weather source, timestamp, and field conditions before release."
+    source = weather.get("source") or "not provided"
+    timestamp = weather.get("timestamp_utc") or "not provided"
+    reason = weather.get("fallback_reason")
+    summary = f"{status}: source {source}, timestamp {timestamp}"
+    if reason:
+        summary = f"{summary}, reason {reason}"
+    return {
+        "status": status,
+        "summary": summary,
+        "source": source,
+        "provider": weather.get("provider") or "not provided",
+        "timestamp_utc": timestamp,
+        "fallback_used": fallback_used,
+        "fallback_reason": reason,
+        "live_fetch_enabled": weather.get("live_fetch_enabled"),
+        "applied_to_wind": weather.get("applied_to_wind"),
+        "operator_action": operator_action,
+    }
+
+
+def _robustness_summary(robustness: Dict[str, Any]) -> Dict[str, Any]:
+    cases = int(robustness.get("cases", 0) or 0) if robustness else 0
+    pass_rate = _float_or_none(robustness.get("hard_pass_rate")) if robustness else None
+    worst_margin = _float_or_none(robustness.get("worst_hard_margin_min")) if robustness else None
+    if cases <= 0:
+        return {
+            "status": "NOT RUN",
+            "summary": "No robustness cases were recorded for this bundle.",
+            "operator_action": "Run robustness cases when uncertainty or margin sensitivity matters.",
+            "cases": cases,
+            "hard_pass_rate": pass_rate,
+            "worst_hard_margin_min": worst_margin,
+        }
+    if pass_rate is None:
+        status = "REVIEW"
+    elif pass_rate >= 1.0:
+        status = "PASS"
+    elif pass_rate >= 0.95:
+        status = "REVIEW"
+    else:
+        status = "ELEVATED RISK"
+    return {
+        "status": status,
+        "summary": (
+            f"{status}: {cases} case(s), hard pass rate {_percent_text(pass_rate)}, "
+            f"worst hard margin {_fmt_value(worst_margin)}"
+        ),
+        "operator_action": (
+            "Review robustness assumptions and rerun with scenario-specific uncertainty "
+            "ranges if margins are close."
+        ),
+        "cases": cases,
+        "hard_pass_rate": pass_rate,
+        "worst_hard_margin_min": worst_margin,
+        "aggregation": robustness.get("robust_aggregation"),
+        "cvar_alpha": robustness.get("cvar_alpha"),
+    }
+
+
+def _sample_data_demo_note(
+    *,
+    scenario_path: Path,
+    mission_id: Any,
+    weather: Dict[str, Any],
+) -> Dict[str, Any]:
+    path_text = str(scenario_path).replace("\\", "/").lower()
+    mission_text = str(mission_id or "").lower()
+    source_text = str(weather.get("source") or "").lower()
+    is_demo = (
+        "demo" in path_text
+        or "sample" in path_text
+        or "demo" in mission_text
+        or "offline" in source_text
+        or "sample" in source_text
+    )
+    if is_demo:
+        note = (
+            "Sample data / demo scenario: this bundle uses demonstration planning inputs, "
+            "including offline or sample weather where configured. Replace route, weather, "
+            "regulatory, crew, and customer evidence before operational use."
+        )
+    else:
+        note = (
+            "Scenario data note: verify route, weather, regulatory, crew, and customer "
+            "evidence before operational use."
+        )
+    return {"is_demo_or_sample": is_demo, "note": note}
+
+
+def _trust_defensibility_summary(
+    *,
+    constraint_audit: Dict[str, Any],
+    manifest_entries: List[Dict[str, Any]],
+    missing_evidence: List[Dict[str, Any]],
+    bundle_warnings: List[Dict[str, Any]],
+    weather: Dict[str, Any],
+    scenario_path: Path,
+) -> Dict[str, Any]:
+    transparency = constraint_audit.get("model_transparency") or {}
+    assumptions = []
+    for item in transparency.get("assumptions_report", []) or []:
+        assumptions.append(
+            {
+                "id": item.get("id"),
+                "label": item.get("label") or item.get("id") or "Model assumption",
+                "assumption": item.get("assumption") or "not provided",
+                "operator_review_note": item.get("operator_review_note")
+                or "Review before release.",
+            }
+        )
+    limitations = []
+    for item in transparency.get("model_limitations", []) or []:
+        limitations.append(
+            {
+                "id": item.get("id"),
+                "applies": bool(item.get("applies")),
+                "limitation": item.get("limitation") or "not provided",
+            }
+        )
+    stale_artifacts = [
+        {
+            "id": entry.get("id"),
+            "label": entry.get("label"),
+            "bundle_path": entry.get("bundle_path"),
+        }
+        for entry in manifest_entries
+        if (entry.get("freshness") or {}).get("stale_against_scenario")
+    ]
+    missing_artifacts = [
+        {
+            "id": entry.get("id"),
+            "label": entry.get("label"),
+            "bundle_path": entry.get("bundle_path"),
+        }
+        for entry in manifest_entries
+        if not entry.get("present")
+    ]
+    warning_status = (
+        "CLEAR"
+        if not missing_artifacts
+        and not stale_artifacts
+        and not missing_evidence
+        and not bundle_warnings
+        else "REVIEW REQUIRED"
+    )
+    return {
+        "sample_data_demo_note": _sample_data_demo_note(
+            scenario_path=scenario_path,
+            mission_id=constraint_audit.get("mission_id"),
+            weather=weather,
+        ),
+        "model_assumptions_summary": assumptions,
+        "known_limitations_summary": limitations,
+        "weather_fallback_status": _weather_fallback_summary(weather),
+        "uncertainty_robustness_status": _robustness_summary(
+            constraint_audit.get("robustness") or {}
+        ),
+        "evidence_warning_summary": {
+            "status": warning_status,
+            "missing_artifacts": len(missing_artifacts),
+            "stale_artifacts": len(stale_artifacts),
+            "missing_evidence": len(missing_evidence),
+            "bundle_warnings": len(bundle_warnings),
+            "summary": (
+                f"{warning_status}: {len(missing_artifacts)} missing artifact(s), "
+                f"{len(stale_artifacts)} stale artifact(s), "
+                f"{len(missing_evidence)} missing evidence item(s), "
+                f"{len(bundle_warnings)} bundle warning(s)"
+            ),
+            "stale_artifacts_detail": stale_artifacts,
+            "missing_artifacts_detail": missing_artifacts,
+        },
+    }
+
+
 def _approval_checklist_summary(
     readiness_report: Dict[str, Any],
     *,
@@ -3787,6 +3988,12 @@ def _format_evidence_bundle_summary(manifest: Dict[str, Any]) -> str:
     missing_evidence = manifest.get("missing_evidence") or []
     freshness = manifest.get("freshness") or {}
     warnings = manifest.get("bundle_warnings") or []
+    trust = manifest.get("trust_defensibility") or {}
+    weather_status = trust.get("weather_fallback_status") or _weather_fallback_summary(
+        manifest.get("weather") or {}
+    )
+    robustness_status = trust.get("uncertainty_robustness_status") or _robustness_summary({})
+    evidence_warning_summary = trust.get("evidence_warning_summary") or {}
     open_first = _artifact_link("operator_dashboard.md", "operator_dashboard.md")
     completeness_text = (
         f"{_fmt_value(completeness.get('score'), '%')} "
@@ -3843,9 +4050,24 @@ def _format_evidence_bundle_summary(manifest: Dict[str, Any]) -> str:
         f"{regulatory_completeness_text} | Shows optional evidence fields captured for review. |",
         f"| Missing evidence | {len(missing_evidence)} item(s) | Review before accepting or archiving the bundle. |",
         f"| Bundle warnings | {len(warnings)} warning(s) | Resolve stale, missing, or mismatched artifacts. |",
+        f"| Weather fallback | {weather_status.get('status', 'UNKNOWN')} | {weather_status.get('operator_action', 'Confirm current field weather before release.')} |",
+        f"| Robustness | {robustness_status.get('summary', 'No robustness status captured.')} | Review uncertainty assumptions before release. |",
+        "| Evidence warnings | "
+        f"{evidence_warning_summary.get('summary', f'{len(warnings)} warning(s)')} | "
+        "Check stale, missing, or mismatched evidence before archiving. |",
         "| Review status | "
         f"{str(review.get('status', 'draft')).replace('_', ' ')} | Current operator review state. |",
         f"| Operator decision | {review.get('operator_decision') or 'not provided'} | Documentation-only review outcome. |",
+        "",
+        "## Trust And Defensibility",
+        "",
+        f"- Sample data / demo scenario note: "
+        f"{(trust.get('sample_data_demo_note') or {}).get('note') or 'Verify scenario inputs before operational use.'}",
+        f"- Weather fallback status: {weather_status.get('summary', 'not provided')}",
+        f"- Uncertainty / robustness status: "
+        f"{robustness_status.get('summary', 'not provided')}",
+        f"- Stale or missing evidence status: "
+        f"{evidence_warning_summary.get('summary', 'not provided')}",
         "",
         "## Start Here",
         "",
@@ -3982,6 +4204,18 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
     completeness = manifest.get("bundle_completeness") or {}
     regulatory_completeness = manifest.get("regulatory_documentation_completeness") or {}
     review = manifest.get("operator_review") or {}
+    trust = manifest.get("trust_defensibility") or {}
+    weather_status = trust.get("weather_fallback_status") or _weather_fallback_summary(
+        manifest.get("weather") or {}
+    )
+    robustness_status = trust.get("uncertainty_robustness_status") or _robustness_summary({})
+    evidence_warning_summary = trust.get("evidence_warning_summary") or {
+        "status": "CLEAR" if not manifest.get("bundle_warnings") else "REVIEW REQUIRED",
+        "summary": f"{len(manifest.get('bundle_warnings') or [])} bundle warning(s)",
+    }
+    sample_note = trust.get("sample_data_demo_note") or {}
+    assumptions_summary = trust.get("model_assumptions_summary") or []
+    limitations_summary = trust.get("known_limitations_summary") or []
     top = audit.get("top_limiting_constraint") or {}
     mission_status = str(audit.get("status") or "unknown").upper()
     mission_risk = str(audit.get("mission_risk") or "unknown").upper()
@@ -4100,6 +4334,9 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
         f"| Top limiting constraint | {_markdown_cell(top_summary)} |",
         f"| Regulatory readiness | {regulatory_state} |",
         f"| Evidence completeness | {bundle_completeness_text} |",
+        f"| Weather fallback status | {_markdown_cell(weather_status.get('status', 'UNKNOWN'))} |",
+        f"| Robustness status | {_markdown_cell(robustness_status.get('summary', 'not provided'))} |",
+        f"| Evidence warning status | {_markdown_cell(evidence_warning_summary.get('summary', 'not provided'))} |",
         f"| Missing evidence | {len(missing_evidence)} item(s) |",
         f"| Bundle warnings | {len(warnings)} warning(s) |",
         "",
@@ -4121,53 +4358,119 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
         f"| Evidence completeness | {bundle_completeness_text} | Confirm expected artifacts are present before sharing. |",
         "| Regulatory documentation completeness | "
         f"{regulatory_completeness_text} | Confirm optional evidence fields are documented where needed. |",
+        f"| Weather fallback | {_markdown_cell(weather_status.get('summary', 'not provided'))} | {_markdown_cell(weather_status.get('operator_action', 'Confirm current field weather before release.'))} |",
+        f"| Uncertainty / robustness | {_markdown_cell(robustness_status.get('summary', 'not provided'))} | {_markdown_cell(robustness_status.get('operator_action', 'Review uncertainty assumptions before release.'))} |",
+        f"| Evidence warnings | {_markdown_cell(evidence_warning_summary.get('summary', 'not provided'))} | Check stale, missing, or mismatched evidence before archiving. |",
         "",
-        "## Recommended Opening Sequence",
+        "## Trust And Defensibility",
         "",
-        "1. Start here with the dashboard.",
-        "2. Open the primary constraint audit for feasibility and top-limiter rationale.",
-        "3. Open the what-if plan to see how mission changes affect feasibility.",
-        "4. Open regulatory readiness to confirm documentation-only action items.",
-        "5. Open the manifest, artifact index, and checksum manifest before archiving.",
+        "### Sample Data / Demo Scenario Note",
         "",
-        "## Mission Snapshot",
+        sample_note.get("note") or "Verify scenario inputs before operational use.",
         "",
-        f"- Mission: {mission_name}",
-        f"- Mission verdict: {verdict['label']}",
-        f"- Mission status: {mission_status}",
-        f"- Mission risk: {mission_risk}",
-        f"- Top limiting constraint: {top_summary}",
-        f"- Regulatory readiness: {regulatory_state}",
-        f"- Bundle completeness: {bundle_completeness_text}",
-        f"- Regulatory documentation completeness: {regulatory_completeness_text}",
-        f"- Missing evidence items: {len(missing_evidence)}",
-        f"- Bundle warnings: {len(warnings)}",
+        "### Model Assumptions Summary",
         "",
-        "## Operator Review",
-        "",
-        f"Review status: {str(review.get('status', 'draft')).replace('_', ' ')}",
-        f"Reviewer name: {review.get('reviewer_name') or 'not provided'}",
-        f"Review timestamp UTC: {review.get('review_timestamp_utc') or 'not provided'}",
-        f"Operator decision: {review.get('operator_decision') or 'not provided'}",
-        f"Review notes: {review.get('review_notes') or 'not provided'}",
-        "",
-        "| Field | Value |",
-        "| --- | --- |",
-        f"| Review status | {str(review.get('status', 'draft')).replace('_', ' ')} |",
-        f"| Reviewer name | {review.get('reviewer_name') or 'not provided'} |",
-        "| Review timestamp UTC | " f"{review.get('review_timestamp_utc') or 'not provided'} |",
-        f"| Operator decision | {review.get('operator_decision') or 'not provided'} |",
-        f"| Review notes | {review.get('review_notes') or 'not provided'} |",
-        "",
-        "Review fields are documentation-only records; they do not change release " "authority.",
-        "",
-        "## Artifact Shortcuts",
-        "",
-        "### Feasibility And Decision Support",
-        "",
-        "| Artifact | Link |",
-        "| --- | --- |",
+        "| Area | Summary | Operator check |",
+        "| --- | --- | --- |",
     ]
+    for item in assumptions_summary[:6]:
+        lines.append(
+            "| {label} | {assumption} | {operator_check} |".format(
+                label=_markdown_cell(item.get("label")),
+                assumption=_markdown_cell(item.get("assumption")),
+                operator_check=_markdown_cell(item.get("operator_review_note")),
+            )
+        )
+    if not assumptions_summary:
+        lines.append(
+            "| not provided | No model assumptions were captured in the manifest. | "
+            "Open the constraint audit and verify scenario inputs before release. |"
+        )
+    lines.extend(
+        [
+            "",
+            "### Known Limitations Summary",
+            "",
+            "| Limitation | Applies | Operator meaning |",
+            "| --- | --- | --- |",
+        ]
+    )
+    for item in limitations_summary[:5]:
+        lines.append(
+            "| {label} | {applies} | {meaning} |".format(
+                label=_markdown_cell(item.get("id") or "model limitation"),
+                applies="yes" if item.get("applies") else "context",
+                meaning=_markdown_cell(item.get("limitation")),
+            )
+        )
+    if not limitations_summary:
+        lines.append(
+            "| not provided | unknown | Open the constraint audit and review model limitations. |"
+        )
+    lines.extend(
+        [
+            "",
+            "### Evidence Warnings At A Glance",
+            "",
+            "| Signal | Value |",
+            "| --- | --- |",
+            f"| Status | {_markdown_cell(evidence_warning_summary.get('status', 'UNKNOWN'))} |",
+            f"| Missing artifacts | {evidence_warning_summary.get('missing_artifacts', len(missing_evidence))} |",
+            f"| Stale artifacts | {evidence_warning_summary.get('stale_artifacts', 'not provided')} |",
+            f"| Missing evidence items | {evidence_warning_summary.get('missing_evidence', len(missing_evidence))} |",
+            f"| Bundle warnings | {evidence_warning_summary.get('bundle_warnings', len(warnings))} |",
+            "",
+            "Open `evidence_bundle_summary.md`, `manifest.json`, and "
+            "`checksum_manifest.json` when any warning count is nonzero.",
+            "",
+            "## Recommended Opening Sequence",
+            "",
+            "1. Start here with the dashboard.",
+            "2. Open the primary constraint audit for feasibility and top-limiter rationale.",
+            "3. Open the what-if plan to see how mission changes affect feasibility.",
+            "4. Open regulatory readiness to confirm documentation-only action items.",
+            "5. Open the manifest, artifact index, and checksum manifest before archiving.",
+            "",
+            "## Mission Snapshot",
+            "",
+            f"- Mission: {mission_name}",
+            f"- Mission verdict: {verdict['label']}",
+            f"- Mission status: {mission_status}",
+            f"- Mission risk: {mission_risk}",
+            f"- Top limiting constraint: {top_summary}",
+            f"- Regulatory readiness: {regulatory_state}",
+            f"- Bundle completeness: {bundle_completeness_text}",
+            f"- Regulatory documentation completeness: {regulatory_completeness_text}",
+            f"- Missing evidence items: {len(missing_evidence)}",
+            f"- Bundle warnings: {len(warnings)}",
+            "",
+            "## Operator Review",
+            "",
+            f"Review status: {str(review.get('status', 'draft')).replace('_', ' ')}",
+            f"Reviewer name: {review.get('reviewer_name') or 'not provided'}",
+            f"Review timestamp UTC: {review.get('review_timestamp_utc') or 'not provided'}",
+            f"Operator decision: {review.get('operator_decision') or 'not provided'}",
+            f"Review notes: {review.get('review_notes') or 'not provided'}",
+            "",
+            "| Field | Value |",
+            "| --- | --- |",
+            f"| Review status | {str(review.get('status', 'draft')).replace('_', ' ')} |",
+            f"| Reviewer name | {review.get('reviewer_name') or 'not provided'} |",
+            "| Review timestamp UTC | " f"{review.get('review_timestamp_utc') or 'not provided'} |",
+            f"| Operator decision | {review.get('operator_decision') or 'not provided'} |",
+            f"| Review notes | {review.get('review_notes') or 'not provided'} |",
+            "",
+            "Review fields are documentation-only records; they do not change release "
+            "authority.",
+            "",
+            "## Artifact Shortcuts",
+            "",
+            "### Feasibility And Decision Support",
+            "",
+            "| Artifact | Link |",
+            "| --- | --- |",
+        ]
+    )
     for label, link in primary_links:
         lines.append(f"| {_markdown_cell(label)} | {link} |")
 
@@ -4681,6 +4984,14 @@ def export_operator_evidence_bundle(
     )
     generated_artifacts = _generated_bundle_artifacts()
     constraint_audit = _read_json_mapping(out_dir / "inspection_constraint_audit.json")
+    trust_defensibility = _trust_defensibility_summary(
+        constraint_audit=constraint_audit,
+        manifest_entries=manifest_entries,
+        missing_evidence=missing_evidence,
+        bundle_warnings=bundle_warnings,
+        weather=weather,
+        scenario_path=scenario_path,
+    )
     freshness_metadata = {
         "generated_timestamp_utc": generated_timestamp_utc,
         "orbital_version": _orbital_version(),
@@ -4728,7 +5039,9 @@ def export_operator_evidence_bundle(
                 "provider": weather.get("provider"),
                 "timestamp_utc": weather.get("timestamp_utc"),
                 "fallback_used": weather.get("fallback_used"),
+                "fallback_reason": weather.get("fallback_reason"),
                 "live_fetch_enabled": weather.get("live_fetch_enabled"),
+                "applied_to_wind": weather.get("applied_to_wind"),
             }
             if weather
             else {}
@@ -4741,6 +5054,7 @@ def export_operator_evidence_bundle(
             "mission_risk": constraint_audit.get("mission_risk"),
             "top_limiting_constraint": constraint_audit.get("top_limiting_constraint"),
         },
+        "trust_defensibility": trust_defensibility,
         "regulatory_readiness": {
             "status": readiness_report.get("status"),
             "readiness_state": readiness_report.get("readiness_state"),

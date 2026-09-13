@@ -378,6 +378,7 @@ python experiments/run_seed_experiments.py --aircraft examples/aircraft_uav_demo
 ## Development Checks
 
 ```bash
+python scripts/focused_secret_scan.py
 python -m ruff check .
 python -m black --check .
 python -m mypy --python-version 3.12 mission_framework
@@ -385,6 +386,10 @@ python -m pytest
 python -m pytest --cov=mission_framework --cov-report=term-missing
 python run_all.py --fast --no-plots
 ```
+
+Run the focused secret scan before any release tag or push. It checks the
+release-facing README, docs, examples, and BVLOS demo outputs for high-signal
+credential patterns.
 
 ---
 

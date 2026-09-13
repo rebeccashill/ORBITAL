@@ -13,7 +13,7 @@ Reviewer: not provided
 Review timestamp UTC: not provided
 Operator decision: pending operator review
 Review notes: Demo bundle ready for operator review; final approval remains outside ORBITAL.
-Generated timestamp UTC: 2026-09-13T00:52:24Z
+Generated timestamp UTC: 2026-09-13T03:20:42Z
 ORBITAL version: 1.0.10
 Scenario SHA-256: 25b9be4703966407b17a062cdc2547d86ed65bf9636c8b1edb7790c0fcdb9238
 Command used: C:\Users\shill\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml --outdir outputs
@@ -30,8 +30,18 @@ ORBITAL evidence bundles are decision-support packages. Bundle completeness, rev
 | Regulatory documentation completeness | 100.0 % (8 / 8 fields documented) | Shows optional evidence fields captured for review. |
 | Missing evidence | 0 item(s) | Review before accepting or archiving the bundle. |
 | Bundle warnings | 0 warning(s) | Resolve stale, missing, or mismatched artifacts. |
+| Weather fallback | FALLBACK USED | Refresh current field weather and keep the source with the bundle. |
+| Robustness | PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139 | Review uncertainty assumptions before release. |
+| Evidence warnings | CLEAR: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 0 bundle warning(s) | Check stale, missing, or mismatched evidence before archiving. |
 | Review status | ready for review | Current operator review state. |
 | Operator decision | pending operator review | Documentation-only review outcome. |
+
+## Trust And Defensibility
+
+- Sample data / demo scenario note: Sample data / demo scenario: this bundle uses demonstration planning inputs, including offline or sample weather where configured. Replace route, weather, regulatory, crew, and customer evidence before operational use.
+- Weather fallback status: FALLBACK USED: source offline Open-Meteo-shaped sample, timestamp 2026-09-11T16:00:00Z, reason weather.use_live is false; using offline sample
+- Uncertainty / robustness status: PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139
+- Stale or missing evidence status: CLEAR: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 0 bundle warning(s)
 
 ## Start Here
 

@@ -553,6 +553,14 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "Top limiting constraint:" in operator_dashboard
     assert "Regulatory readiness: OPERATOR_ACTION_REQUIRED" in operator_dashboard
     assert "Bundle completeness: 100.0 %" in operator_dashboard
+    assert "Weather fallback status" in operator_dashboard
+    assert "Robustness status" in operator_dashboard
+    assert "No robustness cases were recorded" in operator_dashboard
+    assert "Trust And Defensibility" in operator_dashboard
+    assert "Sample Data / Demo Scenario Note" in operator_dashboard
+    assert "Model Assumptions Summary" in operator_dashboard
+    assert "Known Limitations Summary" in operator_dashboard
+    assert "Evidence Warnings At A Glance" in operator_dashboard
     assert "Operator decision: pending operator review" in operator_dashboard
     assert "Review notes: Demo bundle ready for operator review" in operator_dashboard
     assert "not approval, not authorization, not legal advice" in operator_dashboard
@@ -573,6 +581,9 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "Scenario SHA-256:" in bundle_summary
     assert "Command used: not provided" in bundle_summary
     assert "Bundle Warnings" in bundle_summary
+    assert "Trust And Defensibility" in bundle_summary
+    assert "Weather fallback status:" in bundle_summary
+    assert "Uncertainty / robustness status:" in bundle_summary
     assert "Operator review status: ready for review" in bundle_summary
     assert "Operator decision: pending operator review" in bundle_summary
     assert "Review notes: Demo bundle ready for operator review" in bundle_summary
@@ -584,6 +595,17 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "[inspection_constraint_audit.md](inspection_constraint_audit.md)" in artifact_index
     assert "[operator_dashboard.md](operator_dashboard.md)" in artifact_index
     assert "[what_if_plan.md](what_if_plan.md)" in artifact_index
+    bundle_manifest = _load_yaml(bundle_dir / "manifest.json")
+    assert bundle_manifest["trust_defensibility"]["weather_fallback_status"]["status"]
+    assert (
+        bundle_manifest["trust_defensibility"]["uncertainty_robustness_status"]["status"]
+        == "NOT RUN"
+    )
+    assert bundle_manifest["trust_defensibility"]["uncertainty_robustness_status"]["cases"] == 0
+    assert bundle_manifest["trust_defensibility"]["evidence_warning_summary"]["status"] == "CLEAR"
+    assert bundle_manifest["trust_defensibility"]["sample_data_demo_note"]["is_demo_or_sample"] is (
+        True
+    )
     checksum_manifest = _load_yaml(bundle_dir / "checksum_manifest.json")
     assert checksum_manifest["algorithm"] == "sha256"
     checksum_paths = {item["bundle_path"] for item in checksum_manifest["files"]}

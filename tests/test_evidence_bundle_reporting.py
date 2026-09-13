@@ -227,6 +227,54 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
             },
             "missing_evidence": [],
             "bundle_warnings": [],
+            "weather": {
+                "source": "offline Open-Meteo-shaped sample",
+                "timestamp_utc": "2026-09-12T18:00:00Z",
+                "fallback_used": True,
+                "fallback_reason": "weather.use_live is false",
+                "live_fetch_enabled": False,
+            },
+            "trust_defensibility": {
+                "sample_data_demo_note": {"note": "Sample data / demo scenario: demo inputs only."},
+                "weather_fallback_status": {
+                    "status": "FALLBACK USED",
+                    "summary": (
+                        "FALLBACK USED: source offline Open-Meteo-shaped sample, "
+                        "timestamp 2026-09-12T18:00:00Z"
+                    ),
+                    "operator_action": "Refresh current field weather.",
+                },
+                "uncertainty_robustness_status": {
+                    "status": "PASS",
+                    "summary": "PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.1",
+                    "operator_action": "Review robustness assumptions.",
+                },
+                "evidence_warning_summary": {
+                    "status": "CLEAR",
+                    "summary": (
+                        "CLEAR: 0 missing artifact(s), 0 stale artifact(s), "
+                        "0 missing evidence item(s), 0 bundle warning(s)"
+                    ),
+                    "missing_artifacts": 0,
+                    "stale_artifacts": 0,
+                    "missing_evidence": 0,
+                    "bundle_warnings": 0,
+                },
+                "model_assumptions_summary": [
+                    {
+                        "label": "Battery / energy model",
+                        "assumption": "Battery reserve comes from configured scenario inputs.",
+                        "operator_review_note": "Confirm battery health before release.",
+                    }
+                ],
+                "known_limitations_summary": [
+                    {
+                        "id": "offline_sample_weather",
+                        "applies": True,
+                        "limitation": "Weather may come from offline, fallback, or sample inputs.",
+                    }
+                ],
+            },
             "artifacts": [
                 {
                     "id": "constraint_audit_markdown",
@@ -291,8 +339,19 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
     assert "| Verdict | REVIEW REQUIRED |" in markdown
     assert "| Modeled mission status | GO |" in markdown
     assert "| Evidence completeness | 100.0 % (17 / 17 artifacts present) |" in markdown
+    assert "| Weather fallback status | FALLBACK USED |" in markdown
+    assert "Robustness status" in markdown
+    assert "PASS: 20 case(s), hard pass rate 100.0 %" in markdown
     assert "Decision-Support Boundary" in markdown
     assert "10-Second Mission Read" in markdown
+    assert "Trust And Defensibility" in markdown
+    assert "Sample Data / Demo Scenario Note" in markdown
+    assert "Model Assumptions Summary" in markdown
+    assert "Battery reserve comes from configured scenario inputs." in markdown
+    assert "Known Limitations Summary" in markdown
+    assert "offline_sample_weather" in markdown
+    assert "Evidence Warnings At A Glance" in markdown
+    assert "CLEAR: 0 missing artifact(s), 0 stale artifact(s)" in markdown
     assert "Mission status: GO" in markdown
     assert "Mission risk: LOW" in markdown
     assert "Top limiting constraint: Wind / weather margin, PASS, margin 3.1 m/s" in markdown
@@ -359,6 +418,31 @@ def test_evidence_bundle_summary_highlights_reviewer_snapshot_and_flow() -> None
                 "scenario_hash": {"value": "a" * 64},
                 "command": {"display": "python -m mission_framework.cli demo.yaml"},
             },
+            "weather": {
+                "source": "offline Open-Meteo-shaped sample",
+                "timestamp_utc": "2026-09-12T18:00:00Z",
+                "fallback_used": True,
+            },
+            "trust_defensibility": {
+                "sample_data_demo_note": {"note": "Sample data / demo scenario: demo inputs only."},
+                "weather_fallback_status": {
+                    "status": "FALLBACK USED",
+                    "summary": (
+                        "FALLBACK USED: source offline Open-Meteo-shaped sample, "
+                        "timestamp 2026-09-12T18:00:00Z"
+                    ),
+                    "operator_action": "Refresh current field weather.",
+                },
+                "uncertainty_robustness_status": {
+                    "summary": "PASS: 20 case(s), hard pass rate 100.0 %",
+                },
+                "evidence_warning_summary": {
+                    "summary": (
+                        "CLEAR: 0 missing artifact(s), 0 stale artifact(s), "
+                        "0 missing evidence item(s), 0 bundle warning(s)"
+                    ),
+                },
+            },
             "regulatory_evidence_status": {"missing": []},
             "approval_checklist": {"item_count": 9},
         }
@@ -372,6 +456,10 @@ def test_evidence_bundle_summary_highlights_reviewer_snapshot_and_flow() -> None
     assert "What-if plan: [what_if_plan.md](what_if_plan.md)" in markdown
     assert "Regulatory readiness report: [regulatory_readiness_report.md]" in markdown
     assert "ORBITAL version: 1.0.10" in markdown
+    assert "Trust And Defensibility" in markdown
+    assert "Sample data / demo scenario note" in markdown
+    assert "Weather fallback status: FALLBACK USED" in markdown
+    assert "Uncertainty / robustness status: PASS: 20 case(s)" in markdown
 
 
 def test_verify_evidence_bundle_checksums_detects_clean_and_tampered_bundle(tmp_path) -> None:
