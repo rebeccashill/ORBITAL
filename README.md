@@ -2,22 +2,82 @@
 
 [![CI](https://github.com/rebeccashill/ORBITAL/actions/workflows/ci.yml/badge.svg)](https://github.com/rebeccashill/ORBITAL/actions/workflows/ci.yml)
 
-**Operational Reusable Backend for Integrated Trajectory and Logistics**  
-Constraint-Aware BVLOS Inspection Mission Planning
+**BVLOS Inspection Feasibility And Evidence**
+
+Constraint audits, what-if planning, regulatory readiness, and evidence bundles
+for drone inspection operators.
 
 Current release: `v1.0.10`
 
-ORBITAL helps drone operators plan constraint-aware BVLOS inspection missions
-under battery, weather, geofence, and regulatory constraints. It is built on a
-domain-agnostic mission planning engine that can simulate candidate plans,
-evaluate hard and soft constraints, compare objective tradeoffs, and export
-auditable planning evidence before a crew commits field time.
+> ORBITAL tells inspection teams whether a BVLOS mission is feasible before
+> they send a crew.
 
-Current v1.0.10 focus: make ORBITAL's BVLOS evidence workflow faster to scan,
+ORBITAL is a preflight decision-support product for inspection operators who
+need more than a route on a map. It turns route, vehicle, weather, geofence, and
+regulatory metadata into a mission verdict, top limiting constraint, what-if
+comparisons, and a review-ready evidence bundle before field time is committed.
+
+Current product focus: make ORBITAL's BVLOS evidence workflow faster to scan,
 clearer to demo, and more operator-friendly before customer-discovery and
 Foundry-readiness work.
 
-ORBITAL supports:
+## Positioning
+
+### Who This Is For
+
+ORBITAL is for drone inspection teams planning BVLOS or BVLOS-adjacent missions
+where the cost of a weak preflight decision is high: utilities, pipeline
+operators, rail networks, renewable-energy owners, industrial sites, and
+emergency infrastructure teams.
+
+It is especially useful for UAS program managers, mission planners, remote
+pilots in command, visual observer coordinators, and analysts who need a clear
+mission review package before sending people and aircraft into the field.
+
+### What Problem This Solves
+
+Inspection teams need to know whether a planned mission is feasible,
+defensible, and ready for operator review. Generic planning outputs often leave
+that answer scattered across maps, weather notes, battery assumptions,
+authorization records, and informal judgment calls.
+
+ORBITAL pulls those pieces into one workflow: model the mission, audit the
+constraints, identify the top limiter, compare practical alternatives, document
+regulatory readiness, and package the evidence for review.
+
+### Why Generic Drone Tools Are Not Enough
+
+Route planners help draw paths. Fleet tools track assets. Autopilots execute
+commands. LAANC providers handle airspace authorization. GIS viewers show
+spatial context.
+
+ORBITAL fills the gap before dispatch: it asks whether the mission can be
+safely and defensibly flown under battery, wind, geofence, route-completion,
+turn-feasibility, regulatory, and evidence constraints. The output is not just
+a route; it is a constraint audit and operator evidence package.
+
+### Why ORBITAL Now
+
+Infrastructure operators are pushing drone programs toward longer, more
+repeatable, and more accountable inspection workflows. As missions become more
+complex, teams need preflight evidence that explains the decision, not only a
+mission file that executes it.
+
+ORBITAL is built for that moment: it turns feasibility, assumptions,
+limitations, regulatory documentation, and review metadata into artifacts an
+operator can inspect, archive, and defend.
+
+### Decision Support, Not Approval
+
+ORBITAL is not a drone autopilot, LAANC provider, live UTM service, legal
+advisor, or regulatory approval system. It does not replace a licensed remote
+pilot, operational safety review, waiver, authorization, or customer-specific
+compliance process.
+
+ORBITAL recommends and documents candidate plans. Human operators remain
+responsible for approvals, release decisions, and flight execution.
+
+### Current Capabilities
 
 - Drone and aircraft multi-waypoint optimization
 - Battery, wind, geofence, and route feasibility checks
@@ -28,33 +88,6 @@ ORBITAL supports:
 - Monte Carlo robustness analysis
 - Structured reporting with JSON and CSV exports
 - Automated visualization for flight paths, timelines, and performance plots
-
----
-
-## Product Focus
-
-The first customer wedge is BVLOS inspection planning for operators who need to
-know whether a mission is feasible before sending a crew into the field.
-
-Representative use cases:
-
-- Power line and utility corridor inspection
-- Pipeline and rail corridor inspection
-- Solar, wind, mining, and industrial-site inspection
-- Emergency infrastructure assessment after storms or outages
-
-One-liner:
-
-> ORBITAL helps drone inspection teams know whether a BVLOS mission is feasible
-> before sending a crew into the field.
-
-## Competitive Positioning
-
-Drone operators already have tools for airspace authorization, fleet management,
-mapping, photogrammetry, and flight execution. ORBITAL is positioned differently:
-it is a preflight feasibility and evidence layer. The goal is to show the
-operator which constraints are binding, whether the plan is likely to complete,
-and what tradeoffs are available before the mission is attempted.
 
 See [Differentiation](docs/DIFFERENTIATION.md) for the full positioning story,
 comparison table, and product-category boundary. See
@@ -91,13 +124,7 @@ ORBITAL's current differentiators are:
 - Evidence bundle summaries, artifact indexes, completeness scores, review
   status, and SHA-256 checksum manifests for operator audit packages
 
-## What ORBITAL Is Not
-
-ORBITAL is not a drone autopilot, LAANC provider, live UTM service, or regulatory
-approval system. It does not replace a licensed remote pilot, operational safety
-review, waiver, authorization, or customer-specific compliance process. ORBITAL
-recommends and documents candidate plans; human operators remain responsible for
-flight approval and execution.
+### Technical Depth
 
 The spacecraft module remains part of the repository as a demonstration of the
 same planning architecture applied to a harder scheduling domain. For the current
