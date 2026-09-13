@@ -13,7 +13,7 @@ Reviewer: not provided
 Review timestamp UTC: not provided
 Operator decision: pending operator review
 Review notes: Demo bundle ready for operator review; final approval remains outside ORBITAL.
-Generated timestamp UTC: 2026-09-12T21:21:08Z
+Generated timestamp UTC: 2026-09-13T00:43:42Z
 ORBITAL version: 1.0.10
 Scenario SHA-256: 25b9be4703966407b17a062cdc2547d86ed65bf9636c8b1edb7790c0fcdb9238
 Command used: C:\Users\shill\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml --outdir outputs

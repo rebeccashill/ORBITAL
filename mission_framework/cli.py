@@ -212,10 +212,25 @@ def _format_cli_value(value: Any, unit: str = "") -> str:
     return f"{text} {unit}".strip() if unit else text
 
 
+def _format_constraint_status(value: Any) -> str:
+    normalized = str(value or "unknown").strip().lower().replace(" ", "_").replace("-", "_")
+    labels = {
+        "pass": "PASS",
+        "passed": "PASS",
+        "warning": "WARNING",
+        "review": "WARNING",
+        "review_required": "WARNING",
+        "fail": "FAIL",
+        "failed": "FAIL",
+        "unknown": "UNKNOWN",
+    }
+    return labels.get(normalized, normalized.upper() if normalized else "UNKNOWN")
+
+
 def _format_top_constraint(top: Dict[str, Any]) -> str:
     margin = top.get("margin") or {}
     label = top.get("label") or "not available"
-    status = str(top.get("status") or "unknown").upper()
+    status = _format_constraint_status(top.get("status"))
     margin_text = _format_cli_value(margin.get("value"), str(margin.get("unit") or ""))
     return f"{label}: {status}, margin {margin_text}"
 
@@ -373,7 +388,7 @@ def _bundle_top_constraint_command(argv: Sequence[str]) -> int:
         f"{payload['recommended_operator_action'] or 'not provided'}"
     )
     if payload["selection_rationale"]:
-        print(f"Selection rationale: {payload['selection_rationale']}")
+        print(f"Selection detail: {payload['selection_rationale']}")
     return 0
 
 

@@ -35,7 +35,7 @@ from xml.sax.saxutils import escape
 import numpy as np
 
 from mission_framework.core.decision_variables import MutationConfig
-from mission_framework.core.json_utils import strict_json_dumps, write_strict_json
+from mission_framework.core.json_utils import write_strict_json
 from mission_framework.core.objective import ScoreConfig
 from mission_framework.core.planner import Planner, PlannerConfig
 from mission_framework.core.types import Plan, SimResult, Trajectory
@@ -1539,6 +1539,65 @@ def _markdown_cell(value: Any) -> str:
     return text.replace("|", "\\|").replace("\n", " ").strip()
 
 
+def _constraint_status_label(value: Any) -> str:
+    normalized = str(value or "unknown").strip().lower().replace(" ", "_").replace("-", "_")
+    labels = {
+        "pass": "PASS",
+        "passed": "PASS",
+        "warning": "WARNING",
+        "review": "WARNING",
+        "review_required": "WARNING",
+        "fail": "FAIL",
+        "failed": "FAIL",
+        "unknown": "UNKNOWN",
+    }
+    return labels.get(normalized, normalized.upper() if normalized else "UNKNOWN")
+
+
+def _operator_top_limiter_read(top: Dict[str, Any]) -> str:
+    if not top:
+        return "No top limiting constraint is available for this audit."
+    label = str(top.get("label") or "This constraint")
+    status = _constraint_status_label(top.get("status"))
+    if status == "PASS":
+        return (
+            f"{label} still passes, but it is the constraint group ORBITAL would "
+            "review first because it has the highest modeled risk score."
+        )
+    if status == "WARNING":
+        return (
+            f"{label} is still feasible, but it is close enough to the review "
+            "threshold that the operator should check assumptions before release."
+        )
+    if status == "FAIL":
+        return (
+            f"{label} is failing in the modeled mission; modify the plan before "
+            "treating this sortie as release-ready."
+        )
+    return f"{label} needs operator review because ORBITAL could not classify it cleanly."
+
+
+def _observed_evidence_summary(observed: Dict[str, Any]) -> str:
+    if not observed:
+        return "not provided"
+    items: List[str] = []
+    for key, value in observed.items():
+        if len(items) >= 5:
+            break
+        label = str(key).replace("_", " ")
+        if isinstance(value, bool):
+            rendered = "yes" if value else "no"
+        elif isinstance(value, (int, float)):
+            rendered = _fmt_value(value)
+        else:
+            rendered = str(value)
+        items.append(f"{label}: {rendered}")
+    remaining = max(0, len(observed) - len(items))
+    if remaining:
+        items.append(f"{remaining} more fields in the JSON audit")
+    return "; ".join(items)
+
+
 def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
     """Render the drone inspection audit payload as Markdown."""
     top = audit.get("top_limiting_constraint") or {}
@@ -1582,7 +1641,7 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
                 if not top
                 else "{label}, {status}, margin {margin} {unit}".format(
                     label=top.get("label", "unknown"),
-                    status=str(top.get("status", "unknown")).upper(),
+                    status=_constraint_status_label(top.get("status")),
                     margin=_fmt_value((top.get("margin") or {}).get("value")),
                     unit=(top.get("margin") or {}).get("unit", ""),
                 )
@@ -1605,16 +1664,43 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
             (
                 "- n/a"
                 if not top
-                else "- {label}: {status} with margin {margin} {unit}".format(
+                else "- Constraint: {label}\n- Status: {status}\n- Margin: {margin} {unit}\n- Plain-English read: {read}\n- Why this matters: {why}\n- Operator action: {action}".format(
                     label=top.get("label", "unknown"),
-                    status=str(top.get("status", "unknown")).upper(),
+                    status=_constraint_status_label(top.get("status")),
                     margin=_fmt_value((top.get("margin") or {}).get("value")),
                     unit=(top.get("margin") or {}).get("unit", ""),
+                    read=_operator_top_limiter_read(top),
+                    why=top.get("why_this_matters_to_operator") or "not provided",
+                    action=top.get("recommended_operator_action")
+                    or top.get("recommendation")
+                    or "Review mission plan.",
                 )
             ),
-            "- Selection rationale: "
+            "- Selection detail: "
             f"{top_selection.get('explanation') or 'No selection rationale available.'}",
             "- Selection method: " f"{top_selection.get('method') or 'not provided'}",
+            "",
+            "## Plain-English Constraint Guide",
+            "",
+            "| Constraint group | Plain-English read | Operator action |",
+            "| --- | --- | --- |",
+        ]
+    )
+    for check in constraint_groups:
+        lines.append(
+            "| {group} | {read} | {action} |".format(
+                group=_markdown_cell(check.get("category_label") or check.get("label")),
+                read=_markdown_cell(check.get("plain_english") or "Review this constraint."),
+                action=_markdown_cell(
+                    check.get("recommended_operator_action")
+                    or check.get("recommendation")
+                    or "Review mission plan."
+                ),
+            )
+        )
+
+    lines.extend(
+        [
             "",
             "## Constraint Group Summary",
             "",
@@ -1628,7 +1714,7 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
         lines.append(
             "| {group} | {status} | {margin} | {checked} | {why} | {action} |".format(
                 group=_markdown_cell(check.get("category_label") or check.get("label")),
-                status=_markdown_cell(str(check.get("status", "unknown")).upper()),
+                status=_markdown_cell(_constraint_status_label(check.get("status"))),
                 margin=_markdown_cell(margin_text),
                 checked=_markdown_cell(check.get("plain_english")),
                 why=_markdown_cell(check.get("why_this_matters_to_operator")),
@@ -1779,7 +1865,7 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
             )
         )
 
-    lines.extend(["", "## Full Constraint Audit", ""])
+    lines.extend(["", "## Detailed Operator Review", ""])
     for check in constraint_groups:
         margin = check.get("margin") or {}
         observed = check.get("observed") or {}
@@ -1791,13 +1877,13 @@ def format_inspection_constraint_audit(audit: Dict[str, Any]) -> str:
                 f"- What this checks: {check.get('plain_english') or 'Not provided.'}",
                 "- Why this matters to an operator: "
                 f"{check.get('why_this_matters_to_operator') or 'Not provided.'}",
-                f"- Status: {str(check.get('status', 'unknown')).upper()}",
+                f"- Status: {_constraint_status_label(check.get('status'))}",
                 f"- Status meaning: {check.get('status_meaning') or 'Not provided.'}",
                 f"- Margin: {_fmt_value(margin.get('value'))} {margin.get('unit', '')}",
                 f"- Warning margin: "
                 f"{_fmt_value((check.get('warning_margin') or {}).get('value'))} "
                 f"{(check.get('warning_margin') or {}).get('unit', '')}",
-                f"- Observed: `{strict_json_dumps(observed, sort_keys=True)}`",
+                f"- Observed evidence: {_observed_evidence_summary(observed)}",
                 "- Recommended operator action: "
                 f"{check.get('recommended_operator_action') or check.get('recommendation') or 'Review mission plan.'}",
                 "",
@@ -3029,6 +3115,35 @@ def _fmt_improvement_value(value: Any, unit: str = "") -> str:
     return f"{value}{suffix}"
 
 
+def _signed_delta_text(after: Any, before: Any, unit: str) -> Optional[str]:
+    if after is None or before is None:
+        return None
+    try:
+        delta = float(after) - float(before)
+    except (TypeError, ValueError):
+        return None
+    if abs(delta) < 1e-9:
+        return f"no change {unit}".strip()
+    sign = "+" if delta > 0 else ""
+    return f"{sign}{_fmt_value(delta, unit)}"
+
+
+def _what_if_change_sentence(variant: Dict[str, Any], baseline: Dict[str, Any]) -> str:
+    parts = []
+    for label, key, unit in (
+        ("time", "estimated_time_s", "s"),
+        ("energy", "energy_used_Wh", "Wh"),
+        ("battery reserve", "battery_reserve_margin_Wh", "Wh"),
+        ("wind margin", "wind_weather_margin_mps", "m/s"),
+    ):
+        delta = _signed_delta_text(variant.get(key), baseline.get(key), unit)
+        if delta and not delta.startswith("no change"):
+            parts.append(f"{label} {delta}")
+    if not parts:
+        return "No material modeled change versus baseline."
+    return "Changed " + ", ".join(parts[:3]) + "."
+
+
 def _dedupe_risk_drivers(drivers: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
     by_id: Dict[str, Dict[str, Any]] = {}
     for driver in drivers:
@@ -3404,18 +3519,19 @@ def format_what_if_plan(payload: Dict[str, Any]) -> str:
             "",
             "## Scenario Comparisons",
             "",
-            "| Scenario | Risk | Feasible | Time (s) | Delta Time | Energy (Wh) | "
+            "| Scenario | What changed | Risk | Feasible | Time (s) | Delta Time | Energy (Wh) | "
             "Battery Margin | Top Limiter |",
-            "| --- | --- | --- | ---: | ---: | ---: | ---: | --- |",
+            "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |",
         ]
     )
     for variant in payload.get("variants", []) or []:
         top = variant.get("top_limiting_constraint") or {}
         delta = variant.get("delta_vs_baseline") or {}
         lines.append(
-            "| {label} | {risk} | {feasible} | {time} | {delta_time} | {energy} | "
+            "| {label} | {change} | {risk} | {feasible} | {time} | {delta_time} | {energy} | "
             "{battery} | {limiter} |".format(
-                label=variant.get("label", "Scenario"),
+                label=_markdown_cell(variant.get("label", "Scenario")),
+                change=_markdown_cell(_what_if_change_sentence(variant, base)),
                 risk=str(variant.get("mission_risk", "unknown")).upper(),
                 feasible="yes" if variant.get("feasible") else "no",
                 time=_fmt_value(variant.get("estimated_time_s")),
@@ -3814,8 +3930,50 @@ def _top_constraint_summary(top: Dict[str, Any]) -> str:
     margin_value = margin.get("value")
     margin_unit = margin.get("unit") or ""
     label = top.get("label") or top.get("id") or "Constraint"
-    status = str(top.get("status", "unknown")).upper()
+    status = _constraint_status_label(top.get("status"))
     return f"{label}, {status}, margin {_fmt_value(margin_value, margin_unit)}"
+
+
+def _dashboard_verdict(
+    *,
+    mission_status: str,
+    regulatory_state: str,
+    missing_evidence_count: int,
+    warning_count: int,
+) -> Dict[str, str]:
+    if mission_status != "GO":
+        return {
+            "label": "MODIFY",
+            "meaning": "Modeled constraints do not support release as configured.",
+            "next_action": (
+                "Modify the route, assumptions, or constraints, then regenerate the "
+                "evidence bundle before operator review."
+            ),
+        }
+    if (
+        regulatory_state == "OPERATOR_ACTION_REQUIRED"
+        or missing_evidence_count > 0
+        or warning_count > 0
+    ):
+        return {
+            "label": "REVIEW REQUIRED",
+            "meaning": (
+                "Modeled feasibility is acceptable, but operator, regulatory, or "
+                "evidence review items remain."
+            ),
+            "next_action": (
+                "Complete the listed review items, confirm regulatory readiness outside "
+                "ORBITAL, then record the operator decision."
+            ),
+        }
+    return {
+        "label": "GO",
+        "meaning": "Modeled feasibility and bundle evidence are ready for normal signoff.",
+        "next_action": (
+            "Proceed to normal operator signoff, verify checksums, and archive the "
+            "evidence bundle."
+        ),
+    }
 
 
 def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
@@ -3840,6 +3998,17 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
         f"{_fmt_value(regulatory_completeness.get('score'), '%')} "
         f"({regulatory_completeness.get('documented_fields', 0)} / "
         f"{regulatory_completeness.get('total_fields', 0)} fields documented)"
+    )
+    missing_evidence = manifest.get("missing_evidence") or []
+    warnings = manifest.get("bundle_warnings") or []
+    verdict = _dashboard_verdict(
+        mission_status=mission_status,
+        regulatory_state=regulatory_state,
+        missing_evidence_count=len(missing_evidence),
+        warning_count=len(warnings),
+    )
+    mission_name = (
+        audit.get("mission_id") or Path(str(manifest.get("scenario_path", "scenario.yaml"))).stem
     )
 
     primary_links = [
@@ -3911,37 +4080,47 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
         ),
     ]
 
-    missing_evidence = manifest.get("missing_evidence") or []
-    warnings = manifest.get("bundle_warnings") or []
     lines = [
         "# ORBITAL Operator Evidence Dashboard",
         "",
-        "First artifact to open for operator review. Use this page for the fast "
-        "mission read, then drill into the linked evidence artifacts.",
+        f"## Mission Verdict: {verdict['label']}",
         "",
-        "ORBITAL provides decision support only. This dashboard is not approval, "
-        "not authorization, not legal advice, not LAANC, and not operational clearance. "
-        "The pilot-in-command and operator retain final responsibility for release.",
+        verdict["meaning"],
+        "",
+        f"**Next action:** {verdict['next_action']}",
+        "",
+        "## Mission Card",
+        "",
+        "| Field | Value |",
+        "| --- | --- |",
+        f"| Mission | {_markdown_cell(mission_name)} |",
+        f"| Verdict | {verdict['label']} |",
+        f"| Modeled mission status | {mission_status} |",
+        f"| Mission risk | {mission_risk} |",
+        f"| Top limiting constraint | {_markdown_cell(top_summary)} |",
+        f"| Regulatory readiness | {regulatory_state} |",
+        f"| Evidence completeness | {bundle_completeness_text} |",
+        f"| Missing evidence | {len(missing_evidence)} item(s) |",
+        f"| Bundle warnings | {len(warnings)} warning(s) |",
+        "",
+        "## Decision-Support Boundary",
+        "",
+        "ORBITAL provides decision support only: not approval, not authorization, "
+        "not legal advice, not LAANC, and not operational clearance. The "
+        "pilot-in-command and operator retain final responsibility for release.",
         "",
         "## 10-Second Mission Read",
         "",
-        f"**Mission status: {mission_status}**",
-        f"**Mission risk: {mission_risk}**",
-        f"**Top limiting constraint: {top_summary}**",
-        f"**Regulatory readiness: {regulatory_state}**",
-        f"**Bundle completeness: {bundle_completeness_text}**",
-        "",
-        "| Signal | Current value | What to do next |",
+        "| Signal | Current value | Operator cue |",
         "| --- | --- | --- |",
-        f"| Mission status | {mission_status} | Use as the first feasibility read from the constraint audit. |",
+        f"| Verdict | {verdict['label']} | {verdict['next_action']} |",
+        f"| Modeled mission status | {mission_status} | Use as the first feasibility read from the constraint audit. |",
         f"| Mission risk | {mission_risk} | Treat higher risk as a cue for additional operator review. |",
         f"| Top limiting constraint | {_markdown_cell(top_summary)} | Review this constraint before changing or releasing the mission. |",
         f"| Regulatory readiness | {regulatory_state} | Confirm required approvals, waivers, roles, and restrictions outside ORBITAL. |",
-        f"| Bundle completeness | {bundle_completeness_text} | Confirm expected artifacts are present before sharing. |",
+        f"| Evidence completeness | {bundle_completeness_text} | Confirm expected artifacts are present before sharing. |",
         "| Regulatory documentation completeness | "
         f"{regulatory_completeness_text} | Confirm optional evidence fields are documented where needed. |",
-        f"| Missing evidence | {len(missing_evidence)} item(s) | Resolve or document before reviewer acceptance. |",
-        f"| Bundle warnings | {len(warnings)} warning(s) | Investigate stale, missing, or mismatched artifacts. |",
         "",
         "## Recommended Opening Sequence",
         "",
@@ -3953,7 +4132,8 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
         "",
         "## Mission Snapshot",
         "",
-        f"- Mission: {audit.get('mission_id') or Path(str(manifest.get('scenario_path', 'scenario.yaml'))).stem}",
+        f"- Mission: {mission_name}",
+        f"- Mission verdict: {verdict['label']}",
         f"- Mission status: {mission_status}",
         f"- Mission risk: {mission_risk}",
         f"- Top limiting constraint: {top_summary}",
@@ -3979,8 +4159,7 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
         f"| Operator decision | {review.get('operator_decision') or 'not provided'} |",
         f"| Review notes | {review.get('review_notes') or 'not provided'} |",
         "",
-        "Review fields are documentation-only. They do not approve a flight, issue an "
-        "authorization, provide legal advice, or replace pilot-in-command release authority.",
+        "Review fields are documentation-only records; they do not change release " "authority.",
         "",
         "## Artifact Shortcuts",
         "",
@@ -4032,9 +4211,9 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
             "",
             "## Next Operator Actions",
             "",
+            f"- {verdict['next_action']}",
             "- Review the primary constraint audit and top limiting constraint.",
             "- Review the what-if plan if any constraint margin is tight.",
-            "- Confirm regulatory readiness outside ORBITAL before any operation.",
             "- Verify bundle completeness, manifest, and checksum manifest before archiving.",
             "- Record reviewer, timestamp, notes, and operator decision in scenario metadata "
             "when appropriate.",

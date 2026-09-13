@@ -25,9 +25,24 @@ Mission risk: LOW
 
 ## Top Limiting Constraint
 
-- Wind / weather margin: PASS with margin 3.1 m/s
-- Selection rationale: Wind / weather margin was selected because it had the highest risk_points value (14.5) among 5 audited constraint groups. Its margin was 3.1 m/s against a warning threshold of 2.0 m/s.
+- Constraint: Wind / weather margin
+- Status: PASS
+- Margin: 3.1 m/s
+- Plain-English read: Wind / weather margin still passes, but it is the constraint group ORBITAL would review first because it has the highest modeled risk score.
+- Why this matters: Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.
+- Operator action: Confirm launch-time weather against operator minimums and keep the forecast source with the mission package.
+- Selection detail: Wind / weather margin was selected because it had the highest risk_points value (14.5) among 5 audited constraint groups. Its margin was 3.1 m/s against a warning threshold of 2.0 m/s.
 - Selection method: risk_points_descending
+
+## Plain-English Constraint Guide
+
+| Constraint group | Plain-English read | Operator action |
+| --- | --- | --- |
+| Energy / battery reserve | Checks whether the planned sortie lands with the operator-required battery reserve still available. | Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch. |
+| Weather / wind margin | Checks whether modeled or forecast wind stays below the configured safe operating limit. | Confirm launch-time weather against operator minimums and keep the forecast source with the mission package. |
+| Geofence / no-fly-zone clearance | Checks whether the route remains outside no-fly zones and preserves the configured stand-off buffer. | Keep the geofence file and route review in the evidence bundle, then confirm site boundaries before flight. |
+| Route completion | Checks whether the candidate plan reaches all required inspection points. | Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy. |
+| Turn / bank feasibility | Checks whether planned turns stay within configured bank-angle and turn-rate capability. | Keep the planned speed and turn assumptions, then verify they match the aircraft operating envelope. |
 
 ## Constraint Group Summary
 
@@ -195,7 +210,7 @@ Mission risk: LOW
 - Battery reserve margin: PASS, margin 132.1 Wh, risk points 11.1
 - Route completion status: PASS, margin 1.0 completion, risk points 10.0
 
-## Full Constraint Audit
+## Detailed Operator Review
 
 ### Battery reserve margin
 
@@ -206,7 +221,7 @@ Mission risk: LOW
 - Status meaning: Modeled margin is above the configured review threshold.
 - Margin: 132.1 Wh
 - Warning margin: 70.0 Wh
-- Observed: `{"final_battery_Wh": 832.0599780312521, "required_reserve_Wh": 700.0}`
+- Observed evidence: final battery Wh: 832.1; required reserve Wh: 700.0
 - Recommended operator action: Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch.
 
 ### Wind / weather margin
@@ -218,7 +233,7 @@ Mission risk: LOW
 - Status meaning: Modeled margin is above the configured review threshold.
 - Margin: 3.1 m/s
 - Warning margin: 2.0 m/s
-- Observed: `{"max_horizontal_wind_mps": 5.9, "max_safe_wind_mps": 9.0, "precipitation_mm": 0.0, "temperature_C": 18.5, "visibility_m": 16000.0, "weather_audit_wind_mps": 5.9, "weather_fallback_used": true, "weather_source": "offline Open-Meteo-shaped sample", "weather_timestamp_utc": "2026-09-11T16:00:00Z", "weather_wind_direction_deg": 285.0, "weather_wind_gust_mps": 5.9, "weather_wind_speed_mps": 4.5}`
+- Observed evidence: max horizontal wind mps: 5.9; weather audit wind mps: 5.9; max safe wind mps: 9.0; weather source: offline Open-Meteo-shaped sample; weather timestamp utc: 2026-09-11T16:00:00Z; 7 more fields in the JSON audit
 - Recommended operator action: Confirm launch-time weather against operator minimums and keep the forecast source with the mission package.
 
 ### Geofence / no-fly-zone clearance
@@ -230,7 +245,7 @@ Mission risk: LOW
 - Status meaning: Modeled margin is above the configured review threshold.
 - Margin: 276.7 m
 - Warning margin: 25.0 m
-- Observed: `{"geofence_violated": false, "min_clearance_m": 351.69524979477507, "required_clearance_m": 75.0}`
+- Observed evidence: required clearance m: 75.0; min clearance m: 351.7; geofence violated: no
 - Recommended operator action: Keep the geofence file and route review in the evidence bundle, then confirm site boundaries before flight.
 
 ### Route completion status
@@ -242,7 +257,7 @@ Mission risk: LOW
 - Status meaning: Modeled margin is above the configured review threshold.
 - Margin: 1.0 completion
 - Warning margin: 0.5 completion
-- Observed: `{"reached_all": true, "waypoints_completed": 6.0, "waypoints_total": 6.0}`
+- Observed evidence: waypoints completed: 6.0; waypoints total: 6.0; reached all: yes
 - Recommended operator action: Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy.
 
 ### Turn / bank feasibility
@@ -254,5 +269,5 @@ Mission risk: LOW
 - Status meaning: Modeled margin is above the configured review threshold.
 - Margin: 0.139 rad/s
 - Warning margin: 0.05 rad/s
-- Observed: `{"bank_max_deg": 30.0}`
+- Observed evidence: bank max deg: 30.0
 - Recommended operator action: Keep the planned speed and turn assumptions, then verify they match the aircraft operating envelope.

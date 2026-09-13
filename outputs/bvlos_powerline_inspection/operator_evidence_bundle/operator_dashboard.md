@@ -1,27 +1,40 @@
 # ORBITAL Operator Evidence Dashboard
 
-First artifact to open for operator review. Use this page for the fast mission read, then drill into the linked evidence artifacts.
+## Mission Verdict: REVIEW REQUIRED
 
-ORBITAL provides decision support only. This dashboard is not approval, not authorization, not legal advice, not LAANC, and not operational clearance. The pilot-in-command and operator retain final responsibility for release.
+Modeled feasibility is acceptable, but operator, regulatory, or evidence review items remain.
+
+**Next action:** Complete the listed review items, confirm regulatory readiness outside ORBITAL, then record the operator decision.
+
+## Mission Card
+
+| Field | Value |
+| --- | --- |
+| Mission | BVLOS Powerline Inspection Demo |
+| Verdict | REVIEW REQUIRED |
+| Modeled mission status | GO |
+| Mission risk | LOW |
+| Top limiting constraint | Wind / weather margin, PASS, margin 3.1 m/s |
+| Regulatory readiness | OPERATOR_ACTION_REQUIRED |
+| Evidence completeness | 100.0 % (17 / 17 artifacts present) |
+| Missing evidence | 0 item(s) |
+| Bundle warnings | 0 warning(s) |
+
+## Decision-Support Boundary
+
+ORBITAL provides decision support only: not approval, not authorization, not legal advice, not LAANC, and not operational clearance. The pilot-in-command and operator retain final responsibility for release.
 
 ## 10-Second Mission Read
 
-**Mission status: GO**
-**Mission risk: LOW**
-**Top limiting constraint: Wind / weather margin, PASS, margin 3.1 m/s**
-**Regulatory readiness: OPERATOR_ACTION_REQUIRED**
-**Bundle completeness: 100.0 % (17 / 17 artifacts present)**
-
-| Signal | Current value | What to do next |
+| Signal | Current value | Operator cue |
 | --- | --- | --- |
-| Mission status | GO | Use as the first feasibility read from the constraint audit. |
+| Verdict | REVIEW REQUIRED | Complete the listed review items, confirm regulatory readiness outside ORBITAL, then record the operator decision. |
+| Modeled mission status | GO | Use as the first feasibility read from the constraint audit. |
 | Mission risk | LOW | Treat higher risk as a cue for additional operator review. |
 | Top limiting constraint | Wind / weather margin, PASS, margin 3.1 m/s | Review this constraint before changing or releasing the mission. |
 | Regulatory readiness | OPERATOR_ACTION_REQUIRED | Confirm required approvals, waivers, roles, and restrictions outside ORBITAL. |
-| Bundle completeness | 100.0 % (17 / 17 artifacts present) | Confirm expected artifacts are present before sharing. |
+| Evidence completeness | 100.0 % (17 / 17 artifacts present) | Confirm expected artifacts are present before sharing. |
 | Regulatory documentation completeness | 100.0 % (8 / 8 fields documented) | Confirm optional evidence fields are documented where needed. |
-| Missing evidence | 0 item(s) | Resolve or document before reviewer acceptance. |
-| Bundle warnings | 0 warning(s) | Investigate stale, missing, or mismatched artifacts. |
 
 ## Recommended Opening Sequence
 
@@ -34,6 +47,7 @@ ORBITAL provides decision support only. This dashboard is not approval, not auth
 ## Mission Snapshot
 
 - Mission: BVLOS Powerline Inspection Demo
+- Mission verdict: REVIEW REQUIRED
 - Mission status: GO
 - Mission risk: LOW
 - Top limiting constraint: Wind / weather margin, PASS, margin 3.1 m/s
@@ -59,7 +73,7 @@ Review notes: Demo bundle ready for operator review; final approval remains outs
 | Operator decision | pending operator review |
 | Review notes | Demo bundle ready for operator review; final approval remains outside ORBITAL. |
 
-Review fields are documentation-only. They do not approve a flight, issue an authorization, provide legal advice, or replace pilot-in-command release authority.
+Review fields are documentation-only records; they do not change release authority.
 
 ## Artifact Shortcuts
 
@@ -97,8 +111,8 @@ Review fields are documentation-only. They do not approve a flight, issue an aut
 
 ## Next Operator Actions
 
+- Complete the listed review items, confirm regulatory readiness outside ORBITAL, then record the operator decision.
 - Review the primary constraint audit and top limiting constraint.
 - Review the what-if plan if any constraint margin is tight.
-- Confirm regulatory readiness outside ORBITAL before any operation.
 - Verify bundle completeness, manifest, and checksum manifest before archiving.
 - Record reviewer, timestamp, notes, and operator decision in scenario metadata when appropriate.

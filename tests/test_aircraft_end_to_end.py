@@ -247,7 +247,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     memo_text = (tmp_path / "inspection_constraint_audit.md").read_text(encoding="utf-8")
     assert "Primary demo artifact" in memo_text
     assert "Can we safely and defensibly fly this mission?" in memo_text
-    assert "Selection rationale" in memo_text
+    assert "Selection detail" in memo_text
     assert "Model Transparency" in memo_text
     assert "Assumptions Report" in memo_text
     assert "Constraint Margin Units And Sources" in memo_text
@@ -409,6 +409,8 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert (tmp_path / "what_if_plan.md").exists()
     what_if_md = (tmp_path / "what_if_plan.md").read_text(encoding="utf-8")
     assert "Before / After Improvements" in what_if_md
+    assert "| Scenario | What changed | Risk | Feasible |" in what_if_md
+    assert "Changed time" in what_if_md
     assert "Battery reserve margin" in what_if_md
 
     flight_exports = export_flight_planning_artifacts(result.plan, tmp_path, cfg=cfg)
@@ -534,8 +536,12 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "documentation-only" in bundle_readme
     assert "not proof of authorization" in bundle_readme
     assert "ORBITAL Operator Evidence Dashboard" in operator_dashboard
+    assert "Mission Verdict: REVIEW REQUIRED" in operator_dashboard
+    assert "Mission Card" in operator_dashboard
+    assert "| Verdict | REVIEW REQUIRED |" in operator_dashboard
     assert "10-Second Mission Read" in operator_dashboard
     assert "Recommended Opening Sequence" in operator_dashboard
+    assert "| Signal | Current value | Operator cue |" in operator_dashboard
     assert "Mission status: GO" in operator_dashboard
     assert "Mission risk: LOW" in operator_dashboard
     assert "Top limiting constraint:" in operator_dashboard

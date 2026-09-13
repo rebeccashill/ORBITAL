@@ -17,7 +17,7 @@
     },
     {
       "bundle_path": "evidence_bundle_summary.md",
-      "sha256": "6348b1b3bf7a2aff40d369a6a1d11041bd0402325635742e25e345bf9a56b8bf",
+      "sha256": "217d6925de7579ed2f21d7cb4a2f7e882666937ccaf7db1cbc848a9884eb39f8",
       "size_bytes": 3434
     },
     {
@@ -42,12 +42,12 @@
     },
     {
       "bundle_path": "inspection_constraint_audit.md",
-      "sha256": "0663e983debfcef03812ed9dbeebe8928acf6c771163e5ded3b30c4c1282a2d3",
-      "size_bytes": 15760
+      "sha256": "c5fb40b2393bda7d2d5fc20780d4e62ead6a46c1aa5dfe54ec16eccba4975070",
+      "size_bytes": 17270
     },
     {
       "bundle_path": "manifest.json",
-      "sha256": "ee81713855a29d58f65278673ef459e248ad0310389da7487596ad65ae7f2ba4",
+      "sha256": "f4a13893e7d1fe1a9515f2a7cdc194352f1bc0300dd23a992bb1af4e00b49fbe",
       "size_bytes": 30999
     },
     {
@@ -57,8 +57,8 @@
     },
     {
       "bundle_path": "operator_dashboard.md",
-      "sha256": "650a1d47b2d134d124005aa8af3576a3dc4042a93bcec123d42d8888c6aec315",
-      "size_bytes": 4497
+      "sha256": "31d928d883c1a6d6cc13cac6bb257f9a343349575214efd49c9d67a10573aac6",
+      "size_bytes": 4850
     },
     {
       "bundle_path": "operator_memo.md",
@@ -112,8 +112,8 @@
     },
     {
       "bundle_path": "what_if_plan.md",
-      "sha256": "97861655f7ecd1c2a3d7af23b1cc6817501ab09573a917ef1aa1af3e491c70e4",
-      "size_bytes": 2395
+      "sha256": "163f7e2475d12eed2e8c8698d5ef1f13fcb7392a75a37fa9d5731cff05dd8685",
+      "size_bytes": 2791
     }
   ]
 }

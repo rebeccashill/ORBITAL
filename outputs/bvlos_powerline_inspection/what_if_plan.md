@@ -10,14 +10,14 @@ Mission: BVLOS Powerline Inspection Demo
 
 ## Scenario Comparisons
 
-| Scenario | Risk | Feasible | Time (s) | Delta Time | Energy (Wh) | Battery Margin | Top Limiter |
-| --- | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Fewer waypoints | LOW | yes | 95.0 | -45.0 | 11.8 | 138.2 | Wind / weather margin |
-| Lower speed | LOW | yes | 210.0 | 70.0 | 12.3 | 137.7 | Wind / weather margin |
-| Alternate launch point | LOW | yes | 180.0 | 40.0 | 23.8 | 126.2 | Wind / weather margin |
-| Stronger wind case | LOW | yes | 140.0 | 0.0 | 17.9 | 132.1 | Wind / weather margin |
-| Larger battery reserve requirement | MEDIUM | yes | 140.0 | 0.0 | 18.0 | 27.0 | Battery reserve margin |
-| Relaunch / battery swap | LOW | yes | 150.0 | 10.0 | 16.8 | 141.6 | Wind / weather margin |
+| Scenario | What changed | Risk | Feasible | Time (s) | Delta Time | Energy (Wh) | Battery Margin | Top Limiter |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
+| Fewer waypoints | Changed time -45.0 s, energy -6.2 Wh, battery reserve +6.2 Wh. | LOW | yes | 95.0 | -45.0 | 11.8 | 138.2 | Wind / weather margin |
+| Lower speed | Changed time +70.0 s, energy -5.6 Wh, battery reserve +5.6 Wh. | LOW | yes | 210.0 | 70.0 | 12.3 | 137.7 | Wind / weather margin |
+| Alternate launch point | Changed time +40.0 s, energy +5.9 Wh, battery reserve -5.9 Wh. | LOW | yes | 180.0 | 40.0 | 23.8 | 126.2 | Wind / weather margin |
+| Stronger wind case | Changed energy +0.00239 Wh, battery reserve -0.00239 Wh. | LOW | yes | 140.0 | 0.0 | 17.9 | 132.1 | Wind / weather margin |
+| Larger battery reserve requirement | Changed energy +0.0462 Wh, battery reserve -105.0 Wh. | MEDIUM | yes | 140.0 | 0.0 | 18.0 | 27.0 | Battery reserve margin |
+| Relaunch / battery swap | Changed time +10.0 s, energy -1.1 Wh, battery reserve +9.5 Wh. | LOW | yes | 150.0 | 10.0 | 16.8 | 141.6 | Wind / weather margin |
 
 ## Before / After Improvements
 

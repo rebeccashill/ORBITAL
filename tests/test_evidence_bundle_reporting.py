@@ -7,6 +7,7 @@ import os
 from mission_framework.reporting.flight_output import (
     _artifact_freshness_metadata,
     _bundle_completeness,
+    _dashboard_verdict,
     _format_artifact_index,
     _format_evidence_bundle_summary,
     _format_operator_evidence_dashboard,
@@ -156,6 +157,36 @@ def test_artifact_index_lists_expected_and_generated_bundle_artifacts() -> None:
     ) in markdown
 
 
+def test_dashboard_verdict_uses_consistent_release_language() -> None:
+    assert (
+        _dashboard_verdict(
+            mission_status="MODIFY",
+            regulatory_state="OPERATOR_ACTION_REQUIRED",
+            missing_evidence_count=0,
+            warning_count=0,
+        )["label"]
+        == "MODIFY"
+    )
+    assert (
+        _dashboard_verdict(
+            mission_status="GO",
+            regulatory_state="OPERATOR_ACTION_REQUIRED",
+            missing_evidence_count=0,
+            warning_count=0,
+        )["label"]
+        == "REVIEW REQUIRED"
+    )
+    assert (
+        _dashboard_verdict(
+            mission_status="GO",
+            regulatory_state="DOCUMENTED_REVIEW_REQUIRED",
+            missing_evidence_count=0,
+            warning_count=0,
+        )["label"]
+        == "GO"
+    )
+
+
 def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None:
     markdown = _format_operator_evidence_dashboard(
         {
@@ -248,6 +279,13 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
     )
 
     assert "# ORBITAL Operator Evidence Dashboard" in markdown
+    assert "Mission Verdict: REVIEW REQUIRED" in markdown
+    assert "Modeled feasibility is acceptable" in markdown
+    assert "Mission Card" in markdown
+    assert "| Verdict | REVIEW REQUIRED |" in markdown
+    assert "| Modeled mission status | GO |" in markdown
+    assert "| Evidence completeness | 100.0 % (17 / 17 artifacts present) |" in markdown
+    assert "Decision-Support Boundary" in markdown
     assert "10-Second Mission Read" in markdown
     assert "Mission status: GO" in markdown
     assert "Mission risk: LOW" in markdown
@@ -255,7 +293,7 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
     assert "Regulatory readiness: OPERATOR_ACTION_REQUIRED" in markdown
     assert "Bundle completeness: 100.0 % (17 / 17 artifacts present)" in markdown
     assert "Regulatory documentation completeness: 100.0 % (7 / 7 fields documented)" in markdown
-    assert "| Signal | Current value | What to do next |" in markdown
+    assert "| Signal | Current value | Operator cue |" in markdown
     assert "Recommended Opening Sequence" in markdown
     assert "Bundle warnings: 0" in markdown
     assert "Review status: ready for review" in markdown
@@ -263,6 +301,10 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
     assert "Operator decision: pending operator review" in markdown
     assert "Review notes: Ready for operational review." in markdown
     assert "not approval, not authorization, not legal advice" in markdown
+    assert (
+        "Review fields are documentation-only records; they do not change release authority."
+        in markdown
+    )
     assert "Feasibility And Decision Support" in markdown
     assert "Evidence Package" in markdown
     assert "Route, Export, And Field-Use Artifacts" in markdown

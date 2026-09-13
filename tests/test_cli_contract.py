@@ -210,7 +210,13 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     }
     assert audit["constraint_groups"]
     audit_markdown = audit_md.read_text(encoding="utf-8")
+    assert "Operator Handoff" in audit_markdown
+    assert "Plain-English Constraint Guide" in audit_markdown
     assert "Constraint Group Summary" in audit_markdown
+    assert "Plain-English read:" in audit_markdown
+    assert "Operator action:" in audit_markdown
+    assert "Detailed Operator Review" in audit_markdown
+    assert "Observed evidence:" in audit_markdown
     assert "Model Transparency" in audit_markdown
     assert "Scenario path:" in audit_markdown
     assert "mission_framework.cli" in audit_markdown
@@ -220,7 +226,10 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert what_if["baseline"]["id"] == "baseline"
     assert what_if["baseline"]["feasible"] is True
     assert what_if["variants"]
-    assert "Baseline" in what_if_md.read_text(encoding="utf-8")
+    what_if_markdown = what_if_md.read_text(encoding="utf-8")
+    assert "Baseline" in what_if_markdown
+    assert "| Scenario | What changed | Risk | Feasible |" in what_if_markdown
+    assert "Changed time" in what_if_markdown
 
     report = json.loads(report_json.read_text(encoding="utf-8"))
     assert report["kind"] == "regulatory_readiness_report"
@@ -273,8 +282,12 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert "Start with `operator_dashboard.md`" in bundle_readme.read_text(encoding="utf-8")
     dashboard_text = operator_dashboard.read_text(encoding="utf-8")
     assert "ORBITAL Operator Evidence Dashboard" in dashboard_text
+    assert "Mission Verdict: REVIEW REQUIRED" in dashboard_text
+    assert "Mission Card" in dashboard_text
+    assert "| Verdict | REVIEW REQUIRED |" in dashboard_text
     assert "10-Second Mission Read" in dashboard_text
     assert "Recommended Opening Sequence" in dashboard_text
+    assert "| Signal | Current value | Operator cue |" in dashboard_text
     assert "Mission status: GO" in dashboard_text
     assert "Mission risk:" in dashboard_text
     assert "Top limiting constraint:" in dashboard_text
@@ -358,8 +371,9 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     )
     assert top_result.returncode == 0, top_result.stdout + top_result.stderr
     assert "ORBITAL Top Limiting Constraint" in top_result.stdout
+    assert ": PASS, margin" in top_result.stdout
     assert "Recommended operator action:" in top_result.stdout
-    assert "Selection rationale:" in top_result.stdout
+    assert "Selection detail:" in top_result.stdout
 
     review_result = subprocess.run(
         [
