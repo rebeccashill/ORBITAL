@@ -235,6 +235,84 @@ def _format_top_constraint(top: Dict[str, Any]) -> str:
     return f"{label}: {status}, margin {margin_text}"
 
 
+def _bundle_dashboard_verdict(
+    *,
+    mission_status: str,
+    regulatory_state: str,
+    missing_evidence_count: int,
+    warning_count: int,
+) -> Dict[str, str]:
+    if mission_status != "GO":
+        return {
+            "label": "MODIFY",
+            "meaning": "Modeled constraints do not support release as configured.",
+            "next_action": (
+                "Modify the route, assumptions, or constraints, then regenerate the "
+                "evidence bundle before operator review."
+            ),
+        }
+    if (
+        regulatory_state == "OPERATOR_ACTION_REQUIRED"
+        or missing_evidence_count > 0
+        or warning_count > 0
+    ):
+        return {
+            "label": "REVIEW REQUIRED",
+            "meaning": (
+                "Modeled feasibility is acceptable, but operator, regulatory, or "
+                "evidence review items remain."
+            ),
+            "next_action": (
+                "Complete the listed review items, confirm regulatory readiness outside "
+                "ORBITAL, then record the operator decision."
+            ),
+        }
+    return {
+        "label": "GO",
+        "meaning": "Modeled feasibility and bundle evidence are ready for normal signoff.",
+        "next_action": (
+            "Proceed to normal operator signoff, verify checksums, and archive the "
+            "evidence bundle."
+        ),
+    }
+
+
+def _bundle_verdict_payload(bundle_dir: Path, manifest: Dict[str, Any]) -> Dict[str, Any]:
+    audit = manifest.get("constraint_audit") or {}
+    readiness = manifest.get("regulatory_readiness") or {}
+    missing = manifest.get("missing_evidence") or []
+    warnings = manifest.get("bundle_warnings") or []
+    bundle_completeness = (
+        manifest.get("artifact_completeness") or manifest.get("bundle_completeness") or {}
+    )
+    regulatory_completeness = manifest.get("regulatory_documentation_completeness") or {}
+    mission_status = str(audit.get("status") or "unknown").upper()
+    regulatory_state = str(
+        readiness.get("readiness_state") or readiness.get("status") or "unknown"
+    ).upper()
+    verdict = _bundle_dashboard_verdict(
+        mission_status=mission_status,
+        regulatory_state=regulatory_state,
+        missing_evidence_count=len(missing),
+        warning_count=len(warnings),
+    )
+    return {
+        "bundle_dir": str(bundle_dir),
+        "mission_id": audit.get("mission_id"),
+        "mission_verdict": verdict["label"],
+        "mission_verdict_meaning": verdict["meaning"],
+        "next_operator_action": verdict["next_action"],
+        "modeled_mission_status": mission_status,
+        "mission_risk": str(audit.get("mission_risk") or "unknown").upper(),
+        "top_limiting_constraint": audit.get("top_limiting_constraint") or {},
+        "regulatory_readiness": regulatory_state,
+        "artifact_completeness_score": bundle_completeness.get("score"),
+        "regulatory_documentation_completeness_score": regulatory_completeness.get("score"),
+        "missing_evidence_count": len(missing),
+        "bundle_warning_count": len(warnings),
+    }
+
+
 def _artifact_present(manifest: Dict[str, Any], artifact_id: str) -> bool:
     return any(
         entry.get("id") == artifact_id and bool(entry.get("present"))
@@ -265,10 +343,13 @@ def _bundle_summary_command(argv: Sequence[str]) -> int:
     missing = manifest.get("missing_evidence") or []
     warnings = manifest.get("bundle_warnings") or []
     open_first = _bundle_open_first_path(bundle_dir, manifest)
+    verdict_payload = _bundle_verdict_payload(bundle_dir, manifest)
 
     payload = {
         "bundle_dir": str(bundle_dir),
         "open_first": str(open_first),
+        "mission_verdict": verdict_payload["mission_verdict"],
+        "next_operator_action": verdict_payload["next_operator_action"],
         "mission_id": audit.get("mission_id"),
         "mission_status": audit.get("status"),
         "mission_risk": audit.get("mission_risk"),
@@ -286,9 +367,10 @@ def _bundle_summary_command(argv: Sequence[str]) -> int:
 
     print("=== ORBITAL Evidence Bundle Summary ===")
     print(f"Bundle: {bundle_dir}")
-    print(f"Open first: {open_first}")
+    print(f"Open first artifact: {open_first}")
     print(f"Mission: {payload['mission_id'] or 'not provided'}")
-    print(f"Mission status: {str(payload['mission_status'] or 'unknown').upper()}")
+    print(f"Mission verdict: {payload['mission_verdict']}")
+    print(f"Modeled mission status: {str(payload['mission_status'] or 'unknown').upper()}")
     print(f"Mission risk: {str(payload['mission_risk'] or 'unknown').upper()}")
     print(f"Top limiting constraint: {_format_top_constraint(top)}")
     print(
@@ -306,6 +388,83 @@ def _bundle_summary_command(argv: Sequence[str]) -> int:
     print(f"Operator review status: {review.get('status') or 'not provided'}")
     print(f"Bundle warnings: {len(warnings)}")
     print(f"Missing evidence items: {len(missing)}")
+    print(f"Next operator action: {payload['next_operator_action']}")
+    return 0
+
+
+def _bundle_open_first_command(argv: Sequence[str]) -> int:
+    ap = argparse.ArgumentParser(description="Print the first evidence artifact to open.")
+    ap.add_argument("bundle", help="Evidence bundle directory or manifest.json path.")
+    ap.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
+    args = ap.parse_args(list(argv))
+
+    try:
+        bundle_dir, manifest = _load_bundle_manifest(args.bundle)
+    except FileNotFoundError as exc:
+        print(f"INVALID: {exc}", file=sys.stderr)
+        return 2
+
+    open_first = _bundle_open_first_path(bundle_dir, manifest)
+    payload = {
+        "bundle_dir": str(bundle_dir),
+        "open_first": str(open_first),
+        "reason": (
+            "Start with the operator dashboard for mission verdict, risk, top limiting "
+            "constraint, regulatory readiness, evidence completeness, and next action."
+        ),
+    }
+    if args.json:
+        print(strict_json_dumps(payload, indent=2))
+        return 0
+
+    print("=== ORBITAL First Artifact To Open ===")
+    print(f"Bundle: {bundle_dir}")
+    print(f"Open first artifact: {open_first}")
+    print(f"Why: {payload['reason']}")
+    return 0
+
+
+def _bundle_verdict_command(argv: Sequence[str]) -> int:
+    ap = argparse.ArgumentParser(description="Print the mission verdict for an evidence bundle.")
+    ap.add_argument("bundle", help="Evidence bundle directory or manifest.json path.")
+    ap.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
+    args = ap.parse_args(list(argv))
+
+    try:
+        bundle_dir, manifest = _load_bundle_manifest(args.bundle)
+    except FileNotFoundError as exc:
+        print(f"INVALID: {exc}", file=sys.stderr)
+        return 2
+
+    payload = _bundle_verdict_payload(bundle_dir, manifest)
+    if args.json:
+        print(strict_json_dumps(payload, indent=2))
+        return 0
+
+    print("=== ORBITAL Mission Verdict ===")
+    print(f"Bundle: {bundle_dir}")
+    print(f"Mission: {payload['mission_id'] or 'not provided'}")
+    print(f"Mission verdict: {payload['mission_verdict']}")
+    print(f"Meaning: {payload['mission_verdict_meaning']}")
+    print(f"Modeled mission status: {payload['modeled_mission_status']}")
+    print(f"Mission risk: {payload['mission_risk']}")
+    print(f"Top limiting constraint: {_format_top_constraint(payload['top_limiting_constraint'])}")
+    print(f"Regulatory readiness: {payload['regulatory_readiness']}")
+    print(
+        "Artifact completeness: "
+        f"{_format_cli_value(payload['artifact_completeness_score'], '%')}"
+    )
+    print(
+        "Regulatory documentation completeness: "
+        f"{_format_cli_value(payload['regulatory_documentation_completeness_score'], '%')}"
+    )
+    print(f"Bundle warnings: {payload['bundle_warning_count']}")
+    print(f"Missing evidence items: {payload['missing_evidence_count']}")
+    print(f"Next operator action: {payload['next_operator_action']}")
+    print(
+        "Decision-support boundary: ORBITAL is not approval, authorization, "
+        "legal advice, LAANC, or operational clearance."
+    )
     return 0
 
 
@@ -381,7 +540,7 @@ def _bundle_top_constraint_command(argv: Sequence[str]) -> int:
 
     print("=== ORBITAL Top Limiting Constraint ===")
     print(f"Bundle: {bundle_dir}")
-    print(_format_top_constraint(top))
+    print(f"Top limiting constraint: {_format_top_constraint(top)}")
     print("Why this matters: " f"{top.get('why_this_matters_to_operator') or 'not provided'}")
     print(
         "Recommended operator action: "
@@ -522,12 +681,20 @@ def _bundle_review_validate_command(argv: Sequence[str]) -> int:
 
 
 BUNDLE_COMMANDS = {
+    "bundle-open": _bundle_open_first_command,
+    "open-first": _bundle_open_first_command,
+    "first-artifact": _bundle_open_first_command,
+    "first": _bundle_open_first_command,
+    "bundle-verdict": _bundle_verdict_command,
+    "mission-verdict": _bundle_verdict_command,
+    "verdict": _bundle_verdict_command,
     "bundle-summary": _bundle_summary_command,
     "evidence-summary": _bundle_summary_command,
     "bundle-verify": _bundle_verify_command,
     "verify-bundle": _bundle_verify_command,
     "bundle-top": _bundle_top_constraint_command,
     "top-constraint": _bundle_top_constraint_command,
+    "top": _bundle_top_constraint_command,
     "bundle-review-validate": _bundle_review_validate_command,
     "review-validate": _bundle_review_validate_command,
 }
@@ -1003,7 +1170,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     print(f"\nWrote outputs to: {outdir}")
     first_artifact = _first_artifact_to_open(outdir, scenario_type)
     if first_artifact is not None:
-        print(f"Open first: {first_artifact}")
+        print(f"Open first artifact: {first_artifact}")
     artifact_index = outdir / "operator_evidence_bundle" / "artifact_index.md"
     if artifact_index.exists():
         print(f"Artifact index: {artifact_index}")

@@ -209,11 +209,19 @@ summary, audit, regulatory, index, and plot capture guidance.
 Evidence bundle quick checks do not rerun optimization:
 
 ```bash
+python -m mission_framework.cli open-first outputs/bvlos_powerline_inspection/operator_evidence_bundle
+python -m mission_framework.cli verdict outputs/bvlos_powerline_inspection/operator_evidence_bundle
+python -m mission_framework.cli top outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli bundle-summary outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli bundle-verify outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli bundle-top outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli bundle-review-validate outputs/bvlos_powerline_inspection/operator_evidence_bundle
 ```
+
+The short commands mirror the dashboard language: `open-first` prints the first
+artifact to open, `verdict` prints the mission verdict and next operator action,
+and `top` prints the top limiting constraint with the recommended operator
+action.
 
 ### Standard Domain Outputs
 

@@ -239,6 +239,9 @@ outputs/bvlos_powerline_inspection/operator_evidence_bundle/evidence_bundle_summ
 CLI shortcuts:
 
 ```bash
+python -m mission_framework.cli open-first outputs/bvlos_powerline_inspection/operator_evidence_bundle
+python -m mission_framework.cli verdict outputs/bvlos_powerline_inspection/operator_evidence_bundle
+python -m mission_framework.cli top outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli bundle-summary outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli bundle-verify outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli bundle-review-validate outputs/bvlos_powerline_inspection/operator_evidence_bundle

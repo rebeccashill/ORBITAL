@@ -375,17 +375,21 @@ recorded in `manifest.json`.
 Existing evidence bundles can also be inspected without rerunning optimization:
 
 ```bash
+python -m mission_framework.cli open-first outputs/bvlos_powerline_inspection/operator_evidence_bundle
+python -m mission_framework.cli verdict outputs/bvlos_powerline_inspection/operator_evidence_bundle
+python -m mission_framework.cli top outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli bundle-summary outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli bundle-verify outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli bundle-top outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m mission_framework.cli bundle-review-validate outputs/bvlos_powerline_inspection/operator_evidence_bundle
 ```
 
-`bundle-summary` shows which artifact to open first, mission status, mission
-risk, top limiting constraint, completeness, warnings, and missing evidence.
-`bundle-verify` checks the checksum manifest. `bundle-top` prints the top
-limiting constraint and recommended operator action. `bundle-review-validate`
-checks review metadata fields without running the planner.
+`open-first` prints the first artifact to open. `verdict` prints the mission
+verdict, modeled mission status, regulatory readiness, and next operator action.
+`top` prints the top limiting constraint and recommended operator action.
+`bundle-summary` shows the broader bundle summary. `bundle-verify` checks the
+checksum manifest. `bundle-review-validate` checks review metadata fields
+without running the planner.
 
 ## Batch Inspection Runs
 

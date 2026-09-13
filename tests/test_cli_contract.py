@@ -140,7 +140,7 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "Open first:" in result.stdout
+    assert "Open first artifact:" in result.stdout
     assert "operator_dashboard.md" in result.stdout
 
     scenario_dir = outdir / "bvlos_powerline_inspection"
@@ -338,9 +338,50 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     )
     assert summary_result.returncode == 0, summary_result.stdout + summary_result.stderr
     assert "ORBITAL Evidence Bundle Summary" in summary_result.stdout
-    assert "Open first:" in summary_result.stdout
+    assert "Open first artifact:" in summary_result.stdout
     assert "operator_dashboard.md" in summary_result.stdout
+    assert "Mission verdict: REVIEW REQUIRED" in summary_result.stdout
+    assert "Modeled mission status: GO" in summary_result.stdout
     assert "Top limiting constraint:" in summary_result.stdout
+    assert "Next operator action:" in summary_result.stdout
+
+    open_result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mission_framework.cli",
+            "open-first",
+            str(bundle_dir),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert open_result.returncode == 0, open_result.stdout + open_result.stderr
+    assert "ORBITAL First Artifact To Open" in open_result.stdout
+    assert "Open first artifact:" in open_result.stdout
+    assert "operator_dashboard.md" in open_result.stdout
+
+    verdict_result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mission_framework.cli",
+            "verdict",
+            str(bundle_dir),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert verdict_result.returncode == 0, verdict_result.stdout + verdict_result.stderr
+    assert "ORBITAL Mission Verdict" in verdict_result.stdout
+    assert "Mission verdict: REVIEW REQUIRED" in verdict_result.stdout
+    assert "Modeled mission status: GO" in verdict_result.stdout
+    assert "Regulatory readiness: OPERATOR_ACTION_REQUIRED" in verdict_result.stdout
+    assert "Next operator action:" in verdict_result.stdout
 
     verify_result = subprocess.run(
         [
@@ -364,7 +405,7 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
             sys.executable,
             "-m",
             "mission_framework.cli",
-            "bundle-top",
+            "top",
             str(bundle_dir),
         ],
         cwd=ROOT,
@@ -374,6 +415,7 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     )
     assert top_result.returncode == 0, top_result.stdout + top_result.stderr
     assert "ORBITAL Top Limiting Constraint" in top_result.stdout
+    assert "Top limiting constraint:" in top_result.stdout
     assert ": PASS, margin" in top_result.stdout
     assert "Recommended operator action:" in top_result.stdout
     assert "Selection detail:" in top_result.stdout
