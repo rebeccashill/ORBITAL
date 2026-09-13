@@ -4224,11 +4224,39 @@ def _format_operator_evidence_dashboard(manifest: Dict[str, Any]) -> str:
 
 
 def _format_artifact_index(manifest: Dict[str, Any]) -> str:
+    expected_artifacts = manifest.get("artifacts", []) or []
+    generated_artifacts = manifest.get("generated_artifacts", []) or []
+    expected_present = sum(1 for entry in expected_artifacts if entry.get("present"))
+    expected_missing = max(0, len(expected_artifacts) - expected_present)
     lines = [
         "# Evidence Bundle Artifact Index",
         "",
-        "Links are relative to this evidence bundle folder. Open the dashboard first, "
-        "then use this index when you need a specific artifact.",
+        "Links are relative to this evidence bundle folder. Open "
+        "[operator_dashboard.md](operator_dashboard.md) first, then use this index "
+        "when you need a specific artifact.",
+        "",
+        "## Open First",
+        "",
+        "[operator_dashboard.md](operator_dashboard.md) is the first review surface. "
+        "It summarizes the mission verdict, risk, top limiting constraint, regulatory "
+        "readiness, evidence completeness, and next operator action.",
+        "",
+        "## Review Path",
+        "",
+        "| Step | Purpose | Artifact |",
+        "| ---: | --- | --- |",
+        "| 1 | Mission verdict and next action | [operator_dashboard.md](operator_dashboard.md) |",
+        "| 2 | Feasibility and top limiting constraint | [inspection_constraint_audit.md](inspection_constraint_audit.md) |",
+        "| 3 | What-if comparison | [what_if_plan.md](what_if_plan.md) |",
+        "| 4 | Documentation-only regulatory review | [regulatory_readiness_report.md](regulatory_readiness_report.md) |",
+        "| 5 | Bundle completeness and review metadata | [evidence_bundle_summary.md](evidence_bundle_summary.md) |",
+        "| 6 | Archive and checksum verification | [manifest.json](manifest.json), [checksum_manifest.json](checksum_manifest.json) |",
+        "",
+        "## Artifact Status Summary",
+        "",
+        f"- Expected artifacts included: {expected_present} / {len(expected_artifacts)}",
+        f"- Expected artifacts missing: {expected_missing}",
+        f"- Generated bundle index artifacts: {len(generated_artifacts)}",
         "",
         "## Recommended Opening Order",
         "",
@@ -4756,6 +4784,36 @@ def export_operator_evidence_bundle(
         "individual artifacts. `evidence_bundle_summary.md` summarizes completeness, "
         "and `checksum_manifest.json` provides lightweight SHA-256 checksums for files "
         "in this bundle.",
+        "",
+        "## Open This First",
+        "",
+        "`operator_dashboard.md` is the first file to open. It gives the mission verdict, "
+        "mission risk, top limiting constraint, regulatory readiness, evidence "
+        "completeness, and next operator action before the reviewer drills into details.",
+        "",
+        "## How To Review This Bundle",
+        "",
+        "Start with the dashboard, then open the constraint audit for feasibility and "
+        "top-limiter rationale, the what-if report for mission tradeoffs, and the "
+        "regulatory readiness report for documentation-only action items. Use the "
+        "evidence summary to check missing evidence, warnings, reviewer metadata, and "
+        "operator decision status.",
+        "",
+        "## How To Archive This Bundle",
+        "",
+        "Archive the full `operator_evidence_bundle/` folder after review. Keep "
+        "`manifest.json`, `checksum_manifest.json`, the scenario YAML, and all linked "
+        "artifacts together so a later reviewer can verify the files came from the same "
+        "scenario and generation run.",
+        "",
+        "## Completeness And Verification",
+        "",
+        "Artifact completeness reports whether expected bundle files are present. "
+        "Regulatory documentation completeness is reported separately because optional "
+        "regulatory evidence fields are documentation aids, not generated artifact "
+        "failures or approvals. `checksum_manifest.json` records lightweight SHA-256 "
+        "checksums; run `python -m mission_framework.cli bundle-verify <bundle>` to "
+        "check whether archived files still match the bundle manifest.",
         "",
         "Recommended opening order:",
         "",

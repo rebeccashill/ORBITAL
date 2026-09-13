@@ -7,8 +7,8 @@
   "files": [
     {
       "bundle_path": "artifact_index.md",
-      "sha256": "4a11888066d43999c08ca685deaec10d42c30a5b43e3f937dee5a3b70cce4e82",
-      "size_bytes": 2839
+      "sha256": "334a451341415711d52b6a89ec5a8039b7a20b20833b818c331b64fb29f267fe",
+      "size_bytes": 3940
     },
     {
       "bundle_path": "autopilot_mission.csv",
@@ -17,7 +17,7 @@
     },
     {
       "bundle_path": "evidence_bundle_summary.md",
-      "sha256": "217d6925de7579ed2f21d7cb4a2f7e882666937ccaf7db1cbc848a9884eb39f8",
+      "sha256": "b4a3ea80d63f5346595c3a2b4ba3cae96f1f1eaa26fd6030b5d0e450734c3ebc",
       "size_bytes": 3434
     },
     {
@@ -47,7 +47,7 @@
     },
     {
       "bundle_path": "manifest.json",
-      "sha256": "f4a13893e7d1fe1a9515f2a7cdc194352f1bc0300dd23a992bb1af4e00b49fbe",
+      "sha256": "ff48eac6cd8003f0675e4a71d520c0d8cf9ff1185b81eb22165fe35b47788a61",
       "size_bytes": 30999
     },
     {
@@ -72,8 +72,8 @@
     },
     {
       "bundle_path": "README.md",
-      "sha256": "1f81a61e5abfa21f0fb5193d932cc68dec0fe966adf049ca81d2931d3cd7034b",
-      "size_bytes": 3718
+      "sha256": "c18e03dfd30340f6262f357d4553b10dd0a12c9bb32ded36bf4492bdf31044e5",
+      "size_bytes": 5104
     },
     {
       "bundle_path": "regulatory_readiness_report.json",

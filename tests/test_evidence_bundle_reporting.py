@@ -146,6 +146,12 @@ def test_artifact_index_lists_expected_and_generated_bundle_artifacts() -> None:
     )
 
     assert "# Evidence Bundle Artifact Index" in markdown
+    assert "Open First" in markdown
+    assert "[operator_dashboard.md](operator_dashboard.md) is the first review surface" in markdown
+    assert "Review Path" in markdown
+    assert "Artifact Status Summary" in markdown
+    assert "Expected artifacts included: 1 / 2" in markdown
+    assert "Expected artifacts missing: 1" in markdown
     assert "Recommended Opening Order" in markdown
     assert "1. [operator_dashboard.md](operator_dashboard.md)" in markdown
     assert "| Artifact | Status | Link | Type |" in markdown

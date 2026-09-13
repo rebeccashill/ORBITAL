@@ -8,6 +8,22 @@ Regulatory metadata, authorization references, approval checklist items, and evi
 
 Start with `operator_dashboard.md`, then use `artifact_index.md` to open individual artifacts. `evidence_bundle_summary.md` summarizes completeness, and `checksum_manifest.json` provides lightweight SHA-256 checksums for files in this bundle.
 
+## Open This First
+
+`operator_dashboard.md` is the first file to open. It gives the mission verdict, mission risk, top limiting constraint, regulatory readiness, evidence completeness, and next operator action before the reviewer drills into details.
+
+## How To Review This Bundle
+
+Start with the dashboard, then open the constraint audit for feasibility and top-limiter rationale, the what-if report for mission tradeoffs, and the regulatory readiness report for documentation-only action items. Use the evidence summary to check missing evidence, warnings, reviewer metadata, and operator decision status.
+
+## How To Archive This Bundle
+
+Archive the full `operator_evidence_bundle/` folder after review. Keep `manifest.json`, `checksum_manifest.json`, the scenario YAML, and all linked artifacts together so a later reviewer can verify the files came from the same scenario and generation run.
+
+## Completeness And Verification
+
+Artifact completeness reports whether expected bundle files are present. Regulatory documentation completeness is reported separately because optional regulatory evidence fields are documentation aids, not generated artifact failures or approvals. `checksum_manifest.json` records lightweight SHA-256 checksums; run `python -m mission_framework.cli bundle-verify <bundle>` to check whether archived files still match the bundle manifest.
+
 Recommended opening order:
 
 1. `operator_dashboard.md` for the 10-second mission read.

@@ -305,6 +305,9 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert "Recommended Review Flow" in bundle_summary_text
     artifact_index_text = artifact_index.read_text(encoding="utf-8")
     assert "Evidence Bundle Artifact Index" in artifact_index_text
+    assert "Open First" in artifact_index_text
+    assert "Review Path" in artifact_index_text
+    assert "Artifact Status Summary" in artifact_index_text
     assert "Recommended Opening Order" in artifact_index_text
     assert "Primary constraint-audit report" in artifact_index_text
     assert "What-if planning report" in artifact_index_text

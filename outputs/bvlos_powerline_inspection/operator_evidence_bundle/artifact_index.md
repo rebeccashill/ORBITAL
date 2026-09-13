@@ -1,6 +1,27 @@
 # Evidence Bundle Artifact Index
 
-Links are relative to this evidence bundle folder. Open the dashboard first, then use this index when you need a specific artifact.
+Links are relative to this evidence bundle folder. Open [operator_dashboard.md](operator_dashboard.md) first, then use this index when you need a specific artifact.
+
+## Open First
+
+[operator_dashboard.md](operator_dashboard.md) is the first review surface. It summarizes the mission verdict, risk, top limiting constraint, regulatory readiness, evidence completeness, and next operator action.
+
+## Review Path
+
+| Step | Purpose | Artifact |
+| ---: | --- | --- |
+| 1 | Mission verdict and next action | [operator_dashboard.md](operator_dashboard.md) |
+| 2 | Feasibility and top limiting constraint | [inspection_constraint_audit.md](inspection_constraint_audit.md) |
+| 3 | What-if comparison | [what_if_plan.md](what_if_plan.md) |
+| 4 | Documentation-only regulatory review | [regulatory_readiness_report.md](regulatory_readiness_report.md) |
+| 5 | Bundle completeness and review metadata | [evidence_bundle_summary.md](evidence_bundle_summary.md) |
+| 6 | Archive and checksum verification | [manifest.json](manifest.json), [checksum_manifest.json](checksum_manifest.json) |
+
+## Artifact Status Summary
+
+- Expected artifacts included: 17 / 17
+- Expected artifacts missing: 0
+- Generated bundle index artifacts: 6
 
 ## Recommended Opening Order
 

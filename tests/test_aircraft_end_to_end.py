@@ -531,6 +531,12 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     bundle_summary = (bundle_dir / "evidence_bundle_summary.md").read_text(encoding="utf-8")
     artifact_index = (bundle_dir / "artifact_index.md").read_text(encoding="utf-8")
     assert "Start with `operator_dashboard.md`" in bundle_readme
+    assert "## Open This First" in bundle_readme
+    assert "## How To Review This Bundle" in bundle_readme
+    assert "## How To Archive This Bundle" in bundle_readme
+    assert "## Completeness And Verification" in bundle_readme
+    assert "Regulatory documentation completeness is reported separately" in bundle_readme
+    assert "bundle-verify" in bundle_readme
     assert "Regulatory Readiness" in bundle_readme
     assert "Approval Checklist" in bundle_readme
     assert "documentation-only" in bundle_readme
@@ -571,6 +577,9 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "Operator decision: pending operator review" in bundle_summary
     assert "Review notes: Demo bundle ready for operator review" in bundle_summary
     assert "Missing Evidence" in bundle_summary
+    assert "Open First" in artifact_index
+    assert "Review Path" in artifact_index
+    assert "Artifact Status Summary" in artifact_index
     assert "Recommended Opening Order" in artifact_index
     assert "[inspection_constraint_audit.md](inspection_constraint_audit.md)" in artifact_index
     assert "[operator_dashboard.md](operator_dashboard.md)" in artifact_index
