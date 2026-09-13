@@ -7,8 +7,8 @@
   "files": [
     {
       "bundle_path": "artifact_index.md",
-      "sha256": "334a451341415711d52b6a89ec5a8039b7a20b20833b818c331b64fb29f267fe",
-      "size_bytes": 3940
+      "sha256": "e5c2caaadd94a0c4989820c7c1fa0838774c4be3bfe978cdbc23da6b82f6f6d9",
+      "size_bytes": 4056
     },
     {
       "bundle_path": "autopilot_mission.csv",
@@ -17,7 +17,7 @@
     },
     {
       "bundle_path": "evidence_bundle_summary.md",
-      "sha256": "81f57f96fa2c420d6ff2cb5d10ccdb4700fd9c7fec9c856519e4abb8cd4befb6",
+      "sha256": "26335c327280177ee48f5bf6436ddba2310958b2edf936099db2a25dac1ae6ca",
       "size_bytes": 4560
     },
     {
@@ -37,18 +37,18 @@
     },
     {
       "bundle_path": "inspection_constraint_audit.json",
-      "sha256": "95e7ca1d5373f3a12336ba26ddf2f708976a4fe1a85e2757073330614090e6d9",
-      "size_bytes": 50799
+      "sha256": "d21cc15f3257bab0c685f34bfb2db71ca6d5b9101e7e2f387b89bfd884cfaa77",
+      "size_bytes": 50801
     },
     {
       "bundle_path": "inspection_constraint_audit.md",
-      "sha256": "0eef0f78d1d1db9ab2dd4eca497f7afaa3464b92114dd2740fcd4b74df576b57",
+      "sha256": "952fc3443a897306efb6eb05fe64ececa42875f61da6b98d6907264cebde6cd6",
       "size_bytes": 17270
     },
     {
       "bundle_path": "manifest.json",
-      "sha256": "1cd117eaf0c31c9785b2531fcdca4bf1e813252450b41e70f9685fd4163b3306",
-      "size_bytes": 36234
+      "sha256": "8fa81aaab7228e0849a5f7ebed9cb451023a3c8bf4885774b79165841fd4c80b",
+      "size_bytes": 36438
     },
     {
       "bundle_path": "mission_review.kml",
@@ -66,14 +66,19 @@
       "size_bytes": 2127
     },
     {
+      "bundle_path": "operator_review_ui.html",
+      "sha256": "7586c70976502deb3245fec06e7db4e977b89c2b1460b0dc432bde711a6c4576",
+      "size_bytes": 8508
+    },
+    {
       "bundle_path": "plan.json",
       "sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8",
       "size_bytes": 2542
     },
     {
       "bundle_path": "README.md",
-      "sha256": "c18e03dfd30340f6262f357d4553b10dd0a12c9bb32ded36bf4492bdf31044e5",
-      "size_bytes": 5104
+      "sha256": "09b3b49cb7ac437e6ae253688a50d36ce1bfa8419b31bbf0622879d9f1e798de",
+      "size_bytes": 5457
     },
     {
       "bundle_path": "regulatory_readiness_report.json",

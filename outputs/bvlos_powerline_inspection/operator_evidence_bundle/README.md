@@ -6,11 +6,12 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 
 Regulatory metadata, authorization references, approval checklist items, and evidence fields in this bundle are documentation-only. They support operator review; they are not proof of authorization, legal approval, LAANC, waiver, or operational clearance.
 
-Start with `operator_dashboard.md`, then use `artifact_index.md` to open individual artifacts. `evidence_bundle_summary.md` summarizes completeness, and `checksum_manifest.json` provides lightweight SHA-256 checksums for files in this bundle.
+Start with `operator_dashboard.md`, then use `artifact_index.md` to open individual artifacts. `evidence_bundle_summary.md` summarizes completeness, and `checksum_manifest.json` provides lightweight SHA-256 checksums for files in this bundle. For a local read-only browser view, open `operator_review_ui.html`; the Markdown, JSON, CSV, KML, and checksum artifacts remain accessible outside the UI.
 
 ## Open This First
 
 `operator_dashboard.md` is the first file to open. It gives the mission verdict, mission risk, top limiting constraint, regulatory readiness, evidence completeness, and next operator action before the reviewer drills into details.
+Open `operator_review_ui.html` for the same operator review signals in a lightweight local web UI. Opening or reviewing that page does not approve, authorize, clear, or legally validate a mission.
 
 ## How To Review This Bundle
 

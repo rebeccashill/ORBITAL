@@ -39,6 +39,7 @@ from mission_framework.core.json_utils import write_strict_json
 from mission_framework.core.objective import ScoreConfig
 from mission_framework.core.planner import Planner, PlannerConfig
 from mission_framework.core.types import Plan, SimResult, Trajectory
+from mission_framework.reporting.operator_review_ui import format_operator_review_ui_html
 
 FLIGHT_PLANNING_EXPORT_NOTICE = (
     "Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, "
@@ -3914,6 +3915,13 @@ def _bundle_missing_evidence(
 def _generated_bundle_artifacts() -> List[Dict[str, Any]]:
     return [
         {
+            "id": "operator_review_ui",
+            "label": "Lightweight operator review web UI",
+            "bundle_path": "operator_review_ui.html",
+            "present": True,
+            "generated": True,
+        },
+        {
             "id": "operator_dashboard",
             "label": "Operator evidence dashboard",
             "bundle_path": "operator_dashboard.md",
@@ -5097,13 +5105,18 @@ def export_operator_evidence_bundle(
         "Start with `operator_dashboard.md`, then use `artifact_index.md` to open "
         "individual artifacts. `evidence_bundle_summary.md` summarizes completeness, "
         "and `checksum_manifest.json` provides lightweight SHA-256 checksums for files "
-        "in this bundle.",
+        "in this bundle. For a local read-only browser view, open "
+        "`operator_review_ui.html`; the Markdown, JSON, CSV, KML, and checksum "
+        "artifacts remain accessible outside the UI.",
         "",
         "## Open This First",
         "",
         "`operator_dashboard.md` is the first file to open. It gives the mission verdict, "
         "mission risk, top limiting constraint, regulatory readiness, evidence "
         "completeness, and next operator action before the reviewer drills into details.",
+        "Open `operator_review_ui.html` for the same operator review signals in a "
+        "lightweight local web UI. Opening or reviewing that page does not approve, "
+        "authorize, clear, or legally validate a mission.",
         "",
         "## How To Review This Bundle",
         "",
@@ -5221,6 +5234,10 @@ def export_operator_evidence_bundle(
     )
     (bundle_dir / "artifact_index.md").write_text(
         _format_artifact_index(manifest),
+        encoding="utf-8",
+    )
+    (bundle_dir / "operator_review_ui.html").write_text(
+        format_operator_review_ui_html(manifest),
         encoding="utf-8",
     )
     checksum_payload = {

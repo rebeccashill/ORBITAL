@@ -520,6 +520,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         "flight_planning_exports.md",
         "manifest.json",
         "README.md",
+        "operator_review_ui.html",
         "operator_dashboard.md",
         "evidence_bundle_summary.md",
         "artifact_index.md",
@@ -527,10 +528,13 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     }
     assert {path.name for path in bundle_dir.iterdir()} >= expected_bundle_files
     bundle_readme = (bundle_dir / "README.md").read_text(encoding="utf-8")
+    operator_review_ui = (bundle_dir / "operator_review_ui.html").read_text(encoding="utf-8")
     operator_dashboard = (bundle_dir / "operator_dashboard.md").read_text(encoding="utf-8")
     bundle_summary = (bundle_dir / "evidence_bundle_summary.md").read_text(encoding="utf-8")
     artifact_index = (bundle_dir / "artifact_index.md").read_text(encoding="utf-8")
     assert "Start with `operator_dashboard.md`" in bundle_readme
+    assert "operator_review_ui.html" in bundle_readme
+    assert "local read-only browser view" in bundle_readme
     assert "## Open This First" in bundle_readme
     assert "## How To Review This Bundle" in bundle_readme
     assert "## How To Archive This Bundle" in bundle_readme
@@ -541,6 +545,26 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "Approval Checklist" in bundle_readme
     assert "documentation-only" in bundle_readme
     assert "not proof of authorization" in bundle_readme
+    assert "ORBITAL Operator Review UI" in operator_review_ui
+    assert "Mission Verdict:" in operator_review_ui
+    assert "REVIEW REQUIRED" in operator_review_ui
+    assert "Modeled mission status" in operator_review_ui
+    assert "Mission risk" in operator_review_ui
+    assert "Top limiting constraint" in operator_review_ui
+    assert "Regulatory readiness" in operator_review_ui
+    assert "Evidence completeness" in operator_review_ui
+    assert "Regulatory documentation" in operator_review_ui
+    assert "Weather fallback" in operator_review_ui
+    assert "Robustness / uncertainty" in operator_review_ui
+    assert "Missing evidence" in operator_review_ui
+    assert "Evidence warnings" in operator_review_ui
+    assert "local review surface" in operator_review_ui
+    assert "decision support, not approval" in operator_review_ui
+    assert "does not approve a mission" in operator_review_ui
+    assert "documentation-only records" in operator_review_ui
+    assert "flight_path.png" in operator_review_ui
+    assert "operator_dashboard.md" in operator_review_ui
+    assert "manifest.json" in operator_review_ui
     assert "ORBITAL Operator Evidence Dashboard" in operator_dashboard
     assert "Mission Verdict: REVIEW REQUIRED" in operator_dashboard
     assert "Mission Card" in operator_dashboard
@@ -606,12 +630,16 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert bundle_manifest["trust_defensibility"]["sample_data_demo_note"]["is_demo_or_sample"] is (
         True
     )
+    assert {artifact["id"] for artifact in bundle_manifest["generated_artifacts"]} >= {
+        "operator_review_ui"
+    }
     checksum_manifest = _load_yaml(bundle_dir / "checksum_manifest.json")
     assert checksum_manifest["algorithm"] == "sha256"
     checksum_paths = {item["bundle_path"] for item in checksum_manifest["files"]}
     assert {
         "manifest.json",
         "README.md",
+        "operator_review_ui.html",
         "operator_dashboard.md",
         "evidence_bundle_summary.md",
         "artifact_index.md",

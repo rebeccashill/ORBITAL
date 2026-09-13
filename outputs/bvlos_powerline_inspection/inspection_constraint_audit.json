@@ -942,12 +942,12 @@
       "robustness_cases_configured": 20,
       "robustness_cases_run": 20,
       "command": {
-        "display": "C:\\Users\\shill\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\python.exe -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml --outdir outputs",
+        "display": "C:\\Users\\shill\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\python.exe -m mission_framework.cli examples\\bvlos_powerline_inspection_demo.yaml --outdir outputs",
         "argv": [
           "C:\\Users\\shill\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\python.exe",
           "-m",
           "mission_framework.cli",
-          "examples/bvlos_powerline_inspection_demo.yaml",
+          "examples\\bvlos_powerline_inspection_demo.yaml",
           "--outdir",
           "outputs"
         ]

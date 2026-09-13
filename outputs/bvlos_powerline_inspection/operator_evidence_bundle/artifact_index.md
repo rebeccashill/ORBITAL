@@ -21,7 +21,7 @@ Links are relative to this evidence bundle folder. Open [operator_dashboard.md](
 
 - Expected artifacts included: 17 / 17
 - Expected artifacts missing: 0
-- Generated bundle index artifacts: 6
+- Generated bundle index artifacts: 7
 
 ## Recommended Opening Order
 
@@ -53,6 +53,7 @@ Links are relative to this evidence bundle folder. Open [operator_dashboard.md](
 | Mission review KML | included | [mission_review.kml](mission_review.kml) | expected |
 | Flight-planning exports manifest | included | [flight_planning_exports.json](flight_planning_exports.json) | expected |
 | Flight-planning exports README | included | [flight_planning_exports.md](flight_planning_exports.md) | expected |
+| Lightweight operator review web UI | included | [operator_review_ui.html](operator_review_ui.html) | generated |
 | Operator evidence dashboard | included | [operator_dashboard.md](operator_dashboard.md) | generated |
 | Evidence bundle summary | included | [evidence_bundle_summary.md](evidence_bundle_summary.md) | generated |
 | Evidence bundle artifact index | included | [artifact_index.md](artifact_index.md) | generated |

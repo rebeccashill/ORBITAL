@@ -156,6 +156,7 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     bundle_dir = scenario_dir / "operator_evidence_bundle"
     manifest_json = bundle_dir / "manifest.json"
     bundle_readme = bundle_dir / "README.md"
+    operator_review_ui = bundle_dir / "operator_review_ui.html"
     operator_dashboard = bundle_dir / "operator_dashboard.md"
     bundle_summary = bundle_dir / "evidence_bundle_summary.md"
     artifact_index = bundle_dir / "artifact_index.md"
@@ -171,6 +172,7 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert report_md.is_file()
     assert manifest_json.is_file()
     assert bundle_readme.is_file()
+    assert operator_review_ui.is_file()
     assert operator_dashboard.is_file()
     assert bundle_summary.is_file()
     assert artifact_index.is_file()
@@ -279,7 +281,26 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert {"flight_path_plot", "robustness_summary"} <= {
         item["id"] for item in manifest["missing_evidence"] if item["kind"] == "artifact"
     }
-    assert "Start with `operator_dashboard.md`" in bundle_readme.read_text(encoding="utf-8")
+    bundle_readme_text = bundle_readme.read_text(encoding="utf-8")
+    assert "Start with `operator_dashboard.md`" in bundle_readme_text
+    assert "operator_review_ui.html" in bundle_readme_text
+    assert "local read-only browser view" in bundle_readme_text
+    ui_text = operator_review_ui.read_text(encoding="utf-8")
+    assert "ORBITAL Operator Review UI" in ui_text
+    assert "Mission Verdict:" in ui_text
+    assert "REVIEW REQUIRED" in ui_text
+    assert "Modeled mission status" in ui_text
+    assert "Top limiting constraint" in ui_text
+    assert "Regulatory readiness" in ui_text
+    assert "Evidence completeness" in ui_text
+    assert "Regulatory documentation" in ui_text
+    assert "Weather fallback" in ui_text
+    assert "Robustness / uncertainty" in ui_text
+    assert "Missing evidence" in ui_text
+    assert "Evidence warnings" in ui_text
+    assert "local review surface" in ui_text
+    assert "decision support, not approval" in ui_text
+    assert "does not approve a mission" in ui_text
     dashboard_text = operator_dashboard.read_text(encoding="utf-8")
     assert "ORBITAL Operator Evidence Dashboard" in dashboard_text
     assert "Mission Verdict: REVIEW REQUIRED" in dashboard_text
@@ -312,12 +333,14 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert "Primary constraint-audit report" in artifact_index_text
     assert "What-if planning report" in artifact_index_text
     assert "Regulatory readiness report" in artifact_index_text
+    assert "Lightweight operator review web UI" in artifact_index_text
     assert "Operator evidence dashboard" in artifact_index_text
     assert "Evidence bundle summary" in artifact_index_text
     checksums = json.loads(checksum_manifest.read_text(encoding="utf-8"))
     assert checksums["algorithm"] == "sha256"
     assert {item["bundle_path"] for item in checksums["files"]} >= {
         "manifest.json",
+        "operator_review_ui.html",
         "operator_dashboard.md",
         "evidence_bundle_summary.md",
         "artifact_index.md",
