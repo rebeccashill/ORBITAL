@@ -276,8 +276,7 @@ file, manifest, summary, README, and checksum manifest.
 
 ## Screenshots And Sample Outputs
 
-Use the screenshot set for polished README, demo, and Foundry-style capture
-planning:
+Use the screenshot set for polished README, demo, and Foundry-style visuals:
 
 ```text
 docs/BVLOS_DEMO_SCREENSHOT_SET.md

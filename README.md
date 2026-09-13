@@ -66,7 +66,7 @@ For a presenter-ready BVLOS walkthrough, see the
 [BVLOS powerline demo script](docs/BVLOS_POWERLINE_DEMO_SCRIPT.md). The live
 operator review starts with
 `outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_dashboard.md`.
-For screenshot planning, see the
+For a committed screenshot gallery, see the
 [BVLOS demo screenshot set](docs/BVLOS_DEMO_SCREENSHOT_SET.md).
 The constraint-audit report remains the primary feasibility artifact: it
 translates modeled battery, weather, geofence, route-completion, and
@@ -203,8 +203,8 @@ Regulatory readiness: OPERATOR_ACTION_REQUIRED, documentation-only
 See the [BVLOS powerline demo script](docs/BVLOS_POWERLINE_DEMO_SCRIPT.md) for
 the baseline feasibility, limiting constraint, what-if comparison, regulatory
 readiness, and evidence bundle walkthrough. See the
-[BVLOS demo screenshot set](docs/BVLOS_DEMO_SCREENSHOT_SET.md) for dashboard,
-summary, audit, regulatory, index, and plot capture guidance.
+[BVLOS demo screenshot set](docs/BVLOS_DEMO_SCREENSHOT_SET.md) for captured
+dashboard, audit, what-if, regulatory, index, and plot visuals with captions.
 
 Evidence bundle quick checks do not rerun optimization:
 
