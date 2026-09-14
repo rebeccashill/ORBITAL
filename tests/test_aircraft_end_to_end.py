@@ -446,11 +446,24 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert evidence["complete"] is True
     assert evidence["bundle_completeness_score"] == 100.0
     assert evidence["bundle_completeness"]["complete"] is True
+    assert evidence["manifest_version"] == 1
+    assert evidence["ui_manifest_version"] == 1
+    assert evidence["ui_compatibility"]["schema_version"] == 1
+    assert "manifest_version" in evidence["ui_compatibility"]["required_top_level_fields"]
+    assert evidence["ui_compatibility"]["artifact_access"]["outside_ui_required"] is True
+    assert "dashboard" in evidence["ui_compatibility"]["artifact_access"]["expected_formats"]
+    assert (
+        "non-link unavailable labels"
+        in evidence["ui_compatibility"]["artifact_access"]["unavailable_artifact_policy"]
+    )
     assert evidence["artifact_completeness"]["score"] == 100.0
     assert evidence["regulatory_documentation_completeness"]["score"] == 100.0
-    assert evidence["regulatory_documentation_completeness"]["documented_fields"] == 8
-    assert evidence["regulatory_documentation_completeness"]["total_fields"] == 8
-    assert evidence["bundle_warnings"] == []
+    assert evidence["regulatory_documentation_completeness"]["documented_fields"] == 11
+    assert evidence["regulatory_documentation_completeness"]["total_fields"] == 11
+    assert {warning["kind"] for warning in evidence["bundle_warnings"]} >= {
+        "weather_evidence",
+        "regulatory_evidence_provenance",
+    }
     assert evidence["missing_evidence"] == []
     assert evidence["operator_review"]["status"] == "ready_for_review"
     assert evidence["operator_review"]["reviewer_name"] is None
@@ -470,6 +483,14 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert evidence["freshness"]["command"]["display"] == "not provided"
     assert evidence["weather"]["source"] == "offline Open-Meteo-shaped sample"
     assert evidence["weather"]["timestamp_utc"] == "2026-09-11T16:00:00Z"
+    assert evidence["weather_evidence_readiness"]["status"] == "STALE"
+    assert evidence["weather_evidence_readiness"]["mode"] == "sample"
+    assert evidence["regulatory_evidence_provenance"]["status"] == "STALE"
+    assert (
+        evidence["regulatory_evidence_provenance"]["operator_confirmation_status"]
+        == "pending_operator_confirmation"
+    )
+    assert evidence["checksum_evidence_readiness"]["status"] == "VERIFY REQUIRED"
     assert evidence["regulatory_metadata"]["laanc_required"] is True
     assert evidence["regulatory_metadata"]["waiver_or_authorization_required"] is True
     assert evidence["regulatory_metadata"]["airspace_class"] == "Class D"
@@ -485,6 +506,9 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert evidence["approval_checklist"]["item_count"] == len(checklist)
     for artifact in evidence["artifacts"]:
         assert "freshness" in artifact
+        assert artifact["opens_outside_ui"] is True
+        assert artifact["ui_link_behavior"] == "link_when_present_else_unavailable_label"
+        assert artifact["artifact_format"]
         if artifact["present"]:
             assert artifact["freshness"]["bundle_sha256"]
             assert artifact["freshness"]["stale_against_scenario"] is False
@@ -542,19 +566,40 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "Regulatory documentation completeness is reported separately" in bundle_readme
     assert "bundle-verify" in bundle_readme
     assert "Regulatory Readiness" in bundle_readme
+    assert "Weather / Live Evidence Readiness" in bundle_readme
+    assert "Regulatory Evidence Provenance" in bundle_readme
     assert "Approval Checklist" in bundle_readme
     assert "documentation-only" in bundle_readme
     assert "not proof of authorization" in bundle_readme
     assert "ORBITAL Operator Review UI" in operator_review_ui
     assert "Mission Verdict:" in operator_review_ui
     assert "REVIEW REQUIRED" in operator_review_ui
+    assert "Review Order" in operator_review_ui
+    assert (
+        "Verdict -> top constraint -> trust signals -> artifacts -> checksum" in operator_review_ui
+    )
+    assert "First artifact to open" in operator_review_ui
+    assert "Raw Evidence Quick Links" in operator_review_ui
+    assert "Manifest Compatibility" in operator_review_ui
+    assert "Manifest version" in operator_review_ui
+    assert "UI schema" in operator_review_ui
+    assert "Markdown, JSON, CSV, KML, PNG, manifest, checksum, dashboard" in operator_review_ui
+    assert "Checksum Review" in operator_review_ui
+    assert "Print / demo view" in operator_review_ui
+    assert 'class="skip-link"' in operator_review_ui
+    assert 'tabindex="0"' in operator_review_ui
+    assert "Why This Verdict?" in operator_review_ui
+    assert "Model Assumptions" in operator_review_ui
+    assert "Artifact Freshness" in operator_review_ui
+    assert "Operator should verify" in operator_review_ui
     assert "Modeled mission status" in operator_review_ui
     assert "Mission risk" in operator_review_ui
     assert "Top limiting constraint" in operator_review_ui
     assert "Regulatory readiness" in operator_review_ui
     assert "Evidence completeness" in operator_review_ui
     assert "Regulatory documentation" in operator_review_ui
-    assert "Weather fallback" in operator_review_ui
+    assert "Weather evidence" in operator_review_ui
+    assert "Weather / Live Evidence" in operator_review_ui
     assert "Robustness / uncertainty" in operator_review_ui
     assert "Missing evidence" in operator_review_ui
     assert "Evidence warnings" in operator_review_ui
@@ -567,7 +612,30 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "manifest.json" in operator_review_ui
     assert "ORBITAL Operator Evidence Dashboard" in operator_dashboard
     assert "Mission Verdict: REVIEW REQUIRED" in operator_dashboard
+    assert "30-Second Review Path" in operator_dashboard
+    assert (
+        "Review order: Verdict -> top constraint -> trust signals -> artifacts -> checksum."
+        in operator_dashboard
+    )
+    assert (
+        "**First artifact to open:** [operator_dashboard.md](operator_dashboard.md)"
+        in operator_dashboard
+    )
+    assert "Raw Evidence Quick Links" in operator_dashboard
+    assert "Manifest Compatibility" in operator_dashboard
+    assert "| Manifest version | 1 |" in operator_dashboard
+    assert (
+        "Unavailable artifacts are rendered as unavailable text, not links." in operator_dashboard
+    )
+    assert "| Raw Markdown |" in operator_dashboard
+    assert "| JSON Evidence |" in operator_dashboard
+    assert "| CSV / KML |" in operator_dashboard
+    assert "| Plots |" in operator_dashboard
+    assert "| Manifest / checksum |" in operator_dashboard
     assert "Mission Card" in operator_dashboard
+    assert "Why This Verdict?" in operator_dashboard
+    assert "The verdict is REVIEW REQUIRED because modeled feasibility is GO" in operator_dashboard
+    assert "Model Assumptions Snapshot" in operator_dashboard
     assert "| Verdict | REVIEW REQUIRED |" in operator_dashboard
     assert "10-Second Mission Read" in operator_dashboard
     assert "Recommended Opening Sequence" in operator_dashboard
@@ -577,7 +645,9 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "Top limiting constraint:" in operator_dashboard
     assert "Regulatory readiness: OPERATOR_ACTION_REQUIRED" in operator_dashboard
     assert "Bundle completeness: 100.0 %" in operator_dashboard
-    assert "Weather fallback status" in operator_dashboard
+    assert "Weather evidence status" in operator_dashboard
+    assert "Regulatory provenance" in operator_dashboard
+    assert "Checksum evidence" in operator_dashboard
     assert "Robustness status" in operator_dashboard
     assert "No robustness cases were recorded" in operator_dashboard
     assert "Trust And Defensibility" in operator_dashboard
@@ -585,6 +655,8 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "Model Assumptions Summary" in operator_dashboard
     assert "Known Limitations Summary" in operator_dashboard
     assert "Evidence Warnings At A Glance" in operator_dashboard
+    assert "Stale / Missing / Mismatched Evidence Scan" in operator_dashboard
+    assert "Artifact Freshness Summary" in operator_dashboard
     assert "Operator decision: pending operator review" in operator_dashboard
     assert "Review notes: Demo bundle ready for operator review" in operator_dashboard
     assert "not approval, not authorization, not legal advice" in operator_dashboard
@@ -597,6 +669,10 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "[autopilot_mission.csv](autopilot_mission.csv)" in operator_dashboard
     assert "[mission_review.kml](mission_review.kml)" in operator_dashboard
     assert "Completeness score: 100.0 %" in bundle_summary
+    assert "UI Manifest Compatibility" in bundle_summary
+    assert "Markdown, JSON, CSV, KML, PNG, manifest, checksum, and dashboard artifacts" in (
+        bundle_summary
+    )
     assert "Reviewer Snapshot" in bundle_summary
     assert "Recommended Review Flow" in bundle_summary
     assert "Artifact completeness score: 100.0 %" in bundle_summary
@@ -606,7 +682,9 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "Command used: not provided" in bundle_summary
     assert "Bundle Warnings" in bundle_summary
     assert "Trust And Defensibility" in bundle_summary
-    assert "Weather fallback status:" in bundle_summary
+    assert "Weather evidence readiness:" in bundle_summary
+    assert "Regulatory evidence provenance:" in bundle_summary
+    assert "Checksum evidence readiness:" in bundle_summary
     assert "Uncertainty / robustness status:" in bundle_summary
     assert "Operator review status: ready for review" in bundle_summary
     assert "Operator decision: pending operator review" in bundle_summary
@@ -626,13 +704,20 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
         == "NOT RUN"
     )
     assert bundle_manifest["trust_defensibility"]["uncertainty_robustness_status"]["cases"] == 0
-    assert bundle_manifest["trust_defensibility"]["evidence_warning_summary"]["status"] == "CLEAR"
+    assert (
+        bundle_manifest["trust_defensibility"]["evidence_warning_summary"]["status"]
+        == "REVIEW REQUIRED"
+    )
     assert bundle_manifest["trust_defensibility"]["sample_data_demo_note"]["is_demo_or_sample"] is (
         True
     )
     assert {artifact["id"] for artifact in bundle_manifest["generated_artifacts"]} >= {
         "operator_review_ui"
     }
+    for artifact in bundle_manifest["generated_artifacts"]:
+        assert artifact["opens_outside_ui"] is True
+        assert artifact["ui_link_behavior"] == "link_when_present_else_unavailable_label"
+        assert artifact["artifact_format"]
     checksum_manifest = _load_yaml(bundle_dir / "checksum_manifest.json")
     assert checksum_manifest["algorithm"] == "sha256"
     checksum_paths = {item["bundle_path"] for item in checksum_manifest["files"]}
@@ -655,8 +740,11 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     missing_cfg.pop("evidence_bundle", None)
     for key in (
         "authorization_id",
+        "authorization_authority",
         "approving_authority_source",
+        "authorization_date_checked_utc",
         "authorization_expiration_date",
+        "operator_confirmation_status",
         "operating_altitude_limit_m",
         "special_conditions_limitations",
         "emergency_contingency_plan",
@@ -714,8 +802,11 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     }
     assert {
         "regulatory.authorization_id",
+        "regulatory.authorization_authority",
         "regulatory.approving_authority_source",
+        "regulatory.authorization_date_checked_utc",
         "regulatory.authorization_expiration_date",
+        "regulatory.operator_confirmation_status",
         "regulatory.operating_altitude_limit_m",
         "regulatory.operating_time_window",
         "regulatory.required_crew_roles",

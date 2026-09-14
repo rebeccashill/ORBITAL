@@ -30,8 +30,11 @@ ORBITAL provides decision support only and is not legal approval. This report do
 Optional documentation-only evidence fields. ORBITAL records these values for operator review but does not verify, approve, or issue authorizations.
 
 - Authorization ID / reference number: example authorization reference only
+- Authorization authority: FAA / LAANC provider placeholder
 - Approving authority / source: Operator-provided example authority source for documentation-only demo
+- Authorization date checked: 2026-09-11T15:45:00Z
 - Authorization expiration date: 2026-12-31
+- Operator confirmation status: pending_operator_confirmation
 - Operating altitude limit: 120.0 m
 - Operating time window: 2026-09-11T16:00:00Z to 2026-09-11T18:00:00Z
 - Required crew roles: Remote pilot in command, Visual observer

@@ -346,9 +346,9 @@ def _bundle_dashboard_verdict(
         }
     return {
         "label": "GO",
-        "meaning": "Modeled feasibility and bundle evidence are ready for normal signoff.",
+        "meaning": "Modeled feasibility and bundle evidence are ready for normal operator review.",
         "next_action": (
-            "Proceed to normal operator signoff, verify checksums, and archive the "
+            "Proceed to normal operator review, verify checksums, and archive the "
             "evidence bundle."
         ),
     }
@@ -735,6 +735,15 @@ def _parse_review_timestamp(value: Any) -> bool:
     return True
 
 
+def _mapping_has_path(mapping: Dict[str, Any], path: str) -> bool:
+    current: Any = mapping
+    for part in path.split("."):
+        if not isinstance(current, dict) or part not in current:
+            return False
+        current = current[part]
+    return True
+
+
 def _bundle_review_validate_command(argv: Sequence[str]) -> int:
     ap = argparse.ArgumentParser(
         description="Validate evidence bundle review metadata without rerunning optimization."
@@ -818,11 +827,52 @@ def _bundle_review_validate_command(argv: Sequence[str]) -> int:
                 "message": "bundle has missing evidence; review status may need attention",
             }
         )
+    manifest_version = manifest.get("manifest_version")
+    ui_compatibility = manifest.get("ui_compatibility") or {}
+    ui_schema_version = ui_compatibility.get("schema_version")
+    required_ui_fields = ui_compatibility.get("required_top_level_fields") or []
+    artifact_entry_fields = ui_compatibility.get("artifact_entry_required_fields") or []
+    if manifest_version is None:
+        warnings.append(
+            {
+                "path": "manifest_version",
+                "message": "manifest has no explicit version; UI compatibility is legacy/unknown",
+            }
+        )
+    if not ui_compatibility:
+        warnings.append(
+            {
+                "path": "ui_compatibility",
+                "message": "manifest does not declare UI-facing schema expectations",
+            }
+        )
+    else:
+        for required_path in required_ui_fields:
+            if not _mapping_has_path(manifest, str(required_path)):
+                errors.append(
+                    {
+                        "path": str(required_path),
+                        "message": "required UI-facing manifest field is missing",
+                    }
+                )
+        for collection_name in ("artifacts", "generated_artifacts"):
+            for index, entry in enumerate(manifest.get(collection_name, []) or []):
+                for field in artifact_entry_fields:
+                    if not isinstance(entry, dict) or field not in entry:
+                        errors.append(
+                            {
+                                "path": f"{collection_name}[{index}].{field}",
+                                "message": "required UI-facing artifact field is missing",
+                            }
+                        )
 
     payload = {
         "bundle_dir": str(bundle_dir),
         "valid": not errors,
         "status": status,
+        "manifest_version": manifest_version,
+        "ui_schema_version": ui_schema_version,
+        "ui_required_field_count": len(required_ui_fields),
         "documentation_only": bool(review.get("documentation_only", True)),
         "errors": errors,
         "warnings": warnings,
@@ -835,6 +885,12 @@ def _bundle_review_validate_command(argv: Sequence[str]) -> int:
     print(f"Bundle: {bundle_dir}")
     print(f"Review metadata: {'VALID' if payload['valid'] else 'INVALID'}")
     print(f"Operator review status: {status or 'not provided'}")
+    print(f"Manifest version: {manifest_version or 'legacy / not provided'}")
+    print(f"UI schema version: {ui_schema_version or 'not provided'}")
+    print(
+        "UI-facing manifest fields: "
+        f"{'OK' if not any(error['message'] == 'required UI-facing manifest field is missing' for error in errors) else 'needs attention'}"
+    )
     print("Documentation-only: yes")
     if errors:
         print("Errors:")

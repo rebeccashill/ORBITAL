@@ -268,6 +268,12 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert manifest["constraint_audit"]["status"] == "go"
     assert manifest["constraint_audit"]["mission_risk"] in {"low", "medium", "high"}
     assert manifest["constraint_audit"]["top_limiting_constraint"]["label"]
+    assert manifest["manifest_version"] == 1
+    assert manifest["ui_manifest_version"] == 1
+    assert manifest["ui_compatibility"]["schema_version"] == 1
+    assert "manifest_version" in manifest["ui_compatibility"]["required_top_level_fields"]
+    assert manifest["ui_compatibility"]["artifact_access"]["outside_ui_required"] is True
+    assert "dashboard" in manifest["ui_compatibility"]["artifact_access"]["expected_formats"]
     assert manifest["regulatory_readiness"]["readiness_state"] == "operator_action_required"
     assert manifest["artifact_completeness"]["score"] == manifest["bundle_completeness_score"]
     assert manifest["regulatory_documentation_completeness"]["score"] == 100.0
@@ -279,6 +285,16 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert manifest["regulatory_metadata"]["laanc_required"] is True
     assert manifest["approval_checklist"]["item_count"] >= 8
     assert manifest["regulatory_evidence_status"]["missing"] == []
+    assert manifest["weather_evidence_readiness"]["status"] in {
+        "STALE",
+        "SAMPLE",
+        "FALLBACK USED",
+    }
+    assert manifest["regulatory_evidence_provenance"]["status"] in {
+        "STALE",
+        "PENDING OPERATOR CONFIRMATION",
+    }
+    assert manifest["checksum_evidence_readiness"]["status"] == "VERIFY REQUIRED"
     assert 0.0 < manifest["bundle_completeness_score"] < 100.0
     assert manifest["operator_review"]["status"] == "draft"
     assert {warning["kind"] for warning in manifest["bundle_warnings"]} >= {"missing_artifact"}
@@ -293,12 +309,28 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert "ORBITAL Operator Review UI" in ui_text
     assert "Mission Verdict:" in ui_text
     assert "REVIEW REQUIRED" in ui_text
+    assert "Review Order" in ui_text
+    assert "Verdict -> top constraint -> trust signals -> artifacts -> checksum" in ui_text
+    assert "First artifact to open" in ui_text
+    assert "Raw Evidence Quick Links" in ui_text
+    assert "Manifest Compatibility" in ui_text
+    assert "Manifest version" in ui_text
+    assert "UI schema" in ui_text
+    assert "Markdown, JSON, CSV, KML, PNG, manifest, checksum, dashboard" in ui_text
+    assert "Checksum Review" in ui_text
+    assert "Print / demo view" in ui_text
+    assert 'class="skip-link"' in ui_text
+    assert 'tabindex="0"' in ui_text
+    assert "Why This Verdict?" in ui_text
+    assert "Model Assumptions" in ui_text
+    assert "Artifact Freshness" in ui_text
     assert "Modeled mission status" in ui_text
     assert "Top limiting constraint" in ui_text
     assert "Regulatory readiness" in ui_text
     assert "Evidence completeness" in ui_text
     assert "Regulatory documentation" in ui_text
-    assert "Weather fallback" in ui_text
+    assert "Weather evidence" in ui_text
+    assert "Weather / Live Evidence" in ui_text
     assert "Robustness / uncertainty" in ui_text
     assert "Missing evidence" in ui_text
     assert "Evidence warnings" in ui_text
@@ -308,7 +340,28 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     dashboard_text = operator_dashboard.read_text(encoding="utf-8")
     assert "ORBITAL Operator Evidence Dashboard" in dashboard_text
     assert "Mission Verdict: REVIEW REQUIRED" in dashboard_text
+    assert "30-Second Review Path" in dashboard_text
+    assert (
+        "Review order: Verdict -> top constraint -> trust signals -> artifacts -> checksum."
+        in dashboard_text
+    )
+    assert (
+        "**First artifact to open:** [operator_dashboard.md](operator_dashboard.md)"
+        in dashboard_text
+    )
+    assert "Raw Evidence Quick Links" in dashboard_text
+    assert "Manifest Compatibility" in dashboard_text
+    assert "| Manifest version | 1 |" in dashboard_text
+    assert "Unavailable artifacts are rendered as unavailable text, not links." in dashboard_text
+    assert "| Raw Markdown |" in dashboard_text
+    assert "| JSON Evidence |" in dashboard_text
+    assert "| CSV / KML |" in dashboard_text
+    assert "| Plots |" in dashboard_text
+    assert "| Manifest / checksum |" in dashboard_text
     assert "Mission Card" in dashboard_text
+    assert "Why This Verdict?" in dashboard_text
+    assert "Model Assumptions Snapshot" in dashboard_text
+    assert "Artifact Freshness Summary" in dashboard_text
     assert "| Verdict | REVIEW REQUIRED |" in dashboard_text
     assert "10-Second Mission Read" in dashboard_text
     assert "Recommended Opening Sequence" in dashboard_text
@@ -326,6 +379,10 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert "[mission_review.kml](mission_review.kml)" in dashboard_text
     bundle_summary_text = bundle_summary.read_text(encoding="utf-8")
     assert "Completeness score:" in bundle_summary_text
+    assert "UI Manifest Compatibility" in bundle_summary_text
+    assert "Markdown, JSON, CSV, KML, PNG, manifest, checksum, and dashboard artifacts" in (
+        bundle_summary_text
+    )
     assert "Reviewer Snapshot" in bundle_summary_text
     assert "Recommended Review Flow" in bundle_summary_text
     artifact_index_text = artifact_index.read_text(encoding="utf-8")
@@ -463,6 +520,9 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert review_result.returncode == 0, review_result.stdout + review_result.stderr
     assert "Review metadata: VALID" in review_result.stdout
     assert "Operator review status: draft" in review_result.stdout
+    assert "Manifest version: 1" in review_result.stdout
+    assert "UI schema version: 1" in review_result.stdout
+    assert "UI-facing manifest fields: OK" in review_result.stdout
 
     serve_result = subprocess.run(
         [

@@ -5,6 +5,64 @@ from html import escape
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+_ARTIFACT_DEFINITIONS: tuple[tuple[tuple[str, ...], str], ...] = (
+    (("operator_dashboard",), "operator_dashboard.md"),
+    (("constraint_audit_markdown",), "inspection_constraint_audit.md"),
+    (("what_if_plan_markdown",), "what_if_plan.md"),
+    (("regulatory_readiness_markdown",), "regulatory_readiness_report.md"),
+    (("bundle_summary",), "evidence_bundle_summary.md"),
+    (("artifact_index",), "artifact_index.md"),
+    (("manifest_json",), "manifest.json"),
+    (("checksum_manifest",), "checksum_manifest.json"),
+    (("flight_path_plot",), "flight_path.png"),
+    (("autopilot_mission_csv",), "autopilot_mission.csv"),
+    (("mission_review_kml",), "mission_review.kml"),
+)
+
+_RAW_EVIDENCE_GROUPS: tuple[tuple[str, tuple[tuple[tuple[str, ...], str], ...]], ...] = (
+    (
+        "Raw Markdown",
+        (
+            (("operator_dashboard",), "operator_dashboard.md"),
+            (("constraint_audit_markdown",), "inspection_constraint_audit.md"),
+            (("what_if_plan_markdown",), "what_if_plan.md"),
+            (("regulatory_readiness_markdown",), "regulatory_readiness_report.md"),
+            (("bundle_summary",), "evidence_bundle_summary.md"),
+            (("artifact_index",), "artifact_index.md"),
+        ),
+    ),
+    (
+        "JSON Evidence",
+        (
+            (("plan_json",), "plan.json"),
+            (("constraint_audit_json",), "inspection_constraint_audit.json"),
+            (("what_if_plan_json",), "what_if_plan.json"),
+            (("regulatory_readiness_json",), "regulatory_readiness_report.json"),
+            (("score_breakdown",), "score_breakdown.json"),
+            (("weather_snapshot",), "weather_snapshot.json"),
+            (("robustness_summary",), "robustness_summary.json"),
+        ),
+    ),
+    (
+        "CSV / KML",
+        (
+            (("autopilot_mission_csv",), "autopilot_mission.csv"),
+            (("mission_review_kml",), "mission_review.kml"),
+        ),
+    ),
+    (
+        "Plots",
+        ((("flight_path_plot",), "flight_path.png"),),
+    ),
+    (
+        "Manifest / checksum",
+        (
+            (("manifest_json",), "manifest.json"),
+            (("checksum_manifest",), "checksum_manifest.json"),
+        ),
+    ),
+)
+
 
 def _text(value: Any, default: str = "not provided") -> str:
     if value is None:
@@ -66,6 +124,9 @@ def _status_class(value: Any) -> str:
         "ready",
         "ready_for_review",
         "configured_source",
+        "documented",
+        "fresh",
+        "live",
         "low",
     }:
         return "status-good"
@@ -75,12 +136,17 @@ def _status_class(value: Any) -> str:
         "operator_action_required",
         "warning",
         "fallback_used",
+        "packaged",
+        "pending_operator_confirmation",
+        "sample",
+        "stale",
+        "verify_required",
         "not_run",
         "medium",
         "moderate",
     }:
         return "status-review"
-    if normalized in {"modify", "fail", "failed", "elevated_risk", "high"}:
+    if normalized in {"modify", "fail", "failed", "elevated_risk", "expired", "missing", "high"}:
         return "status-bad"
     return "status-neutral"
 
@@ -139,6 +205,62 @@ def _dashboard_verdict(
     }
 
 
+def _verdict_derivation(
+    *,
+    verdict: Mapping[str, Any],
+    mission_status: str,
+    regulatory_state: str,
+    missing_evidence_count: int,
+    warning_count: int,
+) -> dict[str, Any]:
+    mission_key = mission_status.replace(" ", "_")
+    regulatory_key = regulatory_state.replace(" ", "_")
+    if mission_key != "GO":
+        explanation = "The verdict is MODIFY because the modeled mission status is not GO."
+    elif (
+        regulatory_key == "OPERATOR_ACTION_REQUIRED"
+        or missing_evidence_count > 0
+        or warning_count > 0
+    ):
+        explanation = (
+            "The verdict is REVIEW REQUIRED because modeled feasibility is GO but "
+            "regulatory readiness, missing evidence, or bundle warnings still need "
+            "operator attention."
+        )
+    else:
+        explanation = (
+            "The verdict is GO because modeled mission status is GO, regulatory "
+            "readiness does not require action, and no missing evidence or bundle "
+            "warnings are recorded."
+        )
+    return {
+        "label": verdict.get("label"),
+        "explanation": explanation,
+        "inputs": [
+            {
+                "signal": "Modeled mission status",
+                "value": mission_status,
+                "effect": "MODIFY if not GO.",
+            },
+            {
+                "signal": "Regulatory readiness",
+                "value": regulatory_state,
+                "effect": "REVIEW REQUIRED when OPERATOR_ACTION_REQUIRED.",
+            },
+            {
+                "signal": "Missing evidence",
+                "value": f"{missing_evidence_count} item(s)",
+                "effect": "REVIEW REQUIRED when greater than 0.",
+            },
+            {
+                "signal": "Bundle warnings",
+                "value": f"{warning_count} warning(s)",
+                "effect": "REVIEW REQUIRED when greater than 0.",
+            },
+        ],
+    }
+
+
 def _warning_kind_count(warnings: Sequence[Mapping[str, Any]], *kinds: str) -> int:
     wanted = set(kinds)
     return sum(1 for warning in warnings if warning.get("kind") in wanted)
@@ -172,19 +294,48 @@ def _href(bundle_path: Any) -> str:
     return escape(path, quote=True)
 
 
+def _artifact_kind(label: str) -> str:
+    suffix = Path(label).suffix.strip(".").upper()
+    return suffix if suffix else "FILE"
+
+
+def _slug(value: str) -> str:
+    rendered = []
+    previous_dash = False
+    for char in value.strip().lower():
+        if char.isalnum():
+            rendered.append(char)
+            previous_dash = False
+        elif not previous_dash:
+            rendered.append("-")
+            previous_dash = True
+    slug = "".join(rendered).strip("-")
+    return slug or "section"
+
+
 def _artifact_link(manifest: Mapping[str, Any], ids: Sequence[str], label: str) -> str:
     entry = _artifact_entry(manifest, ids)
+    kind = escape(_artifact_kind(label))
     if entry and entry.get("present") and entry.get("bundle_path"):
-        return f'<a href="{_href(entry.get("bundle_path"))}">{escape(label)}</a>'
-    return f'<span class="unavailable">{escape(label)} unavailable</span>'
+        aria_label = escape(f"Open {label}", quote=True)
+        return (
+            f'<a class="artifact-link" href="{_href(entry.get("bundle_path"))}" '
+            f'aria-label="{aria_label}">'
+            f"<span>{escape(label)}</span><small>{kind}</small></a>"
+        )
+    return (
+        '<span class="artifact-link artifact-unavailable unavailable">'
+        f"<span>{escape(label)} unavailable</span><small>Missing</small></span>"
+    )
 
 
 def _open_first(manifest: Mapping[str, Any]) -> str:
     return (
-        '<div class="open-first" data-open-first>'
-        "<span>Open first</span>"
+        '<div class="open-first" data-open-first aria-label="First artifact to open">'
+        "<span>Open first: first artifact to open</span>"
         f"{_artifact_link(manifest, ('operator_dashboard',), 'operator_dashboard.md')}"
-        "<p>Start here for the verdict, next action, and 30-second mission read.</p>"
+        "<p>Start here for the verdict, next action, and 30-second mission read. "
+        "This is the primary review surface before opening supporting artifacts.</p>"
         "</div>"
     )
 
@@ -236,29 +387,179 @@ def _compact_list(items: Sequence[Any], *, empty: str = "none", limit: int = 3) 
     return "\n".join(rendered)
 
 
+def _model_assumptions_preview(trust: Mapping[str, Any], *, limit: int = 3) -> str:
+    assumptions = list(trust.get("model_assumptions_summary", []) or [])
+    if not assumptions:
+        return (
+            '<p class="compact-note">No model assumptions were captured. Operator should '
+            "verify scenario inputs in the constraint audit.</p>"
+        )
+    items = []
+    for item in assumptions[:limit]:
+        label = _text(item.get("label") or item.get("id"), "Model assumption")
+        assumption = _short_text(item.get("assumption"), "not provided", 120)
+        operator_note = _short_text(
+            item.get("operator_review_note"),
+            "Operator should verify this assumption before release.",
+            110,
+        )
+        items.append(
+            "<li>"
+            f"<strong>{escape(label)}</strong>"
+            f"<span>{escape(assumption)}</span>"
+            f"<em>{escape(operator_note)}</em>"
+            "</li>"
+        )
+    return '<ul class="assumption-list">' + "\n".join(items) + "</ul>"
+
+
+def _artifact_freshness_preview(manifest: Mapping[str, Any], *, limit: int = 5) -> str:
+    priority = {
+        "scenario_yaml": 0,
+        "constraint_audit_markdown": 1,
+        "regulatory_readiness_markdown": 2,
+        "what_if_plan_markdown": 3,
+        "weather_snapshot": 4,
+        "autopilot_mission_csv": 5,
+        "mission_review_kml": 6,
+    }
+    entries = sorted(
+        list(manifest.get("artifacts", []) or []),
+        key=lambda item: (
+            priority.get(str(item.get("id")), 99),
+            str(item.get("label") or item.get("id") or ""),
+        ),
+    )
+    rows = []
+    for entry in entries[:limit]:
+        freshness = entry.get("freshness") if isinstance(entry.get("freshness"), Mapping) else {}
+        present = bool(entry.get("present"))
+        stale = bool(freshness.get("stale_against_scenario"))
+        if not present:
+            status = "MISSING"
+        elif stale:
+            status = "STALE"
+        else:
+            status = "CURRENT"
+        rows.append(
+            "<div>"
+            f"<span>{escape(_text(entry.get('label') or entry.get('id'), 'Artifact'))}</span>"
+            f'<strong class="{_status_class(status)}">{escape(status)}</strong>'
+            f"<small>source {escape(_text(freshness.get('source_modified_utc')))}</small>"
+            f"<small>bundle {escape(_text(freshness.get('bundle_modified_utc')))}</small>"
+            "</div>"
+        )
+    if not rows:
+        return '<p class="compact-note">No artifact freshness metadata captured.</p>'
+    return '<div class="freshness-list">' + "\n".join(rows) + "</div>"
+
+
+def _compatibility(manifest: Mapping[str, Any]) -> Mapping[str, Any]:
+    return _as_mapping(manifest.get("ui_compatibility"))
+
+
+def _as_mapping(value: Any) -> Mapping[str, Any]:
+    return value if isinstance(value, Mapping) else {}
+
+
+def _freshness_checksum_strip(manifest: Mapping[str, Any]) -> str:
+    freshness = _as_mapping(manifest.get("freshness"))
+    checksum = _as_mapping(manifest.get("checksum_evidence_readiness"))
+    compatibility = _compatibility(manifest)
+    manifest_version = (
+        manifest.get("manifest_version")
+        or manifest.get("ui_manifest_version")
+        or compatibility.get("manifest_version")
+    )
+    checksum_status = _status_label(checksum.get("status"))
+    return (
+        '<section class="freshness-strip" aria-label="Manifest, checksum, and freshness status">'
+        "<article>"
+        "<span>Manifest version</span>"
+        f'<strong data-field="manifest-version">{escape(_text(manifest_version, "legacy / not provided"))}</strong>'
+        f"<small>UI schema {escape(_text(compatibility.get('schema_version')))}</small>"
+        "</article>"
+        "<article>"
+        "<span>Generated</span>"
+        f'<strong data-field="generated-timestamp">{escape(_text(freshness.get("generated_timestamp_utc")))}</strong>'
+        f"<small>scenario {escape(_text(freshness.get('scenario_modified_utc')))}</small>"
+        "</article>"
+        "<article>"
+        "<span>Checksum</span>"
+        f'<strong class="{_status_class(checksum_status)}" data-field="checksum-status">{escape(checksum_status)}</strong>'
+        f"<small>{escape(_short_text(checksum.get('operator_action'), 'Run bundle checksum verification before archiving.', 110))}</small>"
+        "</article>"
+        "</section>"
+    )
+
+
+def _manifest_compatibility_panel(manifest: Mapping[str, Any]) -> str:
+    compatibility = _compatibility(manifest)
+    artifact_access = _as_mapping(compatibility.get("artifact_access"))
+    required_fields = list(compatibility.get("required_top_level_fields") or [])
+    fallback_count = len(compatibility.get("optional_field_fallbacks") or {})
+    expected_formats = ", ".join(artifact_access.get("expected_formats") or []) or (
+        "Markdown, JSON, CSV, KML, PNG, manifest, checksum, dashboard"
+    )
+    return (
+        "<div data-ui-compatibility>"
+        '<div class="meta-grid">'
+        f"{_kv('Manifest version', manifest.get('manifest_version') or compatibility.get('manifest_version'), _status_class('documented'))}"
+        f"{_kv('UI schema', compatibility.get('schema_version'))}"
+        f"{_kv('Required UI fields', f'{len(required_fields)} expected')}"
+        f"{_kv('Fallback fields', f'{fallback_count} documented')}"
+        "</div>"
+        f'<p class="compact-note">{escape(_text(compatibility.get("optional_field_fallback_policy"), "Optional UI fields use explicit fallback text."))}</p>'
+        f'<p class="compact-note">Outside-UI access: {escape(expected_formats)}.</p>'
+        f'<p class="compact-note">{escape(_text(artifact_access.get("unavailable_artifact_policy"), "Unavailable artifacts render as non-link unavailable labels."))}</p>'
+        "</div>"
+    )
+
+
 def _source_links(manifest: Mapping[str, Any]) -> str:
-    links = [
-        _artifact_link(manifest, ("operator_dashboard",), "operator_dashboard.md"),
-        _artifact_link(
-            manifest,
-            ("constraint_audit_markdown",),
-            "inspection_constraint_audit.md",
-        ),
-        _artifact_link(manifest, ("what_if_plan_markdown",), "what_if_plan.md"),
-        _artifact_link(
-            manifest,
-            ("regulatory_readiness_markdown",),
-            "regulatory_readiness_report.md",
-        ),
-        _artifact_link(manifest, ("bundle_summary",), "evidence_bundle_summary.md"),
-        _artifact_link(manifest, ("artifact_index",), "artifact_index.md"),
-        _artifact_link(manifest, ("manifest_json",), "manifest.json"),
-        _artifact_link(manifest, ("checksum_manifest",), "checksum_manifest.json"),
-        _artifact_link(manifest, ("flight_path_plot",), "flight_path.png"),
-        _artifact_link(manifest, ("autopilot_mission_csv",), "autopilot_mission.csv"),
-        _artifact_link(manifest, ("mission_review_kml",), "mission_review.kml"),
-    ]
+    links = [_artifact_link(manifest, ids, label) for ids, label in _ARTIFACT_DEFINITIONS]
     return "\n".join(links)
+
+
+def _raw_evidence_quick_links(manifest: Mapping[str, Any]) -> str:
+    groups = []
+    for title, definitions in _RAW_EVIDENCE_GROUPS:
+        links = "\n".join(_artifact_link(manifest, ids, label) for ids, label in definitions)
+        groups.append(
+            '<section class="quick-link-group">'
+            f"<h3>{escape(title)}</h3>"
+            f'<div class="quick-links">{links}</div>'
+            "</section>"
+        )
+    return "\n".join(groups)
+
+
+def _review_order_strip(top_summary: str) -> str:
+    steps = [
+        ("Verdict", "mission-verdict", "Mission verdict and next operator action"),
+        ("Top constraint", "feasibility", top_summary),
+        ("Trust signals", "trust-defensibility", "Readiness, assumptions, and warnings"),
+        ("Artifacts", "source-artifacts", "Open the first artifact, then raw evidence"),
+        ("Checksum", "checksum-review", "Verify manifest and checksum evidence"),
+    ]
+    items = []
+    for index, (label, target, detail) in enumerate(steps, start=1):
+        items.append(
+            "<li>"
+            f'<a href="#{escape(target, quote=True)}">'
+            f"<span>{index}</span>"
+            f"<strong>{escape(label)}</strong>"
+            f"<small>{escape(_short_text(detail, limit=92))}</small>"
+            "</a>"
+            "</li>"
+        )
+    return (
+        '<nav class="review-order" aria-label="Review order">'
+        "<span>Review Order</span>"
+        "<p>Verdict -> top constraint -> trust signals -> artifacts -> checksum</p>"
+        f"<ol>{''.join(items)}</ol>"
+        "</nav>"
+    )
 
 
 def _review_section(
@@ -269,10 +570,13 @@ def _review_section(
     section_id: str = "",
 ) -> str:
     links = f'<div class="section-links">{links_html}</div>' if links_html else ""
-    id_attr = f' id="{escape(section_id, quote=True)}"' if section_id else ""
+    section_slug = section_id or _slug(title)
+    heading_id = f"{section_slug}-heading"
     return (
-        f'<article class="review-section"{id_attr}>'
-        f"<h2>{escape(title)}</h2>"
+        f'<article class="review-section" id="{escape(section_slug, quote=True)}" '
+        'tabindex="0" '
+        f'aria-labelledby="{escape(heading_id, quote=True)}">'
+        f'<h2 id="{escape(heading_id, quote=True)}">{escape(title)}</h2>'
         f"<p>{escape(summary)}</p>"
         f"{body_html}"
         f"{links}"
@@ -322,6 +626,18 @@ def _review_sections(
     regulatory_status = manifest.get("regulatory_evidence_status") or {}
     approval_checklist = manifest.get("approval_checklist") or {}
     trust = manifest.get("trust_defensibility") or {}
+    weather_readiness = (
+        manifest.get("weather_evidence_readiness")
+        or trust.get("weather_evidence_readiness")
+        or trust.get("weather_fallback_status")
+        or {}
+    )
+    regulatory_provenance = (
+        manifest.get("regulatory_evidence_provenance")
+        or trust.get("regulatory_evidence_provenance")
+        or {}
+    )
+    checksum_readiness = manifest.get("checksum_evidence_readiness") or {}
     sample_note = trust.get("sample_data_demo_note") or {}
     missing_evidence = manifest.get("missing_evidence") or []
     bundle_warnings = manifest.get("bundle_warnings") or []
@@ -343,6 +659,22 @@ def _review_sections(
         f"{_kv('Missing fields', len(missing_regulatory))}"
         "</div>"
     )
+    live_evidence_body = (
+        '<div class="compact-grid evidence-readiness-grid">'
+        f"{_kv('Weather status', _status_label(weather_readiness.get('status')), _status_class(weather_readiness.get('status')))}"
+        f"{_kv('Weather source', weather_readiness.get('source'))}"
+        f"{_kv('Weather timestamp', weather_readiness.get('timestamp_utc'))}"
+        f"{_kv('Weather freshness', weather_readiness.get('freshness_status'))}"
+        f"{_kv('Weather action', _short_text(weather_readiness.get('operator_action'), limit=130))}"
+        f"{_kv('Regulatory provenance', _status_label(regulatory_provenance.get('status')), _status_class(regulatory_provenance.get('status')))}"
+        f"{_kv('Authority', regulatory_provenance.get('authority'))}"
+        f"{_kv('Date checked', regulatory_provenance.get('date_checked_utc'))}"
+        f"{_kv('Expiration', regulatory_provenance.get('expiration_date'))}"
+        f"{_kv('Operator confirmation', regulatory_provenance.get('operator_confirmation_status'))}"
+        f"{_kv('Checksum evidence', _status_label(checksum_readiness.get('status')), _status_class(checksum_readiness.get('status')))}"
+        "</div>"
+        '<p class="compact-note">Live weather and regulatory hooks are documentation-only unless verified outside ORBITAL.</p>'
+    )
     completeness_body = (
         '<div class="compact-grid">'
         f"{_kv('Artifact coverage', evidence_completeness)}"
@@ -352,7 +684,7 @@ def _review_sections(
     )
     trust_body = (
         '<div class="compact-grid">'
-        f"{_kv('Weather fallback', weather_status, _status_class(weather_status))}"
+        f"{_kv('Weather evidence', weather_status, _status_class(weather_status))}"
         f"{_kv('Robustness', robustness_status, _status_class(robustness_status))}"
         f"{_kv('Weather note', _short_text(weather_summary))}"
         f"{_kv('Robustness note', _short_text(robustness_summary))}"
@@ -396,6 +728,20 @@ def _review_sections(
             "regulatory-readiness",
         ),
         _review_section(
+            "Weather / Live Evidence",
+            "Source, freshness, provenance, and operator-action hooks for operational evidence review.",
+            live_evidence_body,
+            "\n".join(
+                [
+                    _artifact_link(manifest, ("weather_snapshot",), "Weather snapshot"),
+                    _artifact_link(
+                        manifest, ("regulatory_readiness_markdown",), "Regulatory report"
+                    ),
+                ]
+            ),
+            "live-evidence-readiness",
+        ),
+        _review_section(
             "Evidence Completeness",
             "Expected bundle artifacts and missing evidence counts.",
             completeness_body,
@@ -409,7 +755,7 @@ def _review_sections(
         ),
         _review_section(
             "Trust / Defensibility",
-            "Weather fallback, uncertainty, and model-context signals for audit review.",
+            "Weather evidence, uncertainty, and model-context signals for audit review.",
             trust_body,
             _artifact_link(manifest, ("operator_dashboard",), "Dashboard MD"),
             "trust-defensibility",
@@ -461,6 +807,51 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
     { ids: ["autopilot_mission_csv"], label: "autopilot_mission.csv" },
     { ids: ["mission_review_kml"], label: "mission_review.kml" },
   ];
+  const rawEvidenceGroups = [
+    {
+      title: "Raw Markdown",
+      definitions: [
+        { ids: ["operator_dashboard"], label: "operator_dashboard.md" },
+        { ids: ["constraint_audit_markdown"], label: "inspection_constraint_audit.md" },
+        { ids: ["what_if_plan_markdown"], label: "what_if_plan.md" },
+        { ids: ["regulatory_readiness_markdown"], label: "regulatory_readiness_report.md" },
+        { ids: ["bundle_summary"], label: "evidence_bundle_summary.md" },
+        { ids: ["artifact_index"], label: "artifact_index.md" },
+      ],
+    },
+    {
+      title: "JSON Evidence",
+      definitions: [
+        { ids: ["plan_json"], label: "plan.json" },
+        { ids: ["constraint_audit_json"], label: "inspection_constraint_audit.json" },
+        { ids: ["what_if_plan_json"], label: "what_if_plan.json" },
+        { ids: ["regulatory_readiness_json"], label: "regulatory_readiness_report.json" },
+        { ids: ["score_breakdown"], label: "score_breakdown.json" },
+        { ids: ["weather_snapshot"], label: "weather_snapshot.json" },
+        { ids: ["robustness_summary"], label: "robustness_summary.json" },
+      ],
+    },
+    {
+      title: "CSV / KML",
+      definitions: [
+        { ids: ["autopilot_mission_csv"], label: "autopilot_mission.csv" },
+        { ids: ["mission_review_kml"], label: "mission_review.kml" },
+      ],
+    },
+    {
+      title: "Plots",
+      definitions: [
+        { ids: ["flight_path_plot"], label: "flight_path.png" },
+      ],
+    },
+    {
+      title: "Manifest / checksum",
+      definitions: [
+        { ids: ["manifest_json"], label: "manifest.json" },
+        { ids: ["checksum_manifest"], label: "checksum_manifest.json" },
+      ],
+    },
+  ];
 
   function objectOr(value) {
     return value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -482,6 +873,11 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
     const rendered = text(value, fallback || "not provided");
     const max = limit || 170;
     return rendered.length <= max ? rendered : rendered.slice(0, max - 1).trimEnd() + "...";
+  }
+
+  function slug(value) {
+    const rendered = text(value, "section").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return rendered || "section";
   }
 
   function numberText(value, unit) {
@@ -512,13 +908,13 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
 
   function statusClass(value) {
     const normalized = text(value, "unknown").toLowerCase().replace(/[ -]/g, "_");
-    if (["go", "pass", "clear", "ready", "ready_for_review", "configured_source", "low"].includes(normalized)) {
+    if (["go", "pass", "clear", "ready", "ready_for_review", "configured_source", "documented", "fresh", "live", "low"].includes(normalized)) {
       return "status-good";
     }
-    if (["review", "review_required", "operator_action_required", "warning", "fallback_used", "not_run", "medium", "moderate"].includes(normalized)) {
+    if (["review", "review_required", "operator_action_required", "warning", "fallback_used", "packaged", "pending_operator_confirmation", "sample", "stale", "verify_required", "not_run", "medium", "moderate"].includes(normalized)) {
       return "status-review";
     }
-    if (["modify", "fail", "failed", "elevated_risk", "high"].includes(normalized)) {
+    if (["modify", "fail", "failed", "elevated_risk", "expired", "missing", "high"].includes(normalized)) {
       return "status-bad";
     }
     return "status-neutral";
@@ -575,6 +971,27 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
     };
   }
 
+  function verdictDerivation(verdict, missionStatus, regulatoryState, missingCount, warningCount) {
+    let explanation = "";
+    if (missionStatus.replace(/ /g, "_") !== "GO") {
+      explanation = "The verdict is MODIFY because the modeled mission status is not GO.";
+    } else if (regulatoryState.replace(/ /g, "_") === "OPERATOR_ACTION_REQUIRED" || missingCount > 0 || warningCount > 0) {
+      explanation = "The verdict is REVIEW REQUIRED because modeled feasibility is GO but regulatory readiness, missing evidence, or bundle warnings still need operator attention.";
+    } else {
+      explanation = "The verdict is GO because modeled mission status is GO, regulatory readiness does not require action, and no missing evidence or bundle warnings are recorded.";
+    }
+    return {
+      label: verdict.label,
+      explanation,
+      inputs: [
+        { signal: "Modeled mission status", value: missionStatus, effect: "MODIFY if not GO." },
+        { signal: "Regulatory readiness", value: regulatoryState, effect: "REVIEW REQUIRED when OPERATOR_ACTION_REQUIRED." },
+        { signal: "Missing evidence", value: missingCount + " item(s)", effect: "REVIEW REQUIRED when greater than 0." },
+        { signal: "Bundle warnings", value: warningCount + " warning(s)", effect: "REVIEW REQUIRED when greater than 0." },
+      ],
+    };
+  }
+
   function artifactEntry(manifest, ids) {
     const entries = arrayOr(manifest.artifacts).concat(arrayOr(manifest.generated_artifacts));
     for (const id of ids) {
@@ -586,17 +1003,32 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
     return null;
   }
 
+  function artifactKind(label) {
+    const match = String(label).match(/\.([A-Za-z0-9]+)$/);
+    return match ? match[1].toUpperCase() : "FILE";
+  }
+
+  function artifactLabelNode(label, unavailable) {
+    const name = document.createElement("span");
+    name.textContent = unavailable ? label + " unavailable" : label;
+    const tag = document.createElement("small");
+    tag.textContent = unavailable ? "Missing" : artifactKind(label);
+    return [name, tag];
+  }
+
   function artifactNode(manifest, ids, label) {
     const entry = artifactEntry(manifest, ids);
     if (entry && entry.present && entry.bundle_path) {
       const link = document.createElement("a");
+      link.className = "artifact-link";
       link.href = String(entry.bundle_path).replace(/\\/g, "/");
-      link.textContent = label;
+      link.setAttribute("aria-label", "Open " + label);
+      link.append(...artifactLabelNode(label, false));
       return link;
     }
     const span = document.createElement("span");
-    span.className = "unavailable";
-    span.textContent = label + " unavailable";
+    span.className = "artifact-link artifact-unavailable unavailable";
+    span.append(...artifactLabelNode(label, true));
     return span;
   }
 
@@ -652,11 +1084,12 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
   function section(title, summary, bodyNodes, linkNodes, id) {
     const article = document.createElement("article");
     article.className = "review-section";
-    if (id) {
-      article.id = id;
-    }
+    article.id = id || slug(title);
+    article.tabIndex = 0;
     const heading = document.createElement("h2");
+    heading.id = article.id + "-heading";
     heading.textContent = title;
+    article.setAttribute("aria-labelledby", heading.id);
     const copy = document.createElement("p");
     copy.textContent = summary;
     article.append(heading, copy, ...bodyNodes);
@@ -676,15 +1109,123 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
     return grid;
   }
 
+  function assumptionsNode(trust) {
+    const assumptions = arrayOr(objectOr(trust).model_assumptions_summary).slice(0, 3);
+    if (!assumptions.length) {
+      const note = document.createElement("p");
+      note.className = "compact-note";
+      note.textContent = "No model assumptions were captured. Operator should verify scenario inputs in the constraint audit.";
+      return note;
+    }
+    const list = document.createElement("ul");
+    list.className = "assumption-list";
+    assumptions.forEach((item) => {
+      const source = objectOr(item);
+      const li = document.createElement("li");
+      const label = document.createElement("strong");
+      label.textContent = text(source.label || source.id, "Model assumption");
+      const assumption = document.createElement("span");
+      assumption.textContent = shortText(source.assumption, "not provided", 120);
+      const note = document.createElement("em");
+      note.textContent = shortText(source.operator_review_note, "Operator should verify this assumption before release.", 110);
+      li.append(label, assumption, note);
+      list.appendChild(li);
+    });
+    return list;
+  }
+
+  function artifactFreshnessNode(manifest) {
+    const priority = {
+      scenario_yaml: 0,
+      constraint_audit_markdown: 1,
+      regulatory_readiness_markdown: 2,
+      what_if_plan_markdown: 3,
+      weather_snapshot: 4,
+      autopilot_mission_csv: 5,
+      mission_review_kml: 6,
+    };
+    const entries = arrayOr(manifest.artifacts)
+      .slice()
+      .sort((a, b) => (priority[text(a && a.id, "")] ?? 99) - (priority[text(b && b.id, "")] ?? 99))
+      .slice(0, 5);
+    if (!entries.length) {
+      const note = document.createElement("p");
+      note.className = "compact-note";
+      note.textContent = "No artifact freshness metadata captured.";
+      return note;
+    }
+    const list = document.createElement("div");
+    list.className = "freshness-list";
+    entries.forEach((entry) => {
+      const source = objectOr(entry);
+      const freshness = objectOr(source.freshness);
+      const stale = Boolean(freshness.stale_against_scenario);
+      const status = !source.present ? "MISSING" : stale ? "STALE" : "CURRENT";
+      const row = document.createElement("div");
+      const label = document.createElement("span");
+      label.textContent = text(source.label || source.id, "Artifact");
+      const statusNode = document.createElement("strong");
+      statusNode.className = statusClass(status);
+      statusNode.textContent = status;
+      const sourceTime = document.createElement("small");
+      sourceTime.textContent = "source " + text(freshness.source_modified_utc);
+      const bundleTime = document.createElement("small");
+      bundleTime.textContent = "bundle " + text(freshness.bundle_modified_utc);
+      row.append(label, statusNode, sourceTime, bundleTime);
+      list.appendChild(row);
+    });
+    return list;
+  }
+
   function openFirstNode(manifest) {
     const wrapper = document.createElement("div");
     wrapper.className = "open-first";
     wrapper.setAttribute("data-open-first", "");
+    wrapper.setAttribute("aria-label", "First artifact to open");
     const label = document.createElement("span");
-    label.textContent = "Open first";
+    label.textContent = "Open first: first artifact to open";
     const note = document.createElement("p");
-    note.textContent = "Start here for the verdict, next action, and 30-second mission read.";
+    note.textContent = "Start here for the verdict, next action, and 30-second mission read. This is the primary review surface before opening supporting artifacts.";
     wrapper.append(label, artifactNode(manifest, ["operator_dashboard"], "operator_dashboard.md"), note);
+    return wrapper;
+  }
+
+  function compatibilityNode(manifest) {
+    const compatibility = objectOr(manifest.ui_compatibility);
+    const artifactAccess = objectOr(compatibility.artifact_access);
+    const requiredFields = arrayOr(compatibility.required_top_level_fields);
+    const fallbackFields = objectOr(compatibility.optional_field_fallbacks);
+    const expectedFormats = arrayOr(artifactAccess.expected_formats);
+    const wrapper = document.createElement("div");
+    wrapper.setAttribute("data-ui-compatibility", "");
+    const grid = compactGrid([
+      { label: "Manifest version", value: manifest.manifest_version || compatibility.manifest_version, className: statusClass("documented") },
+      { label: "UI schema", value: compatibility.schema_version },
+      { label: "Required UI fields", value: requiredFields.length + " expected" },
+      { label: "Fallback fields", value: Object.keys(fallbackFields).length + " documented" },
+    ]);
+    const fallbackNote = document.createElement("p");
+    fallbackNote.className = "compact-note";
+    fallbackNote.textContent = text(compatibility.optional_field_fallback_policy, "Optional UI fields use explicit fallback text.");
+    const accessNote = document.createElement("p");
+    accessNote.className = "compact-note";
+    accessNote.textContent = "Outside-UI access: " + (expectedFormats.length ? expectedFormats.join(", ") : "Markdown, JSON, CSV, KML, PNG, manifest, checksum, dashboard") + ".";
+    const unavailableNote = document.createElement("p");
+    unavailableNote.className = "compact-note";
+    unavailableNote.textContent = text(artifactAccess.unavailable_artifact_policy, "Unavailable artifacts render as non-link unavailable labels.");
+    wrapper.append(grid, fallbackNote, accessNote, unavailableNote);
+    return wrapper;
+  }
+
+  function rawEvidenceGroupNode(manifest, group) {
+    const wrapper = document.createElement("section");
+    wrapper.className = "quick-link-group";
+    const heading = document.createElement("h3");
+    heading.textContent = group.title;
+    const links = document.createElement("div");
+    links.className = "quick-links";
+    links.append(...group.definitions.map((definition) => artifactNode(manifest, definition.ids, definition.label)));
+    wrapper.append(heading, links);
     return wrapper;
   }
 
@@ -701,6 +1242,19 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
     });
   }
 
+  function renderRawEvidenceLinks(manifest) {
+    const groups = rawEvidenceGroups.map((group) => rawEvidenceGroupNode(manifest, group));
+    document.querySelectorAll("[data-raw-evidence-links]").forEach((node) => {
+      replaceChildren(node, groups.map((group) => group.cloneNode(true)));
+    });
+  }
+
+  function renderCompatibilityPanels(manifest) {
+    document.querySelectorAll("[data-ui-compatibility]").forEach((node) => {
+      node.replaceWith(compatibilityNode(manifest));
+    });
+  }
+
   function manifestSummary(manifest) {
     const audit = objectOr(manifest.constraint_audit);
     const readiness = objectOr(manifest.regulatory_readiness);
@@ -708,6 +1262,11 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
     const regulatoryCompleteness = objectOr(manifest.regulatory_documentation_completeness);
     const trust = objectOr(manifest.trust_defensibility);
     const weather = objectOr(trust.weather_fallback_status);
+    const weatherReadiness = objectOr(manifest.weather_evidence_readiness || trust.weather_evidence_readiness || weather);
+    const regulatoryProvenance = objectOr(manifest.regulatory_evidence_provenance || trust.regulatory_evidence_provenance);
+    const checksumReadiness = objectOr(manifest.checksum_evidence_readiness);
+    const freshness = objectOr(manifest.freshness);
+    const compatibility = objectOr(manifest.ui_compatibility);
     const robustness = objectOr(trust.uncertainty_robustness_status);
     const evidenceWarnings = objectOr(trust.evidence_warning_summary);
     const missingEvidence = arrayOr(manifest.missing_evidence);
@@ -724,8 +1283,14 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
     const topSummary = marginSummary(audit.top_limiting_constraint);
     const evidenceCompleteness = countedScore(completeness, "artifacts");
     const regulatoryDocCompleteness = countedScore(regulatoryCompleteness, "fields");
-    const weatherStatus = statusLabel(weather.status);
-    const weatherSummary = text(weather.summary, "No weather fallback status captured.");
+    const weatherStatus = statusLabel(weatherReadiness.status || weather.status);
+    const weatherSummary = text(weatherReadiness.summary || weather.summary, "No weather evidence status captured.");
+    const weatherDetail = [
+      "source " + text(weatherReadiness.source, "not provided"),
+      "timestamp " + text(weatherReadiness.timestamp_utc, "not provided"),
+      "freshness " + text(weatherReadiness.freshness_status, "not provided"),
+      "action " + text(weatherReadiness.operator_action, "Confirm current weather before release"),
+    ].join("; ");
     const robustnessStatus = statusLabel(robustness.status);
     const robustnessSummary = text(robustness.summary, "No robustness / uncertainty status captured.");
     const evidenceWarningSummary = text(
@@ -739,6 +1304,11 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
       regulatoryCompleteness,
       trust,
       weather,
+      weatherReadiness,
+      regulatoryProvenance,
+      checksumReadiness,
+      freshness,
+      compatibility,
       robustness,
       evidenceWarnings,
       missingEvidence,
@@ -757,6 +1327,7 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
       regulatoryDocCompleteness,
       weatherStatus,
       weatherSummary,
+      weatherDetail,
       robustnessStatus,
       robustnessSummary,
       evidenceWarningSummary,
@@ -766,13 +1337,13 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
   function renderSignals(summary) {
     const staleMissingMismatchCount = summary.staleCount + summary.missingArtifactCount + summary.mismatchCount;
     const cards = [
-      statCard("Modeled mission status", summary.missionStatus, "", statusClass(summary.missionStatus)),
-      statCard("Mission risk", summary.missionRisk, "", statusClass(summary.missionRisk)),
-      statCard("Top limiting constraint", summary.topSummary),
-      statCard("Regulatory readiness", summary.regulatoryState, "", statusClass(summary.regulatoryState)),
+      statCard("Modeled mission status", summary.missionStatus, "", "decision-signal " + statusClass(summary.missionStatus)),
+      statCard("Mission risk", summary.missionRisk, "", "decision-signal " + statusClass(summary.missionRisk)),
+      statCard("Top limiting constraint", summary.topSummary, "", "decision-signal signal-top"),
+      statCard("Regulatory readiness", summary.regulatoryState, "", "decision-signal " + statusClass(summary.regulatoryState)),
       statCard("Evidence completeness", summary.evidenceCompleteness, "Expected bundle artifacts", "status-neutral"),
       statCard("Regulatory documentation", summary.regulatoryDocCompleteness, "Documentation-only evidence fields", "status-neutral documentation-signal"),
-      statCard("Weather fallback", summary.weatherStatus, summary.weatherSummary, statusClass(summary.weatherStatus)),
+      statCard("Weather evidence", summary.weatherStatus, shortText(summary.weatherDetail, "No weather evidence status captured.", 150), statusClass(summary.weatherStatus)),
       statCard("Robustness / uncertainty", summary.robustnessStatus, summary.robustnessSummary, statusClass(summary.robustnessStatus)),
       statCard("Missing evidence count", String(summary.missingCount), "Artifacts or documentation fields requiring operator attention", "warning-signal " + statusClass(summary.missingCount === 0 ? "clear" : "review_required")),
       statCard("Stale / missing / mismatched evidence", String(staleMissingMismatchCount), summary.staleCount + " stale, " + summary.missingArtifactCount + " missing, " + summary.mismatchCount + " mismatched", "warning-signal " + statusClass(staleMissingMismatchCount === 0 ? "clear" : "review_required")),
@@ -786,6 +1357,9 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
     const regulatoryStatus = objectOr(manifest.regulatory_evidence_status);
     const approvalChecklist = objectOr(manifest.approval_checklist);
     const sampleNote = objectOr(summary.trust.sample_data_demo_note);
+    const weatherReadiness = objectOr(summary.weatherReadiness);
+    const regulatoryProvenance = objectOr(summary.regulatoryProvenance);
+    const checksumReadiness = objectOr(summary.checksumReadiness);
     const missingRegulatory = arrayOr(regulatoryStatus.missing);
     const pendingCount = intValue(approvalChecklist.pending_count, intValue(approvalChecklist.item_count, 0));
     const staleMissingMismatchCount = summary.staleCount + summary.missingArtifactCount + summary.mismatchCount;
@@ -827,6 +1401,31 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
           { label: "Missing fields", value: missingRegulatory.length },
         ]),
       ], [artifactNode(manifest, ["regulatory_readiness_markdown"], "Regulatory report")], "regulatory-readiness"),
+      section("Weather / Live Evidence", "Source, freshness, provenance, and operator-action hooks for operational evidence review.", [
+        (() => {
+          const grid = compactGrid([
+            { label: "Weather status", value: statusLabel(weatherReadiness.status), className: statusClass(weatherReadiness.status) },
+            { label: "Weather source", value: weatherReadiness.source },
+            { label: "Weather timestamp", value: weatherReadiness.timestamp_utc },
+            { label: "Weather freshness", value: weatherReadiness.freshness_status },
+            { label: "Weather action", value: shortText(weatherReadiness.operator_action, "Confirm current weather before release.", 130) },
+            { label: "Regulatory provenance", value: statusLabel(regulatoryProvenance.status), className: statusClass(regulatoryProvenance.status) },
+            { label: "Authority", value: regulatoryProvenance.authority },
+            { label: "Date checked", value: regulatoryProvenance.date_checked_utc },
+            { label: "Expiration", value: regulatoryProvenance.expiration_date },
+            { label: "Operator confirmation", value: regulatoryProvenance.operator_confirmation_status },
+            { label: "Checksum evidence", value: statusLabel(checksumReadiness.status), className: statusClass(checksumReadiness.status) },
+          ]);
+          grid.classList.add("evidence-readiness-grid");
+          return grid;
+        })(),
+        (() => {
+          const note = document.createElement("p");
+          note.className = "compact-note";
+          note.textContent = "Live weather and regulatory hooks are documentation-only unless verified outside ORBITAL.";
+          return note;
+        })(),
+      ], [artifactNode(manifest, ["weather_snapshot"], "Weather snapshot"), artifactNode(manifest, ["regulatory_readiness_markdown"], "Regulatory report")], "live-evidence-readiness"),
       section("Evidence Completeness", "Expected bundle artifacts and missing evidence counts.", [
         compactGrid([
           { label: "Artifact coverage", value: summary.evidenceCompleteness },
@@ -834,9 +1433,9 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
           { label: "Bundle warnings", value: summary.warningCount },
         ]),
       ], [artifactNode(manifest, ["manifest_json"], "Manifest"), artifactNode(manifest, ["checksum_manifest"], "Checksums")], "evidence-completeness"),
-      section("Trust / Defensibility", "Weather fallback, uncertainty, and model-context signals for audit review.", [
+      section("Trust / Defensibility", "Weather evidence, uncertainty, and model-context signals for audit review.", [
         compactGrid([
-          { label: "Weather fallback", value: summary.weatherStatus, className: statusClass(summary.weatherStatus) },
+          { label: "Weather evidence", value: summary.weatherStatus, className: statusClass(summary.weatherStatus) },
           { label: "Robustness", value: summary.robustnessStatus, className: statusClass(summary.robustnessStatus) },
           { label: "Weather note", value: shortText(summary.weatherSummary) },
           { label: "Robustness note", value: shortText(summary.robustnessSummary) },
@@ -871,6 +1470,32 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
     document.querySelectorAll("[data-review-sections]").forEach((node) => replaceChildren(node, sections.map((item) => item.cloneNode(true))));
   }
 
+  function renderTrustPanels(manifest, summary) {
+    const derivation = verdictDerivation(summary.verdict, summary.missionStatus, summary.regulatoryState, summary.missingCount, summary.warningCount);
+    document.querySelectorAll("[data-why-verdict]").forEach((node) => {
+      const heading = document.createElement("h2");
+      heading.textContent = "Why This Verdict?";
+      const explanation = document.createElement("p");
+      explanation.textContent = derivation.explanation;
+      const grid = compactGrid(derivation.inputs.map((item) => ({
+        label: item.signal,
+        value: item.value + " - " + item.effect,
+        className: statusClass(item.value),
+      })));
+      replaceChildren(node, [heading, explanation, grid]);
+    });
+    document.querySelectorAll("[data-model-assumptions]").forEach((node) => {
+      const heading = document.createElement("h2");
+      heading.textContent = "Model Assumptions";
+      replaceChildren(node, [heading, assumptionsNode(summary.trust)]);
+    });
+    document.querySelectorAll("[data-artifact-freshness]").forEach((node) => {
+      const heading = document.createElement("h2");
+      heading.textContent = "Artifact Freshness";
+      replaceChildren(node, [heading, artifactFreshnessNode(manifest)]);
+    });
+  }
+
   function renderManifest(manifest, statusMessage, statusKind) {
     if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) {
       throw new Error("manifest JSON is not an object");
@@ -885,10 +1510,16 @@ def _manifest_loader_script(manifest: Mapping[str, Any]) -> str:
     });
     setText("[data-field='verdict-meaning']", summary.verdict.meaning);
     setText("[data-field='next-action']", summary.verdict.next_action);
+    setText("[data-field='manifest-version']", text(manifest.manifest_version || manifest.ui_manifest_version || summary.compatibility.manifest_version, "legacy / not provided"));
+    setText("[data-field='generated-timestamp']", text(summary.freshness.generated_timestamp_utc));
+    setText("[data-field='checksum-status']", statusLabel(summary.checksumReadiness.status));
     renderSignals(summary);
     renderArtifactLinks(manifest);
     renderOpenFirst(manifest);
+    renderRawEvidenceLinks(manifest);
+    renderCompatibilityPanels(manifest);
     renderReviewSections(manifest, summary);
+    renderTrustPanels(manifest, summary);
     setStatusText(statusMessage, statusKind);
   }
 
@@ -938,11 +1569,17 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
     regulatory_completeness = manifest.get("regulatory_documentation_completeness") or {}
     trust = manifest.get("trust_defensibility") or {}
     weather = trust.get("weather_fallback_status") or {}
+    weather_readiness = (
+        manifest.get("weather_evidence_readiness")
+        or trust.get("weather_evidence_readiness")
+        or weather
+    )
     robustness = trust.get("uncertainty_robustness_status") or {}
     evidence_warnings = trust.get("evidence_warning_summary") or {}
     missing_evidence = manifest.get("missing_evidence") or []
     bundle_warnings = manifest.get("bundle_warnings") or []
     review = manifest.get("operator_review") or {}
+    checksum_readiness = manifest.get("checksum_evidence_readiness") or {}
 
     mission_status = _status_label(audit.get("status"))
     mission_risk = _status_label(audit.get("mission_risk"))
@@ -969,17 +1606,48 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
         missing_evidence_count=missing_count,
         warning_count=warning_count,
     )
+    verdict_derivation = _verdict_derivation(
+        verdict=verdict,
+        mission_status=mission_status,
+        regulatory_state=regulatory_state,
+        missing_evidence_count=missing_count,
+        warning_count=warning_count,
+    )
+    verdict_derivation_items = "".join(
+        _kv(
+            str(item.get("signal")),
+            f"{item.get('value')} - {item.get('effect')}",
+            _status_class(item.get("value")),
+        )
+        for item in verdict_derivation["inputs"]
+    )
     mission_name = (
         audit.get("mission_id") or Path(_text(manifest.get("scenario_path"), "scenario")).stem
     )
     top_summary = _margin_summary(audit.get("top_limiting_constraint") or {})
     evidence_completeness = _counted_score(completeness, total_label="artifacts")
     regulatory_doc_completeness = _counted_score(regulatory_completeness, total_label="fields")
-    weather_status = _status_label(weather.get("status"))
-    weather_summary = _text(weather.get("summary"), "No weather fallback status captured.")
+    weather_status = _status_label(weather_readiness.get("status") or weather.get("status"))
+    weather_summary = _text(
+        weather_readiness.get("summary") or weather.get("summary"),
+        "No weather evidence status captured.",
+    )
+    weather_detail = "; ".join(
+        [
+            f"source {_text(weather_readiness.get('source'))}",
+            f"timestamp {_text(weather_readiness.get('timestamp_utc'))}",
+            f"freshness {_text(weather_readiness.get('freshness_status'))}",
+            "action "
+            f"{_text(weather_readiness.get('operator_action'), 'Confirm current weather before release.')}",
+        ]
+    )
     robustness_status = _status_label(robustness.get("status"))
     robustness_summary = _text(
         robustness.get("summary"), "No robustness / uncertainty status captured."
+    )
+    checksum_action = _text(
+        checksum_readiness.get("operator_action"),
+        "Run bundle checksum verification before archiving or sharing the evidence bundle.",
     )
     evidence_warning_summary = _text(
         evidence_warnings.get("summary"),
@@ -1010,12 +1678,22 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
     cards = "\n".join(
         [
             _stat_card(
-                "Modeled mission status", mission_status, class_name=_status_class(mission_status)
+                "Modeled mission status",
+                mission_status,
+                class_name=f"decision-signal {_status_class(mission_status)}",
             ),
-            _stat_card("Mission risk", mission_risk, class_name=_status_class(mission_risk)),
-            _stat_card("Top limiting constraint", top_summary),
             _stat_card(
-                "Regulatory readiness", regulatory_state, class_name=_status_class(regulatory_state)
+                "Mission risk",
+                mission_risk,
+                class_name=f"decision-signal {_status_class(mission_risk)}",
+            ),
+            _stat_card(
+                "Top limiting constraint", top_summary, class_name="decision-signal signal-top"
+            ),
+            _stat_card(
+                "Regulatory readiness",
+                regulatory_state,
+                class_name=f"decision-signal {_status_class(regulatory_state)}",
             ),
             _stat_card(
                 "Evidence completeness",
@@ -1030,7 +1708,10 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
                 "status-neutral documentation-signal",
             ),
             _stat_card(
-                "Weather fallback", weather_status, weather_summary, _status_class(weather_status)
+                "Weather evidence",
+                weather_status,
+                _short_text(weather_detail, limit=150),
+                _status_class(weather_status),
             ),
             _stat_card(
                 "Robustness / uncertainty",
@@ -1065,6 +1746,7 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ORBITAL Operator Review</title>
+  <link rel="icon" href="data:,">
   <style>
     * {{ box-sizing: border-box; }}
     html {{ max-width: 100%; overflow-x: hidden; }}
@@ -1072,19 +1754,46 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
       margin: 0;
       max-width: 100%;
       overflow-x: hidden;
-      color: #18212b;
-      background: #f5f6f7;
-      font-family: Arial, Helvetica, sans-serif;
+      color: #17212b;
+      background: #f2f4f7;
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif;
       font-size: 16px;
       line-height: 1.45;
     }}
-    a {{ color: #0f5f9f; font-weight: 700; text-decoration: none; }}
+    a {{ color: #0b5d95; font-weight: 700; text-decoration: none; }}
     a:hover {{ text-decoration: underline; }}
+    a:focus-visible,
+    button:focus-visible,
+    .review-section:focus-visible {{
+      outline: 3px solid #0f5f9f;
+      outline-offset: 3px;
+    }}
+    .skip-link {{
+      position: absolute;
+      top: -48px;
+      left: 16px;
+      z-index: 20;
+      border-radius: 6px;
+      background: #ffffff;
+      border: 2px solid #0f5f9f;
+      color: #0f5f9f;
+      padding: 8px 10px;
+      box-shadow: 0 6px 16px rgba(22, 34, 45, 0.16);
+    }}
+    .skip-link:focus {{
+      top: 12px;
+    }}
     .shell {{ min-height: 100vh; }}
     .topbar {{
       background: #ffffff;
       border-bottom: 1px solid #d8dee7;
-      padding: 14px 24px;
+      border-top: 4px solid #0f5f9f;
+      padding: 0 24px;
+    }}
+    .topbar-inner {{
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 13px 0;
       display: flex;
       justify-content: space-between;
       gap: 18px;
@@ -1092,6 +1801,13 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
     }}
     .topbar strong {{ display: block; font-size: 20px; }}
     .topbar span {{ color: #607080; }}
+    .topbar-actions {{
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      align-items: center;
+    }}
     .read-only-pill {{
       border: 1px solid #aab7c4;
       border-radius: 8px;
@@ -1101,7 +1817,21 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
       padding: 6px 9px;
       text-transform: uppercase;
       white-space: nowrap;
+      background: #f8fafc;
     }}
+    .print-button {{
+      border: 1px solid #0f5f9f;
+      border-radius: 8px;
+      background: #0f5f9f;
+      color: #ffffff;
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      min-height: 34px;
+      padding: 6px 10px;
+    }}
+    .print-button:hover {{ background: #0a4d82; }}
     main {{ max-width: 1180px; margin: 0 auto; padding: 20px; }}
     .dashboard-grid {{
       display: grid;
@@ -1117,10 +1847,12 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
       background: #ffffff;
       border: 1px solid #d8dee7;
       border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(22, 34, 45, 0.06);
     }}
     .verdict-band {{
-      padding: 16px;
+      padding: 18px;
       border-left: 5px solid #0f5f9f;
+      box-shadow: 0 8px 24px rgba(20, 47, 72, 0.08);
     }}
     .eyebrow {{
       color: #607080;
@@ -1129,12 +1861,23 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
       letter-spacing: 0;
       text-transform: uppercase;
     }}
-    h1 {{ margin: 8px 0 8px; font-size: 28px; line-height: 1.15; letter-spacing: 0; }}
+    h1 {{
+      margin: 8px 0 8px;
+      font-size: 28px;
+      line-height: 1.15;
+      letter-spacing: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }}
     h2 {{ margin: 0 0 12px; font-size: 19px; letter-spacing: 0; }}
     h3 {{ margin: 0 0 8px; font-size: 17px; letter-spacing: 0; }}
     .verdict-badge {{
       display: inline-flex;
       align-items: center;
+      gap: 7px;
+      max-width: 100%;
       min-height: 31px;
       border-radius: 8px;
       padding: 4px 10px;
@@ -1142,11 +1885,21 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
       border: 1px solid currentColor;
       font-size: 18px;
       vertical-align: middle;
+      overflow-wrap: anywhere;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
     }}
-    .status-good {{ color: #135c3a; background: #edf8f2; border-color: #8fc8a8; }}
-    .status-review {{ color: #744400; background: #fff5dc; border-color: #d8ad49; }}
-    .status-bad {{ color: #941919; background: #fff0f0; border-color: #db8f8f; }}
-    .status-neutral {{ color: #425466; background: #f3f6f8; border-color: #ccd6df; }}
+    .verdict-badge::before {{
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      flex: 0 0 auto;
+    }}
+    .status-good {{ color: #0f5f3d; background: #edf8f2; border-color: #8cc8a8; }}
+    .status-review {{ color: #704200; background: #fff5db; border-color: #d6a13b; }}
+    .status-bad {{ color: #941919; background: #fff0f0; border-color: #dc8d8d; }}
+    .status-neutral {{ color: #3f5061; background: #f4f7fa; border-color: #cbd6df; }}
     .boundary-callout {{
       margin: 12px 0 0;
       padding: 10px 11px;
@@ -1159,63 +1912,233 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
     }}
     .next-action {{
       margin: 0;
-      padding: 12px;
+      padding: 14px 14px 14px 16px;
       border-left: 4px solid #0f5f9f;
-      background: #eef6fc;
-      border-radius: 6px;
+      background: #eef6fb;
+      border-radius: 8px;
       border-top: 1px solid #c8dff1;
       border-right: 1px solid #c8dff1;
       border-bottom: 1px solid #c8dff1;
+      box-shadow: 0 1px 2px rgba(15, 95, 159, 0.06);
     }}
+    .next-action strong {{ display: block; font-size: 15px; }}
     .next-action p {{ margin: 6px 0 0; }}
+    .freshness-strip {{
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }}
+    .freshness-strip article {{
+      min-height: 86px;
+      border: 1px solid #d8dee7;
+      border-left: 4px solid #7d8b99;
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 11px;
+      box-shadow: 0 1px 2px rgba(22, 34, 45, 0.06);
+      overflow-wrap: anywhere;
+    }}
+    .freshness-strip span {{
+      display: block;
+      color: #607080;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }}
+    .freshness-strip strong {{
+      display: block;
+      margin-top: 5px;
+      font-size: 15px;
+      line-height: 1.2;
+    }}
+    .freshness-strip small {{
+      display: block;
+      margin-top: 5px;
+      color: #425466;
+      font-size: 12px;
+    }}
+    .review-order {{
+      background: #ffffff;
+      border: 1px solid #d8dee7;
+      border-left: 5px solid #263847;
+      border-radius: 8px;
+      padding: 13px;
+      box-shadow: 0 1px 2px rgba(22, 34, 45, 0.06);
+    }}
+    .review-order > span {{
+      display: block;
+      color: #607080;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }}
+    .review-order p {{
+      margin: 4px 0 10px;
+      color: #263847;
+      font-weight: 800;
+    }}
+    .review-order ol {{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }}
+    .review-order a {{
+      display: grid;
+      gap: 3px;
+      height: 100%;
+      min-height: 92px;
+      border: 1px solid #d8dee7;
+      border-radius: 8px;
+      background: #f9fbfc;
+      color: #17212b;
+      padding: 9px;
+    }}
+    .review-order a:hover {{
+      background: #eef6fb;
+      border-color: #8fb8d4;
+      text-decoration: none;
+    }}
+    .review-order a span {{
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      color: #ffffff;
+      background: #0f5f9f;
+      font-size: 12px;
+      font-weight: 800;
+    }}
+    .review-order a strong {{
+      display: block;
+      font-size: 14px;
+      line-height: 1.2;
+    }}
+    .review-order a small {{
+      color: #526578;
+      font-size: 12px;
+      line-height: 1.25;
+    }}
+    .why-verdict {{
+      padding: 14px;
+      border-left: 4px solid #7255a1;
+      background: #fbf9ff;
+    }}
+    .why-verdict h2 {{ margin-bottom: 6px; }}
+    .why-verdict p {{ margin: 0 0 10px; color: #425466; }}
     .signals {{
       display: grid;
       grid-template-columns: repeat(4, minmax(150px, 1fr));
       gap: 10px;
     }}
     .signal {{
-      padding: 11px;
-      min-height: 94px;
+      padding: 12px;
+      min-height: 98px;
       overflow-wrap: anywhere;
       border-left: 4px solid #c9d4df;
     }}
+    .signal.decision-signal {{
+      min-height: 116px;
+      border-top-color: #cad6df;
+      box-shadow: 0 5px 16px rgba(22, 34, 45, 0.07);
+    }}
+    .signal.signal-top {{ border-left-color: #0f5f9f; background: #f9fcfe; }}
     .signal.status-good {{ border-left-color: #2d8f5d; }}
     .signal.status-review {{ border-left-color: #c97f12; }}
     .signal.status-bad {{ border-left-color: #c94040; }}
     .signal.status-neutral {{ border-left-color: #9dadbb; }}
     .signal span {{ display: block; color: #607080; font-size: 11px; font-weight: 800; text-transform: uppercase; }}
-    .signal strong {{ display: block; margin-top: 6px; font-size: 16px; line-height: 1.25; }}
-    .signal p {{ margin: 6px 0 0; color: #425466; font-size: 12px; }}
+    .signal strong {{
+      display: block;
+      margin-top: 6px;
+      font-size: 16px;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }}
+    .signal p {{
+      margin: 6px 0 0;
+      color: #425466;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }}
     .warning-signal.status-review {{ border-left-color: #c97f12; background: #fff8e8; }}
     .warning-signal.status-bad {{ border-left-color: #c94040; background: #fff0f0; }}
     .warning-signal.status-good {{ border-left-color: #2d8f5d; background: #f3faf6; }}
     .documentation-signal {{ border-left-color: #8b9aaa !important; background: #f8fafb; }}
     .side-stack {{ display: grid; gap: 12px; }}
-    .panel {{ padding: 14px; }}
+    .panel {{ padding: 15px; }}
     .boundary-list {{ margin: 0; padding-left: 18px; }}
     .boundary-list li {{ margin: 8px 0; }}
     .route-preview {{ margin: 0; padding: 14px; }}
     .route-preview img {{ display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid #d8dee7; }}
     .route-preview figcaption {{ margin-top: 8px; color: #607080; font-size: 13px; }}
     .route-missing {{ color: #607080; }}
-    .quick-links {{ display: flex; flex-wrap: wrap; gap: 8px; }}
-    .quick-links a, .quick-links .unavailable {{
+    .quick-links {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }}
+    .raw-evidence-groups {{
+      display: grid;
+      gap: 11px;
+    }}
+    .quick-link-group {{
+      display: grid;
+      gap: 7px;
+    }}
+    .quick-link-group h3 {{
+      margin: 0;
+      color: #425466;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }}
+    .artifact-link {{
       border: 1px solid #c9d4df;
       border-radius: 8px;
-      padding: 7px 9px;
-      background: #f9fbfc;
+      padding: 8px 9px;
+      background: #fbfcfd;
       font-size: 13px;
       line-height: 1.2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 38px;
+      transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+    }}
+    a.artifact-link:hover {{
+      background: #eef6fb;
+      border-color: #8fb8d4;
+      box-shadow: 0 2px 8px rgba(15, 95, 159, 0.12);
+      text-decoration: none;
+    }}
+    .artifact-link span {{ min-width: 0; overflow-wrap: anywhere; }}
+    .artifact-link small {{
+      color: #526578;
+      background: #eef2f6;
+      border: 1px solid #d6dee7;
+      border-radius: 999px;
+      flex: 0 0 auto;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      text-transform: uppercase;
+    }}
+    .artifact-unavailable {{
+      background: #f5f6f8;
+      border-style: dashed;
+      color: #6c7885;
     }}
     .open-first {{
       border: 1px solid #0f5f9f;
       border-left: 5px solid #0f5f9f;
       border-radius: 8px;
       background: #eef6fc;
-      padding: 12px;
+      padding: 13px;
       margin-bottom: 12px;
+      box-shadow: 0 3px 12px rgba(15, 95, 159, 0.1);
     }}
-    .open-first span {{
+    .open-first > span {{
       display: block;
       color: #425466;
       font-size: 12px;
@@ -1223,9 +2146,10 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
       text-transform: uppercase;
     }}
     .open-first a {{
-      display: inline-block;
+      display: flex;
       margin-top: 4px;
       font-size: 17px;
+      background: #ffffff;
     }}
     .open-first p {{
       margin: 6px 0 0;
@@ -1240,18 +2164,30 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
       font-size: 13px;
       font-weight: 700;
     }}
+    .loading-status.status-good {{ background: #edf8f2; border-color: #8fc8a8; color: #135c3a; }}
+    .loading-status.status-review {{ background: #fff5dc; border-color: #d8ad49; color: #744400; }}
+    .loading-status.status-bad {{ background: #fff0f0; border-color: #db8f8f; color: #941919; }}
     .unavailable {{ color: #6f7d8a; }}
     .meta-grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }}
     .meta-grid div {{ padding: 10px; background: #f9fbfc; border-radius: 6px; border: 1px solid #e3e8ee; }}
     .meta-grid span {{ display: block; color: #607080; font-size: 12px; font-weight: 700; text-transform: uppercase; }}
-    .meta-grid strong {{ display: block; margin-top: 4px; }}
+    .meta-grid strong {{
+      display: block;
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+    }}
     .review-sections {{
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
       margin-top: 16px;
     }}
-    .review-section {{ padding: 14px; min-height: 196px; overflow-wrap: anywhere; }}
+    .review-section {{
+      padding: 14px;
+      min-height: 196px;
+      overflow-wrap: anywhere;
+      scroll-margin-top: 18px;
+    }}
     .review-section h2 {{ font-size: 17px; margin-bottom: 8px; }}
     .review-section p {{ margin: 0 0 12px; color: #425466; font-size: 14px; }}
     .compact-grid {{
@@ -1294,46 +2230,164 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
       color: #425466;
       font-size: 13px;
     }}
+    .assumption-list {{
+      display: grid;
+      gap: 8px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }}
+    .assumption-list li {{
+      border: 1px solid #e3e8ee;
+      border-radius: 6px;
+      background: #f9fbfc;
+      padding: 9px;
+    }}
+    .assumption-list strong,
+    .assumption-list span,
+    .assumption-list em {{
+      display: block;
+      overflow-wrap: anywhere;
+    }}
+    .assumption-list strong {{ font-size: 14px; }}
+    .assumption-list span {{ margin-top: 4px; color: #425466; font-size: 13px; }}
+    .assumption-list em {{ margin-top: 5px; color: #5d4d1e; font-size: 12px; font-style: normal; font-weight: 700; }}
+    .freshness-list {{
+      display: grid;
+      gap: 8px;
+    }}
+    .freshness-list div {{
+      border: 1px solid #e3e8ee;
+      border-radius: 6px;
+      background: #f9fbfc;
+      padding: 9px;
+    }}
+    .freshness-list span,
+    .freshness-list strong,
+    .freshness-list small {{
+      display: block;
+      overflow-wrap: anywhere;
+    }}
+    .freshness-list span {{ color: #607080; font-size: 11px; font-weight: 800; text-transform: uppercase; }}
+    .freshness-list strong {{ margin-top: 4px; border-radius: 6px; padding: 3px 6px; width: fit-content; }}
+    .freshness-list small {{ margin-top: 4px; color: #425466; font-size: 12px; }}
     .section-links {{
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
       margin-top: 12px;
     }}
-    .section-links a, .section-links .unavailable {{
-      border: 1px solid #c9d4df;
-      border-radius: 8px;
-      padding: 7px 9px;
-      background: #f9fbfc;
-      font-size: 13px;
-    }}
+    .side-stack .quick-links {{ grid-template-columns: 1fr; }}
+    .side-stack .raw-evidence-groups .quick-links {{ grid-template-columns: 1fr; }}
+    .evidence-readiness-grid div:nth-child(2),
+    .evidence-readiness-grid div:nth-child(5) {{ grid-column: span 2; }}
+    #trust-defensibility .compact-grid div:nth-child(n+3) {{ grid-column: span 2; }}
+    #artifact-navigation .section-links {{ grid-template-columns: 1fr; }}
+    .section-links .artifact-link {{ font-size: 13px; }}
     @media (max-width: 920px) {{
       .dashboard-grid {{ grid-template-columns: 1fr; }}
+      .review-order ol {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
       .signals {{ grid-template-columns: repeat(3, minmax(150px, 1fr)); }}
       .review-sections {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
     }}
     @media (max-width: 620px) {{
       main {{ padding: 16px; }}
-      .topbar {{ padding: 14px 16px; align-items: flex-start; flex-direction: column; }}
-      h1 {{ font-size: 24px; }}
-      .verdict-badge {{ font-size: 16px; }}
-      .signals, .meta-grid, .compact-grid, .review-sections {{ grid-template-columns: 1fr; }}
+      .topbar {{ padding: 0 16px; }}
+      .topbar-inner {{ padding: 12px 0; align-items: flex-start; flex-direction: column; }}
+      main,
+      .dashboard-grid,
+      .review-lead,
+      .side-stack,
+      .verdict-band,
+      .next-action,
+      .panel,
+      .route-preview,
+      .signal,
+      .review-section {{
+        min-width: 0;
+        max-width: 100%;
+      }}
+      h1 {{ display: block; font-size: 24px; }}
+      .verdict-badge {{ display: flex; margin-top: 8px; width: fit-content; font-size: 16px; }}
+      .signals, .meta-grid, .compact-grid, .review-sections, .quick-links, .section-links, .review-order ol, .freshness-strip {{ grid-template-columns: 1fr; }}
+      .evidence-readiness-grid div:nth-child(2),
+      .evidence-readiness-grid div:nth-child(5) {{ grid-column: auto; }}
+      #trust-defensibility .compact-grid div:nth-child(n+3) {{ grid-column: auto; }}
+    }}
+    @media print {{
+      body {{
+        background: #ffffff;
+        color: #111827;
+        font-size: 12px;
+      }}
+      .skip-link,
+      .print-button,
+      .loading-status,
+      script {{
+        display: none !important;
+      }}
+      .topbar {{
+        border-top: 0;
+        padding: 0;
+      }}
+      .topbar-inner,
+      main {{
+        max-width: none;
+        padding: 0;
+      }}
+      .dashboard-grid,
+      .review-sections,
+      .signals,
+      .compact-grid,
+      .meta-grid,
+      .freshness-strip,
+      .review-order ol {{
+        grid-template-columns: 1fr 1fr;
+      }}
+      .side-stack {{
+        grid-template-columns: 1fr 1fr;
+      }}
+      .verdict-band,
+      .panel,
+      .signal,
+      .route-preview,
+      .review-section,
+      .next-action,
+      .review-order {{
+        break-inside: avoid;
+        box-shadow: none;
+      }}
+      .route-preview img {{
+        max-height: 260px;
+        object-fit: contain;
+      }}
+      a[href]::after {{
+        content: " (" attr(href) ")";
+        color: #526578;
+        font-weight: 400;
+      }}
     }}
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#review-sections">Skip to review sections</a>
   <div class="shell">
     <header class="topbar">
-      <div>
-        <strong>ORBITAL Operator Review UI</strong>
-        <span>Local read-only review surface for evidence bundles</span>
+      <div class="topbar-inner">
+        <div>
+          <strong>ORBITAL Operator Review UI</strong>
+          <span>Local read-only review surface for evidence bundles</span>
+        </div>
+        <div class="topbar-actions">
+          <button class="print-button" type="button" onclick="window.print()">Print / demo view</button>
+          <span class="read-only-pill">Read-only demo / discovery aid</span>
+        </div>
       </div>
-      <span class="read-only-pill">Read-only demo / discovery aid</span>
     </header>
     <main>
       <section class="dashboard-grid" aria-label="Operator review dashboard">
         <div class="review-lead">
-          <section class="verdict-band" aria-label="Mission verdict">
+          <section class="verdict-band" id="mission-verdict" aria-label="Mission verdict">
             <span class="eyebrow" data-field="mission-name">{escape(_text(mission_name))}</span>
             <h1>Mission Verdict: <span class="verdict-badge {_status_class(verdict["label"])}" data-field="verdict-label">{escape(verdict["label"])}</span></h1>
             <p data-field="verdict-meaning">{escape(verdict["meaning"])}</p>
@@ -1343,6 +2397,15 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
             <strong>Next operator action</strong>
             <p data-field="next-action">{escape(verdict["next_action"])}</p>
           </div>
+          {_freshness_checksum_strip(manifest)}
+          {_review_order_strip(top_summary)}
+          <section class="panel why-verdict" data-why-verdict>
+            <h2>Why This Verdict?</h2>
+            <p>{escape(_text(verdict_derivation.get("explanation")))}</p>
+            <div class="compact-grid">
+              {verdict_derivation_items}
+            </div>
+          </section>
           <div class="signals" aria-label="Mission signals" data-signals>
             {cards}
           </div>
@@ -1357,15 +2420,41 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
               <li>Opening, clicking, or reviewing an artifact does not approve a mission.</li>
               <li>Review fields are documentation-only records.</li>
               <li>No accounts, databases, auth, editing workflows, live integrations, approvals, or signoff actions are provided.</li>
-              <li>Markdown, JSON, CSV, KML, and checksum artifacts remain accessible outside this UI.</li>
+              <li>Markdown, JSON, CSV, KML, PNG, manifest, checksum, and dashboard artifacts remain accessible outside this UI.</li>
             </ul>
+          </section>
+          <section class="panel" id="manifest-compatibility">
+            <h2>Manifest Compatibility</h2>
+            {_manifest_compatibility_panel(manifest)}
+          </section>
+          <section class="panel" data-model-assumptions>
+            <h2>Model Assumptions</h2>
+            {_model_assumptions_preview(trust)}
+          </section>
+          <section class="panel" data-artifact-freshness>
+            <h2>Artifact Freshness</h2>
+            {_artifact_freshness_preview(manifest)}
           </section>
           {_route_preview(manifest)}
           <section class="panel" id="source-artifacts">
             <h2>Source Artifacts</h2>
             {_open_first(manifest)}
-            <div class="quick-links" data-artifact-links>
+            <div class="quick-links" data-artifact-links aria-label="Primary artifact links">
               {_source_links(manifest)}
+            </div>
+          </section>
+          <section class="panel" id="raw-evidence-links">
+            <h2>Raw Evidence Quick Links</h2>
+            <div class="raw-evidence-groups" data-raw-evidence-links>
+              {_raw_evidence_quick_links(manifest)}
+            </div>
+          </section>
+          <section class="panel checksum-panel" id="checksum-review">
+            <h2>Checksum Review</h2>
+            <p>{escape(checksum_action)}</p>
+            <div class="quick-links">
+              {_artifact_link(manifest, ("manifest_json",), "manifest.json")}
+              {_artifact_link(manifest, ("checksum_manifest",), "checksum_manifest.json")}
             </div>
           </section>
           <section class="panel">
@@ -1389,7 +2478,7 @@ def format_operator_review_ui_html(manifest: Mapping[str, Any]) -> str:
           </section>
         </aside>
       </section>
-      <section class="review-sections" aria-label="Compact review sections" data-review-sections>
+      <section class="review-sections" id="review-sections" aria-label="Compact review sections" data-review-sections>
         {review_sections}
       </section>
     </main>

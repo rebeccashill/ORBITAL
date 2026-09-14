@@ -13,10 +13,19 @@ from mission_framework.reporting.flight_output import (
     _format_artifact_index,
     _format_evidence_bundle_summary,
     _format_operator_evidence_dashboard,
+    _operational_evidence_warnings,
     _regulatory_documentation_completeness,
+    _regulatory_evidence_provenance,
+    _weather_evidence_readiness,
     verify_evidence_bundle_checksums,
 )
-from mission_framework.reporting.operator_review_ui import format_operator_review_ui_html
+from mission_framework.reporting.operator_review_ui import (
+    _dashboard_verdict as _ui_dashboard_verdict,
+)
+from mission_framework.reporting.operator_review_ui import (
+    _verdict_derivation,
+    format_operator_review_ui_html,
+)
 
 
 def _deep_update(base: dict, updates: dict) -> dict:
@@ -30,7 +39,54 @@ def _deep_update(base: dict, updates: dict) -> dict:
 
 def _sample_operator_review_manifest(**updates) -> dict:
     manifest = {
+        "manifest_version": 1,
+        "ui_manifest_version": 1,
+        "ui_compatibility": {
+            "schema_version": 1,
+            "manifest_version": 1,
+            "required_top_level_fields": [
+                "kind",
+                "manifest_version",
+                "ui_compatibility",
+                "scenario_path",
+                "constraint_audit",
+                "regulatory_readiness",
+                "bundle_completeness",
+                "checksum_evidence_readiness",
+                "freshness",
+                "artifacts",
+                "generated_artifacts",
+            ],
+            "artifact_entry_required_fields": ["id", "label", "bundle_path", "present"],
+            "optional_field_fallback_policy": (
+                "Every optional UI field must render explicit fallback text."
+            ),
+            "optional_field_fallbacks": {
+                "constraint_audit.status": "UNKNOWN",
+                "operator_review.reviewer_name": "not provided",
+            },
+            "artifact_access": {
+                "outside_ui_required": True,
+                "expected_formats": [
+                    "markdown",
+                    "json",
+                    "csv",
+                    "kml",
+                    "png",
+                    "manifest",
+                    "checksum",
+                    "dashboard",
+                ],
+                "unavailable_artifact_policy": (
+                    "Unavailable artifacts render as non-link unavailable labels."
+                ),
+            },
+        },
         "scenario_path": "examples/bvlos_powerline_inspection_demo.yaml",
+        "freshness": {
+            "generated_timestamp_utc": "2026-09-12T18:05:00Z",
+            "scenario_modified_utc": "2026-09-12T17:55:00Z",
+        },
         "constraint_audit": {
             "mission_id": "BVLOS Powerline Inspection Demo",
             "status": "go",
@@ -60,6 +116,37 @@ def _sample_operator_review_manifest(**updates) -> dict:
         },
         "missing_evidence": [],
         "bundle_warnings": [],
+        "weather_evidence_readiness": {
+            "status": "STALE",
+            "mode": "sample",
+            "source": "offline Open-Meteo-shaped sample",
+            "provider": "open_meteo",
+            "timestamp_utc": "2026-09-11T16:00:00Z",
+            "freshness_status": "stale",
+            "operator_action": "Refresh weather evidence before release.",
+            "summary": (
+                "STALE: sample weather evidence from offline Open-Meteo-shaped sample, "
+                "timestamp 2026-09-11T16:00:00Z"
+            ),
+        },
+        "regulatory_evidence_provenance": {
+            "status": "PENDING OPERATOR CONFIRMATION",
+            "source": "Operator source",
+            "date_checked_utc": "2026-09-11T15:45:00Z",
+            "expiration_date": "2026-12-31",
+            "authority": "FAA / LAANC provider placeholder",
+            "operator_confirmation_status": "pending_operator_confirmation",
+            "operator_action": "Operator must confirm authorization outside ORBITAL.",
+            "summary": (
+                "PENDING OPERATOR CONFIRMATION: source Operator source, checked "
+                "2026-09-11T15:45:00Z, expires 2026-12-31"
+            ),
+        },
+        "checksum_evidence_readiness": {
+            "status": "VERIFY REQUIRED",
+            "operator_action": "Run bundle checksum verification before archiving.",
+            "summary": "Checksum verification must be run against final archived files.",
+        },
         "trust_defensibility": {
             "weather_fallback_status": {
                 "status": "fallback_used",
@@ -93,6 +180,36 @@ def _sample_operator_review_manifest(**updates) -> dict:
                 "id": "what_if_plan_markdown",
                 "label": "What-if planning report",
                 "bundle_path": "what_if_plan.md",
+                "present": True,
+            },
+            {
+                "id": "constraint_audit_json",
+                "label": "Constraint audit JSON",
+                "bundle_path": "inspection_constraint_audit.json",
+                "present": True,
+            },
+            {
+                "id": "regulatory_readiness_json",
+                "label": "Regulatory readiness JSON",
+                "bundle_path": "regulatory_readiness_report.json",
+                "present": True,
+            },
+            {
+                "id": "what_if_plan_json",
+                "label": "What-if planning JSON",
+                "bundle_path": "what_if_plan.json",
+                "present": True,
+            },
+            {
+                "id": "score_breakdown",
+                "label": "Score breakdown",
+                "bundle_path": "score.json",
+                "present": True,
+            },
+            {
+                "id": "weather_snapshot",
+                "label": "Weather snapshot",
+                "bundle_path": "weather.json",
                 "present": True,
             },
             {
@@ -176,6 +293,81 @@ def _rendered_verdict_label(html: str) -> str:
     match = re.search(r'data-field="verdict-label">([^<]+)</span>', html)
     assert match is not None
     return match.group(1)
+
+
+def test_operator_review_ui_verdict_derivation_covers_all_release_paths() -> None:
+    cases = [
+        {
+            "mission_status": "MODIFY",
+            "regulatory_state": "READY",
+            "missing_evidence_count": 0,
+            "warning_count": 0,
+            "expected_label": "MODIFY",
+            "expected_explanation": "modeled mission status is not GO",
+            "expected_action": "Modify the route",
+        },
+        {
+            "mission_status": "GO",
+            "regulatory_state": "OPERATOR ACTION REQUIRED",
+            "missing_evidence_count": 0,
+            "warning_count": 0,
+            "expected_label": "REVIEW REQUIRED",
+            "expected_explanation": "regulatory readiness, missing evidence, or bundle warnings",
+            "expected_action": "confirm regulatory readiness outside ORBITAL",
+        },
+        {
+            "mission_status": "GO",
+            "regulatory_state": "READY",
+            "missing_evidence_count": 1,
+            "warning_count": 0,
+            "expected_label": "REVIEW REQUIRED",
+            "expected_explanation": "regulatory readiness, missing evidence, or bundle warnings",
+            "expected_action": "Complete the listed review items",
+        },
+        {
+            "mission_status": "GO",
+            "regulatory_state": "READY",
+            "missing_evidence_count": 0,
+            "warning_count": 2,
+            "expected_label": "REVIEW REQUIRED",
+            "expected_explanation": "regulatory readiness, missing evidence, or bundle warnings",
+            "expected_action": "Complete the listed review items",
+        },
+        {
+            "mission_status": "GO",
+            "regulatory_state": "READY",
+            "missing_evidence_count": 0,
+            "warning_count": 0,
+            "expected_label": "GO",
+            "expected_explanation": "no missing evidence or bundle warnings are recorded",
+            "expected_action": "verify checksums",
+        },
+    ]
+
+    for case in cases:
+        verdict = _ui_dashboard_verdict(
+            mission_status=case["mission_status"],
+            regulatory_state=case["regulatory_state"],
+            missing_evidence_count=case["missing_evidence_count"],
+            warning_count=case["warning_count"],
+        )
+        derivation = _verdict_derivation(
+            verdict=verdict,
+            mission_status=case["mission_status"],
+            regulatory_state=case["regulatory_state"],
+            missing_evidence_count=case["missing_evidence_count"],
+            warning_count=case["warning_count"],
+        )
+
+        assert verdict["label"] == case["expected_label"]
+        assert case["expected_action"] in verdict["next_action"]
+        assert case["expected_explanation"] in derivation["explanation"]
+        assert [item["signal"] for item in derivation["inputs"]] == [
+            "Modeled mission status",
+            "Regulatory readiness",
+            "Missing evidence",
+            "Bundle warnings",
+        ]
 
 
 def test_bundle_completeness_score_counts_present_expected_artifacts() -> None:
@@ -278,6 +470,107 @@ def test_artifact_freshness_metadata_handles_missing_and_scenario_artifacts(tmp_
     assert missing_freshness["stale_against_scenario"] is False
 
 
+def test_weather_evidence_readiness_distinguishes_stale_sample_and_live_weather() -> None:
+    stale_sample = _weather_evidence_readiness(
+        {
+            "source": "offline Open-Meteo-shaped sample",
+            "provider": "open_meteo",
+            "timestamp_utc": "2026-09-11T16:00:00Z",
+            "fallback_used": True,
+            "live_fetch_enabled": False,
+            "freshness_max_age_hours": 2,
+        },
+        generated_timestamp_utc="2026-09-13T18:00:00Z",
+    )
+    live_weather = _weather_evidence_readiness(
+        {
+            "source": "Open-Meteo live API",
+            "provider": "open_meteo",
+            "timestamp_utc": "2026-09-13T17:45:00Z",
+            "fallback_used": False,
+            "live_fetch_enabled": True,
+            "freshness_max_age_hours": 2,
+        },
+        generated_timestamp_utc="2026-09-13T18:00:00Z",
+    )
+    missing = _weather_evidence_readiness({}, generated_timestamp_utc="2026-09-13T18:00:00Z")
+
+    assert stale_sample["status"] == "STALE"
+    assert stale_sample["mode"] == "sample"
+    assert stale_sample["freshness_status"] == "stale"
+    assert "Refresh weather evidence" in stale_sample["operator_action"]
+    assert live_weather["status"] == "LIVE"
+    assert live_weather["freshness_status"] == "fresh"
+    assert missing["status"] == "MISSING"
+
+
+def test_regulatory_evidence_provenance_tracks_source_dates_and_confirmation() -> None:
+    provenance = _regulatory_evidence_provenance(
+        {
+            "laanc_required": True,
+            "authorization_authority": "FAA / LAANC provider placeholder",
+            "approving_authority_source": "Operator source",
+            "authorization_date_checked_utc": "2026-09-11T15:45:00Z",
+            "authorization_expiration_date": "2026-12-31",
+            "operator_confirmation_status": "pending_operator_confirmation",
+            "evidence_freshness_max_age_hours": 24,
+        },
+        {
+            "approving_authority_source": "Operator source",
+            "authorization_expiration_date": "2026-12-31",
+        },
+        generated_timestamp_utc="2026-09-13T18:00:00Z",
+    )
+
+    assert provenance["status"] == "STALE"
+    assert provenance["source"] == "Operator source"
+    assert provenance["authority"] == "FAA / LAANC provider placeholder"
+    assert provenance["operator_confirmation_status"] == "pending_operator_confirmation"
+    assert provenance["freshness_status"] == "stale"
+    assert "Refresh regulatory evidence" in provenance["operator_action"]
+
+
+def test_operational_evidence_warnings_cover_weather_regulatory_and_route_exports() -> None:
+    warnings = _operational_evidence_warnings(
+        weather_readiness={
+            "status": "STALE",
+            "source": "offline sample",
+            "timestamp_utc": "2026-09-11T16:00:00Z",
+            "freshness_status": "stale",
+            "operator_action": "Refresh weather evidence.",
+        },
+        regulatory_provenance={
+            "status": "PENDING OPERATOR CONFIRMATION",
+            "source": "Operator source",
+            "date_checked_utc": "2026-09-13T17:00:00Z",
+            "expiration_date": "2026-12-31",
+            "authority": "FAA",
+            "operator_action": "Operator must confirm authorization.",
+        },
+        manifest_entries=[
+            {
+                "id": "autopilot_mission_csv",
+                "bundle_path": "autopilot_mission.csv",
+                "present": False,
+            },
+            {
+                "id": "mission_review_kml",
+                "bundle_path": "mission_review.kml",
+                "present": True,
+                "freshness": {"stale_against_scenario": True},
+            },
+        ],
+    )
+
+    kinds = {warning["kind"] for warning in warnings}
+    assert {
+        "weather_evidence",
+        "regulatory_evidence_provenance",
+        "route_export_missing",
+        "route_export_stale",
+    } <= kinds
+
+
 def test_artifact_index_lists_expected_and_generated_bundle_artifacts() -> None:
     markdown = _format_artifact_index(
         {
@@ -358,6 +651,26 @@ def test_dashboard_verdict_uses_consistent_release_language() -> None:
 def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None:
     markdown = _format_operator_evidence_dashboard(
         {
+            "manifest_version": 1,
+            "ui_compatibility": {
+                "schema_version": 1,
+                "required_top_level_fields": [
+                    "kind",
+                    "manifest_version",
+                    "constraint_audit",
+                    "artifacts",
+                    "generated_artifacts",
+                ],
+                "artifact_entry_required_fields": ["id", "label", "bundle_path", "present"],
+                "optional_field_fallbacks": {"operator_review.reviewer_name": "not provided"},
+                "artifact_access": {
+                    "outside_ui_required": True,
+                    "unavailable_artifact_policy": (
+                        "Unavailable artifacts render as non-link unavailable labels."
+                    ),
+                },
+            },
+            "freshness": {"generated_timestamp_utc": "2026-09-12T18:05:00Z"},
             "scenario_path": "examples/bvlos_powerline_inspection_demo.yaml",
             "constraint_audit": {
                 "mission_id": "BVLOS Powerline Inspection Demo",
@@ -395,6 +708,35 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
                 "fallback_used": True,
                 "fallback_reason": "weather.use_live is false",
                 "live_fetch_enabled": False,
+            },
+            "weather_evidence_readiness": {
+                "status": "STALE",
+                "source": "offline Open-Meteo-shaped sample",
+                "timestamp_utc": "2026-09-12T18:00:00Z",
+                "freshness_status": "stale",
+                "operator_action": "Refresh weather evidence.",
+                "summary": (
+                    "STALE: sample weather evidence from offline Open-Meteo-shaped sample, "
+                    "timestamp 2026-09-12T18:00:00Z"
+                ),
+            },
+            "regulatory_evidence_provenance": {
+                "status": "PENDING OPERATOR CONFIRMATION",
+                "source": "Operator source",
+                "date_checked_utc": "2026-09-12T17:30:00Z",
+                "expiration_date": "2026-12-31",
+                "authority": "FAA / LAANC provider placeholder",
+                "operator_confirmation_status": "pending_operator_confirmation",
+                "operator_action": "Operator must confirm authorization outside ORBITAL.",
+                "summary": (
+                    "PENDING OPERATOR CONFIRMATION: source Operator source, checked "
+                    "2026-09-12T17:30:00Z, expires 2026-12-31"
+                ),
+            },
+            "checksum_evidence_readiness": {
+                "status": "VERIFY REQUIRED",
+                "operator_action": "Run bundle checksum verification before archiving.",
+                "summary": "Checksum verification must be run against final archived files.",
             },
             "trust_defensibility": {
                 "sample_data_demo_note": {"note": "Sample data / demo scenario: demo inputs only."},
@@ -445,15 +787,45 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
                     "present": True,
                 },
                 {
+                    "id": "constraint_audit_json",
+                    "label": "Constraint audit JSON",
+                    "bundle_path": "inspection_constraint_audit.json",
+                    "present": True,
+                },
+                {
                     "id": "what_if_plan_markdown",
                     "label": "What-if planning report",
                     "bundle_path": "what_if_plan.md",
                     "present": True,
                 },
                 {
+                    "id": "what_if_plan_json",
+                    "label": "What-if planning JSON",
+                    "bundle_path": "what_if_plan.json",
+                    "present": True,
+                },
+                {
                     "id": "regulatory_readiness_markdown",
                     "label": "Regulatory readiness report",
                     "bundle_path": "regulatory_readiness_report.md",
+                    "present": True,
+                },
+                {
+                    "id": "regulatory_readiness_json",
+                    "label": "Regulatory readiness JSON",
+                    "bundle_path": "regulatory_readiness_report.json",
+                    "present": True,
+                },
+                {
+                    "id": "score_breakdown",
+                    "label": "Score breakdown",
+                    "bundle_path": "score.json",
+                    "present": True,
+                },
+                {
+                    "id": "weather_snapshot",
+                    "label": "Weather snapshot",
+                    "bundle_path": "weather.json",
                     "present": True,
                 },
                 {
@@ -477,6 +849,27 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
             ],
             "generated_artifacts": [
                 {
+                    "id": "operator_dashboard",
+                    "label": "Operator evidence dashboard",
+                    "bundle_path": "operator_dashboard.md",
+                    "present": True,
+                    "generated": True,
+                },
+                {
+                    "id": "bundle_summary",
+                    "label": "Evidence bundle summary",
+                    "bundle_path": "evidence_bundle_summary.md",
+                    "present": True,
+                    "generated": True,
+                },
+                {
+                    "id": "artifact_index",
+                    "label": "Evidence bundle artifact index",
+                    "bundle_path": "artifact_index.md",
+                    "present": True,
+                    "generated": True,
+                },
+                {
                     "id": "manifest_json",
                     "label": "Evidence bundle manifest",
                     "bundle_path": "manifest.json",
@@ -497,11 +890,48 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
     assert "# ORBITAL Operator Evidence Dashboard" in markdown
     assert "Mission Verdict: REVIEW REQUIRED" in markdown
     assert "Modeled feasibility is acceptable" in markdown
+    assert "30-Second Review Path" in markdown
+    assert (
+        "Review order: Verdict -> top constraint -> trust signals -> artifacts -> checksum."
+        in markdown
+    )
+    assert "**First artifact to open:** [operator_dashboard.md](operator_dashboard.md)" in markdown
+    assert "Raw Evidence Quick Links" in markdown
+    assert "| Raw Markdown |" in markdown
+    assert "| JSON Evidence |" in markdown
+    assert "| CSV / KML |" in markdown
+    assert "| Plots |" in markdown
+    assert "| Manifest / checksum |" in markdown
+    assert "[inspection_constraint_audit.json](inspection_constraint_audit.json)" in markdown
+    assert "[score_breakdown.json](score.json)" in markdown
+    assert "[weather_snapshot.json](weather.json)" in markdown
+    assert "plan.json unavailable (not listed in manifest)" in markdown
+    assert "[plan.json](plan.json)" not in markdown
+    assert "Manifest Compatibility" in markdown
+    assert "| Manifest version | 1 |" in markdown
+    assert "| UI schema version | 1 |" in markdown
+    assert "Unavailable artifacts render as non-link unavailable labels." in markdown
+    assert (
+        "Markdown, JSON, CSV, KML, PNG, manifest, checksum, and dashboard artifacts "
+        "remain accessible outside the UI." in markdown
+    )
     assert "Mission Card" in markdown
+    assert "Why This Verdict?" in markdown
+    assert "The verdict is REVIEW REQUIRED because modeled feasibility is GO" in markdown
+    assert "| Modeled mission status | GO | MODIFY if not GO. |" in markdown
+    assert "Model Assumptions Snapshot" in markdown
+    assert "| Area | Summary | Operator should verify |" in markdown
     assert "| Verdict | REVIEW REQUIRED |" in markdown
     assert "| Modeled mission status | GO |" in markdown
     assert "| Evidence completeness | 100.0 % (17 / 17 artifacts present) |" in markdown
-    assert "| Weather fallback status | FALLBACK USED |" in markdown
+    assert "| Weather evidence status | STALE |" in markdown
+    assert "| Weather source | offline Open-Meteo-shaped sample |" in markdown
+    assert "| Weather freshness | stale |" in markdown
+    assert "| Regulatory provenance | PENDING OPERATOR CONFIRMATION |" in markdown
+    assert "| Checksum evidence | VERIFY REQUIRED |" in markdown
+    assert "| Weather evidence | STALE: sample weather evidence" in markdown
+    assert "| Regulatory provenance | PENDING OPERATOR CONFIRMATION:" in markdown
+    assert "| Checksum evidence | Checksum verification must be run" in markdown
     assert "Robustness status" in markdown
     assert "PASS: 20 case(s), hard pass rate 100.0 %" in markdown
     assert "Decision-Support Boundary" in markdown
@@ -513,6 +943,8 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
     assert "Known Limitations Summary" in markdown
     assert "offline_sample_weather" in markdown
     assert "Evidence Warnings At A Glance" in markdown
+    assert "Stale / Missing / Mismatched Evidence Scan" in markdown
+    assert "Artifact Freshness Summary" in markdown
     assert "CLEAR: 0 missing artifact(s), 0 stale artifact(s)" in markdown
     assert "Mission status: GO" in markdown
     assert "Mission risk: LOW" in markdown
@@ -548,6 +980,44 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
 def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     html = format_operator_review_ui_html(
         {
+            "manifest_version": 1,
+            "ui_manifest_version": 1,
+            "ui_compatibility": {
+                "schema_version": 1,
+                "required_top_level_fields": [
+                    "kind",
+                    "manifest_version",
+                    "ui_compatibility",
+                    "constraint_audit",
+                    "artifacts",
+                    "generated_artifacts",
+                ],
+                "artifact_entry_required_fields": ["id", "label", "bundle_path", "present"],
+                "optional_field_fallback_policy": (
+                    "Every optional UI field must render explicit fallback text."
+                ),
+                "optional_field_fallbacks": {"operator_review.reviewer_name": "not provided"},
+                "artifact_access": {
+                    "outside_ui_required": True,
+                    "expected_formats": [
+                        "markdown",
+                        "json",
+                        "csv",
+                        "kml",
+                        "png",
+                        "manifest",
+                        "checksum",
+                        "dashboard",
+                    ],
+                    "unavailable_artifact_policy": (
+                        "Unavailable artifacts render as non-link unavailable labels."
+                    ),
+                },
+            },
+            "freshness": {
+                "generated_timestamp_utc": "2026-09-12T18:05:00Z",
+                "scenario_modified_utc": "2026-09-12T17:55:00Z",
+            },
             "scenario_path": "examples/bvlos_powerline_inspection_demo.yaml",
             "constraint_audit": {
                 "mission_id": "BVLOS Powerline Inspection Demo",
@@ -682,13 +1152,47 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "Mission Verdict:" in html
     assert "REVIEW REQUIRED" in html
     assert "Next operator action" in html
+    assert "Review Order" in html
+    assert "Verdict -> top constraint -> trust signals -> artifacts -> checksum" in html
+    assert "First artifact to open" in html
+    assert "Raw Evidence Quick Links" in html
+    assert "Manifest Compatibility" in html
+    assert "Manifest version" in html
+    assert "UI schema" in html
+    assert "Required UI fields" in html
+    assert "Fallback fields" in html
+    assert "Every optional UI field must render explicit fallback text." in html
+    assert "Unavailable artifacts render as non-link unavailable labels." in html
+    assert "Markdown, JSON, CSV, KML, PNG, manifest, checksum, dashboard" in html
+    assert "Generated" in html
+    assert "2026-09-12T18:05:00Z" in html
+    assert "Checksum" in html
+    assert "Raw Markdown" in html
+    assert "JSON Evidence" in html
+    assert "CSV / KML" in html
+    assert "Plots" in html
+    assert "Manifest / checksum" in html
+    assert "Checksum Review" in html
+    assert "Print / demo view" in html
+    assert "window.print()" in html
+    assert "@media print" in html
+    assert 'class="skip-link"' in html
+    assert 'id="mission-verdict"' in html
+    assert 'id="review-sections"' in html
+    assert 'tabindex="0"' in html
+    assert 'aria-labelledby="feasibility-heading"' in html
+    assert "Why This Verdict?" in html
+    assert "The verdict is REVIEW REQUIRED because modeled feasibility is GO" in html
+    assert "Model Assumptions" in html
+    assert "Artifact Freshness" in html
+    assert "Operator should verify" in html
     assert "Modeled mission status" in html
     assert "Mission risk" in html
     assert "Top limiting constraint" in html
     assert "Regulatory readiness" in html
     assert "Evidence completeness" in html
     assert "Regulatory documentation" in html
-    assert "Weather fallback" in html
+    assert "Weather evidence" in html
     assert "Robustness / uncertainty" in html
     assert "Missing evidence count" in html
     assert "Stale / missing / mismatched evidence" in html
@@ -705,15 +1209,22 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "does not approve a mission" in html
     assert "documentation-only" in html
     assert "No accounts, databases, auth, editing workflows" in html
-    assert "Markdown, JSON, CSV, KML, and checksum artifacts remain accessible" in html
+    assert (
+        "Markdown, JSON, CSV, KML, PNG, manifest, checksum, and dashboard artifacts remain accessible"
+        in html
+    )
     assert "Feasibility" in html
     assert "Regulatory Readiness" in html
+    assert "Weather / Live Evidence" in html
+    assert "Weather source" in html
+    assert "Regulatory provenance" in html
+    assert "Checksum evidence" in html
     assert "Evidence Completeness" in html
     assert "Trust / Defensibility" in html
     assert "Warnings" in html
     assert "Artifact Navigation" in html
     assert "Operator Review Metadata" in html
-    assert "Open first" in html
+    assert "Open first: first artifact to open" in html
     assert "Start here for the verdict, next action, and 30-second mission read." in html
     assert "Data Loading" in html
     assert "outputs/bvlos_powerline_inspection/operator_evidence_bundle/manifest.json" in html
@@ -738,6 +1249,8 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert 'href="flight_path.png"' in html
     assert 'href="autopilot_mission.csv"' in html
     assert 'href="mission_review.kml"' in html
+    assert "plan.json unavailable" in html
+    assert "score_breakdown.json unavailable" in html
     assert "Demo reviewer" in html
 
 
@@ -767,7 +1280,7 @@ def test_operator_review_ui_marks_missing_artifacts_unavailable() -> None:
 
     assert "what_if_plan.md unavailable" in html
     assert 'href="what_if_plan.md"' not in html
-    assert "No weather fallback status captured." in html
+    assert "No weather evidence status captured." in html
     assert "No robustness / uncertainty status captured." in html
     assert "n/a (0 / 0 fields)" in html
 
@@ -777,14 +1290,87 @@ def test_operator_review_ui_embeds_manifest_loader_and_snapshot() -> None:
     html = format_operator_review_ui_html(manifest)
     snapshot = _embedded_manifest_snapshot(html)
 
+    assert snapshot["manifest_version"] == 1
+    assert snapshot["ui_compatibility"]["schema_version"] == 1
     assert snapshot["constraint_audit"]["mission_id"] == "BVLOS Powerline Inspection Demo"
-    assert snapshot["trust_defensibility"]["weather_fallback_status"]["summary"] == (
-        "Fallback weather sample was used."
+    assert snapshot["weather_evidence_readiness"]["freshness_status"] == "stale"
+    assert snapshot["regulatory_evidence_provenance"]["operator_confirmation_status"] == (
+        "pending_operator_confirmation"
     )
     assert 'const manifestUrl = "manifest.json";' in html
     assert 'fetch(manifestUrl, { cache: "no-store" })' in html
     assert "Loaded primary data from manifest.json. No backend database is required." in html
     assert "Using embedded fallback snapshot" in html
+
+
+def test_operator_review_ui_renders_freshness_and_provenance_fields() -> None:
+    html = format_operator_review_ui_html(
+        _sample_operator_review_manifest(
+            weather_evidence_readiness={
+                "status": "STALE",
+                "mode": "sample",
+                "source": "offline Open-Meteo-shaped sample",
+                "provider": "open_meteo",
+                "timestamp_utc": "2026-09-11T16:00:00Z",
+                "freshness_status": "stale",
+                "operator_action": "Refresh weather evidence close to launch.",
+                "summary": "STALE sample weather evidence; operator should verify.",
+            },
+            regulatory_evidence_provenance={
+                "status": "STALE",
+                "source": "Operator-provided authority source",
+                "date_checked_utc": "2026-09-11T15:45:00Z",
+                "expiration_date": "2026-12-31",
+                "authority": "FAA / LAANC provider placeholder",
+                "operator_confirmation_status": "pending_operator_confirmation",
+                "operator_action": "Refresh regulatory evidence checks.",
+                "summary": "STALE regulatory evidence; pending operator confirmation.",
+            },
+        )
+    )
+
+    assert "Weather source" in html
+    assert "offline Open-Meteo-shaped sample" in html
+    assert "2026-09-11T16:00:00Z" in html
+    assert "Weather freshness" in html
+    assert "Refresh weather evidence close to launch." in html
+    assert "Regulatory provenance" in html
+    assert "Operator-provided authority source" in html
+    assert "Date checked" in html
+    assert "2026-09-11T15:45:00Z" in html
+    assert "Expiration" in html
+    assert "2026-12-31" in html
+    assert "Authority" in html
+    assert "FAA / LAANC provider placeholder" in html
+    assert "Operator confirmation" in html
+    assert "pending_operator_confirmation" in html
+
+
+def test_operator_review_ui_exposes_responsive_anchor_targets_for_screenshots() -> None:
+    html = format_operator_review_ui_html(_sample_operator_review_manifest())
+
+    for target in [
+        "mission-verdict",
+        "trust-defensibility",
+        "source-artifacts",
+        "artifact-navigation",
+        "checksum-review",
+        "review-sections",
+    ]:
+        assert f'id="{target}"' in html
+
+    for href in [
+        "#mission-verdict",
+        "#trust-defensibility",
+        "#source-artifacts",
+        "#checksum-review",
+    ]:
+        assert f'href="{href}"' in html
+
+    assert "skip-link" in html
+    assert 'tabindex="0"' in html
+    assert "@media (max-width: 920px)" in html
+    assert "@media print" in html
 
 
 def test_operator_review_ui_handles_missing_optional_fields() -> None:
@@ -797,10 +1383,14 @@ def test_operator_review_ui_handles_missing_optional_fields() -> None:
     assert "not available" in html
     assert "n/a (0 / 0 artifacts)" in html
     assert "n/a (0 / 0 fields)" in html
-    assert "No weather fallback status captured." in html
+    assert "No weather evidence status captured." in html
     assert "No robustness / uncertainty status captured." in html
     assert "Verify scenario inputs before operational use." in html
     assert "operator_dashboard.md unavailable" in html
+    assert "legacy / not provided" in html
+    assert "Manifest Compatibility" in html
+    assert "Optional UI fields use explicit fallback text." in html
+    assert "Unavailable artifacts render as non-link unavailable labels." in html
 
 
 def test_operator_review_ui_includes_malformed_manifest_fallback_handling() -> None:
@@ -897,8 +1487,9 @@ def test_operator_review_ui_unavailable_artifacts_are_not_valid_links() -> None:
         )
     )
 
-    assert '<span class="unavailable">flight_path.png unavailable</span>' in html
-    assert '<span class="unavailable">what_if_plan.md unavailable</span>' in html
+    assert '<span class="artifact-link artifact-unavailable unavailable">' in html
+    assert "<span>flight_path.png unavailable</span><small>Missing</small>" in html
+    assert "<span>what_if_plan.md unavailable</span><small>Missing</small>" in html
     assert 'href="flight_path.png"' not in html
     assert 'href="what_if_plan.md"' not in html
     assert 'src="flight_path.png"' not in html
@@ -907,11 +1498,15 @@ def test_operator_review_ui_unavailable_artifacts_are_not_valid_links() -> None:
 
 def test_operator_review_ui_trust_defensibility_fallbacks_are_visible() -> None:
     html = format_operator_review_ui_html(
-        _sample_operator_review_manifest(trust_defensibility=None)
+        _sample_operator_review_manifest(
+            trust_defensibility=None,
+            weather_evidence_readiness=None,
+            regulatory_evidence_provenance=None,
+        )
     )
 
     assert "Trust / Defensibility" in html
-    assert "No weather fallback status captured." in html
+    assert "No weather evidence status captured." in html
     assert "No robustness / uncertainty status captured." in html
     assert "Verify scenario inputs before operational use." in html
     assert "0 missing artifact(s), 0 stale artifact(s)" in html
@@ -974,6 +1569,35 @@ def test_evidence_bundle_summary_highlights_reviewer_snapshot_and_flow() -> None
                 "timestamp_utc": "2026-09-12T18:00:00Z",
                 "fallback_used": True,
             },
+            "weather_evidence_readiness": {
+                "status": "STALE",
+                "source": "offline Open-Meteo-shaped sample",
+                "timestamp_utc": "2026-09-12T18:00:00Z",
+                "freshness_status": "stale",
+                "operator_action": "Refresh weather evidence.",
+                "summary": (
+                    "STALE: sample weather evidence from offline Open-Meteo-shaped sample, "
+                    "timestamp 2026-09-12T18:00:00Z"
+                ),
+            },
+            "regulatory_evidence_provenance": {
+                "status": "PENDING OPERATOR CONFIRMATION",
+                "source": "Operator source",
+                "date_checked_utc": "2026-09-12T17:30:00Z",
+                "expiration_date": "2026-12-31",
+                "authority": "FAA / LAANC provider placeholder",
+                "operator_confirmation_status": "pending_operator_confirmation",
+                "operator_action": "Operator must confirm authorization outside ORBITAL.",
+                "summary": (
+                    "PENDING OPERATOR CONFIRMATION: source Operator source, checked "
+                    "2026-09-12T17:30:00Z, expires 2026-12-31"
+                ),
+            },
+            "checksum_evidence_readiness": {
+                "status": "VERIFY REQUIRED",
+                "operator_action": "Run bundle checksum verification before archiving.",
+                "summary": "Checksum verification must be run against final archived files.",
+            },
             "trust_defensibility": {
                 "sample_data_demo_note": {"note": "Sample data / demo scenario: demo inputs only."},
                 "weather_fallback_status": {
@@ -1009,7 +1633,9 @@ def test_evidence_bundle_summary_highlights_reviewer_snapshot_and_flow() -> None
     assert "ORBITAL version: 1.0.10" in markdown
     assert "Trust And Defensibility" in markdown
     assert "Sample data / demo scenario note" in markdown
-    assert "Weather fallback status: FALLBACK USED" in markdown
+    assert "Weather evidence readiness: STALE: sample weather evidence" in markdown
+    assert "Regulatory evidence provenance: PENDING OPERATOR CONFIRMATION:" in markdown
+    assert "Checksum evidence readiness: Checksum verification must be run" in markdown
     assert "Uncertainty / robustness status: PASS: 20 case(s)" in markdown
 
 

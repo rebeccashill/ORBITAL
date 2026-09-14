@@ -574,6 +574,20 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
                 issues.append(ValidationIssue(f"weather.{key}", "must be a boolean"))
         _datetime(weather, "weather.timestamp_utc", issues)
         _number(weather, "weather.timeout_s", issues, min_value=0.0, exclusive_min=True)
+        _number(
+            weather,
+            "weather.freshness_max_age_hours",
+            issues,
+            min_value=0.0,
+            exclusive_min=True,
+        )
+        _number(
+            weather,
+            "weather.evidence_freshness_max_age_hours",
+            issues,
+            min_value=0.0,
+            exclusive_min=True,
+        )
 
         location = _optional_mapping(cfg, "weather.location", issues)
         if location is not None:
@@ -696,12 +710,22 @@ def _validate_aircraft(cfg: Mapping[str, Any], issues: list[ValidationIssue]) ->
             "airspace_class",
             "ground_risk_population_note",
             "authorization_id",
+            "authorization_authority",
             "approving_authority_source",
             "authorization_expiration_date",
+            "operator_confirmation_status",
             "emergency_contingency_plan",
             "documentation_only_notice",
         ):
             _optional_nonempty_string(regulatory, f"regulatory.{key}", issues)
+        _datetime(regulatory, "regulatory.authorization_date_checked_utc", issues)
+        _number(
+            cfg,
+            "regulatory.evidence_freshness_max_age_hours",
+            issues,
+            min_value=0.0,
+            exclusive_min=True,
+        )
         _number(cfg, "regulatory.operating_altitude_limit_m", issues, min_value=0.0)
         operating_time_window = _optional_mapping(
             regulatory,

@@ -46,8 +46,11 @@ def _regulatory_cfg() -> dict[str, object]:
             "visual_observer_required": True,
             "ground_risk_population_note": "Industrial corridor with sparse pedestrian exposure.",
             "authorization_id": "unit test authorization reference",
+            "authorization_authority": "FAA / LAANC provider placeholder",
             "approving_authority_source": "Operator authorization binder",
+            "authorization_date_checked_utc": "2026-09-11T16:30:00Z",
             "authorization_expiration_date": "2026-09-30",
+            "operator_confirmation_status": "pending_operator_confirmation",
             "operating_altitude_limit_m": 110.0,
             "operating_time_window": {
                 "start_utc": "2026-09-11T17:00:00Z",
@@ -84,8 +87,11 @@ def test_regulatory_readiness_report_documents_required_items_and_checklist() ->
     evidence = report["regulatory_evidence"]
     assert evidence["documentation_only"] is True
     assert evidence["authorization_id"] == "unit test authorization reference"
+    assert evidence["authorization_authority"] == "FAA / LAANC provider placeholder"
     assert evidence["approving_authority_source"] == "Operator authorization binder"
+    assert evidence["authorization_date_checked_utc"] == "2026-09-11T16:30:00Z"
     assert evidence["authorization_expiration_date"] == "2026-09-30"
+    assert evidence["operator_confirmation_status"] == "pending_operator_confirmation"
     assert evidence["operating_altitude_limit_m"] == 110.0
     assert evidence["operating_time_window"]["start_utc"] == "2026-09-11T17:00:00Z"
     assert evidence["required_crew_roles"] == [
@@ -146,6 +152,9 @@ def test_regulatory_readiness_export_writes_json_and_markdown(tmp_path: Path) ->
     assert "# Regulatory Readiness Report" in markdown
     assert "ORBITAL provides decision support only and is not legal approval" in markdown
     assert "unit test authorization reference" in markdown
+    assert "FAA / LAANC provider placeholder" in markdown
+    assert "2026-09-11T16:30:00Z" in markdown
+    assert "pending_operator_confirmation" in markdown
     assert "Regulatory Evidence Fields" in markdown
     assert "Review lost-link and recovery procedures." in markdown
     assert "- [ ] Confirm LAANC / controlled-airspace authorization" in markdown

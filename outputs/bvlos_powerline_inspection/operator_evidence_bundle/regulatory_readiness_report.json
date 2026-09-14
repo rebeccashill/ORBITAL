@@ -66,8 +66,11 @@
   "regulatory_evidence": {
     "documentation_only": true,
     "authorization_id": "example authorization reference only",
+    "authorization_authority": "FAA / LAANC provider placeholder",
     "approving_authority_source": "Operator-provided example authority source for documentation-only demo",
+    "authorization_date_checked_utc": "2026-09-11T15:45:00Z",
     "authorization_expiration_date": "2026-12-31",
+    "operator_confirmation_status": "pending_operator_confirmation",
     "operating_altitude_limit_m": 120.0,
     "operating_time_window": {
       "start_utc": "2026-09-11T16:00:00Z",

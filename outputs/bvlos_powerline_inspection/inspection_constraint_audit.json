@@ -32,8 +32,12 @@
     "visual_observer_required": true,
     "ground_risk_population_note": "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch.",
     "authorization_id": "example authorization reference only",
+    "authorization_authority": "FAA / LAANC provider placeholder",
     "approving_authority_source": "Operator-provided example authority source for documentation-only demo",
+    "authorization_date_checked_utc": "2026-09-11T15:45:00Z",
     "authorization_expiration_date": "2026-12-31",
+    "operator_confirmation_status": "pending_operator_confirmation",
+    "evidence_freshness_max_age_hours": 24,
     "operating_altitude_limit_m": 120.0,
     "operating_time_window": {
       "start_utc": "2026-09-11T16:00:00Z",
@@ -78,7 +82,9 @@
     "fallback_used": true,
     "fallback_reason": "weather.use_live is false; using offline sample",
     "live_fetch_enabled": false,
-    "applied_to_wind": true
+    "applied_to_wind": true,
+    "freshness_max_age_hours": null,
+    "live_provider_configured": false
   },
   "top_limiting_constraint": {
     "id": "wind_weather",
@@ -952,7 +958,7 @@
           "outputs"
         ]
       },
-      "orbital_version": "1.0.12"
+      "orbital_version": "1.0.13"
     },
     "model_limitations": [
       {

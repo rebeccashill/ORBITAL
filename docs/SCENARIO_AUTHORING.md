@@ -169,14 +169,20 @@ simulation:
 | `weather.offline.visibility_m` | number | Optional, `>= 0` |
 | `weather.offline.precipitation_mm` | number | Optional, `>= 0` |
 | `weather.offline.temperature_C` | number | Optional |
+| `weather.freshness_max_age_hours` | number | Optional documentation-only weather evidence freshness threshold |
+| `weather.evidence_freshness_max_age_hours` | number | Optional alias for weather evidence freshness threshold |
 | `regulatory.laanc_required` | boolean | Optional planning metadata |
 | `regulatory.waiver_or_authorization_required` | boolean | Optional planning metadata |
 | `regulatory.airspace_class` | string | Optional, non-empty |
 | `regulatory.visual_observer_required` | boolean | Optional planning metadata |
 | `regulatory.ground_risk_population_note` | string | Optional, non-empty |
 | `regulatory.authorization_id` | string | Optional documentation-only authorization/reference ID |
+| `regulatory.authorization_authority` | string | Optional documentation-only authority name |
 | `regulatory.approving_authority_source` | string | Optional documentation-only authority/source |
+| `regulatory.authorization_date_checked_utc` | string | Optional documentation-only UTC timestamp when the operator checked the source |
 | `regulatory.authorization_expiration_date` | string | Optional documentation-only expiration date |
+| `regulatory.operator_confirmation_status` | string | Optional documentation-only operator confirmation state |
+| `regulatory.evidence_freshness_max_age_hours` | number | Optional documentation-only regulatory evidence freshness threshold |
 | `regulatory.operating_altitude_limit_m` | number | Optional documentation-only altitude limit, meters |
 | `regulatory.operating_time_window.start_utc` | string | Optional documentation-only UTC start |
 | `regulatory.operating_time_window.end_utc` | string | Optional documentation-only UTC end |
@@ -341,8 +347,19 @@ Operator evidence bundles include `operator_dashboard.md`,
 `evidence_bundle_summary.md`, `artifact_index.md`, `manifest.json`, and a
 lightweight `checksum_manifest.json`. Start with `operator_dashboard.md`; it
 summarizes mission status, mission risk, top limiting constraint, regulatory
-readiness, bundle completeness, operator review fields, and links to audit,
-what-if, regulatory, manifest, checksum, plot, CSV, and KML artifacts. The
+readiness, weather evidence status, regulatory evidence provenance, checksum
+readiness, bundle completeness, why-the-verdict derivation, model assumptions,
+operator review fields, and links to audit, what-if, regulatory, manifest,
+checksum, plot, CSV, and KML artifacts. Weather
+evidence readiness distinguishes live, packaged, fallback, sample, stale, and
+missing evidence; it surfaces source, timestamp, freshness, and the next
+operator action. Regulatory evidence provenance records documentation-only
+source, date checked, expiration, authority, and operator confirmation status.
+Live provider hooks are readiness fields only unless the operator verifies the
+data outside ORBITAL. Artifact freshness summaries surface source and bundled
+timestamps for major artifacts, and warning scans make stale, missing, and
+mismatched evidence easier to review. Robustness summaries describe configured
+uncertainty-case confidence and clearly state when robustness was not run. The
 v1.0.10 dashboard starts with a 10-second mission read, recommended opening
 sequence, grouped artifact shortcuts, and documentation-only review fields so
 operators can quickly decide where to focus their review. The

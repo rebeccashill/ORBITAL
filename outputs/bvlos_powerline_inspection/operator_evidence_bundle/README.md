@@ -6,7 +6,7 @@ ORBITAL is preflight decision support and audit evidence. It is not a LAANC prov
 
 Regulatory metadata, authorization references, approval checklist items, and evidence fields in this bundle are documentation-only. They support operator review; they are not proof of authorization, legal approval, LAANC, waiver, or operational clearance.
 
-Start with `operator_dashboard.md`, then use `artifact_index.md` to open individual artifacts. `evidence_bundle_summary.md` summarizes completeness, and `checksum_manifest.json` provides lightweight SHA-256 checksums for files in this bundle. For a local read-only browser view, open `operator_review_ui.html`; the Markdown, JSON, CSV, KML, and checksum artifacts remain accessible outside the UI.
+Start with `operator_dashboard.md`, then use `artifact_index.md` to open individual artifacts. `evidence_bundle_summary.md` summarizes completeness, and `checksum_manifest.json` provides lightweight SHA-256 checksums for files in this bundle. For a local read-only browser view, open `operator_review_ui.html`; the Markdown, JSON, CSV, KML, PNG, manifest, checksum, and dashboard artifacts remain accessible outside the UI.
 
 ## Open This First
 
@@ -24,6 +24,7 @@ Archive the full `operator_evidence_bundle/` folder after review. Keep `manifest
 ## Completeness And Verification
 
 Artifact completeness reports whether expected bundle files are present. Regulatory documentation completeness is reported separately because optional regulatory evidence fields are documentation aids, not generated artifact failures or approvals. `checksum_manifest.json` records lightweight SHA-256 checksums; run `python -m mission_framework.cli bundle-verify <bundle>` to check whether archived files still match the bundle manifest.
+Manifest version: 1. UI schema version: 1. Unavailable artifacts render as unavailable labels rather than links.
 
 Recommended opening order:
 
@@ -39,7 +40,7 @@ Recommended opening order:
 - Artifact completeness score: 100.0 %
 - Regulatory documentation completeness score: 100.0 %
 - Missing evidence items: 0
-- Bundle warnings: 0
+- Bundle warnings: 2
 - Operator review status: ready for review
 - Reviewer: not provided
 - Review timestamp UTC: not provided
@@ -86,12 +87,27 @@ Recommended opening order:
 - [ ] Confirm weather minimums
 - [ ] Confirm battery reserve
 
-## Weather Source
+## Weather / Live Evidence Readiness
 
+- Status: STALE
+- Mode: sample
 - Source: offline Open-Meteo-shaped sample
 - Provider: open_meteo
 - Timestamp: 2026-09-11T16:00:00Z
-- Fallback used: yes
+- Freshness: stale
+- Operator action: Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field conditions.
+- Live provider hook: documentation-only; live weather integration can populate this field but is not required.
+
+## Regulatory Evidence Provenance
+
+- Status: STALE
+- Source: Operator-provided example authority source for documentation-only demo
+- Date checked: 2026-09-11T15:45:00Z
+- Expiration: 2026-12-31
+- Authority: FAA / LAANC provider placeholder
+- Operator confirmation status: pending_operator_confirmation
+- Operator action: Refresh regulatory evidence checks before relying on this bundle for review. Operator should verify regulatory inputs.
+- Documentation-only: ORBITAL does not grant approval, authorization, LAANC, legal advice, or operational clearance.
 
 ## Flight-Planning Exports
 

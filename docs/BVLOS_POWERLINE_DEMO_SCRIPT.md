@@ -10,6 +10,10 @@ Use this script for a customer, investor, or HBS-style product demo. It keeps
 the narrative grounded in generated artifacts rather than treating ORBITAL as a
 generic map or route-planning tool.
 
+v1.0.13 emphasizes credibility and operator trust: the first screen explains
+why the verdict needs review, what evidence is stale or operator-confirmed, and
+which raw artifact should be opened first.
+
 ## Demo Setup
 
 Regenerate the full demo artifacts, including plots:
@@ -48,20 +52,44 @@ Primary source artifacts to open from the UI or filesystem:
 - `outputs/bvlos_powerline_inspection/regulatory_readiness_report.md`
 - `outputs/bvlos_powerline_inspection/operator_evidence_bundle/evidence_bundle_summary.md`
 - `outputs/bvlos_powerline_inspection/operator_evidence_bundle/artifact_index.md`
+- `outputs/bvlos_powerline_inspection/operator_evidence_bundle/manifest.json`
+- `outputs/bvlos_powerline_inspection/operator_evidence_bundle/checksum_manifest.json`
+
+## v1.0.13 Flow
+
+Use this review order in the UI and narration:
+
+```text
+Verdict -> top constraint -> trust signals -> artifacts -> checksum
+```
+
+The first screen should answer five questions before the presenter opens a raw
+file:
+
+1. What is the mission verdict and next operator action?
+2. What is the top modeled constraint?
+3. Which trust signals require operator verification?
+4. Which artifact should the reviewer open first?
+5. Has checksum evidence been generated and verified?
+
+Live weather hooks and regulatory provenance fields are documentation-only
+readiness records unless verified outside ORBITAL. ORBITAL does not grant
+approval, authorization, LAANC, legal advice, or operational clearance.
 
 ## Demo Arc
 
 1. Start with the local operator review UI, not the map.
-2. Use the first screen for the 30-second read: verdict, modeled status, risk,
-   top constraint, next action, readiness, completeness, weather fallback,
-   robustness, and evidence warnings.
+2. Use the first screen for the 30-second read: verdict, top constraint, trust
+   signals, source artifacts, checksum readiness, freshness, and warnings.
 3. Open the Markdown dashboard and audit artifacts to show that the evidence
    bundle remains the source of truth and the UI is read-only.
 4. Drill into the constraint audit for baseline feasibility and top limiting
    constraint.
 5. Show what-if alternatives and before/after improvements.
-6. Show regulatory readiness as documentation-only decision support.
-7. Finish with the evidence bundle summary, index, and checksum manifest.
+6. Show regulatory readiness as operator-confirmed, documentation-only
+   decision support.
+7. Finish with the raw Markdown, JSON, CSV, KML, PNG, manifest, dashboard, and
+   checksum artifacts.
 
 ## 0. Operator Review UI
 
@@ -74,11 +102,11 @@ python -m mission_framework.cli serve-ui
 Presenter script:
 
 > The first screen is a local, read-only review surface for the generated
-> evidence bundle. It pulls the mission verdict, modeled status, risk, top
-> limiting constraint, next operator action, regulatory readiness, evidence
-> completeness, regulatory documentation completeness, weather fallback,
-> robustness, missing evidence, and warning counts into one scannable view. It
-> is a demo and discovery aid, not a SaaS workflow and not an approval system.
+> evidence bundle. It pulls the mission verdict, top modeled constraint,
+> why-this-verdict explanation, model assumptions, weather and regulatory
+> provenance, artifact freshness, raw evidence links, and checksum readiness
+> into one scannable view. It is a demo and discovery aid, not a SaaS workflow
+> and not an approval system.
 
 Sample output:
 
@@ -87,16 +115,21 @@ Mission Verdict: REVIEW REQUIRED
 Modeled mission status: GO
 Mission risk: LOW
 Top limiting constraint: Wind / weather margin, PASS, margin 3.1 m/s
+Review order: Verdict -> top constraint -> trust signals -> artifacts -> checksum
 Regulatory readiness: OPERATOR_ACTION_REQUIRED
 Evidence completeness: 100.0 %
+Weather evidence: STALE sample/fallback evidence; operator should verify
+Regulatory provenance: STALE, pending operator confirmation
+Checksum evidence: VERIFY REQUIRED
 Next operator action: Complete review items outside ORBITAL.
 ```
 
 Emphasize the UI boundary language: it is read-only, it does not approve a
 mission, and it does not replace approval, authorization, legal advice, LAANC,
 or operational clearance. Then use the Source Artifacts links to open the
-Markdown dashboard and supporting files. The Markdown, JSON, CSV, KML, and
-checksum artifacts remain the evidence bundle's source of truth.
+Markdown dashboard and supporting files. The Markdown, JSON, CSV, KML, PNG,
+manifest, checksum, and dashboard artifacts remain accessible outside the UI.
+Unavailable artifacts must render as unavailable text, not broken links.
 
 ## 1. Baseline Mission Feasibility
 
@@ -231,7 +264,8 @@ Presenter script:
 > ORBITAL is legally honest here: this is decision support, not approval. It
 > records what the operator must confirm outside ORBITAL, including LAANC,
 > waiver or authorization coverage, visual observer support, airspace class,
-> ground-risk notes, and authorization evidence fields.
+> ground-risk notes, authority source, date checked, expiration, and operator
+> confirmation status.
 
 Sample output:
 
@@ -241,6 +275,10 @@ LAANC required: yes
 Waiver / authorization required: yes
 Airspace class: Class D
 Visual observer required: yes
+Regulatory evidence source: Operator-provided example authority source
+Date checked: 2026-09-11T15:45:00Z
+Expiration: 2026-12-31
+Operator confirmation: pending_operator_confirmation
 ```
 
 The key product boundary:
@@ -261,6 +299,8 @@ Open:
 ```text
 outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_dashboard.md
 outputs/bvlos_powerline_inspection/operator_evidence_bundle/evidence_bundle_summary.md
+outputs/bvlos_powerline_inspection/operator_evidence_bundle/manifest.json
+outputs/bvlos_powerline_inspection/operator_evidence_bundle/checksum_manifest.json
 ```
 
 CLI shortcuts:
@@ -291,6 +331,9 @@ Completeness score: 100.0 %
 Artifacts present: 17 / 17
 Missing artifact count: 0
 Operator review status: ready for review
+Manifest version: 1
+UI schema: 1
+Checksum evidence: VERIFY REQUIRED until verification is rerun on final files
 ```
 
 Then open:
@@ -304,6 +347,47 @@ constraint audit, regulatory report, score breakdown, flight path plot,
 robustness summary, operator memo, weather snapshot, autopilot CSV, KML review
 file, manifest, summary, README, and checksum manifest.
 
+## What Improved Since v1.0.12
+
+- The first screen now has a dedicated "Why this verdict?" explanation and a
+  review order strip for verdict, top constraint, trust signals, artifacts, and
+  checksum.
+- Manifest compatibility, UI schema expectations, optional-field fallback text,
+  checksum readiness, and artifact freshness are visible near the first screen.
+- Weather evidence is labeled as live, fallback, sample, stale, or missing, with
+  source, timestamp, freshness, and operator action.
+- Regulatory evidence provenance carries source, date checked, expiration,
+  authority, and operator confirmation status as documentation-only records.
+- Raw Markdown, JSON, CSV, KML, PNG, manifest, checksum, and dashboard artifacts
+  are easy to open outside the UI; unavailable artifacts do not render as broken
+  links.
+- Demo language is more explicit that ORBITAL supports defensible review but
+  does not grant approval, authorization, LAANC, legal advice, or clearance.
+
+## Customer-Discovery Script: Credibility And Operator Trust
+
+Use these prompts after the 30-second review path, while the UI and raw evidence
+bundle are still visible:
+
+1. "When your team reviews a BVLOS inspection today, what has to be visible in
+   the first 30 seconds before you trust the package enough to keep reviewing?"
+2. "Which stale or missing evidence would stop this mission from moving forward:
+   weather, authorization, route exports, checksums, or something else?"
+3. "Who is allowed to confirm regulatory evidence in your workflow, and where
+   would that confirmation need to be recorded?"
+4. "Does the why-this-verdict panel explain the decision well enough for a pilot,
+   program manager, or customer stakeholder?"
+5. "Which raw artifacts would you need to archive outside the UI for audit,
+   handoff, or customer review?"
+6. "What language would make it clearer that ORBITAL is decision support and
+   evidence packaging, not approval or clearance?"
+
+Close this section by saying:
+
+> The product bet is trust. ORBITAL should make the operator faster without
+> hiding the evidence, inventing approval, or pretending sample inputs are live
+> operational facts.
+
 ## Screenshots And Sample Outputs
 
 Use the screenshot set for polished README, demo, and Foundry-style visuals:
@@ -313,14 +397,15 @@ docs/BVLOS_DEMO_SCREENSHOT_SET.md
 ```
 
 The operator review UI should be the first captured artifact because it shows
-the mission verdict, modeled mission status, mission risk, top limiting
-constraint, regulatory readiness, bundle completeness, weather fallback,
-robustness, warnings, and artifact links on one page. Then capture the Markdown
-operator dashboard, constraint audit, what-if report, regulatory report,
-artifact index, and the generated visuals below. Include focused UI screenshots
-for the dashboard, Source Artifacts navigation, and Trust / Defensibility
-section. The UI is read-only; the Markdown evidence bundle remains the source
-of truth.
+the mission verdict, modeled mission status, mission risk, review order, top
+limiting constraint, why-this-verdict derivation, manifest compatibility,
+freshness, regulatory readiness, bundle completeness, weather evidence,
+robustness, warnings, raw evidence links, and checksum readiness on one page.
+Then capture the Markdown operator dashboard, constraint audit, what-if report,
+regulatory report, artifact index, and the generated visuals below. Include
+focused UI screenshots for the dashboard, Source Artifacts navigation, and Trust
+/ Defensibility section. The UI is read-only; the Markdown evidence bundle
+remains the source of truth.
 
 The generated mission overview is the strongest visual lead for README or demo
 docs:
@@ -335,19 +420,24 @@ visual:
 For a compact README snippet, use:
 
 ```text
-10-second mission read
+30-second review path
 Mission verdict: REVIEW REQUIRED
 Modeled mission status: GO
 Mission risk: LOW
 Top limiting constraint: Wind / weather margin, PASS with margin 3.1 m/s
+Review order: Verdict -> top constraint -> trust signals -> artifacts -> checksum
 Open first page: operator_review_ui.html
 Open first source artifact: operator_dashboard.md
 Evidence bundle completeness: 100.0 %
-Regulatory readiness: OPERATOR_ACTION_REQUIRED, documentation-only
+Weather evidence: STALE sample/fallback evidence; operator should verify
+Checksum evidence: VERIFY REQUIRED
+Regulatory readiness: OPERATOR_ACTION_REQUIRED, operator-confirmed documentation-only
 ```
 
 For a demo close, use:
 
 > ORBITAL does not replace a pilot, a LAANC provider, an autopilot, or a legal
 > approval workflow. It answers the preflight feasibility question and packages
-> the evidence an operator needs to review before committing a crew.
+> the evidence an operator needs to review before committing a crew. Live
+> weather and regulatory fields remain operator-confirmed unless verified
+> outside ORBITAL.

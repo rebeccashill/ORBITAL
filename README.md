@@ -7,7 +7,7 @@
 Constraint audits, what-if planning, regulatory readiness, and evidence bundles
 for drone inspection operators.
 
-Current release: `v1.0.12`
+Current release: `v1.0.13`
 
 > ORBITAL tells inspection teams whether a BVLOS mission is feasible before
 > they send a crew.
@@ -20,6 +20,22 @@ comparisons, and a review-ready evidence bundle before field time is committed.
 Current product focus: make ORBITAL's BVLOS evidence workflow faster to scan,
 clearer to demo, and more operator-friendly before customer-discovery and
 Foundry-readiness work.
+
+## What Improved Since v1.0.12
+
+- v1.0.13 makes the 30-second BVLOS review path explicit: verdict -> top
+  constraint -> trust signals -> artifacts -> checksum.
+- The first screen now carries the why-this-verdict panel, model assumptions,
+  manifest compatibility, checksum readiness, artifact freshness, and raw
+  evidence links closer to the mission verdict.
+- Weather and regulatory evidence now distinguish live, fallback, sample,
+  stale, missing, and operator-confirmed documentation states without implying
+  approval, authorization, LAANC, legal advice, or clearance.
+- The evidence bundle keeps Markdown, JSON, CSV, KML, PNG, manifest, checksum,
+  and dashboard artifacts accessible outside the UI, with unavailable artifacts
+  rendered as unavailable text rather than broken links.
+- Demo documentation and screenshots were refreshed around credibility,
+  operator trust, and customer-discovery conversations.
 
 ## Positioning
 
@@ -96,9 +112,11 @@ statement, buyer and user assumptions, target customer profiles, and top
 alternatives.
 
 For a presenter-ready BVLOS walkthrough, see the
-[BVLOS powerline demo script](docs/BVLOS_POWERLINE_DEMO_SCRIPT.md). The live
-operator review starts with
-`outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_dashboard.md`.
+[BVLOS powerline demo script](docs/BVLOS_POWERLINE_DEMO_SCRIPT.md). The
+v1.0.13 operator review starts with
+`outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_review_ui.html`;
+`operator_dashboard.md` remains the first source artifact to open from the raw
+evidence bundle.
 For a committed screenshot gallery, see the
 [BVLOS demo screenshot set](docs/BVLOS_DEMO_SCREENSHOT_SET.md).
 The constraint-audit report remains the primary feasibility artifact: it
@@ -118,9 +136,15 @@ ORBITAL's current differentiators are:
   and unresolved items without implying legal approval
 - Operator approval checklists that keep final confirmations with the pilot-in-
   command and operator
+- Operational evidence readiness that distinguishes live, fallback, sample,
+  stale, packaged, and missing weather evidence while keeping live and
+  regulatory fields documentation-only until verified outside ORBITAL
+- Verdict derivation panels that show how mission status, regulatory readiness,
+  missing evidence, and warning counts produce the review verdict
 - Evidence bundle manifests that surface regulatory metadata, approval
-  checklist status, and missing documentation-only evidence fields for operator
-  review without treating them as approvals
+  checklist status, weather freshness, regulatory provenance, checksum
+  readiness, and missing documentation-only evidence fields for operator review
+  without treating them as approvals
 - Evidence bundle summaries, artifact indexes, completeness scores, review
   status, and SHA-256 checksum manifests for operator audit packages
 
@@ -215,16 +239,21 @@ and `-no-plots`.
 The BVLOS demo leads with feasibility and evidence, not just a map:
 
 ```text
-10-second mission read
-Status: GO
+30-second review path
+Mission verdict: REVIEW REQUIRED
+Modeled mission status: GO
 Mission risk: LOW
 Top limiting constraint: Wind / weather margin, PASS with margin 3.1 m/s
-Model transparency: assumptions, margin sources, top-limiter rationale, and reproducibility
+Review order: Verdict -> top constraint -> trust signals -> artifacts -> checksum
 Open first page: operator_review_ui.html
 Open first source artifact: operator_dashboard.md
+Weather evidence: STALE sample/fallback evidence; operator should verify
+Checksum evidence: VERIFY REQUIRED before archive or sharing
 Evidence bundle completeness: 100.0 %
-Regulatory readiness: OPERATOR_ACTION_REQUIRED, documentation-only
+Regulatory readiness: OPERATOR_ACTION_REQUIRED, operator-confirmed documentation-only
 ```
+
+![BVLOS operator review UI](docs/assets/bvlos_screenshots/operator_review_ui.png)
 
 ![BVLOS mission overview](outputs/bvlos_powerline_inspection/mission_overview.png)
 
@@ -261,15 +290,22 @@ UI-first demo flow:
    `python -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml --outdir outputs`.
 2. Launch the read-only local UI with `python -m mission_framework.cli serve-ui`
    and open the printed `operator_review_ui.html` URL.
-3. Scan the mission verdict, modeled status, risk, top limiting constraint,
-   next operator action, readiness, completeness, weather fallback, robustness,
-   and evidence warnings in the first screen.
+3. Follow the review order strip: verdict, top constraint, trust signals,
+   artifacts, then checksum. Scan the mission verdict, modeled status, risk,
+   next operator action, readiness, completeness, weather evidence freshness,
+   regulatory provenance, robustness, and evidence warnings in the first
+   screen.
 4. Use the artifact links to open `operator_dashboard.md`,
    `inspection_constraint_audit.md`, `what_if_plan.md`, and
-   `regulatory_readiness_report.md`. The Markdown, JSON, CSV, KML, and checksum
-   files remain the source of truth; the UI is a read-only review surface.
+   `regulatory_readiness_report.md`. The Markdown, JSON, CSV, KML, PNG,
+   manifest, checksum, and dashboard files remain accessible outside the UI;
+   unavailable artifacts render as unavailable text rather than broken links.
 5. Close with `python -m mission_framework.cli bundle-verify
    outputs/bvlos_powerline_inspection/operator_evidence_bundle`.
+
+Live weather hooks and regulatory provenance fields are readiness records only
+unless verified outside ORBITAL by the operator. ORBITAL does not grant
+approval, authorization, LAANC, legal advice, or operational clearance.
 
 The short commands mirror the dashboard language: `open-first` prints the first
 artifact to open, `verdict` prints the mission verdict and next operator action,

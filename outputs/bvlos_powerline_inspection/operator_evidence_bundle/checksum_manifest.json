@@ -17,8 +17,8 @@
     },
     {
       "bundle_path": "evidence_bundle_summary.md",
-      "sha256": "631ce9cf08374d1389170a275d3dda89e0e3e09894c687e965fab8a83afd4561",
-      "size_bytes": 4512
+      "sha256": "5029264891bc588059a9951b4d8e1066e676623154761cc486ea302dee90d675",
+      "size_bytes": 6738
     },
     {
       "bundle_path": "flight_path.png",
@@ -37,18 +37,18 @@
     },
     {
       "bundle_path": "inspection_constraint_audit.json",
-      "sha256": "a96657a945dc7db166b287f1c0da9f8b8b70526dfcd3938a784a9d7634ed527c",
-      "size_bytes": 50705
+      "sha256": "919f4020b6789956d7bf18a0f5485d0e498e8c51dd2dfa65b1de8ab38ced0274",
+      "size_bytes": 51029
     },
     {
       "bundle_path": "inspection_constraint_audit.md",
-      "sha256": "e5237d4c8c3dd1712085b727f39c2d0f0ac639143fb38bf744fdaa12f7f9ed68",
+      "sha256": "b0719496f50c91b7e048a9a18ee19e32ea5f969cfd09a2305d91cf5834c80948",
       "size_bytes": 17222
     },
     {
       "bundle_path": "manifest.json",
-      "sha256": "7cf5da701f7a46412bf05a30f1b0a22c5da958d9b214fb1461d26b1d8e613cfe",
-      "size_bytes": 36342
+      "sha256": "31e0caab4f9d2c66a499e3d68de23b8741314680ce68737f78e4a19834fc67e7",
+      "size_bytes": 52039
     },
     {
       "bundle_path": "mission_review.kml",
@@ -57,8 +57,8 @@
     },
     {
       "bundle_path": "operator_dashboard.md",
-      "sha256": "3d1a7b02fdf2701ce3f12dcb050c158a5fcbf32aa490d8d6a6c380ff590ba8bf",
-      "size_bytes": 8824
+      "sha256": "d70a55a57dd0cfc0d4f447e0d7c7b1a5bcb34b47b08a18a871fa5992b2be6699",
+      "size_bytes": 15960
     },
     {
       "bundle_path": "operator_memo.md",
@@ -67,8 +67,8 @@
     },
     {
       "bundle_path": "operator_review_ui.html",
-      "sha256": "36ee8980efc08b5e12e91a254f7dc953a08c92973e48ec65e030f2f644547863",
-      "size_bytes": 74019
+      "sha256": "a3fa89e640a89dfb52fe35438c995375b8458617fff5e968ec97270409df2c2f",
+      "size_bytes": 128799
     },
     {
       "bundle_path": "plan.json",
@@ -77,18 +77,18 @@
     },
     {
       "bundle_path": "README.md",
-      "sha256": "09b3b49cb7ac437e6ae253688a50d36ce1bfa8419b31bbf0622879d9f1e798de",
-      "size_bytes": 5457
+      "sha256": "f7f94d7f64369bdc7cdd2694a73f58feb00941a8fbcaf84c3dc75ab5aca35284",
+      "size_bytes": 6487
     },
     {
       "bundle_path": "regulatory_readiness_report.json",
-      "sha256": "30412182cf2fb3cb6c33726373a3dc422dfc61be911d15d82ac5eac75aa68551",
-      "size_bytes": 11029
+      "sha256": "a83de4f37add9116f01973e843dc957579f88463e7bb29755c53c88550161119",
+      "size_bytes": 11230
     },
     {
       "bundle_path": "regulatory_readiness_report.md",
-      "sha256": "05d976e79a5f11e5803c025926ce4da533a9ebf7142bd0ec2e78912e387ff94c",
-      "size_bytes": 5777
+      "sha256": "3dc309b5016b06e81a375c14d98c7e6504ee353c83b608e15748fb37a8da3fe4",
+      "size_bytes": 5953
     },
     {
       "bundle_path": "robustness.json",
@@ -97,8 +97,8 @@
     },
     {
       "bundle_path": "scenario.yaml",
-      "sha256": "25b9be4703966407b17a062cdc2547d86ed65bf9636c8b1edb7790c0fcdb9238",
-      "size_bytes": 6688
+      "sha256": "dd3aa6749c6aee97d6e60dfaef6954677e660aa6bb93d9ea75eb843f241f308c",
+      "size_bytes": 6905
     },
     {
       "bundle_path": "score.json",

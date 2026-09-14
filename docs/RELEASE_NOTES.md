@@ -1,5 +1,45 @@
 # Release Notes
 
+## v1.0.13 - September 13, 2026
+
+### Changed
+
+- Refreshed the README, BVLOS demo script, and screenshot set around the
+  v1.0.13 operator review flow.
+- Added a short "what improved since v1.0.12" narrative focused on the
+  30-second review path, why-this-verdict explanation, manifest compatibility,
+  checksum readiness, freshness scanning, and raw evidence accessibility.
+- Reframed the screenshot captions around the premium review UI: verdict, top
+  constraint, trust signals, source artifacts, checksum evidence, and
+  trust/defensibility panels.
+- Added customer-discovery demo language for credibility and operator trust,
+  including prompts for how customers verify weather, regulatory provenance,
+  stale artifacts, route exports, and checksum evidence today.
+- Made the live weather and regulatory boundary explicit: live/regulatory
+  fields are documentation-only readiness records unless verified outside
+  ORBITAL by the operator, and ORBITAL does not grant approval, authorization,
+  LAANC, legal advice, or operational clearance.
+- Expanded release-hardening tests for manifest schema compatibility, stale
+  weather/regulatory warnings, freshness and provenance rendering, all verdict
+  derivation paths, UI screenshot anchor targets, generated UI smoke coverage,
+  and the checksum-verification release gate.
+- Bumped package and README release metadata to `v1.0.13`.
+
+### Verified
+
+- Refreshed the committed operator review UI screenshots and checked them for
+  nonblank rendered content.
+- Regenerated `outputs/bvlos_powerline_inspection/`.
+- Ran `python -m black --check .`.
+- Ran `python -m ruff check .`.
+- Ran `python -m mypy --python-version 3.12 mission_framework`.
+- Ran `python -m pytest` with 99 passing tests.
+- Ran `python run_all.py --fast --no-plots`.
+- Ran `python -m mission_framework.cli bundle-verify outputs\bvlos_powerline_inspection\operator_evidence_bundle`.
+- Ran `python -m mission_framework.cli bundle-review-validate outputs\bvlos_powerline_inspection\operator_evidence_bundle`.
+- Ran `python scripts/focused_secret_scan.py`.
+- Ran `git diff --check`.
+
 ## v1.0.12 - September 13, 2026
 
 ### Changed
@@ -8,9 +48,18 @@
   bundles.
 - Made the first screen emphasize mission verdict, modeled status, risk, top
   limiting constraint, next operator action, regulatory readiness, evidence
-  completeness, regulatory documentation completeness, weather fallback,
-  robustness / uncertainty, missing evidence count, and stale / missing /
-  mismatched evidence warning count.
+  completeness, regulatory documentation completeness, weather evidence
+  readiness, regulatory provenance, checksum readiness, robustness /
+  uncertainty, missing evidence count, and stale / missing / mismatched evidence
+  warning count.
+- Added operational evidence readiness fields for live, fallback, sample,
+  stale, packaged, and missing weather evidence, plus documentation-only
+  regulatory provenance fields for source, date checked, expiration, authority,
+  and operator confirmation status.
+- Added trust / defensibility panels for why-the-verdict derivation, near-fold
+  model assumptions, robustness confidence language, operator-verify cues,
+  artifact freshness timestamps, and stale / missing / mismatched evidence
+  scanning.
 - Added compact review sections for feasibility, regulatory readiness, evidence
   completeness, trust / defensibility, warnings, artifact navigation, and
   operator review metadata.

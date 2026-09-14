@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ORBITAL Operator Review</title>
+  <link rel="icon" href="data:,">
   <style>
     * { box-sizing: border-box; }
     html { max-width: 100%; overflow-x: hidden; }
@@ -11,19 +12,46 @@
       margin: 0;
       max-width: 100%;
       overflow-x: hidden;
-      color: #18212b;
-      background: #f5f6f7;
-      font-family: Arial, Helvetica, sans-serif;
+      color: #17212b;
+      background: #f2f4f7;
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif;
       font-size: 16px;
       line-height: 1.45;
     }
-    a { color: #0f5f9f; font-weight: 700; text-decoration: none; }
+    a { color: #0b5d95; font-weight: 700; text-decoration: none; }
     a:hover { text-decoration: underline; }
+    a:focus-visible,
+    button:focus-visible,
+    .review-section:focus-visible {
+      outline: 3px solid #0f5f9f;
+      outline-offset: 3px;
+    }
+    .skip-link {
+      position: absolute;
+      top: -48px;
+      left: 16px;
+      z-index: 20;
+      border-radius: 6px;
+      background: #ffffff;
+      border: 2px solid #0f5f9f;
+      color: #0f5f9f;
+      padding: 8px 10px;
+      box-shadow: 0 6px 16px rgba(22, 34, 45, 0.16);
+    }
+    .skip-link:focus {
+      top: 12px;
+    }
     .shell { min-height: 100vh; }
     .topbar {
       background: #ffffff;
       border-bottom: 1px solid #d8dee7;
-      padding: 14px 24px;
+      border-top: 4px solid #0f5f9f;
+      padding: 0 24px;
+    }
+    .topbar-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 13px 0;
       display: flex;
       justify-content: space-between;
       gap: 18px;
@@ -31,6 +59,13 @@
     }
     .topbar strong { display: block; font-size: 20px; }
     .topbar span { color: #607080; }
+    .topbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      align-items: center;
+    }
     .read-only-pill {
       border: 1px solid #aab7c4;
       border-radius: 8px;
@@ -40,7 +75,21 @@
       padding: 6px 9px;
       text-transform: uppercase;
       white-space: nowrap;
+      background: #f8fafc;
     }
+    .print-button {
+      border: 1px solid #0f5f9f;
+      border-radius: 8px;
+      background: #0f5f9f;
+      color: #ffffff;
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      min-height: 34px;
+      padding: 6px 10px;
+    }
+    .print-button:hover { background: #0a4d82; }
     main { max-width: 1180px; margin: 0 auto; padding: 20px; }
     .dashboard-grid {
       display: grid;
@@ -56,10 +105,12 @@
       background: #ffffff;
       border: 1px solid #d8dee7;
       border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(22, 34, 45, 0.06);
     }
     .verdict-band {
-      padding: 16px;
+      padding: 18px;
       border-left: 5px solid #0f5f9f;
+      box-shadow: 0 8px 24px rgba(20, 47, 72, 0.08);
     }
     .eyebrow {
       color: #607080;
@@ -68,12 +119,23 @@
       letter-spacing: 0;
       text-transform: uppercase;
     }
-    h1 { margin: 8px 0 8px; font-size: 28px; line-height: 1.15; letter-spacing: 0; }
+    h1 {
+      margin: 8px 0 8px;
+      font-size: 28px;
+      line-height: 1.15;
+      letter-spacing: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
     h2 { margin: 0 0 12px; font-size: 19px; letter-spacing: 0; }
     h3 { margin: 0 0 8px; font-size: 17px; letter-spacing: 0; }
     .verdict-badge {
       display: inline-flex;
       align-items: center;
+      gap: 7px;
+      max-width: 100%;
       min-height: 31px;
       border-radius: 8px;
       padding: 4px 10px;
@@ -81,11 +143,21 @@
       border: 1px solid currentColor;
       font-size: 18px;
       vertical-align: middle;
+      overflow-wrap: anywhere;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
     }
-    .status-good { color: #135c3a; background: #edf8f2; border-color: #8fc8a8; }
-    .status-review { color: #744400; background: #fff5dc; border-color: #d8ad49; }
-    .status-bad { color: #941919; background: #fff0f0; border-color: #db8f8f; }
-    .status-neutral { color: #425466; background: #f3f6f8; border-color: #ccd6df; }
+    .verdict-badge::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      flex: 0 0 auto;
+    }
+    .status-good { color: #0f5f3d; background: #edf8f2; border-color: #8cc8a8; }
+    .status-review { color: #704200; background: #fff5db; border-color: #d6a13b; }
+    .status-bad { color: #941919; background: #fff0f0; border-color: #dc8d8d; }
+    .status-neutral { color: #3f5061; background: #f4f7fa; border-color: #cbd6df; }
     .boundary-callout {
       margin: 12px 0 0;
       padding: 10px 11px;
@@ -98,63 +170,233 @@
     }
     .next-action {
       margin: 0;
-      padding: 12px;
+      padding: 14px 14px 14px 16px;
       border-left: 4px solid #0f5f9f;
-      background: #eef6fc;
-      border-radius: 6px;
+      background: #eef6fb;
+      border-radius: 8px;
       border-top: 1px solid #c8dff1;
       border-right: 1px solid #c8dff1;
       border-bottom: 1px solid #c8dff1;
+      box-shadow: 0 1px 2px rgba(15, 95, 159, 0.06);
     }
+    .next-action strong { display: block; font-size: 15px; }
     .next-action p { margin: 6px 0 0; }
+    .freshness-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .freshness-strip article {
+      min-height: 86px;
+      border: 1px solid #d8dee7;
+      border-left: 4px solid #7d8b99;
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 11px;
+      box-shadow: 0 1px 2px rgba(22, 34, 45, 0.06);
+      overflow-wrap: anywhere;
+    }
+    .freshness-strip span {
+      display: block;
+      color: #607080;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .freshness-strip strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+    .freshness-strip small {
+      display: block;
+      margin-top: 5px;
+      color: #425466;
+      font-size: 12px;
+    }
+    .review-order {
+      background: #ffffff;
+      border: 1px solid #d8dee7;
+      border-left: 5px solid #263847;
+      border-radius: 8px;
+      padding: 13px;
+      box-shadow: 0 1px 2px rgba(22, 34, 45, 0.06);
+    }
+    .review-order > span {
+      display: block;
+      color: #607080;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .review-order p {
+      margin: 4px 0 10px;
+      color: #263847;
+      font-weight: 800;
+    }
+    .review-order ol {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .review-order a {
+      display: grid;
+      gap: 3px;
+      height: 100%;
+      min-height: 92px;
+      border: 1px solid #d8dee7;
+      border-radius: 8px;
+      background: #f9fbfc;
+      color: #17212b;
+      padding: 9px;
+    }
+    .review-order a:hover {
+      background: #eef6fb;
+      border-color: #8fb8d4;
+      text-decoration: none;
+    }
+    .review-order a span {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      color: #ffffff;
+      background: #0f5f9f;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .review-order a strong {
+      display: block;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+    .review-order a small {
+      color: #526578;
+      font-size: 12px;
+      line-height: 1.25;
+    }
+    .why-verdict {
+      padding: 14px;
+      border-left: 4px solid #7255a1;
+      background: #fbf9ff;
+    }
+    .why-verdict h2 { margin-bottom: 6px; }
+    .why-verdict p { margin: 0 0 10px; color: #425466; }
     .signals {
       display: grid;
       grid-template-columns: repeat(4, minmax(150px, 1fr));
       gap: 10px;
     }
     .signal {
-      padding: 11px;
-      min-height: 94px;
+      padding: 12px;
+      min-height: 98px;
       overflow-wrap: anywhere;
       border-left: 4px solid #c9d4df;
     }
+    .signal.decision-signal {
+      min-height: 116px;
+      border-top-color: #cad6df;
+      box-shadow: 0 5px 16px rgba(22, 34, 45, 0.07);
+    }
+    .signal.signal-top { border-left-color: #0f5f9f; background: #f9fcfe; }
     .signal.status-good { border-left-color: #2d8f5d; }
     .signal.status-review { border-left-color: #c97f12; }
     .signal.status-bad { border-left-color: #c94040; }
     .signal.status-neutral { border-left-color: #9dadbb; }
     .signal span { display: block; color: #607080; font-size: 11px; font-weight: 800; text-transform: uppercase; }
-    .signal strong { display: block; margin-top: 6px; font-size: 16px; line-height: 1.25; }
-    .signal p { margin: 6px 0 0; color: #425466; font-size: 12px; }
+    .signal strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 16px;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+    .signal p {
+      margin: 6px 0 0;
+      color: #425466;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
     .warning-signal.status-review { border-left-color: #c97f12; background: #fff8e8; }
     .warning-signal.status-bad { border-left-color: #c94040; background: #fff0f0; }
     .warning-signal.status-good { border-left-color: #2d8f5d; background: #f3faf6; }
     .documentation-signal { border-left-color: #8b9aaa !important; background: #f8fafb; }
     .side-stack { display: grid; gap: 12px; }
-    .panel { padding: 14px; }
+    .panel { padding: 15px; }
     .boundary-list { margin: 0; padding-left: 18px; }
     .boundary-list li { margin: 8px 0; }
     .route-preview { margin: 0; padding: 14px; }
     .route-preview img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid #d8dee7; }
     .route-preview figcaption { margin-top: 8px; color: #607080; font-size: 13px; }
     .route-missing { color: #607080; }
-    .quick-links { display: flex; flex-wrap: wrap; gap: 8px; }
-    .quick-links a, .quick-links .unavailable {
+    .quick-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .raw-evidence-groups {
+      display: grid;
+      gap: 11px;
+    }
+    .quick-link-group {
+      display: grid;
+      gap: 7px;
+    }
+    .quick-link-group h3 {
+      margin: 0;
+      color: #425466;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .artifact-link {
       border: 1px solid #c9d4df;
       border-radius: 8px;
-      padding: 7px 9px;
-      background: #f9fbfc;
+      padding: 8px 9px;
+      background: #fbfcfd;
       font-size: 13px;
       line-height: 1.2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 38px;
+      transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+    }
+    a.artifact-link:hover {
+      background: #eef6fb;
+      border-color: #8fb8d4;
+      box-shadow: 0 2px 8px rgba(15, 95, 159, 0.12);
+      text-decoration: none;
+    }
+    .artifact-link span { min-width: 0; overflow-wrap: anywhere; }
+    .artifact-link small {
+      color: #526578;
+      background: #eef2f6;
+      border: 1px solid #d6dee7;
+      border-radius: 999px;
+      flex: 0 0 auto;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      text-transform: uppercase;
+    }
+    .artifact-unavailable {
+      background: #f5f6f8;
+      border-style: dashed;
+      color: #6c7885;
     }
     .open-first {
       border: 1px solid #0f5f9f;
       border-left: 5px solid #0f5f9f;
       border-radius: 8px;
       background: #eef6fc;
-      padding: 12px;
+      padding: 13px;
       margin-bottom: 12px;
+      box-shadow: 0 3px 12px rgba(15, 95, 159, 0.1);
     }
-    .open-first span {
+    .open-first > span {
       display: block;
       color: #425466;
       font-size: 12px;
@@ -162,9 +404,10 @@
       text-transform: uppercase;
     }
     .open-first a {
-      display: inline-block;
+      display: flex;
       margin-top: 4px;
       font-size: 17px;
+      background: #ffffff;
     }
     .open-first p {
       margin: 6px 0 0;
@@ -179,18 +422,30 @@
       font-size: 13px;
       font-weight: 700;
     }
+    .loading-status.status-good { background: #edf8f2; border-color: #8fc8a8; color: #135c3a; }
+    .loading-status.status-review { background: #fff5dc; border-color: #d8ad49; color: #744400; }
+    .loading-status.status-bad { background: #fff0f0; border-color: #db8f8f; color: #941919; }
     .unavailable { color: #6f7d8a; }
     .meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .meta-grid div { padding: 10px; background: #f9fbfc; border-radius: 6px; border: 1px solid #e3e8ee; }
     .meta-grid span { display: block; color: #607080; font-size: 12px; font-weight: 700; text-transform: uppercase; }
-    .meta-grid strong { display: block; margin-top: 4px; }
+    .meta-grid strong {
+      display: block;
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+    }
     .review-sections {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
       margin-top: 16px;
     }
-    .review-section { padding: 14px; min-height: 196px; overflow-wrap: anywhere; }
+    .review-section {
+      padding: 14px;
+      min-height: 196px;
+      overflow-wrap: anywhere;
+      scroll-margin-top: 18px;
+    }
     .review-section h2 { font-size: 17px; margin-bottom: 8px; }
     .review-section p { margin: 0 0 12px; color: #425466; font-size: 14px; }
     .compact-grid {
@@ -233,46 +488,164 @@
       color: #425466;
       font-size: 13px;
     }
+    .assumption-list {
+      display: grid;
+      gap: 8px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .assumption-list li {
+      border: 1px solid #e3e8ee;
+      border-radius: 6px;
+      background: #f9fbfc;
+      padding: 9px;
+    }
+    .assumption-list strong,
+    .assumption-list span,
+    .assumption-list em {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+    .assumption-list strong { font-size: 14px; }
+    .assumption-list span { margin-top: 4px; color: #425466; font-size: 13px; }
+    .assumption-list em { margin-top: 5px; color: #5d4d1e; font-size: 12px; font-style: normal; font-weight: 700; }
+    .freshness-list {
+      display: grid;
+      gap: 8px;
+    }
+    .freshness-list div {
+      border: 1px solid #e3e8ee;
+      border-radius: 6px;
+      background: #f9fbfc;
+      padding: 9px;
+    }
+    .freshness-list span,
+    .freshness-list strong,
+    .freshness-list small {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+    .freshness-list span { color: #607080; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    .freshness-list strong { margin-top: 4px; border-radius: 6px; padding: 3px 6px; width: fit-content; }
+    .freshness-list small { margin-top: 4px; color: #425466; font-size: 12px; }
     .section-links {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
       margin-top: 12px;
     }
-    .section-links a, .section-links .unavailable {
-      border: 1px solid #c9d4df;
-      border-radius: 8px;
-      padding: 7px 9px;
-      background: #f9fbfc;
-      font-size: 13px;
-    }
+    .side-stack .quick-links { grid-template-columns: 1fr; }
+    .side-stack .raw-evidence-groups .quick-links { grid-template-columns: 1fr; }
+    .evidence-readiness-grid div:nth-child(2),
+    .evidence-readiness-grid div:nth-child(5) { grid-column: span 2; }
+    #trust-defensibility .compact-grid div:nth-child(n+3) { grid-column: span 2; }
+    #artifact-navigation .section-links { grid-template-columns: 1fr; }
+    .section-links .artifact-link { font-size: 13px; }
     @media (max-width: 920px) {
       .dashboard-grid { grid-template-columns: 1fr; }
+      .review-order ol { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .signals { grid-template-columns: repeat(3, minmax(150px, 1fr)); }
       .review-sections { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 620px) {
       main { padding: 16px; }
-      .topbar { padding: 14px 16px; align-items: flex-start; flex-direction: column; }
-      h1 { font-size: 24px; }
-      .verdict-badge { font-size: 16px; }
-      .signals, .meta-grid, .compact-grid, .review-sections { grid-template-columns: 1fr; }
+      .topbar { padding: 0 16px; }
+      .topbar-inner { padding: 12px 0; align-items: flex-start; flex-direction: column; }
+      main,
+      .dashboard-grid,
+      .review-lead,
+      .side-stack,
+      .verdict-band,
+      .next-action,
+      .panel,
+      .route-preview,
+      .signal,
+      .review-section {
+        min-width: 0;
+        max-width: 100%;
+      }
+      h1 { display: block; font-size: 24px; }
+      .verdict-badge { display: flex; margin-top: 8px; width: fit-content; font-size: 16px; }
+      .signals, .meta-grid, .compact-grid, .review-sections, .quick-links, .section-links, .review-order ol, .freshness-strip { grid-template-columns: 1fr; }
+      .evidence-readiness-grid div:nth-child(2),
+      .evidence-readiness-grid div:nth-child(5) { grid-column: auto; }
+      #trust-defensibility .compact-grid div:nth-child(n+3) { grid-column: auto; }
+    }
+    @media print {
+      body {
+        background: #ffffff;
+        color: #111827;
+        font-size: 12px;
+      }
+      .skip-link,
+      .print-button,
+      .loading-status,
+      script {
+        display: none !important;
+      }
+      .topbar {
+        border-top: 0;
+        padding: 0;
+      }
+      .topbar-inner,
+      main {
+        max-width: none;
+        padding: 0;
+      }
+      .dashboard-grid,
+      .review-sections,
+      .signals,
+      .compact-grid,
+      .meta-grid,
+      .freshness-strip,
+      .review-order ol {
+        grid-template-columns: 1fr 1fr;
+      }
+      .side-stack {
+        grid-template-columns: 1fr 1fr;
+      }
+      .verdict-band,
+      .panel,
+      .signal,
+      .route-preview,
+      .review-section,
+      .next-action,
+      .review-order {
+        break-inside: avoid;
+        box-shadow: none;
+      }
+      .route-preview img {
+        max-height: 260px;
+        object-fit: contain;
+      }
+      a[href]::after {
+        content: " (" attr(href) ")";
+        color: #526578;
+        font-weight: 400;
+      }
     }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#review-sections">Skip to review sections</a>
   <div class="shell">
     <header class="topbar">
-      <div>
-        <strong>ORBITAL Operator Review UI</strong>
-        <span>Local read-only review surface for evidence bundles</span>
+      <div class="topbar-inner">
+        <div>
+          <strong>ORBITAL Operator Review UI</strong>
+          <span>Local read-only review surface for evidence bundles</span>
+        </div>
+        <div class="topbar-actions">
+          <button class="print-button" type="button" onclick="window.print()">Print / demo view</button>
+          <span class="read-only-pill">Read-only demo / discovery aid</span>
+        </div>
       </div>
-      <span class="read-only-pill">Read-only demo / discovery aid</span>
     </header>
     <main>
       <section class="dashboard-grid" aria-label="Operator review dashboard">
         <div class="review-lead">
-          <section class="verdict-band" aria-label="Mission verdict">
+          <section class="verdict-band" id="mission-verdict" aria-label="Mission verdict">
             <span class="eyebrow" data-field="mission-name">BVLOS Powerline Inspection Demo</span>
             <h1>Mission Verdict: <span class="verdict-badge status-review" data-field="verdict-label">REVIEW REQUIRED</span></h1>
             <p data-field="verdict-meaning">Modeled feasibility is acceptable, but operator, regulatory, or evidence review items remain.</p>
@@ -282,18 +655,27 @@
             <strong>Next operator action</strong>
             <p data-field="next-action">Complete the listed review items, confirm regulatory readiness outside ORBITAL, then record the operator decision.</p>
           </div>
+          <section class="freshness-strip" aria-label="Manifest, checksum, and freshness status"><article><span>Manifest version</span><strong data-field="manifest-version">1</strong><small>UI schema 1</small></article><article><span>Generated</span><strong data-field="generated-timestamp">2026-09-14T04:18:50Z</strong><small>scenario 2026-09-13T19:48:39Z</small></article><article><span>Checksum</span><strong class="status-review" data-field="checksum-status">VERIFY REQUIRED</strong><small>Run bundle checksum verification after generation and before archiving or sharing the evidence bundle.</small></article></section>
+          <nav class="review-order" aria-label="Review order"><span>Review Order</span><p>Verdict -> top constraint -> trust signals -> artifacts -> checksum</p><ol><li><a href="#mission-verdict"><span>1</span><strong>Verdict</strong><small>Mission verdict and next operator action</small></a></li><li><a href="#feasibility"><span>2</span><strong>Top constraint</strong><small>Wind / weather margin, PASS, margin 3.1 m/s</small></a></li><li><a href="#trust-defensibility"><span>3</span><strong>Trust signals</strong><small>Readiness, assumptions, and warnings</small></a></li><li><a href="#source-artifacts"><span>4</span><strong>Artifacts</strong><small>Open the first artifact, then raw evidence</small></a></li><li><a href="#checksum-review"><span>5</span><strong>Checksum</strong><small>Verify manifest and checksum evidence</small></a></li></ol></nav>
+          <section class="panel why-verdict" data-why-verdict>
+            <h2>Why This Verdict?</h2>
+            <p>The verdict is REVIEW REQUIRED because modeled feasibility is GO but regulatory readiness, missing evidence, or bundle warnings still need operator attention.</p>
+            <div class="compact-grid">
+              <div><span>Modeled mission status</span><strong class="status-good">GO - MODIFY if not GO.</strong></div><div><span>Regulatory readiness</span><strong class="status-review">OPERATOR ACTION REQUIRED - REVIEW REQUIRED when OPERATOR_ACTION_REQUIRED.</strong></div><div><span>Missing evidence</span><strong class="status-neutral">0 item(s) - REVIEW REQUIRED when greater than 0.</strong></div><div><span>Bundle warnings</span><strong class="status-neutral">2 warning(s) - REVIEW REQUIRED when greater than 0.</strong></div>
+            </div>
+          </section>
           <div class="signals" aria-label="Mission signals" data-signals>
-            <article class="signal status-good"><span>Modeled mission status</span><strong>GO</strong></article>
-<article class="signal status-good"><span>Mission risk</span><strong>LOW</strong></article>
-<article class="signal"><span>Top limiting constraint</span><strong>Wind / weather margin, PASS, margin 3.1 m/s</strong></article>
-<article class="signal status-review"><span>Regulatory readiness</span><strong>OPERATOR ACTION REQUIRED</strong></article>
+            <article class="signal decision-signal status-good"><span>Modeled mission status</span><strong>GO</strong></article>
+<article class="signal decision-signal status-good"><span>Mission risk</span><strong>LOW</strong></article>
+<article class="signal decision-signal signal-top"><span>Top limiting constraint</span><strong>Wind / weather margin, PASS, margin 3.1 m/s</strong></article>
+<article class="signal decision-signal status-review"><span>Regulatory readiness</span><strong>OPERATOR ACTION REQUIRED</strong></article>
 <article class="signal status-neutral"><span>Evidence completeness</span><strong>100.0 % (17 / 17 artifacts)</strong><p>Expected bundle artifacts</p></article>
-<article class="signal status-neutral documentation-signal"><span>Regulatory documentation</span><strong>100.0 % (8 / 8 fields)</strong><p>Documentation-only evidence fields</p></article>
-<article class="signal status-review"><span>Weather fallback</span><strong>FALLBACK USED</strong><p>FALLBACK USED: source offline Open-Meteo-shaped sample, timestamp 2026-09-11T16:00:00Z, reason weather.use_live is false; using offline sample</p></article>
-<article class="signal status-good"><span>Robustness / uncertainty</span><strong>PASS</strong><p>PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139</p></article>
+<article class="signal status-neutral documentation-signal"><span>Regulatory documentation</span><strong>100.0 % (11 / 11 fields)</strong><p>Documentation-only evidence fields</p></article>
+<article class="signal status-review"><span>Weather evidence</span><strong>STALE</strong><p>source offline Open-Meteo-shaped sample; timestamp 2026-09-11T16:00:00Z; freshness stale; action Refresh weather evidence close to launch and keep th...</p></article>
+<article class="signal status-good"><span>Robustness / uncertainty</span><strong>PASS</strong><p>PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139. Confidence from configured robustness cases is scenario-limited and should be reviewed against operator uncertainty assumptions.</p></article>
 <article class="signal warning-signal status-good"><span>Missing evidence count</span><strong>0</strong><p>Artifacts or documentation fields requiring operator attention</p></article>
 <article class="signal warning-signal status-good"><span>Stale / missing / mismatched evidence</span><strong>0</strong><p>0 stale, 0 missing, 0 mismatched</p></article>
-<article class="signal warning-signal status-good"><span>Evidence warnings</span><strong>0</strong><p>CLEAR: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 0 bundle warning(s)</p></article>
+<article class="signal warning-signal status-review"><span>Evidence warnings</span><strong>2</strong><p>REVIEW REQUIRED: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 2 bundle warning(s)</p></article>
           </div>
         </div>
         <aside class="side-stack" aria-label="Product boundary and bundle artifacts">
@@ -306,25 +688,74 @@
               <li>Opening, clicking, or reviewing an artifact does not approve a mission.</li>
               <li>Review fields are documentation-only records.</li>
               <li>No accounts, databases, auth, editing workflows, live integrations, approvals, or signoff actions are provided.</li>
-              <li>Markdown, JSON, CSV, KML, and checksum artifacts remain accessible outside this UI.</li>
+              <li>Markdown, JSON, CSV, KML, PNG, manifest, checksum, and dashboard artifacts remain accessible outside this UI.</li>
             </ul>
+          </section>
+          <section class="panel" id="manifest-compatibility">
+            <h2>Manifest Compatibility</h2>
+            <div data-ui-compatibility><div class="meta-grid"><div><span>Manifest version</span><strong class="status-good">1</strong></div><div><span>UI schema</span><strong>1</strong></div><div><span>Required UI fields</span><strong>15 expected</strong></div><div><span>Fallback fields</span><strong>15 documented</strong></div></div><p class="compact-note">Every optional UI field must render explicit fallback text such as &#x27;not provided&#x27;, &#x27;n/a&#x27;, &#x27;UNKNOWN&#x27;, or &#x27;unavailable&#x27;; optional fields must not render as blank labels.</p><p class="compact-note">Outside-UI access: markdown, json, csv, kml, png, manifest, checksum, dashboard.</p><p class="compact-note">Unavailable artifacts render as non-link unavailable labels in the review UI and Markdown dashboard; they must not be emitted as hrefs.</p></div>
+          </section>
+          <section class="panel" data-model-assumptions>
+            <h2>Model Assumptions</h2>
+            <ul class="assumption-list"><li><strong>Battery / energy model</strong><span>Battery feasibility is based on the configured capacity, initial charge, reserve policy, and simplified power model coe...</span><em>Confirm aircraft battery health, payload draw, temperature effects, and abort reserve outside ORBITAL before...</em></li>
+<li><strong>Wind / weather model</strong><span>Wind feasibility compares the modeled or weather-provided wind exposure against the configured safe operating limit.</span><em>Refresh field weather and gust observations close to launch, especially when offline or sample weather is use...</em></li>
+<li><strong>Geofence / no-fly-zone model</strong><span>Geofence feasibility treats configured polygons and imported GeoJSON zones as the planning boundary source.</span><em>Confirm site boundaries, customer buffers, and launch/recovery areas on current maps before export or dispatc...</em></li></ul>
+          </section>
+          <section class="panel" data-artifact-freshness>
+            <h2>Artifact Freshness</h2>
+            <div class="freshness-list"><div><span>Scenario YAML</span><strong class="status-neutral">CURRENT</strong><small>source 2026-09-13T19:48:39Z</small><small>bundle 2026-09-13T19:48:39Z</small></div>
+<div><span>Primary constraint-audit report</span><strong class="status-neutral">CURRENT</strong><small>source 2026-09-14T04:18:48Z</small><small>bundle 2026-09-14T04:18:48Z</small></div>
+<div><span>Regulatory readiness report</span><strong class="status-neutral">CURRENT</strong><small>source 2026-09-14T04:18:48Z</small><small>bundle 2026-09-14T04:18:48Z</small></div>
+<div><span>What-if planning report</span><strong class="status-neutral">CURRENT</strong><small>source 2026-09-14T04:18:49Z</small><small>bundle 2026-09-14T04:18:49Z</small></div>
+<div><span>Weather snapshot</span><strong class="status-neutral">CURRENT</strong><small>source 2026-09-14T04:18:50Z</small><small>bundle 2026-09-14T04:18:50Z</small></div></div>
           </section>
           <figure class="route-preview"><img src="flight_path.png" alt="Flight path plot from the evidence bundle"><figcaption>Route preview from the generated evidence bundle.</figcaption></figure>
           <section class="panel" id="source-artifacts">
             <h2>Source Artifacts</h2>
-            <div class="open-first" data-open-first><span>Open first</span><a href="operator_dashboard.md">operator_dashboard.md</a><p>Start here for the verdict, next action, and 30-second mission read.</p></div>
-            <div class="quick-links" data-artifact-links>
-              <a href="operator_dashboard.md">operator_dashboard.md</a>
-<a href="inspection_constraint_audit.md">inspection_constraint_audit.md</a>
-<a href="what_if_plan.md">what_if_plan.md</a>
-<a href="regulatory_readiness_report.md">regulatory_readiness_report.md</a>
-<a href="evidence_bundle_summary.md">evidence_bundle_summary.md</a>
-<a href="artifact_index.md">artifact_index.md</a>
-<a href="manifest.json">manifest.json</a>
-<a href="checksum_manifest.json">checksum_manifest.json</a>
-<a href="flight_path.png">flight_path.png</a>
-<a href="autopilot_mission.csv">autopilot_mission.csv</a>
-<a href="mission_review.kml">mission_review.kml</a>
+            <div class="open-first" data-open-first aria-label="First artifact to open"><span>Open first: first artifact to open</span><a class="artifact-link" href="operator_dashboard.md" aria-label="Open operator_dashboard.md"><span>operator_dashboard.md</span><small>MD</small></a><p>Start here for the verdict, next action, and 30-second mission read. This is the primary review surface before opening supporting artifacts.</p></div>
+            <div class="quick-links" data-artifact-links aria-label="Primary artifact links">
+              <a class="artifact-link" href="operator_dashboard.md" aria-label="Open operator_dashboard.md"><span>operator_dashboard.md</span><small>MD</small></a>
+<a class="artifact-link" href="inspection_constraint_audit.md" aria-label="Open inspection_constraint_audit.md"><span>inspection_constraint_audit.md</span><small>MD</small></a>
+<a class="artifact-link" href="what_if_plan.md" aria-label="Open what_if_plan.md"><span>what_if_plan.md</span><small>MD</small></a>
+<a class="artifact-link" href="regulatory_readiness_report.md" aria-label="Open regulatory_readiness_report.md"><span>regulatory_readiness_report.md</span><small>MD</small></a>
+<a class="artifact-link" href="evidence_bundle_summary.md" aria-label="Open evidence_bundle_summary.md"><span>evidence_bundle_summary.md</span><small>MD</small></a>
+<a class="artifact-link" href="artifact_index.md" aria-label="Open artifact_index.md"><span>artifact_index.md</span><small>MD</small></a>
+<a class="artifact-link" href="manifest.json" aria-label="Open manifest.json"><span>manifest.json</span><small>JSON</small></a>
+<a class="artifact-link" href="checksum_manifest.json" aria-label="Open checksum_manifest.json"><span>checksum_manifest.json</span><small>JSON</small></a>
+<a class="artifact-link" href="flight_path.png" aria-label="Open flight_path.png"><span>flight_path.png</span><small>PNG</small></a>
+<a class="artifact-link" href="autopilot_mission.csv" aria-label="Open autopilot_mission.csv"><span>autopilot_mission.csv</span><small>CSV</small></a>
+<a class="artifact-link" href="mission_review.kml" aria-label="Open mission_review.kml"><span>mission_review.kml</span><small>KML</small></a>
+            </div>
+          </section>
+          <section class="panel" id="raw-evidence-links">
+            <h2>Raw Evidence Quick Links</h2>
+            <div class="raw-evidence-groups" data-raw-evidence-links>
+              <section class="quick-link-group"><h3>Raw Markdown</h3><div class="quick-links"><a class="artifact-link" href="operator_dashboard.md" aria-label="Open operator_dashboard.md"><span>operator_dashboard.md</span><small>MD</small></a>
+<a class="artifact-link" href="inspection_constraint_audit.md" aria-label="Open inspection_constraint_audit.md"><span>inspection_constraint_audit.md</span><small>MD</small></a>
+<a class="artifact-link" href="what_if_plan.md" aria-label="Open what_if_plan.md"><span>what_if_plan.md</span><small>MD</small></a>
+<a class="artifact-link" href="regulatory_readiness_report.md" aria-label="Open regulatory_readiness_report.md"><span>regulatory_readiness_report.md</span><small>MD</small></a>
+<a class="artifact-link" href="evidence_bundle_summary.md" aria-label="Open evidence_bundle_summary.md"><span>evidence_bundle_summary.md</span><small>MD</small></a>
+<a class="artifact-link" href="artifact_index.md" aria-label="Open artifact_index.md"><span>artifact_index.md</span><small>MD</small></a></div></section>
+<section class="quick-link-group"><h3>JSON Evidence</h3><div class="quick-links"><a class="artifact-link" href="plan.json" aria-label="Open plan.json"><span>plan.json</span><small>JSON</small></a>
+<a class="artifact-link" href="inspection_constraint_audit.json" aria-label="Open inspection_constraint_audit.json"><span>inspection_constraint_audit.json</span><small>JSON</small></a>
+<a class="artifact-link" href="what_if_plan.json" aria-label="Open what_if_plan.json"><span>what_if_plan.json</span><small>JSON</small></a>
+<a class="artifact-link" href="regulatory_readiness_report.json" aria-label="Open regulatory_readiness_report.json"><span>regulatory_readiness_report.json</span><small>JSON</small></a>
+<a class="artifact-link" href="score.json" aria-label="Open score_breakdown.json"><span>score_breakdown.json</span><small>JSON</small></a>
+<a class="artifact-link" href="weather.json" aria-label="Open weather_snapshot.json"><span>weather_snapshot.json</span><small>JSON</small></a>
+<a class="artifact-link" href="robustness.json" aria-label="Open robustness_summary.json"><span>robustness_summary.json</span><small>JSON</small></a></div></section>
+<section class="quick-link-group"><h3>CSV / KML</h3><div class="quick-links"><a class="artifact-link" href="autopilot_mission.csv" aria-label="Open autopilot_mission.csv"><span>autopilot_mission.csv</span><small>CSV</small></a>
+<a class="artifact-link" href="mission_review.kml" aria-label="Open mission_review.kml"><span>mission_review.kml</span><small>KML</small></a></div></section>
+<section class="quick-link-group"><h3>Plots</h3><div class="quick-links"><a class="artifact-link" href="flight_path.png" aria-label="Open flight_path.png"><span>flight_path.png</span><small>PNG</small></a></div></section>
+<section class="quick-link-group"><h3>Manifest / checksum</h3><div class="quick-links"><a class="artifact-link" href="manifest.json" aria-label="Open manifest.json"><span>manifest.json</span><small>JSON</small></a>
+<a class="artifact-link" href="checksum_manifest.json" aria-label="Open checksum_manifest.json"><span>checksum_manifest.json</span><small>JSON</small></a></div></section>
+            </div>
+          </section>
+          <section class="panel checksum-panel" id="checksum-review">
+            <h2>Checksum Review</h2>
+            <p>Run bundle checksum verification after generation and before archiving or sharing the evidence bundle.</p>
+            <div class="quick-links">
+              <a class="artifact-link" href="manifest.json" aria-label="Open manifest.json"><span>manifest.json</span><small>JSON</small></a>
+              <a class="artifact-link" href="checksum_manifest.json" aria-label="Open checksum_manifest.json"><span>checksum_manifest.json</span><small>JSON</small></a>
             </div>
           </section>
           <section class="panel">
@@ -348,29 +779,32 @@
           </section>
         </aside>
       </section>
-      <section class="review-sections" aria-label="Compact review sections" data-review-sections>
-        <article class="review-section" id="feasibility"><h2>Feasibility</h2><p>Modeled mission feasibility and the constraint most likely to limit release.</p><div class="compact-grid"><div><span>Modeled status</span><strong class="status-good">GO</strong></div><div><span>Mission risk</span><strong class="status-good">LOW</strong></div><div><span>Top constraint</span><strong>Wind / weather margin, PASS, margin 3.1 m/s</strong></div></div><div class="section-links"><a href="inspection_constraint_audit.md">Constraint audit</a></div></article>
-<article class="review-section" id="regulatory-readiness"><h2>Regulatory Readiness</h2><p>Documentation-only readiness signals for operator confirmation outside ORBITAL.</p><div class="compact-grid"><div><span>Readiness</span><strong class="status-review">OPERATOR ACTION REQUIRED</strong></div><div><span>Documentation</span><strong>100.0 % (8 / 8 fields)</strong></div><div><span>Checklist pending</span><strong>8</strong></div><div><span>Missing fields</span><strong>0</strong></div></div><div class="section-links"><a href="regulatory_readiness_report.md">Regulatory report</a></div></article>
-<article class="review-section" id="evidence-completeness"><h2>Evidence Completeness</h2><p>Expected bundle artifacts and missing evidence counts.</p><div class="compact-grid"><div><span>Artifact coverage</span><strong>100.0 % (17 / 17 artifacts)</strong></div><div><span>Missing evidence</span><strong>0</strong></div><div><span>Bundle warnings</span><strong>0</strong></div></div><div class="section-links"><a href="manifest.json">Manifest</a>
-<a href="checksum_manifest.json">Checksums</a></div></article>
-<article class="review-section" id="trust-defensibility"><h2>Trust / Defensibility</h2><p>Weather fallback, uncertainty, and model-context signals for audit review.</p><div class="compact-grid"><div><span>Weather fallback</span><strong class="status-review">FALLBACK USED</strong></div><div><span>Robustness</span><strong class="status-good">PASS</strong></div><div><span>Weather note</span><strong>FALLBACK USED: source offline Open-Meteo-shaped sample, timestamp 2026-09-11T16:00:00Z, reason weather.use_live is false; using offline sample</strong></div><div><span>Robustness note</span><strong>PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139</strong></div></div><p class="compact-note">Sample data / demo scenario: this bundle uses demonstration planning inputs, including offline or sample weather where configured. Replace route, weather, regulatory, cr...</p><div class="section-links"><a href="operator_dashboard.md">Dashboard MD</a></div></article>
-<article class="review-section" id="warnings"><h2>Warnings</h2><p>Stale, missing, mismatched, or otherwise review-required evidence signals.</p><div class="compact-grid"><div><span>Stale artifacts</span><strong>0</strong></div><div><span>Missing artifacts</span><strong>0</strong></div><div><span>Mismatched artifacts</span><strong>0</strong></div><div><span>Warning total</span><strong class="status-good">0</strong></div></div><p class="compact-note">CLEAR: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 0 bundle warning(s)</p><ul class="compact-list"><li>No bundle warnings captured.</li></ul><div class="section-links"><a href="checksum_manifest.json">Checksum manifest</a></div></article>
-<article class="review-section" id="artifact-navigation"><h2>Artifact Navigation</h2><p>Shortcuts to the underlying source-of-truth bundle files.</p><div class="open-first" data-open-first><span>Open first</span><a href="operator_dashboard.md">operator_dashboard.md</a><p>Start here for the verdict, next action, and 30-second mission read.</p></div><p class="compact-note">Open source artifacts directly; this page summarizes them without replacing Markdown, JSON, CSV, KML, or checksum files.</p><div class="section-links"><a href="operator_dashboard.md">operator_dashboard.md</a>
-<a href="inspection_constraint_audit.md">inspection_constraint_audit.md</a>
-<a href="what_if_plan.md">what_if_plan.md</a>
-<a href="regulatory_readiness_report.md">regulatory_readiness_report.md</a>
-<a href="evidence_bundle_summary.md">evidence_bundle_summary.md</a>
-<a href="artifact_index.md">artifact_index.md</a>
-<a href="manifest.json">manifest.json</a>
-<a href="checksum_manifest.json">checksum_manifest.json</a>
-<a href="flight_path.png">flight_path.png</a>
-<a href="autopilot_mission.csv">autopilot_mission.csv</a>
-<a href="mission_review.kml">mission_review.kml</a></div></article>
-<article class="review-section" id="operator-review-metadata"><h2>Operator Review Metadata</h2><p>Current review-state fields captured for documentation only.</p><div class="compact-grid"><div><span>Status</span><strong>ready for review</strong></div><div><span>Decision</span><strong>pending operator review</strong></div><div><span>Reviewer</span><strong>not provided</strong></div><div><span>Timestamp</span><strong>not provided</strong></div></div><p class="compact-note">Review metadata is documentation-only and does not change release authority.</p></article>
+      <section class="review-sections" id="review-sections" aria-label="Compact review sections" data-review-sections>
+        <article class="review-section" id="feasibility" tabindex="0" aria-labelledby="feasibility-heading"><h2 id="feasibility-heading">Feasibility</h2><p>Modeled mission feasibility and the constraint most likely to limit release.</p><div class="compact-grid"><div><span>Modeled status</span><strong class="status-good">GO</strong></div><div><span>Mission risk</span><strong class="status-good">LOW</strong></div><div><span>Top constraint</span><strong>Wind / weather margin, PASS, margin 3.1 m/s</strong></div></div><div class="section-links"><a class="artifact-link" href="inspection_constraint_audit.md" aria-label="Open Constraint audit"><span>Constraint audit</span><small>FILE</small></a></div></article>
+<article class="review-section" id="regulatory-readiness" tabindex="0" aria-labelledby="regulatory-readiness-heading"><h2 id="regulatory-readiness-heading">Regulatory Readiness</h2><p>Documentation-only readiness signals for operator confirmation outside ORBITAL.</p><div class="compact-grid"><div><span>Readiness</span><strong class="status-review">OPERATOR ACTION REQUIRED</strong></div><div><span>Documentation</span><strong>100.0 % (11 / 11 fields)</strong></div><div><span>Checklist pending</span><strong>8</strong></div><div><span>Missing fields</span><strong>0</strong></div></div><div class="section-links"><a class="artifact-link" href="regulatory_readiness_report.md" aria-label="Open Regulatory report"><span>Regulatory report</span><small>FILE</small></a></div></article>
+<article class="review-section" id="live-evidence-readiness" tabindex="0" aria-labelledby="live-evidence-readiness-heading"><h2 id="live-evidence-readiness-heading">Weather / Live Evidence</h2><p>Source, freshness, provenance, and operator-action hooks for operational evidence review.</p><div class="compact-grid evidence-readiness-grid"><div><span>Weather status</span><strong class="status-review">STALE</strong></div><div><span>Weather source</span><strong>offline Open-Meteo-shaped sample</strong></div><div><span>Weather timestamp</span><strong>2026-09-11T16:00:00Z</strong></div><div><span>Weather freshness</span><strong>stale</strong></div><div><span>Weather action</span><strong>Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field con...</strong></div><div><span>Regulatory provenance</span><strong class="status-review">STALE</strong></div><div><span>Authority</span><strong>FAA / LAANC provider placeholder</strong></div><div><span>Date checked</span><strong>2026-09-11T15:45:00Z</strong></div><div><span>Expiration</span><strong>2026-12-31</strong></div><div><span>Operator confirmation</span><strong>pending_operator_confirmation</strong></div><div><span>Checksum evidence</span><strong class="status-review">VERIFY REQUIRED</strong></div></div><p class="compact-note">Live weather and regulatory hooks are documentation-only unless verified outside ORBITAL.</p><div class="section-links"><a class="artifact-link" href="weather.json" aria-label="Open Weather snapshot"><span>Weather snapshot</span><small>FILE</small></a>
+<a class="artifact-link" href="regulatory_readiness_report.md" aria-label="Open Regulatory report"><span>Regulatory report</span><small>FILE</small></a></div></article>
+<article class="review-section" id="evidence-completeness" tabindex="0" aria-labelledby="evidence-completeness-heading"><h2 id="evidence-completeness-heading">Evidence Completeness</h2><p>Expected bundle artifacts and missing evidence counts.</p><div class="compact-grid"><div><span>Artifact coverage</span><strong>100.0 % (17 / 17 artifacts)</strong></div><div><span>Missing evidence</span><strong>0</strong></div><div><span>Bundle warnings</span><strong>2</strong></div></div><div class="section-links"><a class="artifact-link" href="manifest.json" aria-label="Open Manifest"><span>Manifest</span><small>FILE</small></a>
+<a class="artifact-link" href="checksum_manifest.json" aria-label="Open Checksums"><span>Checksums</span><small>FILE</small></a></div></article>
+<article class="review-section" id="trust-defensibility" tabindex="0" aria-labelledby="trust-defensibility-heading"><h2 id="trust-defensibility-heading">Trust / Defensibility</h2><p>Weather evidence, uncertainty, and model-context signals for audit review.</p><div class="compact-grid"><div><span>Weather evidence</span><strong class="status-review">STALE</strong></div><div><span>Robustness</span><strong class="status-good">PASS</strong></div><div><span>Weather note</span><strong>STALE: sample weather evidence from offline Open-Meteo-shaped sample, timestamp 2026-09-11T16:00:00Z, freshness stale, 60.3 hour(s) old</strong></div><div><span>Robustness note</span><strong>PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139. Confidence from configured robustness cases is scenario-limited and should be reviewed against operato...</strong></div></div><p class="compact-note">Sample data / demo scenario: this bundle uses demonstration planning inputs, including offline or sample weather where configured. Replace route, weather, regulatory, cr...</p><div class="section-links"><a class="artifact-link" href="operator_dashboard.md" aria-label="Open Dashboard MD"><span>Dashboard MD</span><small>FILE</small></a></div></article>
+<article class="review-section" id="warnings" tabindex="0" aria-labelledby="warnings-heading"><h2 id="warnings-heading">Warnings</h2><p>Stale, missing, mismatched, or otherwise review-required evidence signals.</p><div class="compact-grid"><div><span>Stale artifacts</span><strong>0</strong></div><div><span>Missing artifacts</span><strong>0</strong></div><div><span>Mismatched artifacts</span><strong>0</strong></div><div><span>Warning total</span><strong class="status-review">2</strong></div></div><p class="compact-note">REVIEW REQUIRED: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 2 bundle warning(s)</p><ul class="compact-list"><li>weather_evidence_stale: Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field...</li>
+<li>regulatory_provenance_stale: Refresh regulatory evidence checks before relying on this bundle for review. Operator should verify regulatory inputs.</li></ul><div class="section-links"><a class="artifact-link" href="checksum_manifest.json" aria-label="Open Checksum manifest"><span>Checksum manifest</span><small>FILE</small></a></div></article>
+<article class="review-section" id="artifact-navigation" tabindex="0" aria-labelledby="artifact-navigation-heading"><h2 id="artifact-navigation-heading">Artifact Navigation</h2><p>Shortcuts to the underlying source-of-truth bundle files.</p><div class="open-first" data-open-first aria-label="First artifact to open"><span>Open first: first artifact to open</span><a class="artifact-link" href="operator_dashboard.md" aria-label="Open operator_dashboard.md"><span>operator_dashboard.md</span><small>MD</small></a><p>Start here for the verdict, next action, and 30-second mission read. This is the primary review surface before opening supporting artifacts.</p></div><p class="compact-note">Open source artifacts directly; this page summarizes them without replacing Markdown, JSON, CSV, KML, or checksum files.</p><div class="section-links"><a class="artifact-link" href="operator_dashboard.md" aria-label="Open operator_dashboard.md"><span>operator_dashboard.md</span><small>MD</small></a>
+<a class="artifact-link" href="inspection_constraint_audit.md" aria-label="Open inspection_constraint_audit.md"><span>inspection_constraint_audit.md</span><small>MD</small></a>
+<a class="artifact-link" href="what_if_plan.md" aria-label="Open what_if_plan.md"><span>what_if_plan.md</span><small>MD</small></a>
+<a class="artifact-link" href="regulatory_readiness_report.md" aria-label="Open regulatory_readiness_report.md"><span>regulatory_readiness_report.md</span><small>MD</small></a>
+<a class="artifact-link" href="evidence_bundle_summary.md" aria-label="Open evidence_bundle_summary.md"><span>evidence_bundle_summary.md</span><small>MD</small></a>
+<a class="artifact-link" href="artifact_index.md" aria-label="Open artifact_index.md"><span>artifact_index.md</span><small>MD</small></a>
+<a class="artifact-link" href="manifest.json" aria-label="Open manifest.json"><span>manifest.json</span><small>JSON</small></a>
+<a class="artifact-link" href="checksum_manifest.json" aria-label="Open checksum_manifest.json"><span>checksum_manifest.json</span><small>JSON</small></a>
+<a class="artifact-link" href="flight_path.png" aria-label="Open flight_path.png"><span>flight_path.png</span><small>PNG</small></a>
+<a class="artifact-link" href="autopilot_mission.csv" aria-label="Open autopilot_mission.csv"><span>autopilot_mission.csv</span><small>CSV</small></a>
+<a class="artifact-link" href="mission_review.kml" aria-label="Open mission_review.kml"><span>mission_review.kml</span><small>KML</small></a></div></article>
+<article class="review-section" id="operator-review-metadata" tabindex="0" aria-labelledby="operator-review-metadata-heading"><h2 id="operator-review-metadata-heading">Operator Review Metadata</h2><p>Current review-state fields captured for documentation only.</p><div class="compact-grid"><div><span>Status</span><strong>ready for review</strong></div><div><span>Decision</span><strong>pending operator review</strong></div><div><span>Reviewer</span><strong>not provided</strong></div><div><span>Timestamp</span><strong>not provided</strong></div></div><p class="compact-note">Review metadata is documentation-only and does not change release authority.</p></article>
       </section>
     </main>
   </div>
-  <script type="application/json" id="manifest-snapshot">{"kind": "operator_evidence_bundle", "bundle_dir": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\operator_evidence_bundle", "scenario_path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml", "complete": true, "missing": [], "bundle_completeness_score": 100.0, "bundle_completeness": {"score": 100.0, "unit": "percent", "present_artifacts": 17, "total_artifacts": 17, "missing_artifacts": 0, "complete": true, "scoring_note": "Score is based on expected bundle artifacts present at export time. Optional documentation fields are reported separately and do not block planning."}, "artifact_completeness": {"score": 100.0, "unit": "percent", "present_artifacts": 17, "total_artifacts": 17, "missing_artifacts": 0, "complete": true, "scoring_note": "Score is based on expected bundle artifacts present at export time. Optional documentation fields are reported separately and do not block planning."}, "regulatory_documentation_completeness": {"score": 100.0, "unit": "percent", "documented_fields": 8, "total_fields": 8, "missing_fields": 0, "operator_attention_missing_fields": 0, "complete": true, "documentation_only": true, "scoring_note": "Score is based on optional regulatory documentation fields. Missing fields are visible for operator review but do not block planning or imply approval."}, "missing_evidence": [], "bundle_warnings": [], "operator_review": {"status": "ready_for_review", "requested_status": "ready_for_review", "allowed_statuses": ["draft", "ready_for_review", "reviewed"], "reviewer_name": null, "review_timestamp_utc": null, "review_notes": "Demo bundle ready for operator review; final approval remains outside ORBITAL.", "operator_decision": "pending operator review", "documentation_only": true, "notice": "Operator review fields are documentation only. They do not approve a flight, issue an authorization, provide legal advice, or replace pilot-in-command release authority."}, "review_metadata": {"schema_version": 1, "status": "ready_for_review", "requested_status": "ready_for_review", "reviewer_name": null, "review_timestamp_utc": null, "review_notes": "Demo bundle ready for operator review; final approval remains outside ORBITAL.", "operator_decision": "pending operator review", "documentation_only": true, "notice": "Operator review fields are documentation only. They do not approve a flight, issue an authorization, provide legal advice, or replace pilot-in-command release authority."}, "freshness": {"generated_timestamp_utc": "2026-09-13T17:55:13Z", "orbital_version": "1.0.12", "scenario_path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml", "scenario_hash": {"algorithm": "sha256", "value": "25b9be4703966407b17a062cdc2547d86ed65bf9636c8b1edb7790c0fcdb9238"}, "scenario_modified_utc": "2026-09-12T21:09:19Z", "command": {"display": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\.venv\\Scripts\\python.exe -m mission_framework.cli examples\\bvlos_powerline_inspection_demo.yaml --outdir outputs", "argv": ["C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\.venv\\Scripts\\python.exe", "-m", "mission_framework.cli", "examples\\bvlos_powerline_inspection_demo.yaml", "--outdir", "outputs"]}, "metadata_note": "Freshness metadata supports evidence review. It does not provide flight approval, authorization, legal advice, or operational clearance."}, "weather": {"source": "offline Open-Meteo-shaped sample", "provider": "open_meteo", "timestamp_utc": "2026-09-11T16:00:00Z", "fallback_used": true, "fallback_reason": "weather.use_live is false; using offline sample", "live_fetch_enabled": false, "applied_to_wind": true}, "flight_planning_exports_enabled": true, "regulatory_metadata": {"documentation_only": true, "laanc_required": true, "waiver_or_authorization_required": true, "airspace_class": "Class D", "visual_observer_required": true, "ground_risk_population_note": "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch.", "authorization_id": "example authorization reference only", "approving_authority_source": "Operator-provided example authority source for documentation-only demo", "authorization_expiration_date": "2026-12-31", "operating_altitude_limit_m": 120.0, "operating_time_window": {"start_utc": "2026-09-11T16:00:00Z", "end_utc": "2026-09-11T18:00:00Z"}, "required_crew_roles": ["Remote pilot in command", "Visual observer"], "special_conditions_limitations": ["Remain within the modeled utility corridor and geofence buffers.", "Do not launch if current field weather is below operator minimums."], "emergency_contingency_plan": "Review lost-link, diversion, recovery, flyaway response, and incident-contact procedures before dispatch.", "operating_assumptions": ["Pilot-in-command verifies current FAA, local, site, NOTAM, TFR, and airspace requirements before launch.", "Mission remains within the modeled route, altitude, weather, battery, geofence, and crew constraints.", "Visual observer staffing and crew communications are confirmed before dispatch."], "unresolved_items": ["Confirm utility owner site-access approval for the planned inspection window.", "Confirm launch and recovery area permissions with the local site contact."], "documentation_only_notice": "For planning documentation only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, or operational clearance.", "decision_support_disclaimer": "ORBITAL provides decision support only and is not legal approval. This report does not provide LAANC, waivers, authorizations, operational clearance, legal advice, or permission to fly. The pilot-in-command and operator remain responsible for all required regulatory review, approvals, and compliance decisions."}, "constraint_audit": {"mission_id": "BVLOS Powerline Inspection Demo", "status": "go", "mission_risk": "low", "top_limiting_constraint": {"id": "wind_weather", "label": "Wind / weather margin", "category": "weather", "category_label": "Weather / wind margin", "status": "pass", "status_meaning": "Modeled margin is above the configured review threshold.", "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.", "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.", "margin": {"value": 3.0999999999999996, "unit": "m/s", "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"}, "warning_margin": {"value": 2.0, "unit": "m/s", "source": "wind.warning_margin_mps or default 2.0 m/s"}, "risk_points": 14.500000000000002, "observed": {"max_horizontal_wind_mps": 5.9, "weather_audit_wind_mps": 5.9, "max_safe_wind_mps": 9.0, "weather_source": "offline Open-Meteo-shaped sample", "weather_timestamp_utc": "2026-09-11T16:00:00Z", "weather_wind_speed_mps": 4.5, "weather_wind_direction_deg": 285.0, "weather_wind_gust_mps": 5.9, "visibility_m": 16000.0, "precipitation_mm": 0.0, "temperature_C": 18.5, "weather_fallback_used": true}, "recommendation": "Wait for better wind or lower mission scope.", "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."}}, "trust_defensibility": {"sample_data_demo_note": {"is_demo_or_sample": true, "note": "Sample data / demo scenario: this bundle uses demonstration planning inputs, including offline or sample weather where configured. Replace route, weather, regulatory, crew, and customer evidence before operational use."}, "model_assumptions_summary": [{"id": "battery", "label": "Battery / energy model", "assumption": "Battery feasibility is based on the configured capacity, initial charge, reserve policy, and simplified power model coefficients.", "operator_review_note": "Confirm aircraft battery health, payload draw, temperature effects, and abort reserve outside ORBITAL before release."}, {"id": "wind", "label": "Wind / weather model", "assumption": "Wind feasibility compares the modeled or weather-provided wind exposure against the configured safe operating limit.", "operator_review_note": "Refresh field weather and gust observations close to launch, especially when offline or sample weather is used."}, {"id": "geofence", "label": "Geofence / no-fly-zone model", "assumption": "Geofence feasibility treats configured polygons and imported GeoJSON zones as the planning boundary source.", "operator_review_note": "Confirm site boundaries, customer buffers, and launch/recovery areas on current maps before export or dispatch."}, {"id": "route_completion", "label": "Route completion model", "assumption": "The route is considered complete only when the simulation reaches the required inspection waypoints under the configured reach radius.", "operator_review_note": "Confirm the waypoint list matches the inspection scope and define any acceptable skipped-point policy before dispatch."}, {"id": "turn_feasibility", "label": "Turn / bank feasibility model", "assumption": "Turn feasibility uses a simplified bank-angle/yaw-rate envelope rather than aircraft-specific autopilot tracking or detailed aerodynamics.", "operator_review_note": "Confirm the route geometry, turn spacing, and selected speed are within the aircraft operating envelope."}, {"id": "robustness", "label": "Robustness model", "assumption": "Robustness reflects configured Monte Carlo perturbations only; it is not a certification, reliability guarantee, or live safety monitor.", "operator_review_note": "Increase robustness cases or add scenario-specific uncertainty ranges when margin sensitivity matters."}], "known_limitations_summary": [{"id": "offline_sample_weather", "applies": true, "limitation": "Weather may come from offline, fallback, or sample inputs. ORBITAL records the source and timestamp, but the operator must verify current field weather before release."}, {"id": "simplified_flight_dynamics", "applies": true, "limitation": "Aircraft dynamics are simplified for feasibility planning. ORBITAL does not model every autopilot behavior, controller response, payload effect, battery aging factor, sensor constraint, or emergency maneuver."}, {"id": "decision_support_only", "applies": true, "limitation": "Constraint margins are planning evidence for operator review. They do not approve a flight, issue authorization, or replace pilot-in-command judgment."}], "weather_fallback_status": {"status": "FALLBACK USED", "summary": "FALLBACK USED: source offline Open-Meteo-shaped sample, timestamp 2026-09-11T16:00:00Z, reason weather.use_live is false; using offline sample", "source": "offline Open-Meteo-shaped sample", "provider": "open_meteo", "timestamp_utc": "2026-09-11T16:00:00Z", "fallback_used": true, "fallback_reason": "weather.use_live is false; using offline sample", "live_fetch_enabled": false, "applied_to_wind": true, "operator_action": "Refresh current field weather and keep the source with the bundle."}, "uncertainty_robustness_status": {"status": "PASS", "summary": "PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139", "operator_action": "Review robustness assumptions and rerun with scenario-specific uncertainty ranges if margins are close.", "cases": 20, "hard_pass_rate": 1.0, "worst_hard_margin_min": 0.1390076277875651, "aggregation": "mean", "cvar_alpha": null}, "evidence_warning_summary": {"status": "CLEAR", "missing_artifacts": 0, "stale_artifacts": 0, "missing_evidence": 0, "bundle_warnings": 0, "summary": "CLEAR: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 0 bundle warning(s)", "stale_artifacts_detail": [], "missing_artifacts_detail": []}}, "regulatory_readiness": {"status": "operator_action_required", "readiness_state": "operator_action_required", "documentation_only": true, "not_legal_approval": true}, "regulatory_evidence": {"documentation_only": true, "authorization_id": "example authorization reference only", "approving_authority_source": "Operator-provided example authority source for documentation-only demo", "authorization_expiration_date": "2026-12-31", "operating_altitude_limit_m": 120.0, "operating_time_window": {"start_utc": "2026-09-11T16:00:00Z", "end_utc": "2026-09-11T18:00:00Z"}, "required_crew_roles": ["Remote pilot in command", "Visual observer"], "special_conditions_limitations": ["Remain within the modeled utility corridor and geofence buffers.", "Do not launch if current field weather is below operator minimums."], "emergency_contingency_plan": "Review lost-link, diversion, recovery, flyaway response, and incident-contact procedures before dispatch.", "notice": "Optional documentation-only evidence fields. ORBITAL records these values for operator review but does not verify, approve, or issue authorizations."}, "regulatory_evidence_status": {"documentation_only": true, "all_optional_fields_documented": true, "field_count": 8, "missing_count": 0, "operator_attention_missing_count": 0, "fields": [{"id": "authorization_id", "label": "Authorization ID / reference number", "path": "regulatory.authorization_id", "present": true, "documentation_only": true, "recommended_when": "LAANC or waiver / authorization is required.", "operator_attention_when_missing": true}, {"id": "approving_authority_source", "label": "Approving authority / source", "path": "regulatory.approving_authority_source", "present": true, "documentation_only": true, "recommended_when": "Authorization evidence is referenced.", "operator_attention_when_missing": true}, {"id": "authorization_expiration_date", "label": "Authorization expiration date", "path": "regulatory.authorization_expiration_date", "present": true, "documentation_only": true, "recommended_when": "Authorization evidence is referenced.", "operator_attention_when_missing": true}, {"id": "operating_altitude_limit_m", "label": "Operating altitude limit", "path": "regulatory.operating_altitude_limit_m", "present": true, "documentation_only": true, "recommended_when": "An authorization or operational limit applies.", "operator_attention_when_missing": true}, {"id": "operating_time_window", "label": "Operating time window", "path": "regulatory.operating_time_window", "present": true, "documentation_only": true, "recommended_when": "An authorization or time-bounded operation applies.", "operator_attention_when_missing": true}, {"id": "required_crew_roles", "label": "Required crew roles", "path": "regulatory.required_crew_roles", "present": true, "documentation_only": true, "recommended_when": "Crew-role constraints or visual observer support apply.", "operator_attention_when_missing": true}, {"id": "special_conditions_limitations", "label": "Special conditions / limitations", "path": "regulatory.special_conditions_limitations", "present": true, "documentation_only": true, "recommended_when": "An authorization includes special conditions.", "operator_attention_when_missing": false}, {"id": "emergency_contingency_plan", "label": "Emergency / contingency plan documentation", "path": "regulatory.emergency_contingency_plan", "present": true, "documentation_only": true, "recommended_when": "BVLOS, authorization-bound, or higher-risk operations are planned.", "operator_attention_when_missing": true}], "missing": [], "operator_attention_missing": [], "notice": "Regulatory evidence fields are optional documentation. Missing fields are reported for operator review but do not make ORBITAL an approval system or block planning by themselves."}, "approval_checklist": {"documentation_only": true, "included": true, "source_artifact": "regulatory_readiness_report.json", "item_count": 8, "pending_count": 8, "items": [{"id": "laanc_confirmation", "label": "Confirm LAANC / controlled-airspace authorization", "category": "regulatory", "checked": false, "status": "operator_confirmation_required", "source": "regulatory.laanc_required", "note": "Scenario sets laanc_required=true; verify authorization evidence, flight window, altitude limits, and operating area outside ORBITAL."}, {"id": "waiver_authorization_confirmation", "label": "Confirm waiver / authorization coverage", "category": "regulatory", "checked": false, "status": "operator_confirmation_required", "source": "regulatory.waiver_or_authorization_required", "note": "Scenario indicates a waiver or authorization is required; verify document scope, dates, conditions, and mission fit outside ORBITAL."}, {"id": "visual_observer_assignment", "label": "Confirm visual observer assignment", "category": "crew", "checked": false, "status": "operator_confirmation_required", "source": "regulatory.visual_observer_required", "note": "Assign visual observer coverage, station locations, communications, handoff rules, and responsibilities before dispatch."}, {"id": "crew_briefing", "label": "Confirm crew briefing completed", "category": "crew", "checked": false, "status": "operator_confirmation_required", "source": "operator_review", "note": "Brief route, roles, communications, geofences, weather, abort criteria, lost-link procedures, and final go/no-go authority."}, {"id": "emergency_contingency_plan", "label": "Confirm emergency / contingency plan", "category": "safety", "checked": false, "status": "operator_confirmation_required", "source": "operator_review", "note": "Review lost-link response, diversion or landing zones, flyaway response, incident contacts, and recovery responsibilities."}, {"id": "notam_local_restriction_review", "label": "Confirm NOTAM / local restriction review", "category": "regulatory", "checked": false, "status": "operator_confirmation_required", "source": "operator_review", "note": "Review current NOTAMs, TFRs, local restrictions, site permissions, and customer constraints close to flight time."}, {"id": "weather_minimums_confirmation", "label": "Confirm weather minimums", "category": "weather", "checked": false, "status": "operator_confirmation_required", "source": "weather", "note": "Confirm launch-time weather and operator minimums, including wind, gusts, visibility, precipitation, and temperature, before flight. Current planning weather: source offline Open-Meteo-shaped sample; timestamp 2026-09-11T16:00:00Z; wind 4.5 m/s; gust 5.9 m/s."}, {"id": "battery_reserve_confirmation", "label": "Confirm battery reserve", "category": "energy", "checked": false, "status": "operator_confirmation_required", "source": "vehicle.battery_reserve_Wh", "note": "Confirm launch battery, reserve policy, payload draw, and abort reserve meet operator requirements before release (required reserve 700.0 Wh; planned final battery 832.1 Wh; modeled reserve margin 132.1 Wh)."}], "notice": "Checklist items support operator review only. Checking an item is not legal approval, LAANC, a waiver, or operational clearance."}, "artifacts": [{"id": "scenario_yaml", "label": "Scenario YAML", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml", "bundle_path": "scenario.yaml", "present": true, "freshness": {"source_sha256": "25b9be4703966407b17a062cdc2547d86ed65bf9636c8b1edb7790c0fcdb9238", "bundle_sha256": "25b9be4703966407b17a062cdc2547d86ed65bf9636c8b1edb7790c0fcdb9238", "source_modified_utc": "2026-09-12T21:09:19Z", "bundle_modified_utc": "2026-09-12T21:09:19Z", "source_size_bytes": 6688, "bundle_size_bytes": 6688, "stale_against_scenario": false}}, {"id": "plan_json", "label": "Plan JSON", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\plan.json", "bundle_path": "plan.json", "present": true, "freshness": {"source_sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8", "bundle_sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8", "source_modified_utc": "2026-09-13T17:55:13Z", "bundle_modified_utc": "2026-09-13T17:55:13Z", "source_size_bytes": 2542, "bundle_size_bytes": 2542, "stale_against_scenario": false}}, {"id": "constraint_audit_markdown", "label": "Primary constraint-audit report", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\inspection_constraint_audit.md", "bundle_path": "inspection_constraint_audit.md", "present": true, "freshness": {"source_sha256": "e5237d4c8c3dd1712085b727f39c2d0f0ac639143fb38bf744fdaa12f7f9ed68", "bundle_sha256": "e5237d4c8c3dd1712085b727f39c2d0f0ac639143fb38bf744fdaa12f7f9ed68", "source_modified_utc": "2026-09-13T17:55:11Z", "bundle_modified_utc": "2026-09-13T17:55:11Z", "source_size_bytes": 17222, "bundle_size_bytes": 17222, "stale_against_scenario": false}}, {"id": "constraint_audit_json", "label": "Constraint audit JSON", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\inspection_constraint_audit.json", "bundle_path": "inspection_constraint_audit.json", "present": true, "freshness": {"source_sha256": "a96657a945dc7db166b287f1c0da9f8b8b70526dfcd3938a784a9d7634ed527c", "bundle_sha256": "a96657a945dc7db166b287f1c0da9f8b8b70526dfcd3938a784a9d7634ed527c", "source_modified_utc": "2026-09-13T17:55:11Z", "bundle_modified_utc": "2026-09-13T17:55:11Z", "source_size_bytes": 50705, "bundle_size_bytes": 50705, "stale_against_scenario": false}}, {"id": "regulatory_readiness_json", "label": "Regulatory readiness JSON", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\regulatory_readiness_report.json", "bundle_path": "regulatory_readiness_report.json", "present": true, "freshness": {"source_sha256": "30412182cf2fb3cb6c33726373a3dc422dfc61be911d15d82ac5eac75aa68551", "bundle_sha256": "30412182cf2fb3cb6c33726373a3dc422dfc61be911d15d82ac5eac75aa68551", "source_modified_utc": "2026-09-13T17:55:11Z", "bundle_modified_utc": "2026-09-13T17:55:11Z", "source_size_bytes": 11029, "bundle_size_bytes": 11029, "stale_against_scenario": false}}, {"id": "regulatory_readiness_markdown", "label": "Regulatory readiness report", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\regulatory_readiness_report.md", "bundle_path": "regulatory_readiness_report.md", "present": true, "freshness": {"source_sha256": "05d976e79a5f11e5803c025926ce4da533a9ebf7142bd0ec2e78912e387ff94c", "bundle_sha256": "05d976e79a5f11e5803c025926ce4da533a9ebf7142bd0ec2e78912e387ff94c", "source_modified_utc": "2026-09-13T17:55:11Z", "bundle_modified_utc": "2026-09-13T17:55:11Z", "source_size_bytes": 5777, "bundle_size_bytes": 5777, "stale_against_scenario": false}}, {"id": "what_if_plan_markdown", "label": "What-if planning report", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\what_if_plan.md", "bundle_path": "what_if_plan.md", "present": true, "freshness": {"source_sha256": "163f7e2475d12eed2e8c8698d5ef1f13fcb7392a75a37fa9d5731cff05dd8685", "bundle_sha256": "163f7e2475d12eed2e8c8698d5ef1f13fcb7392a75a37fa9d5731cff05dd8685", "source_modified_utc": "2026-09-13T17:55:11Z", "bundle_modified_utc": "2026-09-13T17:55:11Z", "source_size_bytes": 2791, "bundle_size_bytes": 2791, "stale_against_scenario": false}}, {"id": "what_if_plan_json", "label": "What-if planning JSON", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\what_if_plan.json", "bundle_path": "what_if_plan.json", "present": true, "freshness": {"source_sha256": "03e9abda42d20b469093fa8c1a90565323640556d1ad73de8005213031ffbc61", "bundle_sha256": "03e9abda42d20b469093fa8c1a90565323640556d1ad73de8005213031ffbc61", "source_modified_utc": "2026-09-13T17:55:11Z", "bundle_modified_utc": "2026-09-13T17:55:11Z", "source_size_bytes": 63529, "bundle_size_bytes": 63529, "stale_against_scenario": false}}, {"id": "score_breakdown", "label": "Score breakdown", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\score.json", "bundle_path": "score.json", "present": true, "freshness": {"source_sha256": "e3cb2a7098d4fe8716cd7fcadab220bd74b4f525b5f645b5ff0f2231548e1d10", "bundle_sha256": "e3cb2a7098d4fe8716cd7fcadab220bd74b4f525b5f645b5ff0f2231548e1d10", "source_modified_utc": "2026-09-13T17:55:13Z", "bundle_modified_utc": "2026-09-13T17:55:13Z", "source_size_bytes": 1119, "bundle_size_bytes": 1119, "stale_against_scenario": false}}, {"id": "flight_path_plot", "label": "Flight path plot", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\flight_path.png", "bundle_path": "flight_path.png", "present": true, "freshness": {"source_sha256": "3fe518d198cfb992ac5cf0cc4d2dc652a3caf56cabf725b78f477aa17cf1e77f", "bundle_sha256": "3fe518d198cfb992ac5cf0cc4d2dc652a3caf56cabf725b78f477aa17cf1e77f", "source_modified_utc": "2026-09-13T17:55:13Z", "bundle_modified_utc": "2026-09-13T17:55:13Z", "source_size_bytes": 57053, "bundle_size_bytes": 57053, "stale_against_scenario": false}}, {"id": "robustness_summary", "label": "Robustness summary", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\robustness.json", "bundle_path": "robustness.json", "present": true, "freshness": {"source_sha256": "9a1984b6ec530bf6836eb5facfed37ff102d5c19ccf8cf1128c0e6a4020dd82a", "bundle_sha256": "9a1984b6ec530bf6836eb5facfed37ff102d5c19ccf8cf1128c0e6a4020dd82a", "source_modified_utc": "2026-09-13T17:55:13Z", "bundle_modified_utc": "2026-09-13T17:55:13Z", "source_size_bytes": 295, "bundle_size_bytes": 295, "stale_against_scenario": false}}, {"id": "go_no_go_memo", "label": "Plain-English go/no-go memo", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\operator_memo.md", "bundle_path": "operator_memo.md", "present": true, "freshness": {"source_sha256": "0a01dd2eccd98f400c243dbf18e62e193bc1ea0142a97124be084bcf49d80570", "bundle_sha256": "0a01dd2eccd98f400c243dbf18e62e193bc1ea0142a97124be084bcf49d80570", "source_modified_utc": "2026-09-13T17:55:11Z", "bundle_modified_utc": "2026-09-13T17:55:11Z", "source_size_bytes": 2127, "bundle_size_bytes": 2127, "stale_against_scenario": false}}, {"id": "weather_snapshot", "label": "Weather snapshot", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\weather.json", "bundle_path": "weather.json", "present": true, "freshness": {"source_sha256": "7c005ca7f585d6dde21e595aa2ce5c8c1a9968fdec8b3b3df86675c1ace0c027", "bundle_sha256": "7c005ca7f585d6dde21e595aa2ce5c8c1a9968fdec8b3b3df86675c1ace0c027", "source_modified_utc": "2026-09-13T17:55:13Z", "bundle_modified_utc": "2026-09-13T17:55:13Z", "source_size_bytes": 623, "bundle_size_bytes": 623, "stale_against_scenario": false}}, {"id": "autopilot_mission_csv", "label": "Autopilot mission CSV", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\autopilot_mission.csv", "bundle_path": "autopilot_mission.csv", "present": true, "freshness": {"source_sha256": "9189cd93204ddb505dba7b135a9bed0c81b745e8adfcb05d12ea9535bc46bd29", "bundle_sha256": "9189cd93204ddb505dba7b135a9bed0c81b745e8adfcb05d12ea9535bc46bd29", "source_modified_utc": "2026-09-13T17:55:13Z", "bundle_modified_utc": "2026-09-13T17:55:13Z", "source_size_bytes": 2086, "bundle_size_bytes": 2086, "stale_against_scenario": false}}, {"id": "mission_review_kml", "label": "Mission review KML", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\mission_review.kml", "bundle_path": "mission_review.kml", "present": true, "freshness": {"source_sha256": "6ac079f4b22f49eb17330ee67df7bcdd425f694eebe4262c0e8c50d126865179", "bundle_sha256": "6ac079f4b22f49eb17330ee67df7bcdd425f694eebe4262c0e8c50d126865179", "source_modified_utc": "2026-09-13T17:55:13Z", "bundle_modified_utc": "2026-09-13T17:55:13Z", "source_size_bytes": 3394, "bundle_size_bytes": 3394, "stale_against_scenario": false}}, {"id": "flight_planning_exports_manifest", "label": "Flight-planning exports manifest", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\flight_planning_exports.json", "bundle_path": "flight_planning_exports.json", "present": true, "freshness": {"source_sha256": "d0a6a63526594d75c219b912ef3280983bfe79c7c604d4ff19457101f15ba0d3", "bundle_sha256": "d0a6a63526594d75c219b912ef3280983bfe79c7c604d4ff19457101f15ba0d3", "source_modified_utc": "2026-09-13T17:55:13Z", "bundle_modified_utc": "2026-09-13T17:55:13Z", "source_size_bytes": 804, "bundle_size_bytes": 804, "stale_against_scenario": false}}, {"id": "flight_planning_exports_readme", "label": "Flight-planning exports README", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\flight_planning_exports.md", "bundle_path": "flight_planning_exports.md", "present": true, "freshness": {"source_sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672", "bundle_sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672", "source_modified_utc": "2026-09-13T17:55:13Z", "bundle_modified_utc": "2026-09-13T17:55:13Z", "source_size_bytes": 291, "bundle_size_bytes": 291, "stale_against_scenario": false}}], "generated_artifacts": [{"id": "operator_review_ui", "label": "Lightweight operator review web UI", "bundle_path": "operator_review_ui.html", "present": true, "generated": true}, {"id": "operator_dashboard", "label": "Operator evidence dashboard", "bundle_path": "operator_dashboard.md", "present": true, "generated": true}, {"id": "bundle_summary", "label": "Evidence bundle summary", "bundle_path": "evidence_bundle_summary.md", "present": true, "generated": true}, {"id": "artifact_index", "label": "Evidence bundle artifact index", "bundle_path": "artifact_index.md", "present": true, "generated": true}, {"id": "manifest_json", "label": "Evidence bundle manifest", "bundle_path": "manifest.json", "present": true, "generated": true}, {"id": "readme", "label": "Evidence bundle README", "bundle_path": "README.md", "present": true, "generated": true}, {"id": "checksum_manifest", "label": "Evidence bundle checksum manifest", "bundle_path": "checksum_manifest.json", "present": true, "generated": true}], "checksum_manifest": {"algorithm": "sha256", "bundle_path": "checksum_manifest.json", "excludes": ["checksum_manifest.json"]}, "documentation_only_notice": "This bundle supports operator review and audit evidence only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance."}</script>
+  <script type="application/json" id="manifest-snapshot">{"kind": "operator_evidence_bundle", "manifest_version": 1, "ui_manifest_version": 1, "ui_compatibility": {"schema_version": 1, "manifest_version": 1, "minimum_supported_manifest_version": 1, "generated_timestamp_utc": "2026-09-14T04:18:50Z", "required_top_level_fields": ["kind", "manifest_version", "ui_compatibility", "scenario_path", "constraint_audit", "regulatory_readiness", "bundle_completeness", "regulatory_documentation_completeness", "weather_evidence_readiness", "regulatory_evidence_provenance", "checksum_evidence_readiness", "freshness", "artifacts", "generated_artifacts", "checksum_manifest"], "artifact_entry_required_fields": ["id", "label", "bundle_path", "present"], "optional_field_fallback_policy": "Every optional UI field must render explicit fallback text such as 'not provided', 'n/a', 'UNKNOWN', or 'unavailable'; optional fields must not render as blank labels.", "optional_field_fallbacks": {"constraint_audit.mission_id": "scenario filename", "constraint_audit.status": "UNKNOWN", "constraint_audit.mission_risk": "UNKNOWN", "constraint_audit.top_limiting_constraint": "not available", "regulatory_readiness.readiness_state": "UNKNOWN", "bundle_completeness.score": "n/a", "regulatory_documentation_completeness.score": "n/a", "weather_evidence_readiness.summary": "No weather evidence status captured.", "weather_evidence_readiness.operator_action": "Confirm current weather before release.", "regulatory_evidence_provenance.summary": "No regulatory provenance captured.", "checksum_evidence_readiness.summary": "Checksum evidence status not captured.", "trust_defensibility.uncertainty_robustness_status.summary": "No robustness / uncertainty status captured.", "operator_review.operator_decision": "pending operator review", "operator_review.reviewer_name": "not provided", "operator_review.review_timestamp_utc": "not provided"}, "artifact_access": {"outside_ui_required": true, "expected_formats": ["markdown", "json", "csv", "kml", "png", "manifest", "checksum", "dashboard"], "artifact_count": 17, "generated_artifact_count": 7, "unavailable_artifact_policy": "Unavailable artifacts render as non-link unavailable labels in the review UI and Markdown dashboard; they must not be emitted as hrefs.", "primary_dashboard": "operator_dashboard.md", "manifest": "manifest.json", "checksum": "checksum_manifest.json"}, "ui_behavior": {"primary_manifest_source": "manifest.json", "fallback_manifest_source": "embedded manifest snapshot", "link_policy": "link_when_present_else_unavailable_label", "read_only": true, "documentation_only": true}}, "bundle_dir": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\operator_evidence_bundle", "scenario_path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml", "complete": true, "missing": [], "bundle_completeness_score": 100.0, "bundle_completeness": {"score": 100.0, "unit": "percent", "present_artifacts": 17, "total_artifacts": 17, "missing_artifacts": 0, "complete": true, "scoring_note": "Score is based on expected bundle artifacts present at export time. Optional documentation fields are reported separately and do not block planning."}, "artifact_completeness": {"score": 100.0, "unit": "percent", "present_artifacts": 17, "total_artifacts": 17, "missing_artifacts": 0, "complete": true, "scoring_note": "Score is based on expected bundle artifacts present at export time. Optional documentation fields are reported separately and do not block planning."}, "regulatory_documentation_completeness": {"score": 100.0, "unit": "percent", "documented_fields": 11, "total_fields": 11, "missing_fields": 0, "operator_attention_missing_fields": 0, "complete": true, "documentation_only": true, "scoring_note": "Score is based on optional regulatory documentation fields. Missing fields are visible for operator review but do not block planning or imply approval."}, "missing_evidence": [], "bundle_warnings": [{"id": "weather_evidence_stale", "kind": "weather_evidence", "severity": "warning", "message": "Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field conditions.", "source": "offline Open-Meteo-shaped sample", "timestamp_utc": "2026-09-11T16:00:00Z", "freshness_status": "stale", "documentation_only": true}, {"id": "regulatory_provenance_stale", "kind": "regulatory_evidence_provenance", "severity": "warning", "message": "Refresh regulatory evidence checks before relying on this bundle for review. Operator should verify regulatory inputs.", "source": "Operator-provided example authority source for documentation-only demo", "date_checked_utc": "2026-09-11T15:45:00Z", "expiration_date": "2026-12-31", "authority": "FAA / LAANC provider placeholder", "documentation_only": true}], "operator_review": {"status": "ready_for_review", "requested_status": "ready_for_review", "allowed_statuses": ["draft", "ready_for_review", "reviewed"], "reviewer_name": null, "review_timestamp_utc": null, "review_notes": "Demo bundle ready for operator review; final approval remains outside ORBITAL.", "operator_decision": "pending operator review", "documentation_only": true, "notice": "Operator review fields are documentation only. They do not approve a flight, issue an authorization, provide legal advice, or replace pilot-in-command release authority."}, "review_metadata": {"schema_version": 1, "status": "ready_for_review", "requested_status": "ready_for_review", "reviewer_name": null, "review_timestamp_utc": null, "review_notes": "Demo bundle ready for operator review; final approval remains outside ORBITAL.", "operator_decision": "pending operator review", "documentation_only": true, "notice": "Operator review fields are documentation only. They do not approve a flight, issue an authorization, provide legal advice, or replace pilot-in-command release authority."}, "freshness": {"generated_timestamp_utc": "2026-09-14T04:18:50Z", "orbital_version": "1.0.13", "scenario_path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml", "scenario_hash": {"algorithm": "sha256", "value": "dd3aa6749c6aee97d6e60dfaef6954677e660aa6bb93d9ea75eb843f241f308c"}, "scenario_modified_utc": "2026-09-13T19:48:39Z", "command": {"display": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\.venv\\Scripts\\python.exe -m mission_framework.cli examples\\bvlos_powerline_inspection_demo.yaml --outdir outputs", "argv": ["C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\.venv\\Scripts\\python.exe", "-m", "mission_framework.cli", "examples\\bvlos_powerline_inspection_demo.yaml", "--outdir", "outputs"]}, "metadata_note": "Freshness metadata supports evidence review. It does not provide flight approval, authorization, legal advice, or operational clearance."}, "weather": {"source": "offline Open-Meteo-shaped sample", "provider": "open_meteo", "timestamp_utc": "2026-09-11T16:00:00Z", "fallback_used": true, "fallback_reason": "weather.use_live is false; using offline sample", "live_fetch_enabled": false, "applied_to_wind": true}, "weather_evidence_readiness": {"documentation_only": true, "status": "STALE", "mode": "sample", "source": "offline Open-Meteo-shaped sample", "provider": "open_meteo", "timestamp_utc": "2026-09-11T16:00:00Z", "generated_timestamp_utc": "2026-09-14T04:18:50Z", "age_hours": 60.31, "freshness_max_age_hours": 2.0, "freshness_status": "stale", "fallback_used": true, "fallback_reason": "weather.use_live is false; using offline sample", "sample_or_offline": true, "live_fetch_enabled": false, "live_provider_configured": false, "live_provider_hook": {"provider": "open_meteo", "configured": false, "required": false, "documentation_only": true, "note": "Live weather provider integration can populate this evidence block, but ORBITAL does not require live integration or verify launch authorization."}, "operator_action": "Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field conditions.", "summary": "STALE: sample weather evidence from offline Open-Meteo-shaped sample, timestamp 2026-09-11T16:00:00Z, freshness stale, 60.3 hour(s) old", "notice": "Weather evidence supports operator review only. ORBITAL does not certify weather, approve launch, or provide operational clearance."}, "regulatory_evidence_provenance": {"documentation_only": true, "status": "STALE", "source": "Operator-provided example authority source for documentation-only demo", "date_checked_utc": "2026-09-11T15:45:00Z", "expiration_date": "2026-12-31", "authority": "FAA / LAANC provider placeholder", "operator_confirmation_status": "pending_operator_confirmation", "authorization_required": true, "checked_age_hours": 60.56, "freshness_max_age_hours": 24.0, "freshness_status": "stale", "expired": false, "operator_action": "Refresh regulatory evidence checks before relying on this bundle for review. Operator should verify regulatory inputs.", "summary": "STALE: source Operator-provided example authority source for documentation-only demo, checked 2026-09-11T15:45:00Z, expires 2026-12-31, authority FAA / LAANC provider placeholder, confirmation pending_operator_confirmation", "notice": "Regulatory evidence provenance is documentation-only. ORBITAL does not grant approval, authorization, LAANC, legal advice, or operational clearance."}, "checksum_evidence_readiness": {"documentation_only": true, "status": "VERIFY REQUIRED", "bundle_path": "checksum_manifest.json", "generated_timestamp_utc": "2026-09-14T04:18:50Z", "operator_action": "Run bundle checksum verification after generation and before archiving or sharing the evidence bundle.", "summary": "Checksum manifest is generated with the bundle; verification must be run against the final archived files.", "notice": "Checksums support file integrity review only. They do not approve a mission or verify regulatory authorization."}, "flight_planning_exports_enabled": true, "regulatory_metadata": {"documentation_only": true, "laanc_required": true, "waiver_or_authorization_required": true, "airspace_class": "Class D", "visual_observer_required": true, "ground_risk_population_note": "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch.", "authorization_id": "example authorization reference only", "authorization_authority": "FAA / LAANC provider placeholder", "approving_authority_source": "Operator-provided example authority source for documentation-only demo", "authorization_date_checked_utc": "2026-09-11T15:45:00Z", "authorization_expiration_date": "2026-12-31", "operator_confirmation_status": "pending_operator_confirmation", "evidence_freshness_max_age_hours": 24, "operating_altitude_limit_m": 120.0, "operating_time_window": {"start_utc": "2026-09-11T16:00:00Z", "end_utc": "2026-09-11T18:00:00Z"}, "required_crew_roles": ["Remote pilot in command", "Visual observer"], "special_conditions_limitations": ["Remain within the modeled utility corridor and geofence buffers.", "Do not launch if current field weather is below operator minimums."], "emergency_contingency_plan": "Review lost-link, diversion, recovery, flyaway response, and incident-contact procedures before dispatch.", "operating_assumptions": ["Pilot-in-command verifies current FAA, local, site, NOTAM, TFR, and airspace requirements before launch.", "Mission remains within the modeled route, altitude, weather, battery, geofence, and crew constraints.", "Visual observer staffing and crew communications are confirmed before dispatch."], "unresolved_items": ["Confirm utility owner site-access approval for the planned inspection window.", "Confirm launch and recovery area permissions with the local site contact."], "documentation_only_notice": "For planning documentation only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, or operational clearance.", "decision_support_disclaimer": "ORBITAL provides decision support only and is not legal approval. This report does not provide LAANC, waivers, authorizations, operational clearance, legal advice, or permission to fly. The pilot-in-command and operator remain responsible for all required regulatory review, approvals, and compliance decisions."}, "constraint_audit": {"mission_id": "BVLOS Powerline Inspection Demo", "status": "go", "mission_risk": "low", "top_limiting_constraint": {"id": "wind_weather", "label": "Wind / weather margin", "category": "weather", "category_label": "Weather / wind margin", "status": "pass", "status_meaning": "Modeled margin is above the configured review threshold.", "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.", "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.", "margin": {"value": 3.0999999999999996, "unit": "m/s", "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"}, "warning_margin": {"value": 2.0, "unit": "m/s", "source": "wind.warning_margin_mps or default 2.0 m/s"}, "risk_points": 14.500000000000002, "observed": {"max_horizontal_wind_mps": 5.9, "weather_audit_wind_mps": 5.9, "max_safe_wind_mps": 9.0, "weather_source": "offline Open-Meteo-shaped sample", "weather_timestamp_utc": "2026-09-11T16:00:00Z", "weather_wind_speed_mps": 4.5, "weather_wind_direction_deg": 285.0, "weather_wind_gust_mps": 5.9, "visibility_m": 16000.0, "precipitation_mm": 0.0, "temperature_C": 18.5, "weather_fallback_used": true}, "recommendation": "Wait for better wind or lower mission scope.", "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."}}, "trust_defensibility": {"sample_data_demo_note": {"is_demo_or_sample": true, "note": "Sample data / demo scenario: this bundle uses demonstration planning inputs, including offline or sample weather where configured. Replace route, weather, regulatory, crew, and customer evidence before operational use. Operator should verify sample data outside ORBITAL."}, "model_assumptions_summary": [{"id": "battery", "label": "Battery / energy model", "assumption": "Battery feasibility is based on the configured capacity, initial charge, reserve policy, and simplified power model coefficients.", "operator_review_note": "Confirm aircraft battery health, payload draw, temperature effects, and abort reserve outside ORBITAL before release."}, {"id": "wind", "label": "Wind / weather model", "assumption": "Wind feasibility compares the modeled or weather-provided wind exposure against the configured safe operating limit.", "operator_review_note": "Refresh field weather and gust observations close to launch, especially when offline or sample weather is used."}, {"id": "geofence", "label": "Geofence / no-fly-zone model", "assumption": "Geofence feasibility treats configured polygons and imported GeoJSON zones as the planning boundary source.", "operator_review_note": "Confirm site boundaries, customer buffers, and launch/recovery areas on current maps before export or dispatch."}, {"id": "route_completion", "label": "Route completion model", "assumption": "The route is considered complete only when the simulation reaches the required inspection waypoints under the configured reach radius.", "operator_review_note": "Confirm the waypoint list matches the inspection scope and define any acceptable skipped-point policy before dispatch."}, {"id": "turn_feasibility", "label": "Turn / bank feasibility model", "assumption": "Turn feasibility uses a simplified bank-angle/yaw-rate envelope rather than aircraft-specific autopilot tracking or detailed aerodynamics.", "operator_review_note": "Confirm the route geometry, turn spacing, and selected speed are within the aircraft operating envelope."}, {"id": "robustness", "label": "Robustness model", "assumption": "Robustness reflects configured Monte Carlo perturbations only; it is not a certification, reliability guarantee, or live safety monitor.", "operator_review_note": "Increase robustness cases or add scenario-specific uncertainty ranges when margin sensitivity matters."}], "known_limitations_summary": [{"id": "offline_sample_weather", "applies": true, "limitation": "Weather may come from offline, fallback, or sample inputs. ORBITAL records the source and timestamp, but the operator must verify current field weather before release."}, {"id": "simplified_flight_dynamics", "applies": true, "limitation": "Aircraft dynamics are simplified for feasibility planning. ORBITAL does not model every autopilot behavior, controller response, payload effect, battery aging factor, sensor constraint, or emergency maneuver."}, {"id": "decision_support_only", "applies": true, "limitation": "Constraint margins are planning evidence for operator review. They do not approve a flight, issue authorization, or replace pilot-in-command judgment."}], "weather_fallback_status": {"documentation_only": true, "status": "STALE", "mode": "sample", "source": "offline Open-Meteo-shaped sample", "provider": "open_meteo", "timestamp_utc": "2026-09-11T16:00:00Z", "generated_timestamp_utc": "2026-09-14T04:18:50Z", "age_hours": 60.31, "freshness_max_age_hours": 2.0, "freshness_status": "stale", "fallback_used": true, "fallback_reason": "weather.use_live is false; using offline sample", "sample_or_offline": true, "live_fetch_enabled": false, "live_provider_configured": false, "live_provider_hook": {"provider": "open_meteo", "configured": false, "required": false, "documentation_only": true, "note": "Live weather provider integration can populate this evidence block, but ORBITAL does not require live integration or verify launch authorization."}, "operator_action": "Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field conditions.", "summary": "STALE: sample weather evidence from offline Open-Meteo-shaped sample, timestamp 2026-09-11T16:00:00Z, freshness stale, 60.3 hour(s) old", "notice": "Weather evidence supports operator review only. ORBITAL does not certify weather, approve launch, or provide operational clearance."}, "weather_evidence_readiness": {"documentation_only": true, "status": "STALE", "mode": "sample", "source": "offline Open-Meteo-shaped sample", "provider": "open_meteo", "timestamp_utc": "2026-09-11T16:00:00Z", "generated_timestamp_utc": "2026-09-14T04:18:50Z", "age_hours": 60.31, "freshness_max_age_hours": 2.0, "freshness_status": "stale", "fallback_used": true, "fallback_reason": "weather.use_live is false; using offline sample", "sample_or_offline": true, "live_fetch_enabled": false, "live_provider_configured": false, "live_provider_hook": {"provider": "open_meteo", "configured": false, "required": false, "documentation_only": true, "note": "Live weather provider integration can populate this evidence block, but ORBITAL does not require live integration or verify launch authorization."}, "operator_action": "Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field conditions.", "summary": "STALE: sample weather evidence from offline Open-Meteo-shaped sample, timestamp 2026-09-11T16:00:00Z, freshness stale, 60.3 hour(s) old", "notice": "Weather evidence supports operator review only. ORBITAL does not certify weather, approve launch, or provide operational clearance."}, "regulatory_evidence_provenance": {"documentation_only": true, "status": "STALE", "source": "Operator-provided example authority source for documentation-only demo", "date_checked_utc": "2026-09-11T15:45:00Z", "expiration_date": "2026-12-31", "authority": "FAA / LAANC provider placeholder", "operator_confirmation_status": "pending_operator_confirmation", "authorization_required": true, "checked_age_hours": 60.56, "freshness_max_age_hours": 24.0, "freshness_status": "stale", "expired": false, "operator_action": "Refresh regulatory evidence checks before relying on this bundle for review. Operator should verify regulatory inputs.", "summary": "STALE: source Operator-provided example authority source for documentation-only demo, checked 2026-09-11T15:45:00Z, expires 2026-12-31, authority FAA / LAANC provider placeholder, confirmation pending_operator_confirmation", "notice": "Regulatory evidence provenance is documentation-only. ORBITAL does not grant approval, authorization, LAANC, legal advice, or operational clearance."}, "uncertainty_robustness_status": {"status": "PASS", "summary": "PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139. Confidence from configured robustness cases is scenario-limited and should be reviewed against operator uncertainty assumptions.", "operator_action": "Review robustness assumptions and rerun with scenario-specific uncertainty ranges if margins are close.", "confidence": "configured-case confidence", "cases": 20, "hard_pass_rate": 1.0, "worst_hard_margin_min": 0.1390076277875651, "aggregation": "mean", "cvar_alpha": null}, "evidence_warning_summary": {"status": "REVIEW REQUIRED", "missing_artifacts": 0, "stale_artifacts": 0, "missing_evidence": 0, "bundle_warnings": 2, "summary": "REVIEW REQUIRED: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 2 bundle warning(s)", "stale_artifacts_detail": [], "missing_artifacts_detail": []}}, "regulatory_readiness": {"status": "operator_action_required", "readiness_state": "operator_action_required", "documentation_only": true, "not_legal_approval": true}, "regulatory_evidence": {"documentation_only": true, "authorization_id": "example authorization reference only", "authorization_authority": "FAA / LAANC provider placeholder", "approving_authority_source": "Operator-provided example authority source for documentation-only demo", "authorization_date_checked_utc": "2026-09-11T15:45:00Z", "authorization_expiration_date": "2026-12-31", "operator_confirmation_status": "pending_operator_confirmation", "operating_altitude_limit_m": 120.0, "operating_time_window": {"start_utc": "2026-09-11T16:00:00Z", "end_utc": "2026-09-11T18:00:00Z"}, "required_crew_roles": ["Remote pilot in command", "Visual observer"], "special_conditions_limitations": ["Remain within the modeled utility corridor and geofence buffers.", "Do not launch if current field weather is below operator minimums."], "emergency_contingency_plan": "Review lost-link, diversion, recovery, flyaway response, and incident-contact procedures before dispatch.", "notice": "Optional documentation-only evidence fields. ORBITAL records these values for operator review but does not verify, approve, or issue authorizations."}, "regulatory_evidence_status": {"documentation_only": true, "all_optional_fields_documented": true, "field_count": 11, "missing_count": 0, "operator_attention_missing_count": 0, "fields": [{"id": "authorization_id", "label": "Authorization ID / reference number", "path": "regulatory.authorization_id", "present": true, "documentation_only": true, "recommended_when": "LAANC or waiver / authorization is required.", "operator_attention_when_missing": true}, {"id": "approving_authority_source", "label": "Approving authority / source", "path": "regulatory.approving_authority_source", "present": true, "documentation_only": true, "recommended_when": "Authorization evidence is referenced.", "operator_attention_when_missing": true}, {"id": "authorization_authority", "label": "Authorization authority", "path": "regulatory.authorization_authority", "present": true, "documentation_only": true, "recommended_when": "Authorization evidence is referenced.", "operator_attention_when_missing": true}, {"id": "authorization_date_checked_utc", "label": "Authorization date checked", "path": "regulatory.authorization_date_checked_utc", "present": true, "documentation_only": true, "recommended_when": "Authorization evidence is referenced.", "operator_attention_when_missing": true}, {"id": "authorization_expiration_date", "label": "Authorization expiration date", "path": "regulatory.authorization_expiration_date", "present": true, "documentation_only": true, "recommended_when": "Authorization evidence is referenced.", "operator_attention_when_missing": true}, {"id": "operator_confirmation_status", "label": "Operator confirmation status", "path": "regulatory.operator_confirmation_status", "present": true, "documentation_only": true, "recommended_when": "Authorization evidence is referenced.", "operator_attention_when_missing": true}, {"id": "operating_altitude_limit_m", "label": "Operating altitude limit", "path": "regulatory.operating_altitude_limit_m", "present": true, "documentation_only": true, "recommended_when": "An authorization or operational limit applies.", "operator_attention_when_missing": true}, {"id": "operating_time_window", "label": "Operating time window", "path": "regulatory.operating_time_window", "present": true, "documentation_only": true, "recommended_when": "An authorization or time-bounded operation applies.", "operator_attention_when_missing": true}, {"id": "required_crew_roles", "label": "Required crew roles", "path": "regulatory.required_crew_roles", "present": true, "documentation_only": true, "recommended_when": "Crew-role constraints or visual observer support apply.", "operator_attention_when_missing": true}, {"id": "special_conditions_limitations", "label": "Special conditions / limitations", "path": "regulatory.special_conditions_limitations", "present": true, "documentation_only": true, "recommended_when": "An authorization includes special conditions.", "operator_attention_when_missing": false}, {"id": "emergency_contingency_plan", "label": "Emergency / contingency plan documentation", "path": "regulatory.emergency_contingency_plan", "present": true, "documentation_only": true, "recommended_when": "BVLOS, authorization-bound, or higher-risk operations are planned.", "operator_attention_when_missing": true}], "missing": [], "operator_attention_missing": [], "notice": "Regulatory evidence fields are optional documentation. Missing fields are reported for operator review but do not make ORBITAL an approval system or block planning by themselves."}, "approval_checklist": {"documentation_only": true, "included": true, "source_artifact": "regulatory_readiness_report.json", "item_count": 8, "pending_count": 8, "items": [{"id": "laanc_confirmation", "label": "Confirm LAANC / controlled-airspace authorization", "category": "regulatory", "checked": false, "status": "operator_confirmation_required", "source": "regulatory.laanc_required", "note": "Scenario sets laanc_required=true; verify authorization evidence, flight window, altitude limits, and operating area outside ORBITAL."}, {"id": "waiver_authorization_confirmation", "label": "Confirm waiver / authorization coverage", "category": "regulatory", "checked": false, "status": "operator_confirmation_required", "source": "regulatory.waiver_or_authorization_required", "note": "Scenario indicates a waiver or authorization is required; verify document scope, dates, conditions, and mission fit outside ORBITAL."}, {"id": "visual_observer_assignment", "label": "Confirm visual observer assignment", "category": "crew", "checked": false, "status": "operator_confirmation_required", "source": "regulatory.visual_observer_required", "note": "Assign visual observer coverage, station locations, communications, handoff rules, and responsibilities before dispatch."}, {"id": "crew_briefing", "label": "Confirm crew briefing completed", "category": "crew", "checked": false, "status": "operator_confirmation_required", "source": "operator_review", "note": "Brief route, roles, communications, geofences, weather, abort criteria, lost-link procedures, and final go/no-go authority."}, {"id": "emergency_contingency_plan", "label": "Confirm emergency / contingency plan", "category": "safety", "checked": false, "status": "operator_confirmation_required", "source": "operator_review", "note": "Review lost-link response, diversion or landing zones, flyaway response, incident contacts, and recovery responsibilities."}, {"id": "notam_local_restriction_review", "label": "Confirm NOTAM / local restriction review", "category": "regulatory", "checked": false, "status": "operator_confirmation_required", "source": "operator_review", "note": "Review current NOTAMs, TFRs, local restrictions, site permissions, and customer constraints close to flight time."}, {"id": "weather_minimums_confirmation", "label": "Confirm weather minimums", "category": "weather", "checked": false, "status": "operator_confirmation_required", "source": "weather", "note": "Confirm launch-time weather and operator minimums, including wind, gusts, visibility, precipitation, and temperature, before flight. Current planning weather: source offline Open-Meteo-shaped sample; timestamp 2026-09-11T16:00:00Z; wind 4.5 m/s; gust 5.9 m/s."}, {"id": "battery_reserve_confirmation", "label": "Confirm battery reserve", "category": "energy", "checked": false, "status": "operator_confirmation_required", "source": "vehicle.battery_reserve_Wh", "note": "Confirm launch battery, reserve policy, payload draw, and abort reserve meet operator requirements before release (required reserve 700.0 Wh; planned final battery 832.1 Wh; modeled reserve margin 132.1 Wh)."}], "notice": "Checklist items support operator review only. Checking an item is not legal approval, LAANC, a waiver, or operational clearance."}, "artifacts": [{"id": "scenario_yaml", "label": "Scenario YAML", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml", "bundle_path": "scenario.yaml", "present": true, "artifact_format": "yaml", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "dd3aa6749c6aee97d6e60dfaef6954677e660aa6bb93d9ea75eb843f241f308c", "bundle_sha256": "dd3aa6749c6aee97d6e60dfaef6954677e660aa6bb93d9ea75eb843f241f308c", "source_modified_utc": "2026-09-13T19:48:39Z", "bundle_modified_utc": "2026-09-13T19:48:39Z", "source_size_bytes": 6905, "bundle_size_bytes": 6905, "stale_against_scenario": false}}, {"id": "plan_json", "label": "Plan JSON", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\plan.json", "bundle_path": "plan.json", "present": true, "artifact_format": "json", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8", "bundle_sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8", "source_modified_utc": "2026-09-14T04:18:50Z", "bundle_modified_utc": "2026-09-14T04:18:50Z", "source_size_bytes": 2542, "bundle_size_bytes": 2542, "stale_against_scenario": false}}, {"id": "constraint_audit_markdown", "label": "Primary constraint-audit report", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\inspection_constraint_audit.md", "bundle_path": "inspection_constraint_audit.md", "present": true, "artifact_format": "markdown", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "b0719496f50c91b7e048a9a18ee19e32ea5f969cfd09a2305d91cf5834c80948", "bundle_sha256": "b0719496f50c91b7e048a9a18ee19e32ea5f969cfd09a2305d91cf5834c80948", "source_modified_utc": "2026-09-14T04:18:48Z", "bundle_modified_utc": "2026-09-14T04:18:48Z", "source_size_bytes": 17222, "bundle_size_bytes": 17222, "stale_against_scenario": false}}, {"id": "constraint_audit_json", "label": "Constraint audit JSON", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\inspection_constraint_audit.json", "bundle_path": "inspection_constraint_audit.json", "present": true, "artifact_format": "json", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "919f4020b6789956d7bf18a0f5485d0e498e8c51dd2dfa65b1de8ab38ced0274", "bundle_sha256": "919f4020b6789956d7bf18a0f5485d0e498e8c51dd2dfa65b1de8ab38ced0274", "source_modified_utc": "2026-09-14T04:18:48Z", "bundle_modified_utc": "2026-09-14T04:18:48Z", "source_size_bytes": 51029, "bundle_size_bytes": 51029, "stale_against_scenario": false}}, {"id": "regulatory_readiness_json", "label": "Regulatory readiness JSON", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\regulatory_readiness_report.json", "bundle_path": "regulatory_readiness_report.json", "present": true, "artifact_format": "json", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "a83de4f37add9116f01973e843dc957579f88463e7bb29755c53c88550161119", "bundle_sha256": "a83de4f37add9116f01973e843dc957579f88463e7bb29755c53c88550161119", "source_modified_utc": "2026-09-14T04:18:48Z", "bundle_modified_utc": "2026-09-14T04:18:48Z", "source_size_bytes": 11230, "bundle_size_bytes": 11230, "stale_against_scenario": false}}, {"id": "regulatory_readiness_markdown", "label": "Regulatory readiness report", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\regulatory_readiness_report.md", "bundle_path": "regulatory_readiness_report.md", "present": true, "artifact_format": "markdown", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "3dc309b5016b06e81a375c14d98c7e6504ee353c83b608e15748fb37a8da3fe4", "bundle_sha256": "3dc309b5016b06e81a375c14d98c7e6504ee353c83b608e15748fb37a8da3fe4", "source_modified_utc": "2026-09-14T04:18:48Z", "bundle_modified_utc": "2026-09-14T04:18:48Z", "source_size_bytes": 5953, "bundle_size_bytes": 5953, "stale_against_scenario": false}}, {"id": "what_if_plan_markdown", "label": "What-if planning report", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\what_if_plan.md", "bundle_path": "what_if_plan.md", "present": true, "artifact_format": "markdown", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "163f7e2475d12eed2e8c8698d5ef1f13fcb7392a75a37fa9d5731cff05dd8685", "bundle_sha256": "163f7e2475d12eed2e8c8698d5ef1f13fcb7392a75a37fa9d5731cff05dd8685", "source_modified_utc": "2026-09-14T04:18:49Z", "bundle_modified_utc": "2026-09-14T04:18:49Z", "source_size_bytes": 2791, "bundle_size_bytes": 2791, "stale_against_scenario": false}}, {"id": "what_if_plan_json", "label": "What-if planning JSON", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\what_if_plan.json", "bundle_path": "what_if_plan.json", "present": true, "artifact_format": "json", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "03e9abda42d20b469093fa8c1a90565323640556d1ad73de8005213031ffbc61", "bundle_sha256": "03e9abda42d20b469093fa8c1a90565323640556d1ad73de8005213031ffbc61", "source_modified_utc": "2026-09-14T04:18:49Z", "bundle_modified_utc": "2026-09-14T04:18:49Z", "source_size_bytes": 63529, "bundle_size_bytes": 63529, "stale_against_scenario": false}}, {"id": "score_breakdown", "label": "Score breakdown", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\score.json", "bundle_path": "score.json", "present": true, "artifact_format": "json", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "e3cb2a7098d4fe8716cd7fcadab220bd74b4f525b5f645b5ff0f2231548e1d10", "bundle_sha256": "e3cb2a7098d4fe8716cd7fcadab220bd74b4f525b5f645b5ff0f2231548e1d10", "source_modified_utc": "2026-09-14T04:18:50Z", "bundle_modified_utc": "2026-09-14T04:18:50Z", "source_size_bytes": 1119, "bundle_size_bytes": 1119, "stale_against_scenario": false}}, {"id": "flight_path_plot", "label": "Flight path plot", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\flight_path.png", "bundle_path": "flight_path.png", "present": true, "artifact_format": "png", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "3fe518d198cfb992ac5cf0cc4d2dc652a3caf56cabf725b78f477aa17cf1e77f", "bundle_sha256": "3fe518d198cfb992ac5cf0cc4d2dc652a3caf56cabf725b78f477aa17cf1e77f", "source_modified_utc": "2026-09-14T04:18:50Z", "bundle_modified_utc": "2026-09-14T04:18:50Z", "source_size_bytes": 57053, "bundle_size_bytes": 57053, "stale_against_scenario": false}}, {"id": "robustness_summary", "label": "Robustness summary", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\robustness.json", "bundle_path": "robustness.json", "present": true, "artifact_format": "json", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "9a1984b6ec530bf6836eb5facfed37ff102d5c19ccf8cf1128c0e6a4020dd82a", "bundle_sha256": "9a1984b6ec530bf6836eb5facfed37ff102d5c19ccf8cf1128c0e6a4020dd82a", "source_modified_utc": "2026-09-14T04:18:50Z", "bundle_modified_utc": "2026-09-14T04:18:50Z", "source_size_bytes": 295, "bundle_size_bytes": 295, "stale_against_scenario": false}}, {"id": "go_no_go_memo", "label": "Plain-English go/no-go memo", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\operator_memo.md", "bundle_path": "operator_memo.md", "present": true, "artifact_format": "markdown", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "0a01dd2eccd98f400c243dbf18e62e193bc1ea0142a97124be084bcf49d80570", "bundle_sha256": "0a01dd2eccd98f400c243dbf18e62e193bc1ea0142a97124be084bcf49d80570", "source_modified_utc": "2026-09-14T04:18:48Z", "bundle_modified_utc": "2026-09-14T04:18:48Z", "source_size_bytes": 2127, "bundle_size_bytes": 2127, "stale_against_scenario": false}}, {"id": "weather_snapshot", "label": "Weather snapshot", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\weather.json", "bundle_path": "weather.json", "present": true, "artifact_format": "json", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "7c005ca7f585d6dde21e595aa2ce5c8c1a9968fdec8b3b3df86675c1ace0c027", "bundle_sha256": "7c005ca7f585d6dde21e595aa2ce5c8c1a9968fdec8b3b3df86675c1ace0c027", "source_modified_utc": "2026-09-14T04:18:50Z", "bundle_modified_utc": "2026-09-14T04:18:50Z", "source_size_bytes": 623, "bundle_size_bytes": 623, "stale_against_scenario": false}}, {"id": "autopilot_mission_csv", "label": "Autopilot mission CSV", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\autopilot_mission.csv", "bundle_path": "autopilot_mission.csv", "present": true, "artifact_format": "csv", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "9189cd93204ddb505dba7b135a9bed0c81b745e8adfcb05d12ea9535bc46bd29", "bundle_sha256": "9189cd93204ddb505dba7b135a9bed0c81b745e8adfcb05d12ea9535bc46bd29", "source_modified_utc": "2026-09-14T04:18:50Z", "bundle_modified_utc": "2026-09-14T04:18:50Z", "source_size_bytes": 2086, "bundle_size_bytes": 2086, "stale_against_scenario": false}}, {"id": "mission_review_kml", "label": "Mission review KML", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\mission_review.kml", "bundle_path": "mission_review.kml", "present": true, "artifact_format": "kml", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "6ac079f4b22f49eb17330ee67df7bcdd425f694eebe4262c0e8c50d126865179", "bundle_sha256": "6ac079f4b22f49eb17330ee67df7bcdd425f694eebe4262c0e8c50d126865179", "source_modified_utc": "2026-09-14T04:18:50Z", "bundle_modified_utc": "2026-09-14T04:18:50Z", "source_size_bytes": 3394, "bundle_size_bytes": 3394, "stale_against_scenario": false}}, {"id": "flight_planning_exports_manifest", "label": "Flight-planning exports manifest", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\flight_planning_exports.json", "bundle_path": "flight_planning_exports.json", "present": true, "artifact_format": "json", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "d0a6a63526594d75c219b912ef3280983bfe79c7c604d4ff19457101f15ba0d3", "bundle_sha256": "d0a6a63526594d75c219b912ef3280983bfe79c7c604d4ff19457101f15ba0d3", "source_modified_utc": "2026-09-14T04:18:50Z", "bundle_modified_utc": "2026-09-14T04:18:50Z", "source_size_bytes": 804, "bundle_size_bytes": 804, "stale_against_scenario": false}}, {"id": "flight_planning_exports_readme", "label": "Flight-planning exports README", "source": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\flight_planning_exports.md", "bundle_path": "flight_planning_exports.md", "present": true, "artifact_format": "markdown", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label", "freshness": {"source_sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672", "bundle_sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672", "source_modified_utc": "2026-09-14T04:18:50Z", "bundle_modified_utc": "2026-09-14T04:18:50Z", "source_size_bytes": 291, "bundle_size_bytes": 291, "stale_against_scenario": false}}], "generated_artifacts": [{"id": "operator_review_ui", "label": "Lightweight operator review web UI", "bundle_path": "operator_review_ui.html", "present": true, "generated": true, "artifact_format": "html", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label"}, {"id": "operator_dashboard", "label": "Operator evidence dashboard", "bundle_path": "operator_dashboard.md", "present": true, "generated": true, "artifact_format": "markdown", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label"}, {"id": "bundle_summary", "label": "Evidence bundle summary", "bundle_path": "evidence_bundle_summary.md", "present": true, "generated": true, "artifact_format": "markdown", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label"}, {"id": "artifact_index", "label": "Evidence bundle artifact index", "bundle_path": "artifact_index.md", "present": true, "generated": true, "artifact_format": "markdown", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label"}, {"id": "manifest_json", "label": "Evidence bundle manifest", "bundle_path": "manifest.json", "present": true, "generated": true, "artifact_format": "json", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label"}, {"id": "readme", "label": "Evidence bundle README", "bundle_path": "README.md", "present": true, "generated": true, "artifact_format": "markdown", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label"}, {"id": "checksum_manifest", "label": "Evidence bundle checksum manifest", "bundle_path": "checksum_manifest.json", "present": true, "generated": true, "artifact_format": "json", "opens_outside_ui": true, "ui_link_behavior": "link_when_present_else_unavailable_label"}], "checksum_manifest": {"algorithm": "sha256", "bundle_path": "checksum_manifest.json", "excludes": ["checksum_manifest.json"]}, "documentation_only_notice": "This bundle supports operator review and audit evidence only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance."}</script>
 <script>
 (function () {
   const manifestUrl = "manifest.json";
@@ -386,6 +820,51 @@
     { ids: ["flight_path_plot"], label: "flight_path.png" },
     { ids: ["autopilot_mission_csv"], label: "autopilot_mission.csv" },
     { ids: ["mission_review_kml"], label: "mission_review.kml" },
+  ];
+  const rawEvidenceGroups = [
+    {
+      title: "Raw Markdown",
+      definitions: [
+        { ids: ["operator_dashboard"], label: "operator_dashboard.md" },
+        { ids: ["constraint_audit_markdown"], label: "inspection_constraint_audit.md" },
+        { ids: ["what_if_plan_markdown"], label: "what_if_plan.md" },
+        { ids: ["regulatory_readiness_markdown"], label: "regulatory_readiness_report.md" },
+        { ids: ["bundle_summary"], label: "evidence_bundle_summary.md" },
+        { ids: ["artifact_index"], label: "artifact_index.md" },
+      ],
+    },
+    {
+      title: "JSON Evidence",
+      definitions: [
+        { ids: ["plan_json"], label: "plan.json" },
+        { ids: ["constraint_audit_json"], label: "inspection_constraint_audit.json" },
+        { ids: ["what_if_plan_json"], label: "what_if_plan.json" },
+        { ids: ["regulatory_readiness_json"], label: "regulatory_readiness_report.json" },
+        { ids: ["score_breakdown"], label: "score_breakdown.json" },
+        { ids: ["weather_snapshot"], label: "weather_snapshot.json" },
+        { ids: ["robustness_summary"], label: "robustness_summary.json" },
+      ],
+    },
+    {
+      title: "CSV / KML",
+      definitions: [
+        { ids: ["autopilot_mission_csv"], label: "autopilot_mission.csv" },
+        { ids: ["mission_review_kml"], label: "mission_review.kml" },
+      ],
+    },
+    {
+      title: "Plots",
+      definitions: [
+        { ids: ["flight_path_plot"], label: "flight_path.png" },
+      ],
+    },
+    {
+      title: "Manifest / checksum",
+      definitions: [
+        { ids: ["manifest_json"], label: "manifest.json" },
+        { ids: ["checksum_manifest"], label: "checksum_manifest.json" },
+      ],
+    },
   ];
 
   function objectOr(value) {
@@ -408,6 +887,11 @@
     const rendered = text(value, fallback || "not provided");
     const max = limit || 170;
     return rendered.length <= max ? rendered : rendered.slice(0, max - 1).trimEnd() + "...";
+  }
+
+  function slug(value) {
+    const rendered = text(value, "section").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return rendered || "section";
   }
 
   function numberText(value, unit) {
@@ -438,13 +922,13 @@
 
   function statusClass(value) {
     const normalized = text(value, "unknown").toLowerCase().replace(/[ -]/g, "_");
-    if (["go", "pass", "clear", "ready", "ready_for_review", "configured_source", "low"].includes(normalized)) {
+    if (["go", "pass", "clear", "ready", "ready_for_review", "configured_source", "documented", "fresh", "live", "low"].includes(normalized)) {
       return "status-good";
     }
-    if (["review", "review_required", "operator_action_required", "warning", "fallback_used", "not_run", "medium", "moderate"].includes(normalized)) {
+    if (["review", "review_required", "operator_action_required", "warning", "fallback_used", "packaged", "pending_operator_confirmation", "sample", "stale", "verify_required", "not_run", "medium", "moderate"].includes(normalized)) {
       return "status-review";
     }
-    if (["modify", "fail", "failed", "elevated_risk", "high"].includes(normalized)) {
+    if (["modify", "fail", "failed", "elevated_risk", "expired", "missing", "high"].includes(normalized)) {
       return "status-bad";
     }
     return "status-neutral";
@@ -501,6 +985,27 @@
     };
   }
 
+  function verdictDerivation(verdict, missionStatus, regulatoryState, missingCount, warningCount) {
+    let explanation = "";
+    if (missionStatus.replace(/ /g, "_") !== "GO") {
+      explanation = "The verdict is MODIFY because the modeled mission status is not GO.";
+    } else if (regulatoryState.replace(/ /g, "_") === "OPERATOR_ACTION_REQUIRED" || missingCount > 0 || warningCount > 0) {
+      explanation = "The verdict is REVIEW REQUIRED because modeled feasibility is GO but regulatory readiness, missing evidence, or bundle warnings still need operator attention.";
+    } else {
+      explanation = "The verdict is GO because modeled mission status is GO, regulatory readiness does not require action, and no missing evidence or bundle warnings are recorded.";
+    }
+    return {
+      label: verdict.label,
+      explanation,
+      inputs: [
+        { signal: "Modeled mission status", value: missionStatus, effect: "MODIFY if not GO." },
+        { signal: "Regulatory readiness", value: regulatoryState, effect: "REVIEW REQUIRED when OPERATOR_ACTION_REQUIRED." },
+        { signal: "Missing evidence", value: missingCount + " item(s)", effect: "REVIEW REQUIRED when greater than 0." },
+        { signal: "Bundle warnings", value: warningCount + " warning(s)", effect: "REVIEW REQUIRED when greater than 0." },
+      ],
+    };
+  }
+
   function artifactEntry(manifest, ids) {
     const entries = arrayOr(manifest.artifacts).concat(arrayOr(manifest.generated_artifacts));
     for (const id of ids) {
@@ -512,17 +1017,32 @@
     return null;
   }
 
+  function artifactKind(label) {
+    const match = String(label).match(/\.([A-Za-z0-9]+)$/);
+    return match ? match[1].toUpperCase() : "FILE";
+  }
+
+  function artifactLabelNode(label, unavailable) {
+    const name = document.createElement("span");
+    name.textContent = unavailable ? label + " unavailable" : label;
+    const tag = document.createElement("small");
+    tag.textContent = unavailable ? "Missing" : artifactKind(label);
+    return [name, tag];
+  }
+
   function artifactNode(manifest, ids, label) {
     const entry = artifactEntry(manifest, ids);
     if (entry && entry.present && entry.bundle_path) {
       const link = document.createElement("a");
+      link.className = "artifact-link";
       link.href = String(entry.bundle_path).replace(/\\/g, "/");
-      link.textContent = label;
+      link.setAttribute("aria-label", "Open " + label);
+      link.append(...artifactLabelNode(label, false));
       return link;
     }
     const span = document.createElement("span");
-    span.className = "unavailable";
-    span.textContent = label + " unavailable";
+    span.className = "artifact-link artifact-unavailable unavailable";
+    span.append(...artifactLabelNode(label, true));
     return span;
   }
 
@@ -578,11 +1098,12 @@
   function section(title, summary, bodyNodes, linkNodes, id) {
     const article = document.createElement("article");
     article.className = "review-section";
-    if (id) {
-      article.id = id;
-    }
+    article.id = id || slug(title);
+    article.tabIndex = 0;
     const heading = document.createElement("h2");
+    heading.id = article.id + "-heading";
     heading.textContent = title;
+    article.setAttribute("aria-labelledby", heading.id);
     const copy = document.createElement("p");
     copy.textContent = summary;
     article.append(heading, copy, ...bodyNodes);
@@ -602,15 +1123,123 @@
     return grid;
   }
 
+  function assumptionsNode(trust) {
+    const assumptions = arrayOr(objectOr(trust).model_assumptions_summary).slice(0, 3);
+    if (!assumptions.length) {
+      const note = document.createElement("p");
+      note.className = "compact-note";
+      note.textContent = "No model assumptions were captured. Operator should verify scenario inputs in the constraint audit.";
+      return note;
+    }
+    const list = document.createElement("ul");
+    list.className = "assumption-list";
+    assumptions.forEach((item) => {
+      const source = objectOr(item);
+      const li = document.createElement("li");
+      const label = document.createElement("strong");
+      label.textContent = text(source.label || source.id, "Model assumption");
+      const assumption = document.createElement("span");
+      assumption.textContent = shortText(source.assumption, "not provided", 120);
+      const note = document.createElement("em");
+      note.textContent = shortText(source.operator_review_note, "Operator should verify this assumption before release.", 110);
+      li.append(label, assumption, note);
+      list.appendChild(li);
+    });
+    return list;
+  }
+
+  function artifactFreshnessNode(manifest) {
+    const priority = {
+      scenario_yaml: 0,
+      constraint_audit_markdown: 1,
+      regulatory_readiness_markdown: 2,
+      what_if_plan_markdown: 3,
+      weather_snapshot: 4,
+      autopilot_mission_csv: 5,
+      mission_review_kml: 6,
+    };
+    const entries = arrayOr(manifest.artifacts)
+      .slice()
+      .sort((a, b) => (priority[text(a && a.id, "")] ?? 99) - (priority[text(b && b.id, "")] ?? 99))
+      .slice(0, 5);
+    if (!entries.length) {
+      const note = document.createElement("p");
+      note.className = "compact-note";
+      note.textContent = "No artifact freshness metadata captured.";
+      return note;
+    }
+    const list = document.createElement("div");
+    list.className = "freshness-list";
+    entries.forEach((entry) => {
+      const source = objectOr(entry);
+      const freshness = objectOr(source.freshness);
+      const stale = Boolean(freshness.stale_against_scenario);
+      const status = !source.present ? "MISSING" : stale ? "STALE" : "CURRENT";
+      const row = document.createElement("div");
+      const label = document.createElement("span");
+      label.textContent = text(source.label || source.id, "Artifact");
+      const statusNode = document.createElement("strong");
+      statusNode.className = statusClass(status);
+      statusNode.textContent = status;
+      const sourceTime = document.createElement("small");
+      sourceTime.textContent = "source " + text(freshness.source_modified_utc);
+      const bundleTime = document.createElement("small");
+      bundleTime.textContent = "bundle " + text(freshness.bundle_modified_utc);
+      row.append(label, statusNode, sourceTime, bundleTime);
+      list.appendChild(row);
+    });
+    return list;
+  }
+
   function openFirstNode(manifest) {
     const wrapper = document.createElement("div");
     wrapper.className = "open-first";
     wrapper.setAttribute("data-open-first", "");
+    wrapper.setAttribute("aria-label", "First artifact to open");
     const label = document.createElement("span");
-    label.textContent = "Open first";
+    label.textContent = "Open first: first artifact to open";
     const note = document.createElement("p");
-    note.textContent = "Start here for the verdict, next action, and 30-second mission read.";
+    note.textContent = "Start here for the verdict, next action, and 30-second mission read. This is the primary review surface before opening supporting artifacts.";
     wrapper.append(label, artifactNode(manifest, ["operator_dashboard"], "operator_dashboard.md"), note);
+    return wrapper;
+  }
+
+  function compatibilityNode(manifest) {
+    const compatibility = objectOr(manifest.ui_compatibility);
+    const artifactAccess = objectOr(compatibility.artifact_access);
+    const requiredFields = arrayOr(compatibility.required_top_level_fields);
+    const fallbackFields = objectOr(compatibility.optional_field_fallbacks);
+    const expectedFormats = arrayOr(artifactAccess.expected_formats);
+    const wrapper = document.createElement("div");
+    wrapper.setAttribute("data-ui-compatibility", "");
+    const grid = compactGrid([
+      { label: "Manifest version", value: manifest.manifest_version || compatibility.manifest_version, className: statusClass("documented") },
+      { label: "UI schema", value: compatibility.schema_version },
+      { label: "Required UI fields", value: requiredFields.length + " expected" },
+      { label: "Fallback fields", value: Object.keys(fallbackFields).length + " documented" },
+    ]);
+    const fallbackNote = document.createElement("p");
+    fallbackNote.className = "compact-note";
+    fallbackNote.textContent = text(compatibility.optional_field_fallback_policy, "Optional UI fields use explicit fallback text.");
+    const accessNote = document.createElement("p");
+    accessNote.className = "compact-note";
+    accessNote.textContent = "Outside-UI access: " + (expectedFormats.length ? expectedFormats.join(", ") : "Markdown, JSON, CSV, KML, PNG, manifest, checksum, dashboard") + ".";
+    const unavailableNote = document.createElement("p");
+    unavailableNote.className = "compact-note";
+    unavailableNote.textContent = text(artifactAccess.unavailable_artifact_policy, "Unavailable artifacts render as non-link unavailable labels.");
+    wrapper.append(grid, fallbackNote, accessNote, unavailableNote);
+    return wrapper;
+  }
+
+  function rawEvidenceGroupNode(manifest, group) {
+    const wrapper = document.createElement("section");
+    wrapper.className = "quick-link-group";
+    const heading = document.createElement("h3");
+    heading.textContent = group.title;
+    const links = document.createElement("div");
+    links.className = "quick-links";
+    links.append(...group.definitions.map((definition) => artifactNode(manifest, definition.ids, definition.label)));
+    wrapper.append(heading, links);
     return wrapper;
   }
 
@@ -627,6 +1256,19 @@
     });
   }
 
+  function renderRawEvidenceLinks(manifest) {
+    const groups = rawEvidenceGroups.map((group) => rawEvidenceGroupNode(manifest, group));
+    document.querySelectorAll("[data-raw-evidence-links]").forEach((node) => {
+      replaceChildren(node, groups.map((group) => group.cloneNode(true)));
+    });
+  }
+
+  function renderCompatibilityPanels(manifest) {
+    document.querySelectorAll("[data-ui-compatibility]").forEach((node) => {
+      node.replaceWith(compatibilityNode(manifest));
+    });
+  }
+
   function manifestSummary(manifest) {
     const audit = objectOr(manifest.constraint_audit);
     const readiness = objectOr(manifest.regulatory_readiness);
@@ -634,6 +1276,11 @@
     const regulatoryCompleteness = objectOr(manifest.regulatory_documentation_completeness);
     const trust = objectOr(manifest.trust_defensibility);
     const weather = objectOr(trust.weather_fallback_status);
+    const weatherReadiness = objectOr(manifest.weather_evidence_readiness || trust.weather_evidence_readiness || weather);
+    const regulatoryProvenance = objectOr(manifest.regulatory_evidence_provenance || trust.regulatory_evidence_provenance);
+    const checksumReadiness = objectOr(manifest.checksum_evidence_readiness);
+    const freshness = objectOr(manifest.freshness);
+    const compatibility = objectOr(manifest.ui_compatibility);
     const robustness = objectOr(trust.uncertainty_robustness_status);
     const evidenceWarnings = objectOr(trust.evidence_warning_summary);
     const missingEvidence = arrayOr(manifest.missing_evidence);
@@ -650,8 +1297,14 @@
     const topSummary = marginSummary(audit.top_limiting_constraint);
     const evidenceCompleteness = countedScore(completeness, "artifacts");
     const regulatoryDocCompleteness = countedScore(regulatoryCompleteness, "fields");
-    const weatherStatus = statusLabel(weather.status);
-    const weatherSummary = text(weather.summary, "No weather fallback status captured.");
+    const weatherStatus = statusLabel(weatherReadiness.status || weather.status);
+    const weatherSummary = text(weatherReadiness.summary || weather.summary, "No weather evidence status captured.");
+    const weatherDetail = [
+      "source " + text(weatherReadiness.source, "not provided"),
+      "timestamp " + text(weatherReadiness.timestamp_utc, "not provided"),
+      "freshness " + text(weatherReadiness.freshness_status, "not provided"),
+      "action " + text(weatherReadiness.operator_action, "Confirm current weather before release"),
+    ].join("; ");
     const robustnessStatus = statusLabel(robustness.status);
     const robustnessSummary = text(robustness.summary, "No robustness / uncertainty status captured.");
     const evidenceWarningSummary = text(
@@ -665,6 +1318,11 @@
       regulatoryCompleteness,
       trust,
       weather,
+      weatherReadiness,
+      regulatoryProvenance,
+      checksumReadiness,
+      freshness,
+      compatibility,
       robustness,
       evidenceWarnings,
       missingEvidence,
@@ -683,6 +1341,7 @@
       regulatoryDocCompleteness,
       weatherStatus,
       weatherSummary,
+      weatherDetail,
       robustnessStatus,
       robustnessSummary,
       evidenceWarningSummary,
@@ -692,13 +1351,13 @@
   function renderSignals(summary) {
     const staleMissingMismatchCount = summary.staleCount + summary.missingArtifactCount + summary.mismatchCount;
     const cards = [
-      statCard("Modeled mission status", summary.missionStatus, "", statusClass(summary.missionStatus)),
-      statCard("Mission risk", summary.missionRisk, "", statusClass(summary.missionRisk)),
-      statCard("Top limiting constraint", summary.topSummary),
-      statCard("Regulatory readiness", summary.regulatoryState, "", statusClass(summary.regulatoryState)),
+      statCard("Modeled mission status", summary.missionStatus, "", "decision-signal " + statusClass(summary.missionStatus)),
+      statCard("Mission risk", summary.missionRisk, "", "decision-signal " + statusClass(summary.missionRisk)),
+      statCard("Top limiting constraint", summary.topSummary, "", "decision-signal signal-top"),
+      statCard("Regulatory readiness", summary.regulatoryState, "", "decision-signal " + statusClass(summary.regulatoryState)),
       statCard("Evidence completeness", summary.evidenceCompleteness, "Expected bundle artifacts", "status-neutral"),
       statCard("Regulatory documentation", summary.regulatoryDocCompleteness, "Documentation-only evidence fields", "status-neutral documentation-signal"),
-      statCard("Weather fallback", summary.weatherStatus, summary.weatherSummary, statusClass(summary.weatherStatus)),
+      statCard("Weather evidence", summary.weatherStatus, shortText(summary.weatherDetail, "No weather evidence status captured.", 150), statusClass(summary.weatherStatus)),
       statCard("Robustness / uncertainty", summary.robustnessStatus, summary.robustnessSummary, statusClass(summary.robustnessStatus)),
       statCard("Missing evidence count", String(summary.missingCount), "Artifacts or documentation fields requiring operator attention", "warning-signal " + statusClass(summary.missingCount === 0 ? "clear" : "review_required")),
       statCard("Stale / missing / mismatched evidence", String(staleMissingMismatchCount), summary.staleCount + " stale, " + summary.missingArtifactCount + " missing, " + summary.mismatchCount + " mismatched", "warning-signal " + statusClass(staleMissingMismatchCount === 0 ? "clear" : "review_required")),
@@ -712,6 +1371,9 @@
     const regulatoryStatus = objectOr(manifest.regulatory_evidence_status);
     const approvalChecklist = objectOr(manifest.approval_checklist);
     const sampleNote = objectOr(summary.trust.sample_data_demo_note);
+    const weatherReadiness = objectOr(summary.weatherReadiness);
+    const regulatoryProvenance = objectOr(summary.regulatoryProvenance);
+    const checksumReadiness = objectOr(summary.checksumReadiness);
     const missingRegulatory = arrayOr(regulatoryStatus.missing);
     const pendingCount = intValue(approvalChecklist.pending_count, intValue(approvalChecklist.item_count, 0));
     const staleMissingMismatchCount = summary.staleCount + summary.missingArtifactCount + summary.mismatchCount;
@@ -753,6 +1415,31 @@
           { label: "Missing fields", value: missingRegulatory.length },
         ]),
       ], [artifactNode(manifest, ["regulatory_readiness_markdown"], "Regulatory report")], "regulatory-readiness"),
+      section("Weather / Live Evidence", "Source, freshness, provenance, and operator-action hooks for operational evidence review.", [
+        (() => {
+          const grid = compactGrid([
+            { label: "Weather status", value: statusLabel(weatherReadiness.status), className: statusClass(weatherReadiness.status) },
+            { label: "Weather source", value: weatherReadiness.source },
+            { label: "Weather timestamp", value: weatherReadiness.timestamp_utc },
+            { label: "Weather freshness", value: weatherReadiness.freshness_status },
+            { label: "Weather action", value: shortText(weatherReadiness.operator_action, "Confirm current weather before release.", 130) },
+            { label: "Regulatory provenance", value: statusLabel(regulatoryProvenance.status), className: statusClass(regulatoryProvenance.status) },
+            { label: "Authority", value: regulatoryProvenance.authority },
+            { label: "Date checked", value: regulatoryProvenance.date_checked_utc },
+            { label: "Expiration", value: regulatoryProvenance.expiration_date },
+            { label: "Operator confirmation", value: regulatoryProvenance.operator_confirmation_status },
+            { label: "Checksum evidence", value: statusLabel(checksumReadiness.status), className: statusClass(checksumReadiness.status) },
+          ]);
+          grid.classList.add("evidence-readiness-grid");
+          return grid;
+        })(),
+        (() => {
+          const note = document.createElement("p");
+          note.className = "compact-note";
+          note.textContent = "Live weather and regulatory hooks are documentation-only unless verified outside ORBITAL.";
+          return note;
+        })(),
+      ], [artifactNode(manifest, ["weather_snapshot"], "Weather snapshot"), artifactNode(manifest, ["regulatory_readiness_markdown"], "Regulatory report")], "live-evidence-readiness"),
       section("Evidence Completeness", "Expected bundle artifacts and missing evidence counts.", [
         compactGrid([
           { label: "Artifact coverage", value: summary.evidenceCompleteness },
@@ -760,9 +1447,9 @@
           { label: "Bundle warnings", value: summary.warningCount },
         ]),
       ], [artifactNode(manifest, ["manifest_json"], "Manifest"), artifactNode(manifest, ["checksum_manifest"], "Checksums")], "evidence-completeness"),
-      section("Trust / Defensibility", "Weather fallback, uncertainty, and model-context signals for audit review.", [
+      section("Trust / Defensibility", "Weather evidence, uncertainty, and model-context signals for audit review.", [
         compactGrid([
-          { label: "Weather fallback", value: summary.weatherStatus, className: statusClass(summary.weatherStatus) },
+          { label: "Weather evidence", value: summary.weatherStatus, className: statusClass(summary.weatherStatus) },
           { label: "Robustness", value: summary.robustnessStatus, className: statusClass(summary.robustnessStatus) },
           { label: "Weather note", value: shortText(summary.weatherSummary) },
           { label: "Robustness note", value: shortText(summary.robustnessSummary) },
@@ -797,6 +1484,32 @@
     document.querySelectorAll("[data-review-sections]").forEach((node) => replaceChildren(node, sections.map((item) => item.cloneNode(true))));
   }
 
+  function renderTrustPanels(manifest, summary) {
+    const derivation = verdictDerivation(summary.verdict, summary.missionStatus, summary.regulatoryState, summary.missingCount, summary.warningCount);
+    document.querySelectorAll("[data-why-verdict]").forEach((node) => {
+      const heading = document.createElement("h2");
+      heading.textContent = "Why This Verdict?";
+      const explanation = document.createElement("p");
+      explanation.textContent = derivation.explanation;
+      const grid = compactGrid(derivation.inputs.map((item) => ({
+        label: item.signal,
+        value: item.value + " - " + item.effect,
+        className: statusClass(item.value),
+      })));
+      replaceChildren(node, [heading, explanation, grid]);
+    });
+    document.querySelectorAll("[data-model-assumptions]").forEach((node) => {
+      const heading = document.createElement("h2");
+      heading.textContent = "Model Assumptions";
+      replaceChildren(node, [heading, assumptionsNode(summary.trust)]);
+    });
+    document.querySelectorAll("[data-artifact-freshness]").forEach((node) => {
+      const heading = document.createElement("h2");
+      heading.textContent = "Artifact Freshness";
+      replaceChildren(node, [heading, artifactFreshnessNode(manifest)]);
+    });
+  }
+
   function renderManifest(manifest, statusMessage, statusKind) {
     if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) {
       throw new Error("manifest JSON is not an object");
@@ -811,10 +1524,16 @@
     });
     setText("[data-field='verdict-meaning']", summary.verdict.meaning);
     setText("[data-field='next-action']", summary.verdict.next_action);
+    setText("[data-field='manifest-version']", text(manifest.manifest_version || manifest.ui_manifest_version || summary.compatibility.manifest_version, "legacy / not provided"));
+    setText("[data-field='generated-timestamp']", text(summary.freshness.generated_timestamp_utc));
+    setText("[data-field='checksum-status']", statusLabel(summary.checksumReadiness.status));
     renderSignals(summary);
     renderArtifactLinks(manifest);
     renderOpenFirst(manifest);
+    renderRawEvidenceLinks(manifest);
+    renderCompatibilityPanels(manifest);
     renderReviewSections(manifest, summary);
+    renderTrustPanels(manifest, summary);
     setStatusText(statusMessage, statusKind);
   }
 
