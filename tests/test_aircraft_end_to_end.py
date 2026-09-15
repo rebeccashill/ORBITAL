@@ -99,7 +99,7 @@ def test_aircraft_pipeline_runs_end_to_end():
         assert worst_hard.min_margin == worst_hard.min_margin  # not NaN
 
 
-def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
+def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path, monkeypatch):
     cfg = _load_yaml(EXAMPLES_DIR / "bvlos_powerline_inspection_demo.yaml")
     assert cfg["scenario"]["type"].lower() == "aircraft"
     cfg["robustness"]["cases"] = 0
@@ -426,6 +426,19 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert FLIGHT_PLANNING_EXPORT_NOTICE in (tmp_path / "mission_review.kml").read_text(
         encoding="utf-8"
     )
+    with monkeypatch.context() as m:
+        m.chdir(tmp_path)
+        relative_exports = export_flight_planning_artifacts(
+            result.plan,
+            tmp_path / "repo_relative_exports",
+            cfg=cfg,
+        )
+    assert relative_exports["artifacts"]["autopilot_mission_csv"]["path"] == (
+        "repo_relative_exports/autopilot_mission.csv"
+    )
+    assert relative_exports["artifacts"]["mission_review_kml"]["path"] == (
+        "repo_relative_exports/mission_review.kml"
+    )
 
     (tmp_path / "plan.json").write_text('{"kind": "aircraft"}\n', encoding="utf-8")
     (tmp_path / "score.json").write_text('{"total_score": 0.0}\n', encoding="utf-8")
@@ -448,10 +461,21 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert evidence["bundle_completeness"]["complete"] is True
     assert evidence["manifest_version"] == 1
     assert evidence["ui_manifest_version"] == 1
+    assert evidence["scenario_path"] == "examples/bvlos_powerline_inspection_demo.yaml"
+    assert evidence["freshness"]["scenario_path"] == evidence["scenario_path"]
+    assert Path(evidence["scenario_path"]).is_absolute() is False
     assert evidence["ui_compatibility"]["schema_version"] == 1
     assert "manifest_version" in evidence["ui_compatibility"]["required_top_level_fields"]
     assert evidence["ui_compatibility"]["artifact_access"]["outside_ui_required"] is True
     assert "dashboard" in evidence["ui_compatibility"]["artifact_access"]["expected_formats"]
+    assert (
+        evidence["ui_compatibility"]["artifact_access"]["primary_dashboard"]
+        == "operator_dashboard.md"
+    )
+    assert (
+        evidence["ui_compatibility"]["artifact_access"]["visual_review_ui"]
+        == "operator_review_ui.html"
+    )
     assert (
         "non-link unavailable labels"
         in evidence["ui_compatibility"]["artifact_access"]["unavailable_artifact_policy"]
@@ -574,6 +598,10 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path):
     assert "ORBITAL Operator Review UI" in operator_review_ui
     assert "Mission Verdict:" in operator_review_ui
     assert "REVIEW REQUIRED" in operator_review_ui
+    assert "30-Second Mission Read" in operator_review_ui
+    assert "Trust status" in operator_review_ui
+    assert "Operator trust review needed" in operator_review_ui
+    assert "Before field release, operator authority stays outside ORBITAL." in (operator_review_ui)
     assert "Review Order" in operator_review_ui
     assert (
         "Verdict -> top constraint -> trust signals -> artifacts -> checksum" in operator_review_ui

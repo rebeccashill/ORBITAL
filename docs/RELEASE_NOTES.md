@@ -1,5 +1,44 @@
 # Release Notes
 
+## v1.0.14 - September 14, 2026
+
+### Changed
+
+- Tightened the BVLOS operator review UI around the 30-second mission read:
+  verdict, top constraint, next action, trust status, and the why-this-verdict
+  explanation are easier to scan before deeper review.
+- Shortened the desktop sidebar, removed large spacing breaks between the
+  mission read, status cards, manifest context, and review sections, and
+  improved the print layout for customer-discovery and archive review.
+- Clarified the boundary between modeled feasibility and operator-required
+  review, including weather evidence, regulatory provenance, checksum
+  readiness, and documentation-only trust signals.
+- Made stale weather and regulatory evidence summaries more understandable for
+  non-engineers by naming the age, review window, source, timestamp, and
+  operator action.
+- Reduced unnecessary generated-output drift where practical by normalizing the
+  recorded Python command and repo-local display paths while preserving
+  generated timestamps, freshness ages, hashes, and checksum evidence.
+- Added manifest metadata that explicitly identifies `operator_dashboard.md` as
+  the open-first artifact and `operator_review_ui.html` as the visual review
+  surface.
+- Expanded tests for the operator review UI layout contract, manifest
+  entrypoints, path normalization, command normalization, and evidence wording.
+- Bumped package and README release metadata to `v1.0.14`.
+
+### Verified
+
+- Regenerated `outputs/bvlos_powerline_inspection/`.
+- Ran `python -m black --check .`.
+- Ran `python -m ruff check .`.
+- Ran `python -m mypy --python-version 3.12 mission_framework`.
+- Ran `python -m pytest` with 100 passing tests.
+- Ran `python run_all.py --fast --no-plots`.
+- Ran `python scripts/focused_secret_scan.py`.
+- Ran `python -m mission_framework.cli bundle-verify outputs\bvlos_powerline_inspection\operator_evidence_bundle`.
+- Ran `python -m mission_framework.cli bundle-review-validate outputs\bvlos_powerline_inspection\operator_evidence_bundle`.
+- Ran `git diff --check`.
+
 ## v1.0.13 - September 13, 2026
 
 ### Changed

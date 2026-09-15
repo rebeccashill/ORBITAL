@@ -3,12 +3,12 @@
   "notice": "Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.",
   "artifacts": {
     "autopilot_mission_csv": {
-      "path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\autopilot_mission.csv",
+      "path": "outputs/bvlos_powerline_inspection/autopilot_mission.csv",
       "rows": 7,
       "present": true
     },
     "mission_review_kml": {
-      "path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\outputs\\bvlos_powerline_inspection\\mission_review.kml",
+      "path": "outputs/bvlos_powerline_inspection/mission_review.kml",
       "coordinates": 7,
       "notice": "Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.",
       "present": true

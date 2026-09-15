@@ -24,10 +24,11 @@ import csv
 import hashlib
 import json
 import math
+import subprocess
 from copy import deepcopy
 from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from shutil import copy2
 from typing import Any, Dict, Iterable, List, Optional
 from xml.sax.saxutils import escape
@@ -414,7 +415,7 @@ def export_kml_flight_review(
     )
     out_path.write_text(kml, encoding="utf-8")
     return {
-        "path": str(out_path),
+        "path": _portable_path_text(out_path),
         "coordinates": len(coordinates),
         "notice": FLIGHT_PLANNING_EXPORT_NOTICE,
     }
@@ -440,7 +441,7 @@ def export_flight_planning_artifacts(
         csv_path = out_dir / "autopilot_mission.csv"
         rows = export_autopilot_mission_csv(plan, csv_path, cfg=cfg)
         artifacts["artifacts"]["autopilot_mission_csv"] = {
-            "path": str(csv_path),
+            "path": _portable_path_text(csv_path),
             "rows": len(rows),
             "present": csv_path.exists(),
         }
@@ -763,15 +764,40 @@ def _weather_evidence_readiness(
             "Operator should verify the source outside ORBITAL."
         )
 
-    if age_hours is None:
-        age_text = "unknown age"
+    age_text = "unknown age" if age_hours is None else f"{age_hours:.1f} hours old"
+    max_age_text = f"{max_age_hours:g}-hour review window"
+    timestamp_text = timestamp or "not provided"
+    if status == "MISSING":
+        summary = (
+            "MISSING: no usable weather evidence timestamp or source was recorded. "
+            "Attach current weather evidence before release review."
+        )
+    elif status == "STALE":
+        summary = (
+            f"STALE: weather evidence is {age_text}, outside the {max_age_text}. "
+            f"Source: {source}; timestamp: {timestamp_text}."
+        )
+    elif status == "SAMPLE":
+        summary = (
+            f"SAMPLE: weather evidence uses sample or offline data from {source}. "
+            f"Replace it with current field weather before operational use. "
+            f"Timestamp: {timestamp_text}."
+        )
+    elif status == "FALLBACK USED":
+        summary = (
+            f"FALLBACK USED: weather evidence came from fallback data from {source}. "
+            f"Verify current field weather before release. Timestamp: {timestamp_text}."
+        )
+    elif status == "LIVE":
+        summary = (
+            f"LIVE: weather evidence timestamp {timestamp_text} is inside the "
+            f"{max_age_text}. Source: {source}."
+        )
     else:
-        age_text = f"{age_hours:.1f} hour(s) old"
-
-    summary = (
-        f"{status}: {mode} weather evidence from {source}, timestamp "
-        f"{timestamp or 'not provided'}, freshness {freshness_status}, {age_text}"
-    )
+        summary = (
+            f"{status}: packaged weather evidence from {source}. Confirm it against "
+            f"launch-time field conditions. Timestamp: {timestamp_text}."
+        )
     return {
         "documentation_only": True,
         "status": status,
@@ -887,6 +913,45 @@ def _regulatory_evidence_provenance(
             "Operator should verify regulatory inputs."
         )
 
+    checked_text = date_checked or "not provided"
+    expiration_text = expiration or "not provided"
+    checked_age_text = (
+        "unknown age" if checked_age_hours is None else f"{checked_age_hours:.1f} hours old"
+    )
+    max_age_text = f"{max_age_hours:g}-hour review window"
+    if status == "EXPIRED":
+        summary = (
+            f"EXPIRED: regulatory evidence expired on {expiration_text}. "
+            f"Source: {source}; checked: {checked_text}; authority: {authority}; "
+            f"confirmation: {confirmation_status}."
+        )
+    elif status == "MISSING":
+        summary = (
+            "MISSING: regulatory evidence needs a documented source and date checked "
+            f"before release review. Source: {source}; checked: {checked_text}; "
+            f"authority: {authority}; confirmation: {confirmation_status}."
+        )
+    elif status == "STALE":
+        summary = (
+            f"STALE: regulatory evidence was checked {checked_age_text}, outside "
+            f"the {max_age_text}. Source: {source}; checked: {checked_text}; "
+            f"expiration: {expiration_text}; authority: {authority}; "
+            f"confirmation: {confirmation_status}."
+        )
+    elif status == "PENDING OPERATOR CONFIRMATION":
+        summary = (
+            "PENDING OPERATOR CONFIRMATION: authorization evidence is documented, "
+            "but the operator has not confirmed it outside ORBITAL. "
+            f"Source: {source}; checked: {checked_text}; expiration: {expiration_text}; "
+            f"authority: {authority}; confirmation: {confirmation_status}."
+        )
+    else:
+        summary = (
+            f"DOCUMENTED: regulatory evidence is documented for review. Source: {source}; "
+            f"checked: {checked_text}; expiration: {expiration_text}; "
+            f"authority: {authority}; confirmation: {confirmation_status}."
+        )
+
     return {
         "documentation_only": True,
         "status": status,
@@ -903,11 +968,7 @@ def _regulatory_evidence_provenance(
         "freshness_status": "stale" if stale else "fresh" if date_checked else "missing",
         "expired": expired,
         "operator_action": operator_action,
-        "summary": (
-            f"{status}: source {source}, checked {date_checked or 'not provided'}, "
-            f"expires {expiration or 'not provided'}, authority {authority}, "
-            f"confirmation {confirmation_status}"
-        ),
+        "summary": summary,
         "notice": (
             "Regulatory evidence provenance is documentation-only. ORBITAL does not "
             "grant approval, authorization, LAANC, legal advice, or operational clearance."
@@ -1583,11 +1644,11 @@ def _top_limiting_constraint_selection(checks_sorted: List[Dict[str, Any]]) -> D
 def _scenario_path_text(scenario_path: Optional[Any], cfg: Dict[str, Any]) -> str:
     if scenario_path:
         try:
-            return str(Path(str(scenario_path)).resolve())
+            return _portable_path_text(Path(str(scenario_path)))
         except OSError:
-            return str(scenario_path)
+            return str(scenario_path).replace("\\", "/")
     configured = cfg.get("_scenario_path")
-    return str(configured) if configured else "not provided"
+    return _portable_path_text(Path(str(configured))) if configured else "not provided"
 
 
 def _reproducibility_report(
@@ -2652,16 +2713,62 @@ def _command_metadata(command_used: Optional[Any]) -> Dict[str, Any]:
     if isinstance(command_used, dict):
         argv = command_used.get("argv")
         display = command_used.get("display")
+        if isinstance(argv, (list, tuple)):
+            normalized_argv = _normalize_command_argv(argv)
+            display_text = (
+                subprocess.list2cmdline(normalized_argv)
+                if normalized_argv
+                else str(display).strip() if display else "not provided"
+            )
+            return {
+                "display": display_text,
+                "argv": normalized_argv,
+            }
         return {
             "display": str(display).strip() if display else "not provided",
-            "argv": [str(item) for item in argv] if isinstance(argv, list) else [],
+            "argv": [],
         }
     if isinstance(command_used, (list, tuple)):
-        argv = [str(item) for item in command_used]
-        return {"display": " ".join(argv) if argv else "not provided", "argv": argv}
+        argv = _normalize_command_argv(command_used)
+        return {
+            "display": subprocess.list2cmdline(argv) if argv else "not provided",
+            "argv": argv,
+        }
     if command_used:
         return {"display": str(command_used), "argv": []}
     return {"display": "not provided", "argv": []}
+
+
+def _normalize_command_argv(argv: Iterable[Any]) -> List[str]:
+    normalized = [str(item) for item in argv]
+    if normalized and _is_python_executable(normalized[0]):
+        normalized[0] = "python"
+    return normalized
+
+
+def _is_python_executable(token: str) -> bool:
+    candidates = {
+        Path(token).name.lower(),
+        PureWindowsPath(token).name.lower(),
+    }
+    python_names = {
+        "python",
+        "python.exe",
+        "python3",
+        "python3.exe",
+        "py",
+        "py.exe",
+    }
+    return any(candidate in python_names for candidate in candidates)
+
+
+def _portable_path_text(path: Path, *, base_dir: Optional[Path] = None) -> str:
+    """Return a stable display path when the file sits under the working tree."""
+    base = base_dir or Path.cwd()
+    try:
+        return str(Path(path).resolve().relative_to(base.resolve())).replace("\\", "/")
+    except (OSError, ValueError):
+        return str(path).replace("\\", "/")
 
 
 def _regulatory_documentation_completeness(
@@ -4536,6 +4643,7 @@ def _ui_manifest_compatibility(
                 "review UI and Markdown dashboard; they must not be emitted as hrefs."
             ),
             "primary_dashboard": "operator_dashboard.md",
+            "visual_review_ui": "operator_review_ui.html",
             "manifest": "manifest.json",
             "checksum": "checksum_manifest.json",
         },
@@ -6000,7 +6108,7 @@ def export_operator_evidence_bundle(
             {
                 "id": artifact["id"],
                 "label": artifact["label"],
-                "source": str(source),
+                "source": _portable_path_text(source),
                 "bundle_path": str(destination.relative_to(bundle_dir)),
                 "present": present,
                 "artifact_format": _artifact_format(destination.name),
@@ -6051,7 +6159,7 @@ def export_operator_evidence_bundle(
     freshness_metadata = {
         "generated_timestamp_utc": generated_timestamp_utc,
         "orbital_version": _orbital_version(),
-        "scenario_path": str(scenario_path),
+        "scenario_path": _portable_path_text(scenario_path),
         "scenario_hash": {
             "algorithm": "sha256",
             "value": scenario_sha256,
@@ -6084,8 +6192,8 @@ def export_operator_evidence_bundle(
         "manifest_version": EVIDENCE_BUNDLE_MANIFEST_VERSION,
         "ui_manifest_version": UI_MANIFEST_SCHEMA_VERSION,
         "ui_compatibility": ui_compatibility,
-        "bundle_dir": str(bundle_dir),
-        "scenario_path": str(scenario_path),
+        "bundle_dir": _portable_path_text(bundle_dir),
+        "scenario_path": _portable_path_text(scenario_path),
         "complete": not missing,
         "missing": missing,
         "bundle_completeness_score": bundle_completeness["score"],

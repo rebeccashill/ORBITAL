@@ -941,16 +941,16 @@
       ]
     },
     "reproducibility": {
-      "scenario_path": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\examples\\bvlos_powerline_inspection_demo.yaml",
+      "scenario_path": "examples/bvlos_powerline_inspection_demo.yaml",
       "seed": 7,
       "iterations": 300,
       "restarts": 1,
       "robustness_cases_configured": 20,
       "robustness_cases_run": 20,
       "command": {
-        "display": "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\.venv\\Scripts\\python.exe -m mission_framework.cli examples\\bvlos_powerline_inspection_demo.yaml --outdir outputs",
+        "display": "python -m mission_framework.cli examples\\bvlos_powerline_inspection_demo.yaml --outdir outputs",
         "argv": [
-          "C:\\Users\\shill\\OneDrive\\Desktop\\ORBITAL\\.venv\\Scripts\\python.exe",
+          "python",
           "-m",
           "mission_framework.cli",
           "examples\\bvlos_powerline_inspection_demo.yaml",
@@ -958,7 +958,7 @@
           "outputs"
         ]
       },
-      "orbital_version": "1.0.13"
+      "orbital_version": "1.0.14"
     },
     "model_limitations": [
       {

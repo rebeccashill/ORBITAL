@@ -17,18 +17,18 @@
     },
     {
       "bundle_path": "evidence_bundle_summary.md",
-      "sha256": "5029264891bc588059a9951b4d8e1066e676623154761cc486ea302dee90d675",
-      "size_bytes": 6738
+      "sha256": "eadc32c2640b888b78ad85fe93a137a710f9124a3314a785e7966c35fc0c3de8",
+      "size_bytes": 6788
     },
     {
       "bundle_path": "flight_path.png",
-      "sha256": "3fe518d198cfb992ac5cf0cc4d2dc652a3caf56cabf725b78f477aa17cf1e77f",
+      "sha256": "edba6e825e8ebbfc334172769fb444373c08968c23826e9ab841d1db36735002",
       "size_bytes": 57053
     },
     {
       "bundle_path": "flight_planning_exports.json",
-      "sha256": "d0a6a63526594d75c219b912ef3280983bfe79c7c604d4ff19457101f15ba0d3",
-      "size_bytes": 804
+      "sha256": "2af43dcb75c8c1ffd5b3a474b49cd9163d3956c91515e10df2b70245465e1c13",
+      "size_bytes": 708
     },
     {
       "bundle_path": "flight_planning_exports.md",
@@ -37,18 +37,18 @@
     },
     {
       "bundle_path": "inspection_constraint_audit.json",
-      "sha256": "919f4020b6789956d7bf18a0f5485d0e498e8c51dd2dfa65b1de8ab38ced0274",
-      "size_bytes": 51029
+      "sha256": "ff46c8b8067149b64d8b5cabfcf9e35b14ef011c6af99d2b5bd3e91dc50e00c2",
+      "size_bytes": 50850
     },
     {
       "bundle_path": "inspection_constraint_audit.md",
-      "sha256": "b0719496f50c91b7e048a9a18ee19e32ea5f969cfd09a2305d91cf5834c80948",
-      "size_bytes": 17222
+      "sha256": "448c4f8a646bfd09ff1476947e31459777bcf2230b560de97b6fb10bb108c775",
+      "size_bytes": 17124
     },
     {
       "bundle_path": "manifest.json",
-      "sha256": "31e0caab4f9d2c66a499e3d68de23b8741314680ce68737f78e4a19834fc67e7",
-      "size_bytes": 52039
+      "sha256": "a0b7adba635e621ff21459b7a6ae3590a5738821edfb4671c6b447297d5f75bc",
+      "size_bytes": 51236
     },
     {
       "bundle_path": "mission_review.kml",
@@ -57,8 +57,8 @@
     },
     {
       "bundle_path": "operator_dashboard.md",
-      "sha256": "d70a55a57dd0cfc0d4f447e0d7c7b1a5bcb34b47b08a18a871fa5992b2be6699",
-      "size_bytes": 15960
+      "sha256": "ea6d2684e5e7336b77bca3f270e5fd887dd2aa71204414c76d322002ab71113d",
+      "size_bytes": 16068
     },
     {
       "bundle_path": "operator_memo.md",
@@ -67,8 +67,8 @@
     },
     {
       "bundle_path": "operator_review_ui.html",
-      "sha256": "a3fa89e640a89dfb52fe35438c995375b8458617fff5e968ec97270409df2c2f",
-      "size_bytes": 128799
+      "sha256": "19b5cf08c8e823ac2f1822da93345bc252493853c32f5808e761da93adccf53c",
+      "size_bytes": 141077
     },
     {
       "bundle_path": "plan.json",

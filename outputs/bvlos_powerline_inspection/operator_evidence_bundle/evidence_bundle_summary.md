@@ -13,10 +13,10 @@ Reviewer: not provided
 Review timestamp UTC: not provided
 Operator decision: pending operator review
 Review notes: Demo bundle ready for operator review; final approval remains outside ORBITAL.
-Generated timestamp UTC: 2026-09-14T04:18:50Z
-ORBITAL version: 1.0.13
+Generated timestamp UTC: 2026-09-15T02:06:28Z
+ORBITAL version: 1.0.14
 Scenario SHA-256: dd3aa6749c6aee97d6e60dfaef6954677e660aa6bb93d9ea75eb843f241f308c
-Command used: C:\Users\shill\OneDrive\Desktop\ORBITAL\.venv\Scripts\python.exe -m mission_framework.cli examples\bvlos_powerline_inspection_demo.yaml --outdir outputs
+Command used: python -m mission_framework.cli examples\bvlos_powerline_inspection_demo.yaml --outdir outputs
 Manifest version: 1
 UI schema version: 1
 
@@ -44,8 +44,8 @@ ORBITAL evidence bundles are decision-support packages. Bundle completeness, rev
 ## Trust And Defensibility
 
 - Sample data / demo scenario note: Sample data / demo scenario: this bundle uses demonstration planning inputs, including offline or sample weather where configured. Replace route, weather, regulatory, crew, and customer evidence before operational use. Operator should verify sample data outside ORBITAL.
-- Weather evidence readiness: STALE: sample weather evidence from offline Open-Meteo-shaped sample, timestamp 2026-09-11T16:00:00Z, freshness stale, 60.3 hour(s) old
-- Regulatory evidence provenance: STALE: source Operator-provided example authority source for documentation-only demo, checked 2026-09-11T15:45:00Z, expires 2026-12-31, authority FAA / LAANC provider placeholder, confirmation pending_operator_confirmation
+- Weather evidence readiness: STALE: weather evidence is 82.1 hours old, outside the 2-hour review window. Source: offline Open-Meteo-shaped sample; timestamp: 2026-09-11T16:00:00Z.
+- Regulatory evidence provenance: STALE: regulatory evidence was checked 82.4 hours old, outside the 24-hour review window. Source: Operator-provided example authority source for documentation-only demo; checked: 2026-09-11T15:45:00Z; expiration: 2026-12-31; authority: FAA / LAANC provider placeholder; confirmation: pending_operator_confirmation.
 - Checksum evidence readiness: Checksum manifest is generated with the bundle; verification must be run against the final archived files.
 - Uncertainty / robustness status: PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139. Confidence from configured robustness cases is scenario-limited and should be reviewed against operator uncertainty assumptions.
 - Stale or missing evidence status: REVIEW REQUIRED: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 2 bundle warning(s)

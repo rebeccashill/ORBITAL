@@ -152,14 +152,14 @@ Mission risk: LOW
 
 ### Reproducibility
 
-- Scenario path: C:\Users\shill\OneDrive\Desktop\ORBITAL\examples\bvlos_powerline_inspection_demo.yaml
+- Scenario path: examples/bvlos_powerline_inspection_demo.yaml
 - Seed: 7
 - Iterations: 300
 - Restarts: 1
 - Robustness cases configured: 20
 - Robustness cases run: 20
-- Command: C:\Users\shill\OneDrive\Desktop\ORBITAL\.venv\Scripts\python.exe -m mission_framework.cli examples\bvlos_powerline_inspection_demo.yaml --outdir outputs
-- ORBITAL version: 1.0.13
+- Command: python -m mission_framework.cli examples\bvlos_powerline_inspection_demo.yaml --outdir outputs
+- ORBITAL version: 1.0.14
 
 ### Model Limitations
 

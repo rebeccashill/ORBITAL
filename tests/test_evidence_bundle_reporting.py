@@ -9,6 +9,7 @@ import re
 from mission_framework.reporting.flight_output import (
     _artifact_freshness_metadata,
     _bundle_completeness,
+    _command_metadata,
     _dashboard_verdict,
     _format_artifact_index,
     _format_evidence_bundle_summary,
@@ -125,8 +126,9 @@ def _sample_operator_review_manifest(**updates) -> dict:
             "freshness_status": "stale",
             "operator_action": "Refresh weather evidence before release.",
             "summary": (
-                "STALE: sample weather evidence from offline Open-Meteo-shaped sample, "
-                "timestamp 2026-09-11T16:00:00Z"
+                "STALE: weather evidence is 50.0 hours old, outside the "
+                "2-hour review window. Source: offline Open-Meteo-shaped sample; "
+                "timestamp: 2026-09-11T16:00:00Z."
             ),
         },
         "regulatory_evidence_provenance": {
@@ -138,8 +140,11 @@ def _sample_operator_review_manifest(**updates) -> dict:
             "operator_confirmation_status": "pending_operator_confirmation",
             "operator_action": "Operator must confirm authorization outside ORBITAL.",
             "summary": (
-                "PENDING OPERATOR CONFIRMATION: source Operator source, checked "
-                "2026-09-11T15:45:00Z, expires 2026-12-31"
+                "PENDING OPERATOR CONFIRMATION: authorization evidence is documented, "
+                "but the operator has not confirmed it outside ORBITAL. Source: Operator "
+                "source; checked: 2026-09-11T15:45:00Z; expiration: 2026-12-31; "
+                "authority: FAA / LAANC provider placeholder; confirmation: "
+                "pending_operator_confirmation."
             ),
         },
         "checksum_evidence_readiness": {
@@ -498,10 +503,14 @@ def test_weather_evidence_readiness_distinguishes_stale_sample_and_live_weather(
     assert stale_sample["status"] == "STALE"
     assert stale_sample["mode"] == "sample"
     assert stale_sample["freshness_status"] == "stale"
+    assert "outside the 2-hour review window" in stale_sample["summary"]
+    assert "Source: offline Open-Meteo-shaped sample" in stale_sample["summary"]
     assert "Refresh weather evidence" in stale_sample["operator_action"]
     assert live_weather["status"] == "LIVE"
     assert live_weather["freshness_status"] == "fresh"
+    assert "inside the 2-hour review window" in live_weather["summary"]
     assert missing["status"] == "MISSING"
+    assert "no usable weather evidence" in missing["summary"]
 
 
 def test_regulatory_evidence_provenance_tracks_source_dates_and_confirmation() -> None:
@@ -527,7 +536,34 @@ def test_regulatory_evidence_provenance_tracks_source_dates_and_confirmation() -
     assert provenance["authority"] == "FAA / LAANC provider placeholder"
     assert provenance["operator_confirmation_status"] == "pending_operator_confirmation"
     assert provenance["freshness_status"] == "stale"
+    assert "outside the 24-hour review window" in provenance["summary"]
+    assert "Source: Operator source" in provenance["summary"]
     assert "Refresh regulatory evidence" in provenance["operator_action"]
+
+
+def test_command_metadata_normalizes_local_python_interpreter_path() -> None:
+    metadata = _command_metadata(
+        {
+            "argv": [
+                r"C:\Users\shill\OneDrive\Desktop\ORBITAL\.venv310\Scripts\python.exe",
+                "-m",
+                "mission_framework.cli",
+                r"examples\bvlos_powerline_inspection_demo.yaml",
+                "--outdir",
+                "outputs",
+            ],
+            "display": (
+                r"C:\Users\shill\OneDrive\Desktop\ORBITAL\.venv310\Scripts\python.exe "
+                r"-m mission_framework.cli examples\bvlos_powerline_inspection_demo.yaml "
+                r"--outdir outputs"
+            ),
+        }
+    )
+
+    assert metadata["argv"][0] == "python"
+    assert metadata["display"].startswith("python -m mission_framework.cli")
+    assert ".venv" not in metadata["display"]
+    assert r"C:\Users" not in metadata["display"]
 
 
 def test_operational_evidence_warnings_cover_weather_regulatory_and_route_exports() -> None:
@@ -716,8 +752,9 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
                 "freshness_status": "stale",
                 "operator_action": "Refresh weather evidence.",
                 "summary": (
-                    "STALE: sample weather evidence from offline Open-Meteo-shaped sample, "
-                    "timestamp 2026-09-12T18:00:00Z"
+                    "STALE: weather evidence is 24.0 hours old, outside the "
+                    "2-hour review window. Source: offline Open-Meteo-shaped sample; "
+                    "timestamp: 2026-09-12T18:00:00Z."
                 ),
             },
             "regulatory_evidence_provenance": {
@@ -729,8 +766,11 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
                 "operator_confirmation_status": "pending_operator_confirmation",
                 "operator_action": "Operator must confirm authorization outside ORBITAL.",
                 "summary": (
-                    "PENDING OPERATOR CONFIRMATION: source Operator source, checked "
-                    "2026-09-12T17:30:00Z, expires 2026-12-31"
+                    "PENDING OPERATOR CONFIRMATION: authorization evidence is documented, "
+                    "but the operator has not confirmed it outside ORBITAL. Source: Operator "
+                    "source; checked: 2026-09-12T17:30:00Z; expiration: 2026-12-31; "
+                    "authority: FAA / LAANC provider placeholder; confirmation: "
+                    "pending_operator_confirmation."
                 ),
             },
             "checksum_evidence_readiness": {
@@ -929,7 +969,7 @@ def test_operator_dashboard_summarizes_review_state_and_artifact_links() -> None
     assert "| Weather freshness | stale |" in markdown
     assert "| Regulatory provenance | PENDING OPERATOR CONFIRMATION |" in markdown
     assert "| Checksum evidence | VERIFY REQUIRED |" in markdown
-    assert "| Weather evidence | STALE: sample weather evidence" in markdown
+    assert "| Weather evidence | STALE: weather evidence is" in markdown
     assert "| Regulatory provenance | PENDING OPERATOR CONFIRMATION:" in markdown
     assert "| Checksum evidence | Checksum verification must be run" in markdown
     assert "Robustness status" in markdown
@@ -1152,6 +1192,12 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "Mission Verdict:" in html
     assert "REVIEW REQUIRED" in html
     assert "Next operator action" in html
+    assert "30-Second Mission Read" in html
+    assert "Verdict, limiter, trust posture, action." in html
+    assert "Trust status" in html
+    assert "Operator trust review needed" in html
+    assert "Check regulatory confirmation, weather evidence check, checksum verification." in html
+    assert "Before field release, operator authority stays outside ORBITAL." in html
     assert "Review Order" in html
     assert "Verdict -> top constraint -> trust signals -> artifacts -> checksum" in html
     assert "First artifact to open" in html
@@ -1176,9 +1222,21 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "Print / demo view" in html
     assert "window.print()" in html
     assert "@media print" in html
+    assert "@page" in html
     assert 'class="skip-link"' in html
     assert 'id="mission-verdict"' in html
-    assert 'id="review-sections"' in html
+    assert 'class="dashboard-primary"' in html
+    assert 'class="review-sections dashboard-review-sections"' in html
+    assert 'class="priority-stack dashboard-context"' in html
+    assert 'class="supporting-evidence"' in html
+    assert html.index('class="signals"') < html.index('class="priority-stack dashboard-context"')
+    assert html.index('class="priority-stack dashboard-context"') < html.index(
+        'id="review-sections"'
+    )
+    assert html.index('id="review-sections"') < html.index('class="supporting-evidence"')
+    assert html.index('class="supporting-evidence"') < html.index(
+        'aria-label="Product boundary and bundle artifacts"'
+    )
     assert 'tabindex="0"' in html
     assert 'aria-labelledby="feasibility-heading"' in html
     assert "Why This Verdict?" in html
@@ -1200,6 +1258,8 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "warning-signal" in html
     assert "documentation-signal" in html
     assert ".verdict-badge" in html
+    assert ".thirty-second-read" in html
+    assert ".read-grid" in html
     assert ".signal.status-review" in html
     assert "Read-only demo / discovery aid" in html
     assert "local review surface" in html
@@ -1232,6 +1292,7 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "Loaded primary data from manifest.json" in html
     assert "Using embedded fallback snapshot" in html
     assert "Manifest JSON could not be loaded or parsed" in html
+    assert "function renderThirtySecondRead" in html
     assert "read-only UI; no bundle mutation" in html
     assert "no backend database required" in html
     assert 'id="manifest-snapshot"' in html
@@ -1576,8 +1637,9 @@ def test_evidence_bundle_summary_highlights_reviewer_snapshot_and_flow() -> None
                 "freshness_status": "stale",
                 "operator_action": "Refresh weather evidence.",
                 "summary": (
-                    "STALE: sample weather evidence from offline Open-Meteo-shaped sample, "
-                    "timestamp 2026-09-12T18:00:00Z"
+                    "STALE: weather evidence is 24.0 hours old, outside the "
+                    "2-hour review window. Source: offline Open-Meteo-shaped sample; "
+                    "timestamp: 2026-09-12T18:00:00Z."
                 ),
             },
             "regulatory_evidence_provenance": {
@@ -1589,8 +1651,11 @@ def test_evidence_bundle_summary_highlights_reviewer_snapshot_and_flow() -> None
                 "operator_confirmation_status": "pending_operator_confirmation",
                 "operator_action": "Operator must confirm authorization outside ORBITAL.",
                 "summary": (
-                    "PENDING OPERATOR CONFIRMATION: source Operator source, checked "
-                    "2026-09-12T17:30:00Z, expires 2026-12-31"
+                    "PENDING OPERATOR CONFIRMATION: authorization evidence is documented, "
+                    "but the operator has not confirmed it outside ORBITAL. Source: Operator "
+                    "source; checked: 2026-09-12T17:30:00Z; expiration: 2026-12-31; "
+                    "authority: FAA / LAANC provider placeholder; confirmation: "
+                    "pending_operator_confirmation."
                 ),
             },
             "checksum_evidence_readiness": {
@@ -1633,7 +1698,7 @@ def test_evidence_bundle_summary_highlights_reviewer_snapshot_and_flow() -> None
     assert "ORBITAL version: 1.0.10" in markdown
     assert "Trust And Defensibility" in markdown
     assert "Sample data / demo scenario note" in markdown
-    assert "Weather evidence readiness: STALE: sample weather evidence" in markdown
+    assert "Weather evidence readiness: STALE: weather evidence is" in markdown
     assert "Regulatory evidence provenance: PENDING OPERATOR CONFIRMATION:" in markdown
     assert "Checksum evidence readiness: Checksum verification must be run" in markdown
     assert "Uncertainty / robustness status: PASS: 20 case(s)" in markdown
