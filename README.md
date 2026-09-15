@@ -7,7 +7,7 @@
 Constraint audits, what-if planning, regulatory readiness, and evidence bundles
 for drone inspection operators.
 
-Current release: `v1.0.14`
+Current release: `v1.0.15`
 
 > ORBITAL tells inspection teams whether a BVLOS mission is feasible before
 > they send a crew.
@@ -21,23 +21,23 @@ Current product focus: make ORBITAL's BVLOS evidence workflow faster to scan,
 clearer to demo, and more operator-friendly before customer-discovery and
 Foundry-readiness work.
 
-## What Improved In v1.0.14
+## What Improved In v1.0.15
 
-- v1.0.14 tightens the 30-second BVLOS review path so the first screen shows
-  verdict, top constraint, next action, and trust status without forcing the
-  reviewer to hunt through the page.
-- The operator review UI now has a shorter desktop sidebar, reduced spacing
-  breaks between review sections, and a cleaner print layout for customer
-  discovery or archive review.
-- Weather and regulatory evidence summaries now explain stale evidence in
-  operator-readable language, including the review window and source timestamp,
-  without implying approval, authorization, LAANC, legal advice, or clearance.
-- Evidence bundle metadata now avoids unnecessary local-environment drift where
-  practical by using portable command and repo-relative display paths while
-  preserving timestamps, freshness ages, hashes, and checksum evidence.
-- The bundle manifest explicitly identifies `operator_dashboard.md` as the
-  open-first artifact and `operator_review_ui.html` as the visual review/demo
-  surface.
+v1.0.15 makes the BVLOS operator demo easier to run, scan, print, and explain.
+
+- `run_all.py` now prints periodic "still running" progress while long demo
+  commands execute, so optimization and robustness runs no longer look frozen
+  while they are working.
+- The desktop operator review UI packs review cards into deliberate stacks
+  instead of row-stretching them. Weather / Live Evidence, Evidence
+  Completeness, Trust / Defensibility, Warnings, and Artifact Navigation now
+  sit closer together with consistent spacing.
+- The Evidence Completeness card is shorter and clearer: it separates artifact
+  coverage, artifacts present, missing evidence, and bundle warnings.
+- The print/demo view uses compact artifact freshness columns and block-based
+  review sections to reduce empty space in PDF or customer-discovery printouts.
+- The generated BVLOS evidence bundle and checksum manifest are refreshed so
+  `operator_review_ui.html` matches the current layout.
 
 ## Positioning
 
@@ -115,7 +115,7 @@ alternatives.
 
 For a presenter-ready BVLOS walkthrough, see the
 [BVLOS powerline demo script](docs/BVLOS_POWERLINE_DEMO_SCRIPT.md). The
-v1.0.14 operator review starts with
+v1.0.15 operator review starts with
 `outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_review_ui.html`;
 `operator_dashboard.md` remains the first source artifact to open from the raw
 evidence bundle.
@@ -184,6 +184,11 @@ For full plots and default robustness settings:
 ```bash
 python run_all.py
 ```
+
+Longer runs can spend a minute or two inside optimization or robustness checks.
+`run_all.py` prints periodic progress lines and writes full command output to
+`runs_logs/` so the terminal does not appear stuck while a demo is still
+running.
 
 Outputs are saved to:
 
@@ -295,14 +300,17 @@ UI-first demo flow:
 3. Follow the review order strip: verdict, top constraint, trust signals,
    artifacts, then checksum. Scan the mission verdict, modeled status, risk,
    next operator action, readiness, completeness, weather evidence freshness,
-   regulatory provenance, robustness, and evidence warnings in the first
-   screen.
-4. Use the artifact links to open `operator_dashboard.md`,
+   regulatory provenance, robustness, and evidence warnings in the compact
+   desktop review stacks.
+4. Use the Print / demo view button when preparing a customer-discovery PDF or
+   archive printout. The print layout keeps review sections in readable order
+   and uses compact artifact freshness columns to avoid large empty gaps.
+5. Use the artifact links to open `operator_dashboard.md`,
    `inspection_constraint_audit.md`, `what_if_plan.md`, and
    `regulatory_readiness_report.md`. The Markdown, JSON, CSV, KML, PNG,
    manifest, checksum, and dashboard files remain accessible outside the UI;
    unavailable artifacts render as unavailable text rather than broken links.
-5. Close with `python -m mission_framework.cli bundle-verify
+6. Close with `python -m mission_framework.cli bundle-verify
    outputs/bvlos_powerline_inspection/operator_evidence_bundle`.
 
 Live weather hooks and regulatory provenance fields are readiness records only
@@ -436,6 +444,9 @@ python experiments/run_seed_experiments.py --aircraft examples/aircraft_uav_demo
 - Aircraft demo: about 30-60 seconds
 - Spacecraft demo: about 60-120 seconds
 - Full validation suite: about 10-15 minutes
+
+During longer commands, `run_all.py` emits periodic progress updates and keeps
+the full subprocess output in timestamped logs under `runs_logs/`.
 
 ---
 

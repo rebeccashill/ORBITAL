@@ -1192,12 +1192,6 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "Mission Verdict:" in html
     assert "REVIEW REQUIRED" in html
     assert "Next operator action" in html
-    assert "30-Second Mission Read" in html
-    assert "Verdict, limiter, trust posture, action." in html
-    assert "Trust status" in html
-    assert "Operator trust review needed" in html
-    assert "Check regulatory confirmation, weather evidence check, checksum verification." in html
-    assert "Before field release, operator authority stays outside ORBITAL." in html
     assert "Review Order" in html
     assert "Verdict -> top constraint -> trust signals -> artifacts -> checksum" in html
     assert "First artifact to open" in html
@@ -1223,19 +1217,32 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "window.print()" in html
     assert "@media print" in html
     assert "@page" in html
+    assert "align-items: start;" in html
+    assert "Artifacts present" in html
+    assert ".dashboard-sidebar {\n        order: 4;\n        display: block;" in html
+    assert ".review-sections {\n        display: block;" in html
     assert 'class="skip-link"' in html
     assert 'id="mission-verdict"' in html
     assert 'class="dashboard-primary"' in html
+    assert 'class="dashboard-sidebar"' in html
     assert 'class="review-sections dashboard-review-sections"' in html
+    assert 'class="review-intro-row"' in html
+    assert 'class="review-column-grid"' in html
+    assert 'class="review-column"' in html
     assert 'class="priority-stack dashboard-context"' in html
     assert 'class="supporting-evidence"' in html
-    assert html.index('class="signals"') < html.index('class="priority-stack dashboard-context"')
-    assert html.index('class="priority-stack dashboard-context"') < html.index(
-        'id="review-sections"'
+    assert html.index('class="review-lead"') < html.index(
+        'class="priority-stack dashboard-context"'
     )
-    assert html.index('id="review-sections"') < html.index('class="supporting-evidence"')
-    assert html.index('class="supporting-evidence"') < html.index(
-        'aria-label="Product boundary and bundle artifacts"'
+    assert html.index('class="priority-stack dashboard-context"') < html.index('class="signals"')
+    assert html.index('class="supporting-evidence"') < html.index('id="review-sections"')
+    assert html.index('id="live-evidence-readiness"') < html.index('id="data-loading"')
+    assert html.index('id="data-loading"') < html.index('id="operator-review-metadata"')
+    assert html.index('id="evidence-completeness"') < html.index('id="trust-defensibility"')
+    assert html.index('id="trust-defensibility"') < html.index('id="warnings"')
+    assert html.index('id="warnings"') < html.index('id="artifact-navigation"')
+    assert html.index("data-model-assumptions") < html.index(
+        'aria-label="Bundle artifacts and evidence navigation"'
     )
     assert 'tabindex="0"' in html
     assert 'aria-labelledby="feasibility-heading"' in html
@@ -1248,18 +1255,14 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "Mission risk" in html
     assert "Top limiting constraint" in html
     assert "Regulatory readiness" in html
-    assert "Evidence completeness" in html
-    assert "Regulatory documentation" in html
+    assert "Evidence Completeness" in html
+    assert "Documentation" in html
     assert "Weather evidence" in html
-    assert "Robustness / uncertainty" in html
-    assert "Missing evidence count" in html
-    assert "Stale / missing / mismatched evidence" in html
-    assert "Evidence warnings" in html
+    assert "Robustness" in html
+    assert "Mismatched artifacts" in html
     assert "warning-signal" in html
     assert "documentation-signal" in html
     assert ".verdict-badge" in html
-    assert ".thirty-second-read" in html
-    assert ".read-grid" in html
     assert ".signal.status-review" in html
     assert "Read-only demo / discovery aid" in html
     assert "local review surface" in html
@@ -1282,11 +1285,11 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "Evidence Completeness" in html
     assert "Trust / Defensibility" in html
     assert "Warnings" in html
+    assert "Data Loading" in html
     assert "Artifact Navigation" in html
     assert "Operator Review Metadata" in html
     assert "Open first: first artifact to open" in html
     assert "Start here for the verdict, next action, and 30-second mission read." in html
-    assert "Data Loading" in html
     assert "outputs/bvlos_powerline_inspection/operator_evidence_bundle/manifest.json" in html
     assert "Loading primary data from manifest.json" in html
     assert "Loaded primary data from manifest.json" in html
@@ -1442,7 +1445,9 @@ def test_operator_review_ui_handles_missing_optional_fields() -> None:
     assert "minimal_demo" in html
     assert "UNKNOWN" in html
     assert "not available" in html
-    assert "n/a (0 / 0 artifacts)" in html
+    assert "Artifact coverage" in html
+    assert "Artifacts present" in html
+    assert "0 / 0" in html
     assert "n/a (0 / 0 fields)" in html
     assert "No weather evidence status captured." in html
     assert "No robustness / uncertainty status captured." in html
@@ -1571,7 +1576,7 @@ def test_operator_review_ui_trust_defensibility_fallbacks_are_visible() -> None:
     assert "No robustness / uncertainty status captured." in html
     assert "Verify scenario inputs before operational use." in html
     assert "0 missing artifact(s), 0 stale artifact(s)" in html
-    assert "Stale / missing / mismatched evidence" in html
+    assert "Mismatched artifacts" in html
 
 
 def test_operator_review_ui_generated_html_smoke() -> None:

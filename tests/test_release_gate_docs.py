@@ -11,8 +11,8 @@ def _release_notes_section(version: str) -> str:
     return text[start:] if next_section == -1 else text[start:next_section]
 
 
-def test_v1014_release_gate_keeps_checksum_verification() -> None:
-    section = _release_notes_section("v1.0.14")
+def test_v1015_release_gate_keeps_checksum_verification() -> None:
+    section = _release_notes_section("v1.0.15")
 
     assert "python -m mission_framework.cli bundle-verify" in section
     assert "outputs\\bvlos_powerline_inspection\\operator_evidence_bundle" in section

@@ -327,13 +327,13 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert "Modeled mission status" in ui_text
     assert "Top limiting constraint" in ui_text
     assert "Regulatory readiness" in ui_text
-    assert "Evidence completeness" in ui_text
-    assert "Regulatory documentation" in ui_text
+    assert "Evidence Completeness" in ui_text
+    assert "Documentation" in ui_text
     assert "Weather evidence" in ui_text
     assert "Weather / Live Evidence" in ui_text
-    assert "Robustness / uncertainty" in ui_text
+    assert "Robustness" in ui_text
     assert "Missing evidence" in ui_text
-    assert "Evidence warnings" in ui_text
+    assert "Warning total" in ui_text
     assert "local review surface" in ui_text
     assert "decision support, not approval" in ui_text
     assert "does not approve a mission" in ui_text

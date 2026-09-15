@@ -1,5 +1,34 @@
 # Release Notes
 
+## v1.0.15 - September 15, 2026
+
+### Changed
+
+- Added periodic progress output to `run_all.py` while subprocess demos are
+  still running, including flushed console updates and timestamped log files,
+  so long optimization or robustness runs no longer appear frozen.
+- Reworked the BVLOS operator review desktop layout into explicit review
+  stacks, removing the row-height gaps that appeared between Weather / Live
+  Evidence, Evidence Completeness, Trust / Defensibility, Warnings, and
+  Artifact Navigation cards.
+- Shortened and clarified the Evidence Completeness card by separating artifact
+  coverage, artifacts present, missing evidence, and bundle warnings.
+- Tightened the print/demo layout with block-based review sections and compact
+  two-column artifact freshness cards, reducing empty print/PDF space and page
+  count.
+- Refreshed the generated BVLOS operator review UI and checksum manifest.
+- Updated README and package release metadata to `v1.0.15`.
+
+### Verified
+
+- Ran `python -m py_compile run_all.py mission_framework\reporting\operator_review_ui.py tests\test_evidence_bundle_reporting.py`.
+- Ran `python -m pytest tests\test_evidence_bundle_reporting.py -q --maxfail=1`.
+- Rendered the desktop operator review section with Playwright and confirmed
+  the review cards use consistent 12px vertical gaps in each stack.
+- Rendered the print/demo PDF with Playwright and Poppler; the compact artifact
+  freshness layout reduced the print output from ten pages to nine.
+- Ran `python -m mission_framework.cli bundle-verify outputs\bvlos_powerline_inspection\operator_evidence_bundle`.
+
 ## v1.0.14 - September 14, 2026
 
 ### Changed

@@ -598,10 +598,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path, monkeypatch):
     assert "ORBITAL Operator Review UI" in operator_review_ui
     assert "Mission Verdict:" in operator_review_ui
     assert "REVIEW REQUIRED" in operator_review_ui
-    assert "30-Second Mission Read" in operator_review_ui
-    assert "Trust status" in operator_review_ui
-    assert "Operator trust review needed" in operator_review_ui
-    assert "Before field release, operator authority stays outside ORBITAL." in (operator_review_ui)
+    assert "Next operator action" in operator_review_ui
     assert "Review Order" in operator_review_ui
     assert (
         "Verdict -> top constraint -> trust signals -> artifacts -> checksum" in operator_review_ui
@@ -624,13 +621,13 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path, monkeypatch):
     assert "Mission risk" in operator_review_ui
     assert "Top limiting constraint" in operator_review_ui
     assert "Regulatory readiness" in operator_review_ui
-    assert "Evidence completeness" in operator_review_ui
-    assert "Regulatory documentation" in operator_review_ui
+    assert "Evidence Completeness" in operator_review_ui
+    assert "Documentation" in operator_review_ui
     assert "Weather evidence" in operator_review_ui
     assert "Weather / Live Evidence" in operator_review_ui
-    assert "Robustness / uncertainty" in operator_review_ui
+    assert "Robustness" in operator_review_ui
     assert "Missing evidence" in operator_review_ui
-    assert "Evidence warnings" in operator_review_ui
+    assert "Warning total" in operator_review_ui
     assert "local review surface" in operator_review_ui
     assert "decision support, not approval" in operator_review_ui
     assert "does not approve a mission" in operator_review_ui

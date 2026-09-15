@@ -2704,6 +2704,13 @@ def _file_modified_timestamp(path: Path) -> Optional[float]:
 
 def _orbital_version() -> str:
     try:
+        from mission_framework import __version__ as package_version
+
+        if package_version:
+            return str(package_version)
+    except Exception:
+        pass
+    try:
         return version("orbital-mission-framework")
     except PackageNotFoundError:
         return "unknown"

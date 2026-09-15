@@ -6,7 +6,7 @@
     "schema_version": 1,
     "manifest_version": 1,
     "minimum_supported_manifest_version": 1,
-    "generated_timestamp_utc": "2026-09-15T02:06:28Z",
+    "generated_timestamp_utc": "2026-09-15T11:27:12Z",
     "required_top_level_fields": [
       "kind",
       "manifest_version",
@@ -161,8 +161,8 @@
     "notice": "Operator review fields are documentation only. They do not approve a flight, issue an authorization, provide legal advice, or replace pilot-in-command release authority."
   },
   "freshness": {
-    "generated_timestamp_utc": "2026-09-15T02:06:28Z",
-    "orbital_version": "1.0.14",
+    "generated_timestamp_utc": "2026-09-15T11:27:12Z",
+    "orbital_version": "1.0.15",
     "scenario_path": "examples/bvlos_powerline_inspection_demo.yaml",
     "scenario_hash": {
       "algorithm": "sha256",
@@ -198,8 +198,8 @@
     "source": "offline Open-Meteo-shaped sample",
     "provider": "open_meteo",
     "timestamp_utc": "2026-09-11T16:00:00Z",
-    "generated_timestamp_utc": "2026-09-15T02:06:28Z",
-    "age_hours": 82.11,
+    "generated_timestamp_utc": "2026-09-15T11:27:12Z",
+    "age_hours": 91.45,
     "freshness_max_age_hours": 2.0,
     "freshness_status": "stale",
     "fallback_used": true,
@@ -215,7 +215,7 @@
       "note": "Live weather provider integration can populate this evidence block, but ORBITAL does not require live integration or verify launch authorization."
     },
     "operator_action": "Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field conditions.",
-    "summary": "STALE: weather evidence is 82.1 hours old, outside the 2-hour review window. Source: offline Open-Meteo-shaped sample; timestamp: 2026-09-11T16:00:00Z.",
+    "summary": "STALE: weather evidence is 91.5 hours old, outside the 2-hour review window. Source: offline Open-Meteo-shaped sample; timestamp: 2026-09-11T16:00:00Z.",
     "notice": "Weather evidence supports operator review only. ORBITAL does not certify weather, approve launch, or provide operational clearance."
   },
   "regulatory_evidence_provenance": {
@@ -227,19 +227,19 @@
     "authority": "FAA / LAANC provider placeholder",
     "operator_confirmation_status": "pending_operator_confirmation",
     "authorization_required": true,
-    "checked_age_hours": 82.36,
+    "checked_age_hours": 91.7,
     "freshness_max_age_hours": 24.0,
     "freshness_status": "stale",
     "expired": false,
     "operator_action": "Refresh regulatory evidence checks before relying on this bundle for review. Operator should verify regulatory inputs.",
-    "summary": "STALE: regulatory evidence was checked 82.4 hours old, outside the 24-hour review window. Source: Operator-provided example authority source for documentation-only demo; checked: 2026-09-11T15:45:00Z; expiration: 2026-12-31; authority: FAA / LAANC provider placeholder; confirmation: pending_operator_confirmation.",
+    "summary": "STALE: regulatory evidence was checked 91.7 hours old, outside the 24-hour review window. Source: Operator-provided example authority source for documentation-only demo; checked: 2026-09-11T15:45:00Z; expiration: 2026-12-31; authority: FAA / LAANC provider placeholder; confirmation: pending_operator_confirmation.",
     "notice": "Regulatory evidence provenance is documentation-only. ORBITAL does not grant approval, authorization, LAANC, legal advice, or operational clearance."
   },
   "checksum_evidence_readiness": {
     "documentation_only": true,
     "status": "VERIFY REQUIRED",
     "bundle_path": "checksum_manifest.json",
-    "generated_timestamp_utc": "2026-09-15T02:06:28Z",
+    "generated_timestamp_utc": "2026-09-15T11:27:12Z",
     "operator_action": "Run bundle checksum verification after generation and before archiving or sharing the evidence bundle.",
     "summary": "Checksum manifest is generated with the bundle; verification must be run against the final archived files.",
     "notice": "Checksums support file integrity review only. They do not approve a mission or verify regulatory authorization."
@@ -394,8 +394,8 @@
       "source": "offline Open-Meteo-shaped sample",
       "provider": "open_meteo",
       "timestamp_utc": "2026-09-11T16:00:00Z",
-      "generated_timestamp_utc": "2026-09-15T02:06:28Z",
-      "age_hours": 82.11,
+      "generated_timestamp_utc": "2026-09-15T11:27:12Z",
+      "age_hours": 91.45,
       "freshness_max_age_hours": 2.0,
       "freshness_status": "stale",
       "fallback_used": true,
@@ -411,7 +411,7 @@
         "note": "Live weather provider integration can populate this evidence block, but ORBITAL does not require live integration or verify launch authorization."
       },
       "operator_action": "Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field conditions.",
-      "summary": "STALE: weather evidence is 82.1 hours old, outside the 2-hour review window. Source: offline Open-Meteo-shaped sample; timestamp: 2026-09-11T16:00:00Z.",
+      "summary": "STALE: weather evidence is 91.5 hours old, outside the 2-hour review window. Source: offline Open-Meteo-shaped sample; timestamp: 2026-09-11T16:00:00Z.",
       "notice": "Weather evidence supports operator review only. ORBITAL does not certify weather, approve launch, or provide operational clearance."
     },
     "weather_evidence_readiness": {
@@ -421,8 +421,8 @@
       "source": "offline Open-Meteo-shaped sample",
       "provider": "open_meteo",
       "timestamp_utc": "2026-09-11T16:00:00Z",
-      "generated_timestamp_utc": "2026-09-15T02:06:28Z",
-      "age_hours": 82.11,
+      "generated_timestamp_utc": "2026-09-15T11:27:12Z",
+      "age_hours": 91.45,
       "freshness_max_age_hours": 2.0,
       "freshness_status": "stale",
       "fallback_used": true,
@@ -438,7 +438,7 @@
         "note": "Live weather provider integration can populate this evidence block, but ORBITAL does not require live integration or verify launch authorization."
       },
       "operator_action": "Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field conditions.",
-      "summary": "STALE: weather evidence is 82.1 hours old, outside the 2-hour review window. Source: offline Open-Meteo-shaped sample; timestamp: 2026-09-11T16:00:00Z.",
+      "summary": "STALE: weather evidence is 91.5 hours old, outside the 2-hour review window. Source: offline Open-Meteo-shaped sample; timestamp: 2026-09-11T16:00:00Z.",
       "notice": "Weather evidence supports operator review only. ORBITAL does not certify weather, approve launch, or provide operational clearance."
     },
     "regulatory_evidence_provenance": {
@@ -450,12 +450,12 @@
       "authority": "FAA / LAANC provider placeholder",
       "operator_confirmation_status": "pending_operator_confirmation",
       "authorization_required": true,
-      "checked_age_hours": 82.36,
+      "checked_age_hours": 91.7,
       "freshness_max_age_hours": 24.0,
       "freshness_status": "stale",
       "expired": false,
       "operator_action": "Refresh regulatory evidence checks before relying on this bundle for review. Operator should verify regulatory inputs.",
-      "summary": "STALE: regulatory evidence was checked 82.4 hours old, outside the 24-hour review window. Source: Operator-provided example authority source for documentation-only demo; checked: 2026-09-11T15:45:00Z; expiration: 2026-12-31; authority: FAA / LAANC provider placeholder; confirmation: pending_operator_confirmation.",
+      "summary": "STALE: regulatory evidence was checked 91.7 hours old, outside the 24-hour review window. Source: Operator-provided example authority source for documentation-only demo; checked: 2026-09-11T15:45:00Z; expiration: 2026-12-31; authority: FAA / LAANC provider placeholder; confirmation: pending_operator_confirmation.",
       "notice": "Regulatory evidence provenance is documentation-only. ORBITAL does not grant approval, authorization, LAANC, legal advice, or operational clearance."
     },
     "uncertainty_robustness_status": {
@@ -735,8 +735,8 @@
       "freshness": {
         "source_sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8",
         "bundle_sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8",
-        "source_modified_utc": "2026-09-15T02:06:28Z",
-        "bundle_modified_utc": "2026-09-15T02:06:28Z",
+        "source_modified_utc": "2026-09-15T11:27:12Z",
+        "bundle_modified_utc": "2026-09-15T11:27:12Z",
         "source_size_bytes": 2542,
         "bundle_size_bytes": 2542,
         "stale_against_scenario": false
@@ -752,10 +752,10 @@
       "opens_outside_ui": true,
       "ui_link_behavior": "link_when_present_else_unavailable_label",
       "freshness": {
-        "source_sha256": "448c4f8a646bfd09ff1476947e31459777bcf2230b560de97b6fb10bb108c775",
-        "bundle_sha256": "448c4f8a646bfd09ff1476947e31459777bcf2230b560de97b6fb10bb108c775",
-        "source_modified_utc": "2026-09-15T02:06:18Z",
-        "bundle_modified_utc": "2026-09-15T02:06:18Z",
+        "source_sha256": "e9dea4fa50bb1c45c13af8c454aada7cc983656eb7fff87e6757b23420db01b8",
+        "bundle_sha256": "e9dea4fa50bb1c45c13af8c454aada7cc983656eb7fff87e6757b23420db01b8",
+        "source_modified_utc": "2026-09-15T11:27:10Z",
+        "bundle_modified_utc": "2026-09-15T11:27:10Z",
         "source_size_bytes": 17124,
         "bundle_size_bytes": 17124,
         "stale_against_scenario": false
@@ -771,10 +771,10 @@
       "opens_outside_ui": true,
       "ui_link_behavior": "link_when_present_else_unavailable_label",
       "freshness": {
-        "source_sha256": "ff46c8b8067149b64d8b5cabfcf9e35b14ef011c6af99d2b5bd3e91dc50e00c2",
-        "bundle_sha256": "ff46c8b8067149b64d8b5cabfcf9e35b14ef011c6af99d2b5bd3e91dc50e00c2",
-        "source_modified_utc": "2026-09-15T02:06:18Z",
-        "bundle_modified_utc": "2026-09-15T02:06:18Z",
+        "source_sha256": "2018495252cab68d3d002217375c4fe63f544bc5b69301895cad14e06d89b423",
+        "bundle_sha256": "2018495252cab68d3d002217375c4fe63f544bc5b69301895cad14e06d89b423",
+        "source_modified_utc": "2026-09-15T11:27:10Z",
+        "bundle_modified_utc": "2026-09-15T11:27:10Z",
         "source_size_bytes": 50850,
         "bundle_size_bytes": 50850,
         "stale_against_scenario": false
@@ -792,8 +792,8 @@
       "freshness": {
         "source_sha256": "a83de4f37add9116f01973e843dc957579f88463e7bb29755c53c88550161119",
         "bundle_sha256": "a83de4f37add9116f01973e843dc957579f88463e7bb29755c53c88550161119",
-        "source_modified_utc": "2026-09-15T02:06:18Z",
-        "bundle_modified_utc": "2026-09-15T02:06:18Z",
+        "source_modified_utc": "2026-09-15T11:27:10Z",
+        "bundle_modified_utc": "2026-09-15T11:27:10Z",
         "source_size_bytes": 11230,
         "bundle_size_bytes": 11230,
         "stale_against_scenario": false
@@ -811,8 +811,8 @@
       "freshness": {
         "source_sha256": "3dc309b5016b06e81a375c14d98c7e6504ee353c83b608e15748fb37a8da3fe4",
         "bundle_sha256": "3dc309b5016b06e81a375c14d98c7e6504ee353c83b608e15748fb37a8da3fe4",
-        "source_modified_utc": "2026-09-15T02:06:18Z",
-        "bundle_modified_utc": "2026-09-15T02:06:18Z",
+        "source_modified_utc": "2026-09-15T11:27:10Z",
+        "bundle_modified_utc": "2026-09-15T11:27:10Z",
         "source_size_bytes": 5953,
         "bundle_size_bytes": 5953,
         "stale_against_scenario": false
@@ -830,8 +830,8 @@
       "freshness": {
         "source_sha256": "163f7e2475d12eed2e8c8698d5ef1f13fcb7392a75a37fa9d5731cff05dd8685",
         "bundle_sha256": "163f7e2475d12eed2e8c8698d5ef1f13fcb7392a75a37fa9d5731cff05dd8685",
-        "source_modified_utc": "2026-09-15T02:06:23Z",
-        "bundle_modified_utc": "2026-09-15T02:06:23Z",
+        "source_modified_utc": "2026-09-15T11:27:11Z",
+        "bundle_modified_utc": "2026-09-15T11:27:11Z",
         "source_size_bytes": 2791,
         "bundle_size_bytes": 2791,
         "stale_against_scenario": false
@@ -849,8 +849,8 @@
       "freshness": {
         "source_sha256": "03e9abda42d20b469093fa8c1a90565323640556d1ad73de8005213031ffbc61",
         "bundle_sha256": "03e9abda42d20b469093fa8c1a90565323640556d1ad73de8005213031ffbc61",
-        "source_modified_utc": "2026-09-15T02:06:23Z",
-        "bundle_modified_utc": "2026-09-15T02:06:23Z",
+        "source_modified_utc": "2026-09-15T11:27:11Z",
+        "bundle_modified_utc": "2026-09-15T11:27:11Z",
         "source_size_bytes": 63529,
         "bundle_size_bytes": 63529,
         "stale_against_scenario": false
@@ -868,8 +868,8 @@
       "freshness": {
         "source_sha256": "e3cb2a7098d4fe8716cd7fcadab220bd74b4f525b5f645b5ff0f2231548e1d10",
         "bundle_sha256": "e3cb2a7098d4fe8716cd7fcadab220bd74b4f525b5f645b5ff0f2231548e1d10",
-        "source_modified_utc": "2026-09-15T02:06:27Z",
-        "bundle_modified_utc": "2026-09-15T02:06:27Z",
+        "source_modified_utc": "2026-09-15T11:27:12Z",
+        "bundle_modified_utc": "2026-09-15T11:27:12Z",
         "source_size_bytes": 1119,
         "bundle_size_bytes": 1119,
         "stale_against_scenario": false
@@ -887,8 +887,8 @@
       "freshness": {
         "source_sha256": "edba6e825e8ebbfc334172769fb444373c08968c23826e9ab841d1db36735002",
         "bundle_sha256": "edba6e825e8ebbfc334172769fb444373c08968c23826e9ab841d1db36735002",
-        "source_modified_utc": "2026-09-15T02:06:26Z",
-        "bundle_modified_utc": "2026-09-15T02:06:26Z",
+        "source_modified_utc": "2026-09-15T11:27:12Z",
+        "bundle_modified_utc": "2026-09-15T11:27:12Z",
         "source_size_bytes": 57053,
         "bundle_size_bytes": 57053,
         "stale_against_scenario": false
@@ -906,8 +906,8 @@
       "freshness": {
         "source_sha256": "9a1984b6ec530bf6836eb5facfed37ff102d5c19ccf8cf1128c0e6a4020dd82a",
         "bundle_sha256": "9a1984b6ec530bf6836eb5facfed37ff102d5c19ccf8cf1128c0e6a4020dd82a",
-        "source_modified_utc": "2026-09-15T02:06:27Z",
-        "bundle_modified_utc": "2026-09-15T02:06:27Z",
+        "source_modified_utc": "2026-09-15T11:27:12Z",
+        "bundle_modified_utc": "2026-09-15T11:27:12Z",
         "source_size_bytes": 295,
         "bundle_size_bytes": 295,
         "stale_against_scenario": false
@@ -925,8 +925,8 @@
       "freshness": {
         "source_sha256": "0a01dd2eccd98f400c243dbf18e62e193bc1ea0142a97124be084bcf49d80570",
         "bundle_sha256": "0a01dd2eccd98f400c243dbf18e62e193bc1ea0142a97124be084bcf49d80570",
-        "source_modified_utc": "2026-09-15T02:06:18Z",
-        "bundle_modified_utc": "2026-09-15T02:06:18Z",
+        "source_modified_utc": "2026-09-15T11:27:10Z",
+        "bundle_modified_utc": "2026-09-15T11:27:10Z",
         "source_size_bytes": 2127,
         "bundle_size_bytes": 2127,
         "stale_against_scenario": false
@@ -944,8 +944,8 @@
       "freshness": {
         "source_sha256": "7c005ca7f585d6dde21e595aa2ce5c8c1a9968fdec8b3b3df86675c1ace0c027",
         "bundle_sha256": "7c005ca7f585d6dde21e595aa2ce5c8c1a9968fdec8b3b3df86675c1ace0c027",
-        "source_modified_utc": "2026-09-15T02:06:27Z",
-        "bundle_modified_utc": "2026-09-15T02:06:27Z",
+        "source_modified_utc": "2026-09-15T11:27:12Z",
+        "bundle_modified_utc": "2026-09-15T11:27:12Z",
         "source_size_bytes": 623,
         "bundle_size_bytes": 623,
         "stale_against_scenario": false
@@ -963,8 +963,8 @@
       "freshness": {
         "source_sha256": "9189cd93204ddb505dba7b135a9bed0c81b745e8adfcb05d12ea9535bc46bd29",
         "bundle_sha256": "9189cd93204ddb505dba7b135a9bed0c81b745e8adfcb05d12ea9535bc46bd29",
-        "source_modified_utc": "2026-09-15T02:06:28Z",
-        "bundle_modified_utc": "2026-09-15T02:06:28Z",
+        "source_modified_utc": "2026-09-15T11:27:12Z",
+        "bundle_modified_utc": "2026-09-15T11:27:12Z",
         "source_size_bytes": 2086,
         "bundle_size_bytes": 2086,
         "stale_against_scenario": false
@@ -982,8 +982,8 @@
       "freshness": {
         "source_sha256": "6ac079f4b22f49eb17330ee67df7bcdd425f694eebe4262c0e8c50d126865179",
         "bundle_sha256": "6ac079f4b22f49eb17330ee67df7bcdd425f694eebe4262c0e8c50d126865179",
-        "source_modified_utc": "2026-09-15T02:06:28Z",
-        "bundle_modified_utc": "2026-09-15T02:06:28Z",
+        "source_modified_utc": "2026-09-15T11:27:12Z",
+        "bundle_modified_utc": "2026-09-15T11:27:12Z",
         "source_size_bytes": 3394,
         "bundle_size_bytes": 3394,
         "stale_against_scenario": false
@@ -1001,8 +1001,8 @@
       "freshness": {
         "source_sha256": "2af43dcb75c8c1ffd5b3a474b49cd9163d3956c91515e10df2b70245465e1c13",
         "bundle_sha256": "2af43dcb75c8c1ffd5b3a474b49cd9163d3956c91515e10df2b70245465e1c13",
-        "source_modified_utc": "2026-09-15T02:06:28Z",
-        "bundle_modified_utc": "2026-09-15T02:06:28Z",
+        "source_modified_utc": "2026-09-15T11:27:12Z",
+        "bundle_modified_utc": "2026-09-15T11:27:12Z",
         "source_size_bytes": 708,
         "bundle_size_bytes": 708,
         "stale_against_scenario": false
@@ -1020,8 +1020,8 @@
       "freshness": {
         "source_sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672",
         "bundle_sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672",
-        "source_modified_utc": "2026-09-15T02:06:28Z",
-        "bundle_modified_utc": "2026-09-15T02:06:28Z",
+        "source_modified_utc": "2026-09-15T11:27:12Z",
+        "bundle_modified_utc": "2026-09-15T11:27:12Z",
         "source_size_bytes": 291,
         "bundle_size_bytes": 291,
         "stale_against_scenario": false

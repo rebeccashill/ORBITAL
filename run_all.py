@@ -6,10 +6,21 @@ from datetime import datetime
 from pathlib import Path
 
 
+PROGRESS_INTERVAL_SECONDS = 15
+
+
 def safe_print(message: str = "") -> None:
     """Print safely when the active console encoding is not UTF-8."""
     encoding = sys.stdout.encoding or "utf-8"
-    print(message.encode(encoding, errors="replace").decode(encoding))
+    print(message.encode(encoding, errors="replace").decode(encoding), flush=True)
+
+
+def format_elapsed(seconds: float) -> str:
+    elapsed_seconds = int(seconds)
+    minutes, seconds = divmod(elapsed_seconds, 60)
+    if minutes:
+        return f"{minutes}m {seconds:02d}s"
+    return f"{seconds}s"
 
 
 def run(cmd: list[str], label: str, log_path: Path) -> None:
@@ -18,6 +29,10 @@ def run(cmd: list[str], label: str, log_path: Path) -> None:
     safe_print("=" * 72)
     safe_print("Command: " + " ".join(cmd))
     safe_print("Log: " + str(log_path))
+    safe_print(
+        f"Output is being written to the log; progress updates every "
+        f"{PROGRESS_INTERVAL_SECONDS}s."
+    )
 
     start = time.time()
 
@@ -27,16 +42,33 @@ def run(cmd: list[str], label: str, log_path: Path) -> None:
         f.write("Command: " + " ".join(cmd) + "\n\n")
         f.flush()
 
-        # Stream stdout/stderr to a UTF-8 log for debugging.
-        result = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT)
+        # Stream stdout/stderr to a UTF-8 log for debugging while keeping
+        # a small console heartbeat so long runs do not look frozen.
+        process = subprocess.Popen(cmd, stdout=f, stderr=subprocess.STDOUT)
+        next_progress = start + PROGRESS_INTERVAL_SECONDS
+        try:
+            while process.poll() is None:
+                now = time.time()
+                if now >= next_progress:
+                    safe_print(f"Still running {label}: {format_elapsed(now - start)} elapsed")
+                    next_progress = now + PROGRESS_INTERVAL_SECONDS
+                time.sleep(1)
+            returncode = process.returncode
+        except KeyboardInterrupt:
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+            raise
 
     elapsed = time.time() - start
-    status = "OK" if result.returncode == 0 else f"FAIL (code {result.returncode})"
+    status = "OK" if returncode == 0 else f"FAIL (code {returncode})"
     safe_print(f"Finished {label}: {status} in {elapsed:.2f}s")
 
-    if result.returncode != 0:
+    if returncode != 0:
         safe_print(f"\nERROR: {label} failed. See log: {log_path}")
-        sys.exit(result.returncode)
+        sys.exit(returncode)
 
 
 def build_cli_cmd(
