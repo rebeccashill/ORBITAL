@@ -1,0 +1,124 @@
+{
+  "kind": "evidence_bundle_checksum_manifest",
+  "algorithm": "sha256",
+  "excludes": [
+    "checksum_manifest.json"
+  ],
+  "files": [
+    {
+      "bundle_path": "artifact_index.md",
+      "sha256": "e5c2caaadd94a0c4989820c7c1fa0838774c4be3bfe978cdbc23da6b82f6f6d9",
+      "size_bytes": 4056
+    },
+    {
+      "bundle_path": "autopilot_mission.csv",
+      "sha256": "2f17c5ca9b84251b578d40013785f2641063b55c5cc5b8c0a6617bf1ebca4ca3",
+      "size_bytes": 2076
+    },
+    {
+      "bundle_path": "evidence_bundle_summary.md",
+      "sha256": "515680e1fc8248bb27ee9c9a033f62ae9743535d548e6ee775acdbbd5601b1f5",
+      "size_bytes": 9067
+    },
+    {
+      "bundle_path": "flight_path.png",
+      "sha256": "4bdaadd7e1f89e6c0bb69efa07a546ae608c22508470fffbc9e8b2aad71a9985",
+      "size_bytes": 56964
+    },
+    {
+      "bundle_path": "flight_planning_exports.json",
+      "sha256": "7395904e8ac9fdfee3c688d67ddf1722484f5cc04667d4c33f9ed8d17cef6acd",
+      "size_bytes": 742
+    },
+    {
+      "bundle_path": "flight_planning_exports.md",
+      "sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672",
+      "size_bytes": 291
+    },
+    {
+      "bundle_path": "inspection_constraint_audit.json",
+      "sha256": "5b00988486b33d30e45e905b8285e3d611f47a2e8cbe572a5dc65f6a549e4d77",
+      "size_bytes": 50959
+    },
+    {
+      "bundle_path": "inspection_constraint_audit.md",
+      "sha256": "c2b14d7b726e722d29bd8f9d8b35c4b3aa77002c2b4512a2b87d21851082fcb7",
+      "size_bytes": 17190
+    },
+    {
+      "bundle_path": "manifest.json",
+      "sha256": "7d8f369d663da5e7c1f3b4638e08b418d6bfa9f148ba4a8e217c74eb025fce31",
+      "size_bytes": 61591
+    },
+    {
+      "bundle_path": "mission_review.kml",
+      "sha256": "82bf0577c8b9ae4d097c747781dbb29c46392265c26695b090dbb4609f08d901",
+      "size_bytes": 3391
+    },
+    {
+      "bundle_path": "operator_dashboard.md",
+      "sha256": "e219420ab96fc084ab7ea0441f6c47d50a1ea3e0a7359a39d04833e3de74d624",
+      "size_bytes": 18254
+    },
+    {
+      "bundle_path": "operator_memo.md",
+      "sha256": "dcd4792e26178d0939e4f48e022eebcc0e001d721387d7d9d411372d30d8d897",
+      "size_bytes": 2123
+    },
+    {
+      "bundle_path": "operator_review_ui.html",
+      "sha256": "76c68f83413f79fdb8d9c54ef54a3d94f861313cb0f976925012f610fa3f9df0",
+      "size_bytes": 159101
+    },
+    {
+      "bundle_path": "plan.json",
+      "sha256": "789865d1eadbfdaa0c43bedc5c648e9e8149889053597df47c38e1fcde0e619b",
+      "size_bytes": 2535
+    },
+    {
+      "bundle_path": "README.md",
+      "sha256": "58777eda13b003587dcdf2fe54087203be9d438d1c1988b95a46c09aa5905907",
+      "size_bytes": 6518
+    },
+    {
+      "bundle_path": "regulatory_readiness_report.json",
+      "sha256": "b85364c0bdfc26c36d0431f89c113867fd9383a60822798e090d1648d2c2b1d3",
+      "size_bytes": 11225
+    },
+    {
+      "bundle_path": "regulatory_readiness_report.md",
+      "sha256": "92d5ccfe22bb9e67bdbb968fa31e551ddffa47c78b79517901f431290c3ee587",
+      "size_bytes": 5950
+    },
+    {
+      "bundle_path": "robustness.json",
+      "sha256": "846443f595f7c187e15a4baafeb28fa5114444a2a859cd765e2a28f5ce22861b",
+      "size_bytes": 293
+    },
+    {
+      "bundle_path": "scenario.yaml",
+      "sha256": "d1ab734cc550ef53d571715d02c0916a63953a97b8b6b0c74783556a8684f88a",
+      "size_bytes": 6612
+    },
+    {
+      "bundle_path": "score.json",
+      "sha256": "c7ec80738105960c6361ae24e294ad530b266b6e637f376b6004a3945365fbc9",
+      "size_bytes": 1118
+    },
+    {
+      "bundle_path": "weather.json",
+      "sha256": "7c005ca7f585d6dde21e595aa2ce5c8c1a9968fdec8b3b3df86675c1ace0c027",
+      "size_bytes": 623
+    },
+    {
+      "bundle_path": "what_if_plan.json",
+      "sha256": "d68a5938088d8737aec18920514d8c581c1f5204efbe1310e4fe7c0b0623826a",
+      "size_bytes": 64922
+    },
+    {
+      "bundle_path": "what_if_plan.md",
+      "sha256": "da7ac22576aa4f027da4e0b0cfcc85393db49d6ffa3ef50a67a406ffeeb9ff8d",
+      "size_bytes": 3131
+    }
+  ]
+}

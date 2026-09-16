@@ -1,0 +1,1314 @@
+{
+  "kind": "operator_evidence_bundle",
+  "manifest_version": 1,
+  "ui_manifest_version": 1,
+  "ui_compatibility": {
+    "schema_version": 1,
+    "manifest_version": 1,
+    "minimum_supported_manifest_version": 1,
+    "generated_timestamp_utc": "2026-09-15T05:24:50Z",
+    "required_top_level_fields": [
+      "kind",
+      "manifest_version",
+      "ui_compatibility",
+      "scenario_path",
+      "constraint_audit",
+      "regulatory_readiness",
+      "bundle_completeness",
+      "regulatory_documentation_completeness",
+      "weather_evidence_readiness",
+      "regulatory_evidence_provenance",
+      "checksum_evidence_readiness",
+      "freshness",
+      "artifacts",
+      "generated_artifacts",
+      "checksum_manifest"
+    ],
+    "artifact_entry_required_fields": [
+      "id",
+      "label",
+      "bundle_path",
+      "present"
+    ],
+    "optional_field_fallback_policy": "Every optional UI field must render explicit fallback text such as 'not provided', 'n/a', 'UNKNOWN', or 'unavailable'; optional fields must not render as blank labels.",
+    "optional_field_fallbacks": {
+      "constraint_audit.mission_id": "scenario filename",
+      "constraint_audit.status": "UNKNOWN",
+      "constraint_audit.mission_risk": "UNKNOWN",
+      "constraint_audit.top_limiting_constraint": "not available",
+      "regulatory_readiness.readiness_state": "UNKNOWN",
+      "bundle_completeness.score": "n/a",
+      "regulatory_documentation_completeness.score": "n/a",
+      "weather_evidence_readiness.summary": "No weather evidence status captured.",
+      "weather_evidence_readiness.operator_action": "Confirm current weather before release.",
+      "regulatory_evidence_provenance.summary": "No regulatory provenance captured.",
+      "checksum_evidence_readiness.summary": "Checksum evidence status not captured.",
+      "trust_defensibility.uncertainty_robustness_status.summary": "No robustness / uncertainty status captured.",
+      "operator_review.operator_decision": "pending operator review",
+      "operator_review.reviewer_name": "not provided",
+      "operator_review.review_timestamp_utc": "not provided"
+    },
+    "artifact_access": {
+      "outside_ui_required": true,
+      "expected_formats": [
+        "markdown",
+        "json",
+        "csv",
+        "kml",
+        "png",
+        "manifest",
+        "checksum",
+        "dashboard"
+      ],
+      "artifact_count": 17,
+      "generated_artifact_count": 7,
+      "unavailable_artifact_policy": "Unavailable artifacts render as non-link unavailable labels in the review UI and Markdown dashboard; they must not be emitted as hrefs.",
+      "primary_dashboard": "operator_dashboard.md",
+      "visual_review_ui": "operator_review_ui.html",
+      "manifest": "manifest.json",
+      "checksum": "checksum_manifest.json"
+    },
+    "ui_behavior": {
+      "primary_manifest_source": "manifest.json",
+      "fallback_manifest_source": "embedded manifest snapshot",
+      "link_policy": "link_when_present_else_unavailable_label",
+      "read_only": true,
+      "documentation_only": true
+    }
+  },
+  "bundle_dir": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/operator_evidence_bundle",
+  "scenario_path": "examples/bvlos_fixtures/bvlos_ready_evidence_fixture.yaml",
+  "complete": true,
+  "missing": [],
+  "bundle_completeness_score": 100.0,
+  "bundle_completeness": {
+    "score": 100.0,
+    "unit": "percent",
+    "present_artifacts": 17,
+    "total_artifacts": 17,
+    "missing_artifacts": 0,
+    "complete": true,
+    "scoring_note": "Score is based on expected bundle artifacts present at export time. Optional documentation fields are reported separately and do not block planning."
+  },
+  "artifact_completeness": {
+    "score": 100.0,
+    "unit": "percent",
+    "present_artifacts": 17,
+    "total_artifacts": 17,
+    "missing_artifacts": 0,
+    "complete": true,
+    "scoring_note": "Score is based on expected bundle artifacts present at export time. Optional documentation fields are reported separately and do not block planning."
+  },
+  "regulatory_documentation_completeness": {
+    "score": 100.0,
+    "unit": "percent",
+    "documented_fields": 11,
+    "total_fields": 11,
+    "missing_fields": 0,
+    "operator_attention_missing_fields": 0,
+    "complete": true,
+    "documentation_only": true,
+    "scoring_note": "Score is based on optional regulatory documentation fields. Missing fields are visible for operator review but do not block planning or imply approval."
+  },
+  "missing_evidence": [],
+  "bundle_warnings": [
+    {
+      "id": "stale_plan_json",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "plan_json",
+      "label": "Plan JSON",
+      "bundle_path": "plan.json",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_constraint_audit_markdown",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "constraint_audit_markdown",
+      "label": "Primary constraint-audit report",
+      "bundle_path": "inspection_constraint_audit.md",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_constraint_audit_json",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "constraint_audit_json",
+      "label": "Constraint audit JSON",
+      "bundle_path": "inspection_constraint_audit.json",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_regulatory_readiness_json",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "regulatory_readiness_json",
+      "label": "Regulatory readiness JSON",
+      "bundle_path": "regulatory_readiness_report.json",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_regulatory_readiness_markdown",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "regulatory_readiness_markdown",
+      "label": "Regulatory readiness report",
+      "bundle_path": "regulatory_readiness_report.md",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_what_if_plan_markdown",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "what_if_plan_markdown",
+      "label": "What-if planning report",
+      "bundle_path": "what_if_plan.md",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_what_if_plan_json",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "what_if_plan_json",
+      "label": "What-if planning JSON",
+      "bundle_path": "what_if_plan.json",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_score_breakdown",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "score_breakdown",
+      "label": "Score breakdown",
+      "bundle_path": "score.json",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_flight_path_plot",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "flight_path_plot",
+      "label": "Flight path plot",
+      "bundle_path": "flight_path.png",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_robustness_summary",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "robustness_summary",
+      "label": "Robustness summary",
+      "bundle_path": "robustness.json",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_go_no_go_memo",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "go_no_go_memo",
+      "label": "Plain-English go/no-go memo",
+      "bundle_path": "operator_memo.md",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_weather_snapshot",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "weather_snapshot",
+      "label": "Weather snapshot",
+      "bundle_path": "weather.json",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_autopilot_mission_csv",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "autopilot_mission_csv",
+      "label": "Autopilot mission CSV",
+      "bundle_path": "autopilot_mission.csv",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_mission_review_kml",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "mission_review_kml",
+      "label": "Mission review KML",
+      "bundle_path": "mission_review.kml",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_flight_planning_exports_manifest",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "flight_planning_exports_manifest",
+      "label": "Flight-planning exports manifest",
+      "bundle_path": "flight_planning_exports.json",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "stale_flight_planning_exports_readme",
+      "kind": "stale_artifact",
+      "severity": "warning",
+      "artifact_id": "flight_planning_exports_readme",
+      "label": "Flight-planning exports README",
+      "bundle_path": "flight_planning_exports.md",
+      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
+    },
+    {
+      "id": "route_export_stale_autopilot_mission_csv",
+      "kind": "route_export_stale",
+      "severity": "warning",
+      "artifact_id": "autopilot_mission_csv",
+      "bundle_path": "autopilot_mission.csv",
+      "message": "Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review."
+    },
+    {
+      "id": "route_export_stale_mission_review_kml",
+      "kind": "route_export_stale",
+      "severity": "warning",
+      "artifact_id": "mission_review_kml",
+      "bundle_path": "mission_review.kml",
+      "message": "Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review."
+    },
+    {
+      "id": "route_export_stale_flight_planning_exports_manifest",
+      "kind": "route_export_stale",
+      "severity": "warning",
+      "artifact_id": "flight_planning_exports_manifest",
+      "bundle_path": "flight_planning_exports.json",
+      "message": "Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review."
+    },
+    {
+      "id": "route_export_stale_flight_planning_exports_readme",
+      "kind": "route_export_stale",
+      "severity": "warning",
+      "artifact_id": "flight_planning_exports_readme",
+      "bundle_path": "flight_planning_exports.md",
+      "message": "Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review."
+    }
+  ],
+  "operator_review": {
+    "status": "ready_for_review",
+    "requested_status": "ready_for_review",
+    "allowed_statuses": [
+      "draft",
+      "ready_for_review",
+      "reviewed"
+    ],
+    "reviewer_name": "Fixture reviewer",
+    "review_timestamp_utc": "2026-09-15T05:24:50Z",
+    "review_notes": "BVLOS Ready Evidence Fixture generated for ORBITAL fixture matrix validation.",
+    "operator_decision": "pending operator review",
+    "documentation_only": true,
+    "notice": "Operator review fields are documentation only. They do not approve a flight, issue an authorization, provide legal advice, or replace pilot-in-command release authority."
+  },
+  "review_metadata": {
+    "schema_version": 1,
+    "status": "ready_for_review",
+    "requested_status": "ready_for_review",
+    "reviewer_name": "Fixture reviewer",
+    "review_timestamp_utc": "2026-09-15T05:24:50Z",
+    "review_notes": "BVLOS Ready Evidence Fixture generated for ORBITAL fixture matrix validation.",
+    "operator_decision": "pending operator review",
+    "documentation_only": true,
+    "notice": "Operator review fields are documentation only. They do not approve a flight, issue an authorization, provide legal advice, or replace pilot-in-command release authority."
+  },
+  "freshness": {
+    "generated_timestamp_utc": "2026-09-15T05:24:50Z",
+    "orbital_version": "1.0.16",
+    "scenario_path": "examples/bvlos_fixtures/bvlos_ready_evidence_fixture.yaml",
+    "scenario_hash": {
+      "algorithm": "sha256",
+      "value": "2f1fd0b0d63f9d2a4b36f1beea6614674aa0a4cfaa71fcc02a3b07f131c4fa38"
+    },
+    "scenario_modified_utc": "2026-09-16T04:57:45Z",
+    "command": {
+      "display": "python -m mission_framework.cli examples\\bvlos_fixtures\\bvlos_ready_evidence_fixture.yaml --generated-at 2026-09-15T05:24:50Z --outdir outputs\\bvlos_fixtures",
+      "argv": [
+        "python",
+        "-m",
+        "mission_framework.cli",
+        "examples\\bvlos_fixtures\\bvlos_ready_evidence_fixture.yaml",
+        "--generated-at",
+        "2026-09-15T05:24:50Z",
+        "--outdir",
+        "outputs\\bvlos_fixtures"
+      ]
+    },
+    "metadata_note": "Freshness metadata supports evidence review. It does not provide flight approval, authorization, legal advice, or operational clearance."
+  },
+  "weather": {
+    "source": "Operator-packaged field weather observation",
+    "provider": "offline",
+    "timestamp_utc": "2026-09-15T05:15:00Z",
+    "fallback_used": false,
+    "fallback_reason": null,
+    "live_fetch_enabled": false,
+    "applied_to_wind": true
+  },
+  "weather_evidence_readiness": {
+    "documentation_only": true,
+    "status": "PACKAGED",
+    "mode": "packaged",
+    "source": "Operator-packaged field weather observation",
+    "provider": "offline",
+    "timestamp_utc": "2026-09-15T05:15:00Z",
+    "generated_timestamp_utc": "2026-09-15T05:24:50Z",
+    "age_hours": 0.16,
+    "freshness_max_age_hours": 2.0,
+    "freshness_status": "packaged",
+    "fallback_used": false,
+    "fallback_reason": null,
+    "sample_or_offline": false,
+    "live_fetch_enabled": false,
+    "live_provider_configured": false,
+    "live_provider_hook": {
+      "provider": "offline",
+      "configured": false,
+      "required": false,
+      "documentation_only": true,
+      "note": "Live weather provider integration can populate this evidence block, but ORBITAL does not require live integration or verify launch authorization."
+    },
+    "operator_action": "Confirm packaged weather evidence against launch-time field conditions. Operator should verify the source outside ORBITAL.",
+    "summary": "PACKAGED: packaged weather evidence from Operator-packaged field weather observation. Confirm it against launch-time field conditions. Timestamp: 2026-09-15T05:15:00Z.",
+    "notice": "Weather evidence supports operator review only. ORBITAL does not certify weather, approve launch, or provide operational clearance."
+  },
+  "regulatory_evidence_provenance": {
+    "documentation_only": true,
+    "status": "DOCUMENTED",
+    "source": "Operator planning record",
+    "date_checked_utc": "2026-09-15T04:30:00Z",
+    "expiration_date": "2026-12-31",
+    "authority": "Operator internal review",
+    "operator_confirmation_status": "not_required",
+    "authorization_required": false,
+    "checked_age_hours": 0.91,
+    "freshness_max_age_hours": 24.0,
+    "freshness_status": "fresh",
+    "expired": false,
+    "operator_action": "Keep source, date checked, expiration, and confirmation record with the bundle. Operator should verify regulatory inputs.",
+    "summary": "DOCUMENTED: regulatory evidence is documented for review. Source: Operator planning record; checked: 2026-09-15T04:30:00Z; expiration: 2026-12-31; authority: Operator internal review; confirmation: not_required.",
+    "notice": "Regulatory evidence provenance is documentation-only. ORBITAL does not grant approval, authorization, LAANC, legal advice, or operational clearance."
+  },
+  "checksum_evidence_readiness": {
+    "documentation_only": true,
+    "status": "VERIFY REQUIRED",
+    "bundle_path": "checksum_manifest.json",
+    "generated_timestamp_utc": "2026-09-15T05:24:50Z",
+    "operator_action": "Run bundle checksum verification after generation and before archiving or sharing the evidence bundle.",
+    "summary": "Checksum manifest is generated with the bundle; verification must be run against the final archived files.",
+    "notice": "Checksums support file integrity review only. They do not approve a mission or verify regulatory authorization."
+  },
+  "flight_planning_exports_enabled": true,
+  "regulatory_metadata": {
+    "documentation_only": true,
+    "laanc_required": false,
+    "waiver_or_authorization_required": false,
+    "airspace_class": "Class G fixture corridor",
+    "visual_observer_required": false,
+    "ground_risk_population_note": "Fixture corridor over controlled utility access roads; no public overflight modeled.",
+    "authorization_id": "not required for fixture",
+    "authorization_authority": "Operator internal review",
+    "approving_authority_source": "Operator planning record",
+    "authorization_date_checked_utc": "2026-09-15T04:30:00Z",
+    "authorization_expiration_date": "2026-12-31",
+    "operator_confirmation_status": "not_required",
+    "evidence_freshness_max_age_hours": 24,
+    "operating_altitude_limit_m": 120.0,
+    "operating_time_window": {
+      "start_utc": "2026-09-15T05:00:00Z",
+      "end_utc": "2026-09-15T07:00:00Z"
+    },
+    "required_crew_roles": [
+      "Remote pilot in command"
+    ],
+    "special_conditions_limitations": [
+      "Stay inside the modeled utility corridor and geofence buffers."
+    ],
+    "emergency_contingency_plan": "Use the documented lost-link, diversion, recovery, and incident-contact procedure.",
+    "operating_assumptions": [
+      "Pilot-in-command verifies current site and local operating conditions before launch.",
+      "Mission remains within modeled route, altitude, weather, battery, and geofence constraints."
+    ],
+    "unresolved_items": [],
+    "documentation_only_notice": "Fixture data for customer-discovery testing; ORBITAL does not provide approval or clearance.",
+    "decision_support_disclaimer": "ORBITAL provides decision support only and is not legal approval. This report does not provide LAANC, waivers, authorizations, operational clearance, legal advice, or permission to fly. The pilot-in-command and operator remain responsible for all required regulatory review, approvals, and compliance decisions."
+  },
+  "constraint_audit": {
+    "mission_id": "BVLOS Ready Evidence Fixture",
+    "status": "go",
+    "mission_risk": "low",
+    "top_limiting_constraint": {
+      "id": "wind_weather",
+      "label": "Wind / weather margin",
+      "category": "weather",
+      "category_label": "Weather / wind margin",
+      "status": "pass",
+      "status_meaning": "Modeled margin is above the configured review threshold.",
+      "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+      "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+      "margin": {
+        "value": 3.5999999999999996,
+        "unit": "m/s",
+        "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+      },
+      "warning_margin": {
+        "value": 2.0,
+        "unit": "m/s",
+        "source": "wind.warning_margin_mps or default 2.0 m/s"
+      },
+      "risk_points": 12.0,
+      "observed": {
+        "max_horizontal_wind_mps": 5.4,
+        "weather_audit_wind_mps": 5.4,
+        "max_safe_wind_mps": 9.0,
+        "weather_source": "Operator-packaged field weather observation",
+        "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+        "weather_wind_speed_mps": 4.2,
+        "weather_wind_direction_deg": 282.0,
+        "weather_wind_gust_mps": 5.4,
+        "visibility_m": 18000.0,
+        "precipitation_mm": 0.0,
+        "temperature_C": 19.0,
+        "weather_fallback_used": false
+      },
+      "recommendation": "Wait for better wind or lower mission scope.",
+      "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+    }
+  },
+  "trust_defensibility": {
+    "sample_data_demo_note": {
+      "is_demo_or_sample": false,
+      "note": "Scenario data note: verify route, weather, regulatory, crew, and customer evidence before operational use. Operator should verify source inputs."
+    },
+    "model_assumptions_summary": [
+      {
+        "id": "battery",
+        "label": "Battery / energy model",
+        "assumption": "Battery feasibility is based on the configured capacity, initial charge, reserve policy, and simplified power model coefficients.",
+        "operator_review_note": "Confirm aircraft battery health, payload draw, temperature effects, and abort reserve outside ORBITAL before release."
+      },
+      {
+        "id": "wind",
+        "label": "Wind / weather model",
+        "assumption": "Wind feasibility compares the modeled or weather-provided wind exposure against the configured safe operating limit.",
+        "operator_review_note": "Refresh field weather and gust observations close to launch, especially when offline or sample weather is used."
+      },
+      {
+        "id": "geofence",
+        "label": "Geofence / no-fly-zone model",
+        "assumption": "Geofence feasibility treats configured polygons and imported GeoJSON zones as the planning boundary source.",
+        "operator_review_note": "Confirm site boundaries, customer buffers, and launch/recovery areas on current maps before export or dispatch."
+      },
+      {
+        "id": "route_completion",
+        "label": "Route completion model",
+        "assumption": "The route is considered complete only when the simulation reaches the required inspection waypoints under the configured reach radius.",
+        "operator_review_note": "Confirm the waypoint list matches the inspection scope and define any acceptable skipped-point policy before dispatch."
+      },
+      {
+        "id": "turn_feasibility",
+        "label": "Turn / bank feasibility model",
+        "assumption": "Turn feasibility uses a simplified bank-angle/yaw-rate envelope rather than aircraft-specific autopilot tracking or detailed aerodynamics.",
+        "operator_review_note": "Confirm the route geometry, turn spacing, and selected speed are within the aircraft operating envelope."
+      },
+      {
+        "id": "robustness",
+        "label": "Robustness model",
+        "assumption": "Robustness reflects configured Monte Carlo perturbations only; it is not a certification, reliability guarantee, or live safety monitor.",
+        "operator_review_note": "Increase robustness cases or add scenario-specific uncertainty ranges when margin sensitivity matters."
+      }
+    ],
+    "known_limitations_summary": [
+      {
+        "id": "offline_sample_weather",
+        "applies": true,
+        "limitation": "Weather may come from offline, fallback, or sample inputs. ORBITAL records the source and timestamp, but the operator must verify current field weather before release."
+      },
+      {
+        "id": "simplified_flight_dynamics",
+        "applies": true,
+        "limitation": "Aircraft dynamics are simplified for feasibility planning. ORBITAL does not model every autopilot behavior, controller response, payload effect, battery aging factor, sensor constraint, or emergency maneuver."
+      },
+      {
+        "id": "decision_support_only",
+        "applies": true,
+        "limitation": "Constraint margins are planning evidence for operator review. They do not approve a flight, issue authorization, or replace pilot-in-command judgment."
+      }
+    ],
+    "weather_fallback_status": {
+      "documentation_only": true,
+      "status": "PACKAGED",
+      "mode": "packaged",
+      "source": "Operator-packaged field weather observation",
+      "provider": "offline",
+      "timestamp_utc": "2026-09-15T05:15:00Z",
+      "generated_timestamp_utc": "2026-09-15T05:24:50Z",
+      "age_hours": 0.16,
+      "freshness_max_age_hours": 2.0,
+      "freshness_status": "packaged",
+      "fallback_used": false,
+      "fallback_reason": null,
+      "sample_or_offline": false,
+      "live_fetch_enabled": false,
+      "live_provider_configured": false,
+      "live_provider_hook": {
+        "provider": "offline",
+        "configured": false,
+        "required": false,
+        "documentation_only": true,
+        "note": "Live weather provider integration can populate this evidence block, but ORBITAL does not require live integration or verify launch authorization."
+      },
+      "operator_action": "Confirm packaged weather evidence against launch-time field conditions. Operator should verify the source outside ORBITAL.",
+      "summary": "PACKAGED: packaged weather evidence from Operator-packaged field weather observation. Confirm it against launch-time field conditions. Timestamp: 2026-09-15T05:15:00Z.",
+      "notice": "Weather evidence supports operator review only. ORBITAL does not certify weather, approve launch, or provide operational clearance."
+    },
+    "weather_evidence_readiness": {
+      "documentation_only": true,
+      "status": "PACKAGED",
+      "mode": "packaged",
+      "source": "Operator-packaged field weather observation",
+      "provider": "offline",
+      "timestamp_utc": "2026-09-15T05:15:00Z",
+      "generated_timestamp_utc": "2026-09-15T05:24:50Z",
+      "age_hours": 0.16,
+      "freshness_max_age_hours": 2.0,
+      "freshness_status": "packaged",
+      "fallback_used": false,
+      "fallback_reason": null,
+      "sample_or_offline": false,
+      "live_fetch_enabled": false,
+      "live_provider_configured": false,
+      "live_provider_hook": {
+        "provider": "offline",
+        "configured": false,
+        "required": false,
+        "documentation_only": true,
+        "note": "Live weather provider integration can populate this evidence block, but ORBITAL does not require live integration or verify launch authorization."
+      },
+      "operator_action": "Confirm packaged weather evidence against launch-time field conditions. Operator should verify the source outside ORBITAL.",
+      "summary": "PACKAGED: packaged weather evidence from Operator-packaged field weather observation. Confirm it against launch-time field conditions. Timestamp: 2026-09-15T05:15:00Z.",
+      "notice": "Weather evidence supports operator review only. ORBITAL does not certify weather, approve launch, or provide operational clearance."
+    },
+    "regulatory_evidence_provenance": {
+      "documentation_only": true,
+      "status": "DOCUMENTED",
+      "source": "Operator planning record",
+      "date_checked_utc": "2026-09-15T04:30:00Z",
+      "expiration_date": "2026-12-31",
+      "authority": "Operator internal review",
+      "operator_confirmation_status": "not_required",
+      "authorization_required": false,
+      "checked_age_hours": 0.91,
+      "freshness_max_age_hours": 24.0,
+      "freshness_status": "fresh",
+      "expired": false,
+      "operator_action": "Keep source, date checked, expiration, and confirmation record with the bundle. Operator should verify regulatory inputs.",
+      "summary": "DOCUMENTED: regulatory evidence is documented for review. Source: Operator planning record; checked: 2026-09-15T04:30:00Z; expiration: 2026-12-31; authority: Operator internal review; confirmation: not_required.",
+      "notice": "Regulatory evidence provenance is documentation-only. ORBITAL does not grant approval, authorization, LAANC, legal advice, or operational clearance."
+    },
+    "uncertainty_robustness_status": {
+      "status": "PASS",
+      "summary": "PASS: 1 case(s), hard pass rate 100.0 %, worst hard margin 0.166. Confidence from configured robustness cases is scenario-limited and should be reviewed against operator uncertainty assumptions.",
+      "operator_action": "Review robustness assumptions and rerun with scenario-specific uncertainty ranges if margins are close.",
+      "confidence": "configured-case confidence",
+      "cases": 1,
+      "hard_pass_rate": 1.0,
+      "worst_hard_margin_min": 0.16550032913122084,
+      "aggregation": "mean",
+      "cvar_alpha": null
+    },
+    "evidence_warning_summary": {
+      "status": "REVIEW REQUIRED",
+      "missing_artifacts": 0,
+      "stale_artifacts": 16,
+      "missing_evidence": 0,
+      "bundle_warnings": 20,
+      "summary": "REVIEW REQUIRED: 0 missing artifact(s), 16 stale artifact(s), 0 missing evidence item(s), 20 bundle warning(s)",
+      "stale_artifacts_detail": [
+        {
+          "id": "plan_json",
+          "label": "Plan JSON",
+          "bundle_path": "plan.json"
+        },
+        {
+          "id": "constraint_audit_markdown",
+          "label": "Primary constraint-audit report",
+          "bundle_path": "inspection_constraint_audit.md"
+        },
+        {
+          "id": "constraint_audit_json",
+          "label": "Constraint audit JSON",
+          "bundle_path": "inspection_constraint_audit.json"
+        },
+        {
+          "id": "regulatory_readiness_json",
+          "label": "Regulatory readiness JSON",
+          "bundle_path": "regulatory_readiness_report.json"
+        },
+        {
+          "id": "regulatory_readiness_markdown",
+          "label": "Regulatory readiness report",
+          "bundle_path": "regulatory_readiness_report.md"
+        },
+        {
+          "id": "what_if_plan_markdown",
+          "label": "What-if planning report",
+          "bundle_path": "what_if_plan.md"
+        },
+        {
+          "id": "what_if_plan_json",
+          "label": "What-if planning JSON",
+          "bundle_path": "what_if_plan.json"
+        },
+        {
+          "id": "score_breakdown",
+          "label": "Score breakdown",
+          "bundle_path": "score.json"
+        },
+        {
+          "id": "flight_path_plot",
+          "label": "Flight path plot",
+          "bundle_path": "flight_path.png"
+        },
+        {
+          "id": "robustness_summary",
+          "label": "Robustness summary",
+          "bundle_path": "robustness.json"
+        },
+        {
+          "id": "go_no_go_memo",
+          "label": "Plain-English go/no-go memo",
+          "bundle_path": "operator_memo.md"
+        },
+        {
+          "id": "weather_snapshot",
+          "label": "Weather snapshot",
+          "bundle_path": "weather.json"
+        },
+        {
+          "id": "autopilot_mission_csv",
+          "label": "Autopilot mission CSV",
+          "bundle_path": "autopilot_mission.csv"
+        },
+        {
+          "id": "mission_review_kml",
+          "label": "Mission review KML",
+          "bundle_path": "mission_review.kml"
+        },
+        {
+          "id": "flight_planning_exports_manifest",
+          "label": "Flight-planning exports manifest",
+          "bundle_path": "flight_planning_exports.json"
+        },
+        {
+          "id": "flight_planning_exports_readme",
+          "label": "Flight-planning exports README",
+          "bundle_path": "flight_planning_exports.md"
+        }
+      ],
+      "missing_artifacts_detail": []
+    }
+  },
+  "regulatory_readiness": {
+    "status": "documented_review_required",
+    "readiness_state": "documented_review_required",
+    "documentation_only": true,
+    "not_legal_approval": true
+  },
+  "regulatory_evidence": {
+    "documentation_only": true,
+    "authorization_id": "not required for fixture",
+    "authorization_authority": "Operator internal review",
+    "approving_authority_source": "Operator planning record",
+    "authorization_date_checked_utc": "2026-09-15T04:30:00Z",
+    "authorization_expiration_date": "2026-12-31",
+    "operator_confirmation_status": "not_required",
+    "operating_altitude_limit_m": 120.0,
+    "operating_time_window": {
+      "start_utc": "2026-09-15T05:00:00Z",
+      "end_utc": "2026-09-15T07:00:00Z"
+    },
+    "required_crew_roles": [
+      "Remote pilot in command"
+    ],
+    "special_conditions_limitations": [
+      "Stay inside the modeled utility corridor and geofence buffers."
+    ],
+    "emergency_contingency_plan": "Use the documented lost-link, diversion, recovery, and incident-contact procedure.",
+    "notice": "Optional documentation-only evidence fields. ORBITAL records these values for operator review but does not verify, approve, or issue authorizations."
+  },
+  "regulatory_evidence_status": {
+    "documentation_only": true,
+    "all_optional_fields_documented": true,
+    "field_count": 11,
+    "missing_count": 0,
+    "operator_attention_missing_count": 0,
+    "fields": [
+      {
+        "id": "authorization_id",
+        "label": "Authorization ID / reference number",
+        "path": "regulatory.authorization_id",
+        "present": true,
+        "documentation_only": true,
+        "recommended_when": "LAANC or waiver / authorization is required.",
+        "operator_attention_when_missing": false
+      },
+      {
+        "id": "approving_authority_source",
+        "label": "Approving authority / source",
+        "path": "regulatory.approving_authority_source",
+        "present": true,
+        "documentation_only": true,
+        "recommended_when": "Authorization evidence is referenced.",
+        "operator_attention_when_missing": false
+      },
+      {
+        "id": "authorization_authority",
+        "label": "Authorization authority",
+        "path": "regulatory.authorization_authority",
+        "present": true,
+        "documentation_only": true,
+        "recommended_when": "Authorization evidence is referenced.",
+        "operator_attention_when_missing": false
+      },
+      {
+        "id": "authorization_date_checked_utc",
+        "label": "Authorization date checked",
+        "path": "regulatory.authorization_date_checked_utc",
+        "present": true,
+        "documentation_only": true,
+        "recommended_when": "Authorization evidence is referenced.",
+        "operator_attention_when_missing": false
+      },
+      {
+        "id": "authorization_expiration_date",
+        "label": "Authorization expiration date",
+        "path": "regulatory.authorization_expiration_date",
+        "present": true,
+        "documentation_only": true,
+        "recommended_when": "Authorization evidence is referenced.",
+        "operator_attention_when_missing": false
+      },
+      {
+        "id": "operator_confirmation_status",
+        "label": "Operator confirmation status",
+        "path": "regulatory.operator_confirmation_status",
+        "present": true,
+        "documentation_only": true,
+        "recommended_when": "Authorization evidence is referenced.",
+        "operator_attention_when_missing": false
+      },
+      {
+        "id": "operating_altitude_limit_m",
+        "label": "Operating altitude limit",
+        "path": "regulatory.operating_altitude_limit_m",
+        "present": true,
+        "documentation_only": true,
+        "recommended_when": "An authorization or operational limit applies.",
+        "operator_attention_when_missing": false
+      },
+      {
+        "id": "operating_time_window",
+        "label": "Operating time window",
+        "path": "regulatory.operating_time_window",
+        "present": true,
+        "documentation_only": true,
+        "recommended_when": "An authorization or time-bounded operation applies.",
+        "operator_attention_when_missing": false
+      },
+      {
+        "id": "required_crew_roles",
+        "label": "Required crew roles",
+        "path": "regulatory.required_crew_roles",
+        "present": true,
+        "documentation_only": true,
+        "recommended_when": "Crew-role constraints or visual observer support apply.",
+        "operator_attention_when_missing": false
+      },
+      {
+        "id": "special_conditions_limitations",
+        "label": "Special conditions / limitations",
+        "path": "regulatory.special_conditions_limitations",
+        "present": true,
+        "documentation_only": true,
+        "recommended_when": "An authorization includes special conditions.",
+        "operator_attention_when_missing": false
+      },
+      {
+        "id": "emergency_contingency_plan",
+        "label": "Emergency / contingency plan documentation",
+        "path": "regulatory.emergency_contingency_plan",
+        "present": true,
+        "documentation_only": true,
+        "recommended_when": "BVLOS, authorization-bound, or higher-risk operations are planned.",
+        "operator_attention_when_missing": false
+      }
+    ],
+    "missing": [],
+    "operator_attention_missing": [],
+    "notice": "Regulatory evidence fields are optional documentation. Missing fields are reported for operator review but do not make ORBITAL an approval system or block planning by themselves."
+  },
+  "approval_checklist": {
+    "documentation_only": true,
+    "included": true,
+    "source_artifact": "regulatory_readiness_report.json",
+    "item_count": 5,
+    "pending_count": 5,
+    "items": [
+      {
+        "id": "crew_briefing",
+        "label": "Confirm crew briefing completed",
+        "category": "crew",
+        "checked": false,
+        "status": "operator_confirmation_required",
+        "source": "operator_review",
+        "note": "Brief route, roles, communications, geofences, weather, abort criteria, lost-link procedures, and final go/no-go authority."
+      },
+      {
+        "id": "emergency_contingency_plan",
+        "label": "Confirm emergency / contingency plan",
+        "category": "safety",
+        "checked": false,
+        "status": "operator_confirmation_required",
+        "source": "operator_review",
+        "note": "Review lost-link response, diversion or landing zones, flyaway response, incident contacts, and recovery responsibilities."
+      },
+      {
+        "id": "notam_local_restriction_review",
+        "label": "Confirm NOTAM / local restriction review",
+        "category": "regulatory",
+        "checked": false,
+        "status": "operator_confirmation_required",
+        "source": "operator_review",
+        "note": "Review current NOTAMs, TFRs, local restrictions, site permissions, and customer constraints close to flight time."
+      },
+      {
+        "id": "weather_minimums_confirmation",
+        "label": "Confirm weather minimums",
+        "category": "weather",
+        "checked": false,
+        "status": "operator_confirmation_required",
+        "source": "weather",
+        "note": "Confirm launch-time weather and operator minimums, including wind, gusts, visibility, precipitation, and temperature, before flight. Current planning weather: source Operator-packaged field weather observation; timestamp 2026-09-15T05:15:00Z; wind 4.2 m/s; gust 5.4 m/s."
+      },
+      {
+        "id": "battery_reserve_confirmation",
+        "label": "Confirm battery reserve",
+        "category": "energy",
+        "checked": false,
+        "status": "operator_confirmation_required",
+        "source": "vehicle.battery_reserve_Wh",
+        "note": "Confirm launch battery, reserve policy, payload draw, and abort reserve meet operator requirements before release (required reserve 700.0 Wh; planned final battery 834.4 Wh; modeled reserve margin 134.4 Wh)."
+      }
+    ],
+    "notice": "Checklist items support operator review only. Checking an item is not legal approval, LAANC, a waiver, or operational clearance."
+  },
+  "artifacts": [
+    {
+      "id": "scenario_yaml",
+      "label": "Scenario YAML",
+      "source": "examples/bvlos_fixtures/bvlos_ready_evidence_fixture.yaml",
+      "bundle_path": "scenario.yaml",
+      "present": true,
+      "artifact_format": "yaml",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "2f1fd0b0d63f9d2a4b36f1beea6614674aa0a4cfaa71fcc02a3b07f131c4fa38",
+        "bundle_sha256": "2f1fd0b0d63f9d2a4b36f1beea6614674aa0a4cfaa71fcc02a3b07f131c4fa38",
+        "source_modified_utc": "2026-09-16T04:57:45Z",
+        "bundle_modified_utc": "2026-09-16T04:57:45Z",
+        "source_size_bytes": 6047,
+        "bundle_size_bytes": 6047,
+        "stale_against_scenario": false
+      }
+    },
+    {
+      "id": "plan_json",
+      "label": "Plan JSON",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/plan.json",
+      "bundle_path": "plan.json",
+      "present": true,
+      "artifact_format": "json",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "f5d44cb37636ce08c8a13ffe4da0b4537ef58c12ce4f957544af6fcc3e922d79",
+        "bundle_sha256": "f5d44cb37636ce08c8a13ffe4da0b4537ef58c12ce4f957544af6fcc3e922d79",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 2507,
+        "bundle_size_bytes": 2507,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "constraint_audit_markdown",
+      "label": "Primary constraint-audit report",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/inspection_constraint_audit.md",
+      "bundle_path": "inspection_constraint_audit.md",
+      "present": true,
+      "artifact_format": "markdown",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "bb8e8fd90d36ac1e71039294e12be30ad39b07f453594acf7ee9a179f53e2afb",
+        "bundle_sha256": "bb8e8fd90d36ac1e71039294e12be30ad39b07f453594acf7ee9a179f53e2afb",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 17127,
+        "bundle_size_bytes": 17127,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "constraint_audit_json",
+      "label": "Constraint audit JSON",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/inspection_constraint_audit.json",
+      "bundle_path": "inspection_constraint_audit.json",
+      "present": true,
+      "artifact_format": "json",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "3e80ca217a5daedbcf6010e379decc85f878c523a8890a9d7b82e9497e001219",
+        "bundle_sha256": "3e80ca217a5daedbcf6010e379decc85f878c523a8890a9d7b82e9497e001219",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 50280,
+        "bundle_size_bytes": 50280,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "regulatory_readiness_json",
+      "label": "Regulatory readiness JSON",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/regulatory_readiness_report.json",
+      "bundle_path": "regulatory_readiness_report.json",
+      "present": true,
+      "artifact_format": "json",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "62c61f3dea4e93b19aff857944e1cee5e2617209c2e9987666dd34445ec77482",
+        "bundle_sha256": "62c61f3dea4e93b19aff857944e1cee5e2617209c2e9987666dd34445ec77482",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 8158,
+        "bundle_size_bytes": 8158,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "regulatory_readiness_markdown",
+      "label": "Regulatory readiness report",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/regulatory_readiness_report.md",
+      "bundle_path": "regulatory_readiness_report.md",
+      "present": true,
+      "artifact_format": "markdown",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "a33b2f453fb7037643a6576991fb3e8798a5250b7119df82ebecfe8869feec67",
+        "bundle_sha256": "a33b2f453fb7037643a6576991fb3e8798a5250b7119df82ebecfe8869feec67",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 4257,
+        "bundle_size_bytes": 4257,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "what_if_plan_markdown",
+      "label": "What-if planning report",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/what_if_plan.md",
+      "bundle_path": "what_if_plan.md",
+      "present": true,
+      "artifact_format": "markdown",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "966def1588dbc2039d4a4105f90d3953010fac1493d6350646f1aceb9b298484",
+        "bundle_sha256": "966def1588dbc2039d4a4105f90d3953010fac1493d6350646f1aceb9b298484",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 3261,
+        "bundle_size_bytes": 3261,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "what_if_plan_json",
+      "label": "What-if planning JSON",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/what_if_plan.json",
+      "bundle_path": "what_if_plan.json",
+      "present": true,
+      "artifact_format": "json",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "d58063a0b14c770386bb0306eecc01278f0fb7d65acd20adf5303c9c87a6f60d",
+        "bundle_sha256": "d58063a0b14c770386bb0306eecc01278f0fb7d65acd20adf5303c9c87a6f60d",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 65450,
+        "bundle_size_bytes": 65450,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "score_breakdown",
+      "label": "Score breakdown",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/score.json",
+      "bundle_path": "score.json",
+      "present": true,
+      "artifact_format": "json",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "72a455fa29d12297f839dec8e4aa38d3c4ac0621229832d6f0b28bed3060939a",
+        "bundle_sha256": "72a455fa29d12297f839dec8e4aa38d3c4ac0621229832d6f0b28bed3060939a",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 1122,
+        "bundle_size_bytes": 1122,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "flight_path_plot",
+      "label": "Flight path plot",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/flight_path.png",
+      "bundle_path": "flight_path.png",
+      "present": true,
+      "artifact_format": "png",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "bac7e72a867c3deb8030921daa679ad729a1fa9a2681b80e59bf19085c32be74",
+        "bundle_sha256": "bac7e72a867c3deb8030921daa679ad729a1fa9a2681b80e59bf19085c32be74",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 56807,
+        "bundle_size_bytes": 56807,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "robustness_summary",
+      "label": "Robustness summary",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/robustness.json",
+      "bundle_path": "robustness.json",
+      "present": true,
+      "artifact_format": "json",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "a5a2d4db7fe9afa87f67f30a6c8eb000bfb04ba47033965fc151c9083889f6dc",
+        "bundle_sha256": "a5a2d4db7fe9afa87f67f30a6c8eb000bfb04ba47033965fc151c9083889f6dc",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 297,
+        "bundle_size_bytes": 297,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "go_no_go_memo",
+      "label": "Plain-English go/no-go memo",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/operator_memo.md",
+      "bundle_path": "operator_memo.md",
+      "present": true,
+      "artifact_format": "markdown",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "8ad26e9138c60dce245e2407d67b239c87fb7578e3040ef30b0cb4870c212bfe",
+        "bundle_sha256": "8ad26e9138c60dce245e2407d67b239c87fb7578e3040ef30b0cb4870c212bfe",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 2039,
+        "bundle_size_bytes": 2039,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "weather_snapshot",
+      "label": "Weather snapshot",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/weather.json",
+      "bundle_path": "weather.json",
+      "present": true,
+      "artifact_format": "json",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "2292f8b3acea70682948de10faea098ed543b5cec5fcc9946d68155e9e8564a9",
+        "bundle_sha256": "2292f8b3acea70682948de10faea098ed543b5cec5fcc9946d68155e9e8564a9",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 590,
+        "bundle_size_bytes": 590,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "autopilot_mission_csv",
+      "label": "Autopilot mission CSV",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/autopilot_mission.csv",
+      "bundle_path": "autopilot_mission.csv",
+      "present": true,
+      "artifact_format": "csv",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "5f6d8b4164b1fd92998e226a123058bd6bf9d11647195bbc23fe24fdb29072db",
+        "bundle_sha256": "5f6d8b4164b1fd92998e226a123058bd6bf9d11647195bbc23fe24fdb29072db",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 2081,
+        "bundle_size_bytes": 2081,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "mission_review_kml",
+      "label": "Mission review KML",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/mission_review.kml",
+      "bundle_path": "mission_review.kml",
+      "present": true,
+      "artifact_format": "kml",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "f04f26b3850afb51d2d8fb7720471798065876ff739189aebf56e6ec4fa03754",
+        "bundle_sha256": "f04f26b3850afb51d2d8fb7720471798065876ff739189aebf56e6ec4fa03754",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 3391,
+        "bundle_size_bytes": 3391,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "flight_planning_exports_manifest",
+      "label": "Flight-planning exports manifest",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/flight_planning_exports.json",
+      "bundle_path": "flight_planning_exports.json",
+      "present": true,
+      "artifact_format": "json",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "328d9bf673489acaa0a243b6a355687a00cde227abdd45cc87d4f63e7a90d586",
+        "bundle_sha256": "328d9bf673489acaa0a243b6a355687a00cde227abdd45cc87d4f63e7a90d586",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 742,
+        "bundle_size_bytes": 742,
+        "stale_against_scenario": true
+      }
+    },
+    {
+      "id": "flight_planning_exports_readme",
+      "label": "Flight-planning exports README",
+      "source": "outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/flight_planning_exports.md",
+      "bundle_path": "flight_planning_exports.md",
+      "present": true,
+      "artifact_format": "markdown",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label",
+      "freshness": {
+        "source_sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672",
+        "bundle_sha256": "9debe149cc69dc4b904d2a943414f35be2e9f2a633ca9ed3360eb8722d8de672",
+        "source_modified_utc": "2026-09-15T05:24:50Z",
+        "bundle_modified_utc": "2026-09-15T05:24:50Z",
+        "source_size_bytes": 291,
+        "bundle_size_bytes": 291,
+        "stale_against_scenario": true
+      }
+    }
+  ],
+  "generated_artifacts": [
+    {
+      "id": "operator_review_ui",
+      "label": "Lightweight operator review web UI",
+      "bundle_path": "operator_review_ui.html",
+      "present": true,
+      "generated": true,
+      "artifact_format": "html",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label"
+    },
+    {
+      "id": "operator_dashboard",
+      "label": "Operator evidence dashboard",
+      "bundle_path": "operator_dashboard.md",
+      "present": true,
+      "generated": true,
+      "artifact_format": "markdown",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label"
+    },
+    {
+      "id": "bundle_summary",
+      "label": "Evidence bundle summary",
+      "bundle_path": "evidence_bundle_summary.md",
+      "present": true,
+      "generated": true,
+      "artifact_format": "markdown",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label"
+    },
+    {
+      "id": "artifact_index",
+      "label": "Evidence bundle artifact index",
+      "bundle_path": "artifact_index.md",
+      "present": true,
+      "generated": true,
+      "artifact_format": "markdown",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label"
+    },
+    {
+      "id": "manifest_json",
+      "label": "Evidence bundle manifest",
+      "bundle_path": "manifest.json",
+      "present": true,
+      "generated": true,
+      "artifact_format": "json",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label"
+    },
+    {
+      "id": "readme",
+      "label": "Evidence bundle README",
+      "bundle_path": "README.md",
+      "present": true,
+      "generated": true,
+      "artifact_format": "markdown",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label"
+    },
+    {
+      "id": "checksum_manifest",
+      "label": "Evidence bundle checksum manifest",
+      "bundle_path": "checksum_manifest.json",
+      "present": true,
+      "generated": true,
+      "artifact_format": "json",
+      "opens_outside_ui": true,
+      "ui_link_behavior": "link_when_present_else_unavailable_label"
+    }
+  ],
+  "checksum_manifest": {
+    "algorithm": "sha256",
+    "bundle_path": "checksum_manifest.json",
+    "excludes": [
+      "checksum_manifest.json"
+    ]
+  },
+  "documentation_only_notice": "This bundle supports operator review and audit evidence only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance."
+}

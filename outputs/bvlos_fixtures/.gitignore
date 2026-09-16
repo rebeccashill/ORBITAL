@@ -1,0 +1,8 @@
+*
+!.gitignore
+!*/
+!*/operator_evidence_bundle/
+!*/operator_evidence_bundle/manifest.json
+!*/operator_evidence_bundle/operator_dashboard.md
+!*/operator_evidence_bundle/operator_review_ui.html
+!*/operator_evidence_bundle/checksum_manifest.json

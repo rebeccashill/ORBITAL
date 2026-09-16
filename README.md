@@ -137,6 +137,11 @@ translates modeled battery, weather, geofence, route-completion, and
 turn-feasibility constraints into operator-readable status, impact, and
 recommended action.
 
+For pre-discovery testing beyond the happy path, use the BVLOS fixture matrix in
+`examples/bvlos_fixtures/`. It includes ready, stale-evidence, missing-artifact,
+and modify/no-go evidence bundles so UI, print, and manifest checks can be
+validated against distinct operator-review states.
+
 ORBITAL's current differentiators are:
 
 - Constraint-first planning rather than map-first planning

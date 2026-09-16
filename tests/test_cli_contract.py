@@ -101,7 +101,7 @@ def test_cli_no_plots_writes_core_artifacts_without_pngs(tmp_path: Path) -> None
             "0",
             "--seed",
             "0",
-            "--generated-at",
+            "-generated-at",
             "2026-09-15T05:24:50Z",
             "--no-plots",
             "--outdir",

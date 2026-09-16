@@ -1108,6 +1108,12 @@ def _batch_command(argv: Sequence[str]) -> int:
             "artifact freshness, e.g. 2026-09-15T05:24:50Z."
         ),
     )
+    ap.add_argument(
+        "-generated-at",
+        dest="generated_at",
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     ap.add_argument("--seed", type=int, default=None, help="Override planner seed")
     ap.add_argument("--no-plots", action="store_true", help="Skip PNG plot generation")
     args = ap.parse_args(list(argv))
@@ -1193,6 +1199,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             "Use a fixed ISO-8601 UTC timestamp for generated evidence metadata and "
             "artifact freshness, e.g. 2026-09-15T05:24:50Z."
         ),
+    )
+    ap.add_argument(
+        "-generated-at",
+        dest="generated_at",
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
     )
     ap.add_argument("--seed", type=int, default=None, help="Random seed for reproducible runs")
     ap.add_argument(

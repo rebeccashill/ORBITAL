@@ -1,0 +1,226 @@
+# ORBITAL BVLOS evidence fixture. Generated from examples/bvlos_powerline_inspection_demo.yaml.
+scenario:
+  name: BVLOS Missing Artifact Fixture
+  type: aircraft
+initial_state:
+  x_m: 0.0
+  y_m: 0.0
+  z_m: 90.0
+  heading_rad: 0.0
+  speed_mps: 18.0
+  battery_Wh: 850.0
+mission_metadata:
+  operator: ORBITAL Demo Operations
+  aircraft_id: UAV-BVLOS-104
+  pilot: Demo Pilot
+  organization: Utility Inspection Team
+  asset_owner: Palo Alto Grid Demo
+fleet_metadata:
+  drone_model: Multirotor inspection UAV
+  battery_pack_id: PACK-900WH-A
+  sensor_payload: RGB + thermal inspection camera
+  inspection_type: Powerline corridor inspection
+mission:
+  fixed_order: true
+  route_geojson_path: examples/geojson/bvlos_powerline_route.geojson
+  use_geojson_route: true
+  route_default_z_m: 90.0
+  route_default_radius_m: 70.0
+  waypoints:
+  - id: TOWER_01
+    x_m: 750.0
+    y_m: 80.0
+    z_m: 90.0
+    radius_m: 70.0
+  - id: TOWER_02
+    x_m: 1500.0
+    y_m: 120.0
+    z_m: 90.0
+    radius_m: 70.0
+  - id: TOWER_03
+    x_m: 2250.0
+    y_m: 80.0
+    z_m: 90.0
+    radius_m: 70.0
+  - id: TOWER_04
+    x_m: 3000.0
+    y_m: 120.0
+    z_m: 90.0
+    radius_m: 70.0
+  - id: TOWER_05
+    x_m: 3750.0
+    y_m: 80.0
+    z_m: 90.0
+    radius_m: 70.0
+  - id: TOWER_06
+    x_m: 4500.0
+    y_m: 120.0
+    z_m: 90.0
+    radius_m: 70.0
+vehicle:
+  dt_s: 5.0
+  reach_radius_m: 80.0
+  mass_kg: 12.0
+  cruise_speed_mps: 20.0
+  min_speed_mps: 12.0
+  max_speed_mps: 28.0
+  bank_max_deg: 30.0
+  climb_rate_max_mps: 3.0
+  descent_rate_max_mps: 3.0
+  battery_capacity_Wh: 900.0
+  battery_reserve_Wh: 700.0
+  p_idle_W: 70.0
+  k_v_W_per_m2s2: 0.55
+  k_climb_W_per_mps: 120.0
+  k_turn_W_per_radps: 35.0
+  z_min_m: 60.0
+  z_max_m: 130.0
+wind:
+  type: sinusoidal
+  mean_east_mps: 4.0
+  mean_north_mps: -1.0
+  mean_up_mps: 0.0
+  amp_east_mps: 1.5
+  amp_north_mps: 1.0
+  amp_up_mps: 0.0
+  period_s: 900.0
+  phase_s: 120.0
+  max_safe_wind_mps: 9.0
+  warning_margin_mps: 2.0
+weather:
+  enabled: true
+  provider: offline
+  use_live: false
+  fallback_enabled: false
+  apply_to_wind: true
+  timestamp_utc: '2026-09-15T05:15:00Z'
+  freshness_max_age_hours: 2
+  location:
+    name: Palo Alto utility corridor fixture
+    latitude_deg: 37.4419
+    longitude_deg: -122.143
+  forecast_window:
+    start_utc: '2026-09-15T04:45:00Z'
+    hours: 2.0
+  offline:
+    source: Operator-packaged field weather observation
+    timestamp_utc: '2026-09-15T05:15:00Z'
+    wind_speed_mps: 4.2
+    wind_direction_deg: 282.0
+    wind_gust_mps: 5.4
+    visibility_m: 18000.0
+    precipitation_mm: 0.0
+    temperature_C: 19.0
+  operational_limits:
+    max_safe_wind_mps: 9.0
+    warning_margin_mps: 2.0
+geofence:
+  clearance_m: 75.0
+  geojson_path: examples/geojson/bvlos_powerline_geofences.geojson
+  use_geojson: true
+  no_fly_zones:
+  - id: SUBSTATION_NFZ
+    polygon:
+    - - 2350.0
+      - 450.0
+    - - 3050.0
+      - 450.0
+    - - 3050.0
+      - 850.0
+    - - 2350.0
+      - 850.0
+regulatory:
+  laanc_required: false
+  waiver_or_authorization_required: false
+  airspace_class: Class G fixture corridor
+  visual_observer_required: false
+  ground_risk_population_note: Fixture corridor over controlled utility access roads; no public overflight
+    modeled.
+  authorization_id: not required for fixture
+  authorization_authority: Operator internal review
+  approving_authority_source: Operator planning record
+  authorization_date_checked_utc: '2026-09-15T04:30:00Z'
+  authorization_expiration_date: '2026-12-31'
+  operator_confirmation_status: not_required
+  evidence_freshness_max_age_hours: 24
+  operating_altitude_limit_m: 120.0
+  operating_time_window:
+    start_utc: '2026-09-15T05:00:00Z'
+    end_utc: '2026-09-15T07:00:00Z'
+  required_crew_roles:
+  - Remote pilot in command
+  special_conditions_limitations:
+  - Stay inside the modeled utility corridor and geofence buffers.
+  emergency_contingency_plan: Use the documented lost-link, diversion, recovery, and incident-contact
+    procedure.
+  operating_assumptions:
+  - Pilot-in-command verifies current site and local operating conditions before launch.
+  - Mission remains within modeled route, altitude, weather, battery, and geofence constraints.
+  unresolved_items: []
+  documentation_only_notice: Fixture data for customer-discovery testing; ORBITAL does not provide approval
+    or clearance.
+constraints:
+  enforce_waypoint_visit: true
+  enforce_inspection_completion: true
+  enforce_geofence: true
+  enforce_energy_nonnegative: true
+  enforce_battery_reserve: true
+  enforce_turn_rate_limit: true
+  enforce_speed_limits: true
+objective:
+  type: weighted_sum
+  terms:
+  - name: total_time
+    weight: 1.0
+    mode: minimize
+  - name: energy_used
+    weight: 0.35
+    mode: minimize
+planner:
+  iterations: 8
+  restarts: 1
+  penalty_weight: 2500.0
+  hard_infeasible_penalty: 1000000.0
+  mutation:
+    cont_sigma: 0.12
+    int_step: 1
+    p_flip: 0.05
+    p_perm_swap: 0.45
+    perm_swaps: 2
+  seed: 13
+  stop_if_feasible_for: 4
+robustness:
+  cases: 0
+  wind_scale_range:
+  - 0.8
+  - 1.2
+  battery_variation_pct: 0.05
+  aggregation: mean
+  report_percentiles:
+  - 50
+  - 90
+output:
+  run_dir_name: bvlos_fixture_missing_artifact
+  save_history: false
+  export_flight_path: true
+  export_constraint_report: true
+  export_what_if_plan: true
+  export_flight_planning_exports: true
+  export_autopilot_csv: true
+  export_kml: true
+  export_operator_evidence_bundle: true
+  export_summary_metrics: true
+  verbose: false
+evidence_bundle:
+  operator_review_status: ready_for_review
+  reviewer_name: Fixture reviewer
+  review_timestamp_utc: '2026-09-15T05:24:50Z'
+  review_notes: Fixture with robustness disabled so the expected robustness artifact is unavailable.
+  operator_decision: pending operator review
+simulation:
+  t_max_s: 2400.0
+  stall_time_s: 900.0
+  stall_improve_m: 0.0
+  k_heading: 0.6
+  k_speed: 0.6
+  max_speed_step_mps: 3.0
