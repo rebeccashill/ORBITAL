@@ -1,5 +1,30 @@
 # Release Notes
 
+## v1.0.17 - September 16, 2026
+
+### Changed
+
+- Bumped package, README, and generated BVLOS fixture evidence metadata to
+  `v1.0.17`.
+- Extended `ui-health` so the default release gate validates every committed
+  BVLOS fixture bundle across desktop 1366px, desktop 1440px, desktop 1920px,
+  tablet, mobile, print/PDF, artifact-link, unavailable-label, and
+  accessibility checks.
+- Added committed fixture review bundles and saved fixture UI health artifacts
+  for ready, stale-evidence, missing-artifact, and modify/no-go states.
+- Documented what each fixture demonstrates and pointed first-time reviewers to
+  the clean ready fixture.
+
+### Verified
+
+- Ran `python -m ruff check .`.
+- Ran `python -m black --check .`.
+- Ran `python -m pytest`.
+- Ran `python scripts\focused_secret_scan.py`.
+- Ran `python -m mission_framework.cli ui-health`.
+- Ran `python -m mission_framework.cli bundle-verify` for every committed
+  BVLOS fixture bundle.
+
 ## v1.0.16 - September 15, 2026
 
 ### Changed

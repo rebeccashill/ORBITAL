@@ -1,0 +1,17 @@
+{
+  "kind": "downstream_flight_planning_exports",
+  "notice": "Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.",
+  "artifacts": {
+    "autopilot_mission_csv": {
+      "path": "outputs/bvlos_fixtures/bvlos_fixture_modify_no_go/autopilot_mission.csv",
+      "rows": 7,
+      "present": true
+    },
+    "mission_review_kml": {
+      "path": "outputs/bvlos_fixtures/bvlos_fixture_modify_no_go/mission_review.kml",
+      "coordinates": 7,
+      "notice": "Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.",
+      "present": true
+    }
+  }
+}

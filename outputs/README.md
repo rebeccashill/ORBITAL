@@ -7,7 +7,7 @@ This folder contains pre-generated outputs from the aircraft and spacecraft miss
 ```text
 outputs/
   aircraft/     UAV multi-waypoint mission results
-  bvlos_fixtures/ Representative BVLOS evidence-state snapshots
+  bvlos_fixtures/ Full BVLOS evidence-state fixture review bundles
   spacecraft/   CubeSat 7-day LEO mission results
   validation/   robustness, stress, baseline, and optimizer maturity outputs
 ```

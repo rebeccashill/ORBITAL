@@ -1,0 +1,19 @@
+{
+  "provider": "offline",
+  "source": "Operator-packaged field weather observation",
+  "timestamp_utc": "2026-09-15T05:15:00Z",
+  "location_name": "Palo Alto utility corridor fixture",
+  "latitude_deg": 37.4419,
+  "longitude_deg": -122.143,
+  "forecast_window_start_utc": "2026-09-15T04:45:00Z",
+  "forecast_window_hours": 2.0,
+  "wind_speed_mps": 4.2,
+  "wind_direction_deg": 282.0,
+  "wind_gust_mps": 5.4,
+  "visibility_m": 18000.0,
+  "precipitation_mm": 0.0,
+  "temperature_C": 19.0,
+  "fallback_used": false,
+  "fallback_reason": null,
+  "live_fetch_enabled": false
+}

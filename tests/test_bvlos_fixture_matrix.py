@@ -11,12 +11,22 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_DIR = ROOT / "examples" / "bvlos_fixtures"
 FIXTURE_OUTPUT_DIR = ROOT / "outputs" / "bvlos_fixtures"
+FIXTURE_UI_ASSET_DIR = ROOT / "docs" / "assets" / "bvlos_fixture_ui"
 GENERATED_AT = "2026-09-15T05:24:50Z"
 REPRESENTATIVE_OUTPUTS = (
     "manifest.json",
     "operator_dashboard.md",
     "operator_review_ui.html",
     "checksum_manifest.json",
+)
+UI_HEALTH_ARTIFACTS = (
+    "operator-review-desktop-1366.png",
+    "operator-review-desktop-1440.png",
+    "operator-review-desktop-1920.png",
+    "operator-review-tablet.png",
+    "operator-review-mobile.png",
+    "operator-review-print-preview.png",
+    "operator-review-print.pdf",
 )
 
 FIXTURE_CASES = (
@@ -187,6 +197,12 @@ def test_bvlos_fixture_representative_outputs_are_committed(
     assert manifest["operator_review"]["review_timestamp_utc"] == GENERATED_AT
     assert manifest["ui_manifest_version"] == 1
     assert manifest["freshness"]["command"]["display"]
+    for artifact in [*manifest["artifacts"], *manifest["generated_artifacts"]]:
+        artifact_path = bundle_dir / artifact["bundle_path"]
+        if artifact["present"]:
+            assert artifact_path.is_file()
+        else:
+            assert not artifact_path.exists()
 
     if expected == "ready":
         assert manifest["bundle_completeness"]["complete"] is True
@@ -215,3 +231,15 @@ def test_bvlos_fixture_outputs_are_stable_across_reruns(
     second_outputs = _representative_bytes(outdir, run_dir_name)
 
     assert second_outputs == first_outputs
+
+
+@pytest.mark.parametrize(("_fixture_name", "run_dir_name", "_expected"), FIXTURE_CASES)
+def test_bvlos_fixture_ui_health_artifacts_are_saved(
+    _fixture_name: str, run_dir_name: str, _expected: str
+) -> None:
+    fixture_asset_dir = FIXTURE_UI_ASSET_DIR / run_dir_name
+
+    for filename in UI_HEALTH_ARTIFACTS:
+        artifact_path = fixture_asset_dir / filename
+        assert artifact_path.is_file()
+        assert artifact_path.stat().st_size > 10_000

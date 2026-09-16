@@ -125,87 +125,6 @@
   ],
   "bundle_warnings": [
     {
-      "id": "stale_plan_json",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "plan_json",
-      "label": "Plan JSON",
-      "bundle_path": "plan.json",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_constraint_audit_markdown",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "constraint_audit_markdown",
-      "label": "Primary constraint-audit report",
-      "bundle_path": "inspection_constraint_audit.md",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_constraint_audit_json",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "constraint_audit_json",
-      "label": "Constraint audit JSON",
-      "bundle_path": "inspection_constraint_audit.json",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_regulatory_readiness_json",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "regulatory_readiness_json",
-      "label": "Regulatory readiness JSON",
-      "bundle_path": "regulatory_readiness_report.json",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_regulatory_readiness_markdown",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "regulatory_readiness_markdown",
-      "label": "Regulatory readiness report",
-      "bundle_path": "regulatory_readiness_report.md",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_what_if_plan_markdown",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "what_if_plan_markdown",
-      "label": "What-if planning report",
-      "bundle_path": "what_if_plan.md",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_what_if_plan_json",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "what_if_plan_json",
-      "label": "What-if planning JSON",
-      "bundle_path": "what_if_plan.json",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_score_breakdown",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "score_breakdown",
-      "label": "Score breakdown",
-      "bundle_path": "score.json",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_flight_path_plot",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "flight_path_plot",
-      "label": "Flight path plot",
-      "bundle_path": "flight_path.png",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
       "id": "missing_robustness_summary",
       "kind": "missing_artifact",
       "severity": "warning",
@@ -213,92 +132,6 @@
       "label": "Robustness summary",
       "bundle_path": "robustness.json",
       "message": "Expected evidence artifact is missing from the bundle."
-    },
-    {
-      "id": "stale_go_no_go_memo",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "go_no_go_memo",
-      "label": "Plain-English go/no-go memo",
-      "bundle_path": "operator_memo.md",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_weather_snapshot",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "weather_snapshot",
-      "label": "Weather snapshot",
-      "bundle_path": "weather.json",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_autopilot_mission_csv",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "autopilot_mission_csv",
-      "label": "Autopilot mission CSV",
-      "bundle_path": "autopilot_mission.csv",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_mission_review_kml",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "mission_review_kml",
-      "label": "Mission review KML",
-      "bundle_path": "mission_review.kml",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_flight_planning_exports_manifest",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "flight_planning_exports_manifest",
-      "label": "Flight-planning exports manifest",
-      "bundle_path": "flight_planning_exports.json",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "stale_flight_planning_exports_readme",
-      "kind": "stale_artifact",
-      "severity": "warning",
-      "artifact_id": "flight_planning_exports_readme",
-      "label": "Flight-planning exports README",
-      "bundle_path": "flight_planning_exports.md",
-      "message": "Artifact source appears older than the scenario file used for the evidence bundle."
-    },
-    {
-      "id": "route_export_stale_autopilot_mission_csv",
-      "kind": "route_export_stale",
-      "severity": "warning",
-      "artifact_id": "autopilot_mission_csv",
-      "bundle_path": "autopilot_mission.csv",
-      "message": "Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review."
-    },
-    {
-      "id": "route_export_stale_mission_review_kml",
-      "kind": "route_export_stale",
-      "severity": "warning",
-      "artifact_id": "mission_review_kml",
-      "bundle_path": "mission_review.kml",
-      "message": "Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review."
-    },
-    {
-      "id": "route_export_stale_flight_planning_exports_manifest",
-      "kind": "route_export_stale",
-      "severity": "warning",
-      "artifact_id": "flight_planning_exports_manifest",
-      "bundle_path": "flight_planning_exports.json",
-      "message": "Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review."
-    },
-    {
-      "id": "route_export_stale_flight_planning_exports_readme",
-      "kind": "route_export_stale",
-      "severity": "warning",
-      "artifact_id": "flight_planning_exports_readme",
-      "bundle_path": "flight_planning_exports.md",
-      "message": "Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review."
     }
   ],
   "operator_review": {
@@ -329,7 +162,7 @@
   },
   "freshness": {
     "generated_timestamp_utc": "2026-09-15T05:24:50Z",
-    "orbital_version": "1.0.16",
+    "orbital_version": "1.0.17",
     "scenario_path": "examples/bvlos_fixtures/bvlos_modify_no_go_fixture.yaml",
     "scenario_hash": {
       "algorithm": "sha256",
@@ -623,87 +456,11 @@
     "evidence_warning_summary": {
       "status": "REVIEW REQUIRED",
       "missing_artifacts": 1,
-      "stale_artifacts": 15,
+      "stale_artifacts": 0,
       "missing_evidence": 1,
-      "bundle_warnings": 20,
-      "summary": "REVIEW REQUIRED: 1 missing artifact(s), 15 stale artifact(s), 1 missing evidence item(s), 20 bundle warning(s)",
-      "stale_artifacts_detail": [
-        {
-          "id": "plan_json",
-          "label": "Plan JSON",
-          "bundle_path": "plan.json"
-        },
-        {
-          "id": "constraint_audit_markdown",
-          "label": "Primary constraint-audit report",
-          "bundle_path": "inspection_constraint_audit.md"
-        },
-        {
-          "id": "constraint_audit_json",
-          "label": "Constraint audit JSON",
-          "bundle_path": "inspection_constraint_audit.json"
-        },
-        {
-          "id": "regulatory_readiness_json",
-          "label": "Regulatory readiness JSON",
-          "bundle_path": "regulatory_readiness_report.json"
-        },
-        {
-          "id": "regulatory_readiness_markdown",
-          "label": "Regulatory readiness report",
-          "bundle_path": "regulatory_readiness_report.md"
-        },
-        {
-          "id": "what_if_plan_markdown",
-          "label": "What-if planning report",
-          "bundle_path": "what_if_plan.md"
-        },
-        {
-          "id": "what_if_plan_json",
-          "label": "What-if planning JSON",
-          "bundle_path": "what_if_plan.json"
-        },
-        {
-          "id": "score_breakdown",
-          "label": "Score breakdown",
-          "bundle_path": "score.json"
-        },
-        {
-          "id": "flight_path_plot",
-          "label": "Flight path plot",
-          "bundle_path": "flight_path.png"
-        },
-        {
-          "id": "go_no_go_memo",
-          "label": "Plain-English go/no-go memo",
-          "bundle_path": "operator_memo.md"
-        },
-        {
-          "id": "weather_snapshot",
-          "label": "Weather snapshot",
-          "bundle_path": "weather.json"
-        },
-        {
-          "id": "autopilot_mission_csv",
-          "label": "Autopilot mission CSV",
-          "bundle_path": "autopilot_mission.csv"
-        },
-        {
-          "id": "mission_review_kml",
-          "label": "Mission review KML",
-          "bundle_path": "mission_review.kml"
-        },
-        {
-          "id": "flight_planning_exports_manifest",
-          "label": "Flight-planning exports manifest",
-          "bundle_path": "flight_planning_exports.json"
-        },
-        {
-          "id": "flight_planning_exports_readme",
-          "label": "Flight-planning exports README",
-          "bundle_path": "flight_planning_exports.md"
-        }
-      ],
+      "bundle_warnings": 1,
+      "summary": "REVIEW REQUIRED: 1 missing artifact(s), 0 stale artifact(s), 1 missing evidence item(s), 1 bundle warning(s)",
+      "stale_artifacts_detail": [],
       "missing_artifacts_detail": [
         {
           "id": "robustness_summary",
@@ -943,7 +700,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 2492,
         "bundle_size_bytes": 2492,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -956,13 +713,13 @@
       "opens_outside_ui": true,
       "ui_link_behavior": "link_when_present_else_unavailable_label",
       "freshness": {
-        "source_sha256": "a8da153d413d8bc8d79a8dfed34c5210aa387d3f0636c49e76ae4f58af76ca20",
-        "bundle_sha256": "a8da153d413d8bc8d79a8dfed34c5210aa387d3f0636c49e76ae4f58af76ca20",
+        "source_sha256": "3ebab530cd6058aed3694ff1190c73c68a63b516b6c860ef62c5cb854fd25711",
+        "bundle_sha256": "3ebab530cd6058aed3694ff1190c73c68a63b516b6c860ef62c5cb854fd25711",
         "source_modified_utc": "2026-09-15T05:24:50Z",
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 17149,
         "bundle_size_bytes": 17149,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -975,13 +732,13 @@
       "opens_outside_ui": true,
       "ui_link_behavior": "link_when_present_else_unavailable_label",
       "freshness": {
-        "source_sha256": "02caabf2bdad78365085cc877f4b36de62d2b151a2801a76ee3ae2521546bd08",
-        "bundle_sha256": "02caabf2bdad78365085cc877f4b36de62d2b151a2801a76ee3ae2521546bd08",
+        "source_sha256": "769339c19f1afcae4cf278363df1080897447593ac3867331cbe64692119d323",
+        "bundle_sha256": "769339c19f1afcae4cf278363df1080897447593ac3867331cbe64692119d323",
         "source_modified_utc": "2026-09-15T05:24:50Z",
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 49745,
         "bundle_size_bytes": 49745,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -1000,7 +757,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 7842,
         "bundle_size_bytes": 7842,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -1019,7 +776,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 4255,
         "bundle_size_bytes": 4255,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -1038,7 +795,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 2759,
         "bundle_size_bytes": 2759,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -1057,7 +814,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 61050,
         "bundle_size_bytes": 61050,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -1076,7 +833,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 1104,
         "bundle_size_bytes": 1104,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -1095,7 +852,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 56323,
         "bundle_size_bytes": 56323,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -1133,7 +890,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 1841,
         "bundle_size_bytes": 1841,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -1152,7 +909,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 590,
         "bundle_size_bytes": 590,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -1171,7 +928,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 1990,
         "bundle_size_bytes": 1990,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -1190,7 +947,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 3389,
         "bundle_size_bytes": 3389,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -1209,7 +966,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 738,
         "bundle_size_bytes": 738,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     },
     {
@@ -1228,7 +985,7 @@
         "bundle_modified_utc": "2026-09-15T05:24:50Z",
         "source_size_bytes": 291,
         "bundle_size_bytes": 291,
-        "stale_against_scenario": true
+        "stale_against_scenario": false
       }
     }
   ],

@@ -53,7 +53,7 @@ The verdict is REVIEW REQUIRED because modeled feasibility is GO but regulatory 
 | Modeled mission status | GO | MODIFY if not GO. |
 | Regulatory readiness | DOCUMENTED_REVIEW_REQUIRED | REVIEW REQUIRED when OPERATOR_ACTION_REQUIRED. |
 | Missing evidence | 1 item(s) | REVIEW REQUIRED when greater than 0. |
-| Bundle warnings | 20 warning(s) | REVIEW REQUIRED when greater than 0. |
+| Bundle warnings | 1 warning(s) | REVIEW REQUIRED when greater than 0. |
 
 ## Model Assumptions Snapshot
 
@@ -83,9 +83,9 @@ The verdict is REVIEW REQUIRED because modeled feasibility is GO but regulatory 
 | Regulatory expiration | 2026-12-31 |
 | Checksum evidence | VERIFY REQUIRED |
 | Robustness status | No robustness cases were recorded for this bundle. Confidence from uncertainty testing is not estimated. |
-| Evidence warning status | REVIEW REQUIRED: 1 missing artifact(s), 15 stale artifact(s), 1 missing evidence item(s), 20 bundle warning(s) |
+| Evidence warning status | REVIEW REQUIRED: 1 missing artifact(s), 0 stale artifact(s), 1 missing evidence item(s), 1 bundle warning(s) |
 | Missing evidence | 1 item(s) |
-| Bundle warnings | 20 warning(s) |
+| Bundle warnings | 1 warning(s) |
 
 ## Decision-Support Boundary
 
@@ -106,7 +106,7 @@ ORBITAL provides decision support only: not approval, not authorization, not leg
 | Regulatory provenance | DOCUMENTED: regulatory evidence is documented for review. Source: Operator planning record; checked: 2026-09-15T04:30:00Z; expiration: 2026-12-31; authority: Operator internal review; confirmation: not_required. | Keep source, date checked, expiration, and confirmation record with the bundle. Operator should verify regulatory inputs. |
 | Checksum evidence | Checksum manifest is generated with the bundle; verification must be run against the final archived files. | Run bundle checksum verification after generation and before archiving or sharing the evidence bundle. |
 | Uncertainty / robustness | No robustness cases were recorded for this bundle. Confidence from uncertainty testing is not estimated. | Run robustness cases when uncertainty or margin sensitivity matters. |
-| Evidence warnings | REVIEW REQUIRED: 1 missing artifact(s), 15 stale artifact(s), 1 missing evidence item(s), 20 bundle warning(s) | Check stale, missing, or mismatched evidence before archiving. |
+| Evidence warnings | REVIEW REQUIRED: 1 missing artifact(s), 0 stale artifact(s), 1 missing evidence item(s), 1 bundle warning(s) | Check stale, missing, or mismatched evidence before archiving. |
 
 ## Trust And Defensibility
 
@@ -139,34 +139,34 @@ Scenario data note: verify route, weather, regulatory, crew, and customer eviden
 | --- | --- |
 | Status | REVIEW REQUIRED |
 | Missing artifacts | 1 |
-| Stale artifacts | 15 |
+| Stale artifacts | 0 |
 | Missing evidence items | 1 |
-| Bundle warnings | 20 |
+| Bundle warnings | 1 |
 
 ### Stale / Missing / Mismatched Evidence Scan
 
 | Signal | Count |
 | --- | --- |
-| Stale artifacts | 15 |
+| Stale artifacts | 0 |
 | Missing artifacts | 1 |
 | Mismatched artifacts | 0 |
 | Missing evidence items | 1 |
-| Bundle warnings | 20 |
+| Bundle warnings | 1 |
 
-Scan summary: 15 stale, 1 missing, 0 mismatched, 1 missing evidence item(s), 20 warning(s).
+Scan summary: 0 stale, 1 missing, 0 mismatched, 1 missing evidence item(s), 1 warning(s).
 
 ### Artifact Freshness Summary
 
 | Artifact | Status | Source timestamp | Bundle timestamp | Operator should verify |
 | --- | --- | --- | --- | --- |
 | Scenario YAML | CURRENT | 2026-09-16T04:57:45Z | 2026-09-16T04:57:45Z | Verify source timestamp and checksum before archiving. |
-| Primary constraint-audit report | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
-| Regulatory readiness report | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
-| What-if planning report | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
-| Weather snapshot | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
-| Autopilot mission CSV | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
-| Mission review KML | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
-| Flight-planning exports manifest | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
+| Primary constraint-audit report | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Regulatory readiness report | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| What-if planning report | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Weather snapshot | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Autopilot mission CSV | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Mission review KML | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Flight-planning exports manifest | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
 
 Open `evidence_bundle_summary.md`, `manifest.json`, and `checksum_manifest.json` when any warning count is nonzero.
 
@@ -189,7 +189,7 @@ Open `evidence_bundle_summary.md`, `manifest.json`, and `checksum_manifest.json`
 - Bundle completeness: 94.1 % (16 / 17 artifacts present)
 - Regulatory documentation completeness: 100.0 % (11 / 11 fields documented)
 - Missing evidence items: 1
-- Bundle warnings: 20
+- Bundle warnings: 1
 
 ## Operator Review
 
@@ -241,26 +241,7 @@ Review fields are documentation-only records; they do not change release authori
 
 ## Bundle Warnings
 
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
 - missing_artifact: Expected evidence artifact is missing from the bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- route_export_stale: Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review.
-- route_export_stale: Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review.
-- route_export_stale: Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review.
-- route_export_stale: Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review.
 
 ## Next Operator Actions
 

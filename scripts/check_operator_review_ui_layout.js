@@ -91,6 +91,99 @@ function loadPlaywright() {
   }
 }
 
+function localHrefPath(value) {
+  if (!value || value.startsWith("#") || value.startsWith("data:")) {
+    return null;
+  }
+  if (/^[a-z][a-z0-9+.-]*:/i.test(value)) {
+    return null;
+  }
+  const withoutFragment = value.split("#", 1)[0].split("?", 1)[0];
+  if (!withoutFragment) {
+    return null;
+  }
+  try {
+    return decodeURIComponent(withoutFragment).replace(/\\/g, "/");
+  } catch (_err) {
+    return withoutFragment.replace(/\\/g, "/");
+  }
+}
+
+async function collectArtifactAccess(page) {
+  return page.evaluate(() => {
+    const snapshotNode = document.getElementById("manifest-snapshot");
+    let manifest = {};
+    try {
+      manifest = snapshotNode ? JSON.parse(snapshotNode.textContent || "{}") : {};
+    } catch (_err) {
+      manifest = {};
+    }
+    const allArtifacts = [
+      ...(Array.isArray(manifest.artifacts) ? manifest.artifacts : []),
+      ...(Array.isArray(manifest.generated_artifacts) ? manifest.generated_artifacts : []),
+    ];
+    const localAnchors = Array.from(document.querySelectorAll("a[href]")).map((anchor) => ({
+      href: anchor.getAttribute("href") || "",
+      text: anchor.textContent.trim().replace(/\s+/g, " "),
+      className: anchor.className || "",
+    }));
+    const unavailableLabels = Array.from(document.querySelectorAll(".artifact-unavailable")).map(
+      (label) => ({
+        text: label.textContent.trim().replace(/\s+/g, " "),
+        className: label.className || "",
+      }),
+    );
+    return {
+      localAnchors,
+      unavailableLabels,
+      missingArtifacts: allArtifacts
+        .filter((artifact) => artifact && artifact.present === false && artifact.bundle_path)
+        .map((artifact) => ({
+          id: artifact.id || "",
+          label: artifact.label || "",
+          bundlePath: artifact.bundle_path || "",
+        })),
+    };
+  });
+}
+
+function assertArtifactAccess(artifactAccess, htmlDir, viewportName) {
+  const localLinks = artifactAccess.localAnchors
+    .map((anchor) => ({ ...anchor, localPath: localHrefPath(anchor.href) }))
+    .filter((anchor) => anchor.localPath);
+  for (const anchor of localLinks) {
+    const targetPath = path.resolve(htmlDir, anchor.localPath);
+    assertLayout(fs.existsSync(targetPath), `${viewportName}: local artifact link is broken`, {
+      anchor,
+      targetPath,
+    });
+  }
+
+  const linkedLocalPaths = new Set(localLinks.map((anchor) => anchor.localPath));
+  for (const missing of artifactAccess.missingArtifacts) {
+    assertLayout(
+      !linkedLocalPaths.has(missing.bundlePath),
+      `${viewportName}: missing artifact is rendered as a link`,
+      { missing, localLinks },
+    );
+  }
+
+  if (artifactAccess.missingArtifacts.length > 0) {
+    assertLayout(
+      artifactAccess.unavailableLabels.length > 0,
+      `${viewportName}: missing artifacts do not render unavailable labels`,
+      artifactAccess,
+    );
+    for (const label of artifactAccess.unavailableLabels) {
+      assertLayout(
+        /unavailable/i.test(label.text) && /missing/i.test(label.text),
+        `${viewportName}: unavailable artifact label is incomplete`,
+        label,
+      );
+    }
+  }
+}
+
 function assertLayout(condition, message, details = {}) {
   if (!condition) {
     const error = new Error(message);
@@ -585,6 +678,7 @@ async function run() {
     args.html || path.join(args.bundle, "operator_review_ui.html"),
   );
   assertLayout(fs.existsSync(htmlPath), `operator review UI not found: ${htmlPath}`);
+  const htmlDir = path.dirname(htmlPath);
 
   const outdir = path.resolve(args.outdir);
   fs.mkdirSync(outdir, { recursive: true });
@@ -607,6 +701,9 @@ async function run() {
       const layout = await collectLayout(page);
       results[viewport.name] = layout;
       assertResponsiveLayout(layout, viewport);
+      const artifactAccess = await collectArtifactAccess(page);
+      results[`${viewport.name}ArtifactAccess`] = artifactAccess;
+      assertArtifactAccess(artifactAccess, htmlDir, viewport.name);
       const accessibility = await collectAccessibility(page);
       results[`${viewport.name}Accessibility`] = accessibility;
       assertAccessibilityBasics(accessibility, viewport.name);

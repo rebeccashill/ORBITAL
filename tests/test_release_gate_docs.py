@@ -11,9 +11,12 @@ def _release_notes_section(version: str) -> str:
     return text[start:] if next_section == -1 else text[start:next_section]
 
 
-def test_v1016_release_gate_keeps_checksum_verification_and_ui_health() -> None:
-    section = _release_notes_section("v1.0.16")
+def test_v1017_release_gate_keeps_checksum_verification_and_ui_health() -> None:
+    section = _release_notes_section("v1.0.17")
+    normalized = " ".join(section.split())
 
     assert "python -m mission_framework.cli bundle-verify" in section
     assert "python -m mission_framework.cli ui-health" in section
-    assert "outputs\\bvlos_powerline_inspection\\operator_evidence_bundle" in section
+    assert "validates every committed BVLOS fixture bundle" in normalized
+    assert "ready, stale-evidence, missing-artifact, and modify/no-go states" in section
+    assert "artifact-link" in section

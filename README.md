@@ -7,7 +7,7 @@
 Constraint audits, what-if planning, regulatory readiness, and evidence bundles
 for drone inspection operators.
 
-Current release: `v1.0.16`
+Current release: `v1.0.17`
 
 > ORBITAL tells inspection teams whether a BVLOS mission is feasible before
 > they send a crew.
@@ -21,10 +21,11 @@ Current product focus: make ORBITAL's BVLOS evidence workflow faster to scan,
 clearer to demo, and more operator-friendly before customer-discovery and
 Foundry-readiness work.
 
-## What Improved In v1.0.16
+## What Improved In v1.0.17
 
-v1.0.16 makes the BVLOS operator demo easier to run, scan, print, validate,
-and explain before customer discovery.
+v1.0.17 makes the BVLOS evidence workflow easier to validate across clean,
+stale, missing-artifact, and modify/no-go review states before customer
+discovery.
 
 - `run_all.py` now prints periodic "still running" progress while long demo
   commands execute, so optimization and robustness runs no longer look frozen
@@ -45,8 +46,11 @@ and explain before customer discovery.
 - The operator review UI health check now covers 1366px, 1440px, 1920px,
   tablet, mobile, print/PDF spacing, heading order, skip-link behavior,
   keyboard focus, and color contrast.
-- `python -m mission_framework.cli ui-health` runs the pre-release layout and
-  accessibility check against a generated evidence bundle.
+- `python -m mission_framework.cli ui-health` now validates every committed
+  BVLOS fixture bundle by default, including responsive layout, print/PDF,
+  artifact-link, unavailable-label, and accessibility checks.
+- Ready, stale-evidence, missing-artifact, and modify/no-go fixture bundles are
+  committed with saved UI health screenshots and print/PDF artifacts.
 - The generated BVLOS evidence bundle and checksum manifest are refreshed so
   `operator_review_ui.html` matches the current layout.
 
@@ -126,7 +130,7 @@ alternatives.
 
 For a presenter-ready BVLOS walkthrough, see the
 [BVLOS powerline demo script](docs/BVLOS_POWERLINE_DEMO_SCRIPT.md). The
-v1.0.16 operator review starts with
+v1.0.17 operator review starts with
 `outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_review_ui.html`;
 `operator_dashboard.md` remains the first source artifact to open from the raw
 evidence bundle.
@@ -140,7 +144,11 @@ recommended action.
 For pre-discovery testing beyond the happy path, use the BVLOS fixture matrix in
 `examples/bvlos_fixtures/`. It includes ready, stale-evidence, missing-artifact,
 and modify/no-go evidence bundles so UI, print, and manifest checks can be
-validated against distinct operator-review states.
+validated against distinct operator-review states. First-time reviewers should
+start with
+`outputs/bvlos_fixtures/bvlos_fixture_ready_evidence/operator_evidence_bundle/operator_review_ui.html`;
+the saved fixture screenshots and print artifacts live in
+`docs/assets/bvlos_fixture_ui/`.
 
 ORBITAL's current differentiators are:
 
@@ -470,7 +478,7 @@ the full subprocess output in timestamped logs under `runs_logs/`.
 
 ```bash
 python scripts/focused_secret_scan.py
-python -m mission_framework.cli ui-health outputs/bvlos_powerline_inspection/operator_evidence_bundle
+python -m mission_framework.cli ui-health
 python -m ruff check .
 python -m black --check .
 python -m mypy --python-version 3.12 mission_framework
@@ -482,6 +490,10 @@ python run_all.py --fast --no-plots
 Run the focused secret scan before any release tag or push. It checks the
 release-facing README, docs, examples, and BVLOS demo outputs for high-signal
 credential patterns.
+Run `python -m mission_framework.cli ui-health` before committing, tagging, or
+pushing a release; with no bundle argument it validates every committed BVLOS
+fixture bundle across desktop, tablet, mobile, print/PDF, artifact-link, and
+accessibility checks.
 
 ---
 

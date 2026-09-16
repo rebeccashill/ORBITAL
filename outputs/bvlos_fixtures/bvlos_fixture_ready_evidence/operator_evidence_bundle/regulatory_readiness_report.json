@@ -1,0 +1,174 @@
+{
+  "kind": "regulatory_readiness_report",
+  "mission_id": "BVLOS Ready Evidence Fixture",
+  "status": "documented_review_required",
+  "readiness_state": "documented_review_required",
+  "documentation_only": true,
+  "decision_support_only": true,
+  "not_legal_approval": true,
+  "disclaimer": "ORBITAL provides decision support only and is not legal approval. This report does not provide LAANC, waivers, authorizations, operational clearance, legal advice, or permission to fly. The pilot-in-command and operator remain responsible for all required regulatory review, approvals, and compliance decisions.",
+  "not_legal_approval_disclaimer": "ORBITAL provides decision support only and is not legal approval. This report does not provide LAANC, waivers, authorizations, operational clearance, legal advice, or permission to fly. The pilot-in-command and operator remain responsible for all required regulatory review, approvals, and compliance decisions.",
+  "mission_metadata": {
+    "operator": "ORBITAL Demo Operations",
+    "aircraft_id": "UAV-BVLOS-104",
+    "pilot": "Demo Pilot",
+    "organization": "Utility Inspection Team",
+    "asset_owner": "Palo Alto Grid Demo"
+  },
+  "fleet_metadata": {
+    "drone_model": "Multirotor inspection UAV",
+    "battery_pack_id": "PACK-900WH-A",
+    "sensor_payload": "RGB + thermal inspection camera",
+    "inspection_type": "Powerline corridor inspection"
+  },
+  "regulatory_summary": {
+    "laanc_required": {
+      "id": "laanc_required",
+      "label": "LAANC required",
+      "value": false,
+      "configured": false,
+      "status": "not_required_as_configured",
+      "summary": "Scenario indicates LAANC is not required, subject to operator verification against current airspace data."
+    },
+    "waiver_or_authorization_required": {
+      "id": "waiver_or_authorization_required",
+      "label": "Waiver / authorization required",
+      "value": false,
+      "configured": false,
+      "status": "not_required_as_configured",
+      "summary": "Scenario indicates no waiver or authorization requirement was identified, subject to operator verification."
+    },
+    "airspace_class": {
+      "id": "airspace_class",
+      "label": "Airspace class",
+      "value": "Class G fixture corridor",
+      "configured": "Class G fixture corridor",
+      "status": "provided",
+      "summary": "Scenario airspace class is Class G fixture corridor."
+    },
+    "visual_observer_required": {
+      "id": "visual_observer_required",
+      "label": "Visual observer required",
+      "value": false,
+      "configured": false,
+      "status": "not_required_as_configured",
+      "summary": "Scenario indicates visual observer support is not required, subject to operator verification."
+    },
+    "ground_risk_population_note": {
+      "id": "ground_risk_population_note",
+      "label": "Ground-risk / population note",
+      "value": "Fixture corridor over controlled utility access roads; no public overflight modeled.",
+      "configured": "Fixture corridor over controlled utility access roads; no public overflight modeled.",
+      "status": "provided",
+      "summary": "Fixture corridor over controlled utility access roads; no public overflight modeled."
+    }
+  },
+  "regulatory_evidence": {
+    "documentation_only": true,
+    "authorization_id": "not required for fixture",
+    "authorization_authority": "Operator internal review",
+    "approving_authority_source": "Operator planning record",
+    "authorization_date_checked_utc": "2026-09-15T04:30:00Z",
+    "authorization_expiration_date": "2026-12-31",
+    "operator_confirmation_status": "not_required",
+    "operating_altitude_limit_m": 120.0,
+    "operating_time_window": {
+      "start_utc": "2026-09-15T05:00:00Z",
+      "end_utc": "2026-09-15T07:00:00Z"
+    },
+    "required_crew_roles": [
+      "Remote pilot in command"
+    ],
+    "special_conditions_limitations": [
+      "Stay inside the modeled utility corridor and geofence buffers."
+    ],
+    "emergency_contingency_plan": "Use the documented lost-link, diversion, recovery, and incident-contact procedure.",
+    "notice": "Optional documentation-only evidence fields. ORBITAL records these values for operator review but does not verify, approve, or issue authorizations."
+  },
+  "operating_assumptions": [
+    "Pilot-in-command verifies current site and local operating conditions before launch.",
+    "Mission remains within modeled route, altitude, weather, battery, and geofence constraints."
+  ],
+  "unresolved_regulatory_items": [
+    {
+      "id": "current_airspace_status",
+      "label": "Current airspace, NOTAM/TFR, and local restrictions",
+      "status": "operator_action_required",
+      "note": "Current restrictions, UAS facility map limits, site permissions, and local rules must be checked outside ORBITAL close to flight time."
+    },
+    {
+      "id": "pic_final_acceptance",
+      "label": "Pilot-in-command final acceptance",
+      "status": "operator_action_required",
+      "note": "Final operational approval, crew briefing, and go/no-go authority remain with the pilot-in-command and operator."
+    }
+  ],
+  "operator_approval_checklist": [
+    {
+      "id": "crew_briefing",
+      "label": "Confirm crew briefing completed",
+      "category": "crew",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "operator_review",
+      "note": "Brief route, roles, communications, geofences, weather, abort criteria, lost-link procedures, and final go/no-go authority."
+    },
+    {
+      "id": "emergency_contingency_plan",
+      "label": "Confirm emergency / contingency plan",
+      "category": "safety",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "operator_review",
+      "note": "Review lost-link response, diversion or landing zones, flyaway response, incident contacts, and recovery responsibilities."
+    },
+    {
+      "id": "notam_local_restriction_review",
+      "label": "Confirm NOTAM / local restriction review",
+      "category": "regulatory",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "operator_review",
+      "note": "Review current NOTAMs, TFRs, local restrictions, site permissions, and customer constraints close to flight time."
+    },
+    {
+      "id": "weather_minimums_confirmation",
+      "label": "Confirm weather minimums",
+      "category": "weather",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "weather",
+      "note": "Confirm launch-time weather and operator minimums, including wind, gusts, visibility, precipitation, and temperature, before flight. Current planning weather: source Operator-packaged field weather observation; timestamp 2026-09-15T05:15:00Z; wind 4.2 m/s; gust 5.4 m/s."
+    },
+    {
+      "id": "battery_reserve_confirmation",
+      "label": "Confirm battery reserve",
+      "category": "energy",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "vehicle.battery_reserve_Wh",
+      "note": "Confirm launch battery, reserve policy, payload draw, and abort reserve meet operator requirements before release (required reserve 700.0 Wh; planned final battery 834.4 Wh; modeled reserve margin 134.4 Wh)."
+    }
+  ],
+  "documentation_only_notice": "Fixture data for customer-discovery testing; ORBITAL does not provide approval or clearance.",
+  "operator_review_required": true,
+  "mission_context": {
+    "hard_constraints_pass": true,
+    "inspection_points": 6,
+    "estimated_time_s": 165.0,
+    "energy_used_Wh": 15.618819443108123,
+    "waypoints_completed": 6.0,
+    "waypoints_total": 6.0
+  },
+  "robustness": {
+    "cases": 1,
+    "hard_pass_rate": 1.0,
+    "worst_hard_margin_min": 0.16550032913122084,
+    "robust_aggregation": "mean",
+    "cvar_alpha": null,
+    "robust_score": 170.46658680508784,
+    "mean_score": 170.46658680508784,
+    "p50_score": 170.46658680508784,
+    "p90_score": 170.46658680508784
+  }
+}

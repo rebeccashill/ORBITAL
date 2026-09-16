@@ -44,6 +44,7 @@ from mission_framework.simulation.feasibility import format_feasibility_report
 DEFAULT_BVLOS_REVIEW_BUNDLE = (
     Path("outputs") / "bvlos_powerline_inspection" / "operator_evidence_bundle"
 )
+BVLOS_FIXTURE_OUTPUT_ROOT = Path("outputs") / "bvlos_fixtures"
 OPERATOR_REVIEW_UI_FILE = "operator_review_ui.html"
 
 
@@ -194,6 +195,17 @@ def _resolve_bundle_dir(bundle_path: str | Path) -> Path:
     if path.is_file():
         return path.parent
     return path
+
+
+def _fixture_review_bundle_dirs(repo_root: Path) -> list[Path]:
+    fixture_root = repo_root / BVLOS_FIXTURE_OUTPUT_ROOT
+    if not fixture_root.is_dir():
+        return []
+    return sorted(
+        path
+        for path in fixture_root.glob("*/operator_evidence_bundle")
+        if (path / OPERATOR_REVIEW_UI_FILE).is_file()
+    )
 
 
 def _load_bundle_manifest(bundle_path: str) -> tuple[Path, Dict[str, Any]]:
@@ -614,11 +626,16 @@ def _bundle_ui_health_command(argv: Sequence[str]) -> int:
     ap.add_argument(
         "bundle",
         nargs="?",
-        default=str(DEFAULT_BVLOS_REVIEW_BUNDLE),
+        default=None,
         help=(
-            "Evidence bundle directory or manifest.json path. Defaults to the generated "
-            "BVLOS demo bundle."
+            "Evidence bundle directory or manifest.json path. Omit this argument to "
+            "validate every committed BVLOS fixture bundle."
         ),
+    )
+    ap.add_argument(
+        "--fixtures",
+        action="store_true",
+        help="Validate every committed BVLOS fixture bundle.",
     )
     ap.add_argument(
         "--outdir",
@@ -633,42 +650,67 @@ def _bundle_ui_health_command(argv: Sequence[str]) -> int:
     ap.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
     args = ap.parse_args(list(argv))
 
-    bundle_dir = _resolve_bundle_dir(args.bundle)
-    ui_path = bundle_dir / OPERATOR_REVIEW_UI_FILE
-    if not bundle_dir.is_dir():
-        print(f"INVALID: evidence bundle directory not found: {bundle_dir}", file=sys.stderr)
-        return 2
-    if not ui_path.is_file():
-        print(f"INVALID: operator review UI not found: {ui_path}", file=sys.stderr)
-        return 2
-
     repo_root = Path(__file__).resolve().parents[1]
     checker = repo_root / "scripts" / "check_operator_review_ui_layout.js"
     if not checker.is_file():
         print(f"INVALID: UI health checker not found: {checker}", file=sys.stderr)
         return 2
 
-    command = ["node", str(checker), "--bundle", str(bundle_dir)]
-    if args.outdir:
-        command.extend(["--outdir", str(args.outdir)])
-    if args.keep_artifacts:
-        command.append("--keep-artifacts")
-    if args.json:
-        command.append("--json")
-    elif sys.stdout.isatty():
-        print("=== ORBITAL Operator Review UI Health ===")
-        print(f"Bundle: {bundle_dir}")
-        print("Checking desktop, tablet, mobile, print/PDF, and accessibility layout...")
-
-    try:
-        result = subprocess.run(command, cwd=repo_root)
-    except FileNotFoundError:
-        print(
-            "INVALID: Node.js is required to run the UI health check.",
-            file=sys.stderr,
-        )
+    if args.bundle and args.fixtures:
+        print("INVALID: pass either a bundle path or --fixtures, not both.", file=sys.stderr)
         return 2
-    return result.returncode
+
+    if args.bundle:
+        bundle_dirs = [_resolve_bundle_dir(args.bundle)]
+    else:
+        bundle_dirs = _fixture_review_bundle_dirs(repo_root)
+        if not bundle_dirs:
+            print(
+                f"INVALID: no fixture bundles found under {repo_root / BVLOS_FIXTURE_OUTPUT_ROOT}",
+                file=sys.stderr,
+            )
+            return 2
+
+    for bundle_dir in bundle_dirs:
+        ui_path = bundle_dir / OPERATOR_REVIEW_UI_FILE
+        if not bundle_dir.is_dir():
+            print(f"INVALID: evidence bundle directory not found: {bundle_dir}", file=sys.stderr)
+            return 2
+        if not ui_path.is_file():
+            print(f"INVALID: operator review UI not found: {ui_path}", file=sys.stderr)
+            return 2
+
+    multiple_bundles = len(bundle_dirs) > 1
+    base_outdir = Path(args.outdir) if args.outdir else Path("tmp") / "operator_review_ui_layout"
+
+    if not args.json:
+        print("=== ORBITAL Operator Review UI Health ===")
+        if multiple_bundles:
+            print(f"Fixture bundles: {len(bundle_dirs)}")
+        print("Checking desktop, tablet, mobile, print/PDF, artifact links, and accessibility...")
+
+    for bundle_dir in bundle_dirs:
+        command = ["node", str(checker), "--bundle", str(bundle_dir)]
+        target_outdir = base_outdir / bundle_dir.parent.name if multiple_bundles else base_outdir
+        command.extend(["--outdir", str(target_outdir)])
+        if args.keep_artifacts:
+            command.append("--keep-artifacts")
+        if args.json:
+            command.append("--json")
+        elif multiple_bundles:
+            print(f"\nBundle: {bundle_dir}")
+
+        try:
+            result = subprocess.run(command, cwd=repo_root)
+        except FileNotFoundError:
+            print(
+                "INVALID: Node.js is required to run the UI health check.",
+                file=sys.stderr,
+            )
+            return 2
+        if result.returncode != 0:
+            return result.returncode
+    return 0
 
 
 def _bundle_verdict_command(argv: Sequence[str]) -> int:

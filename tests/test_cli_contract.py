@@ -685,6 +685,42 @@ def test_cli_ui_health_invokes_layout_checker(tmp_path: Path, monkeypatch: Any) 
     assert captured["cwd"] == ROOT
 
 
+def test_cli_ui_health_defaults_to_fixture_matrix(tmp_path: Path, monkeypatch: Any) -> None:
+    import mission_framework.cli as cli
+
+    fixture_root = tmp_path / "bvlos_fixtures"
+    for name in (
+        "bvlos_fixture_ready_evidence",
+        "bvlos_fixture_stale_evidence",
+        "bvlos_fixture_missing_artifact",
+    ):
+        bundle_dir = fixture_root / name / "operator_evidence_bundle"
+        bundle_dir.mkdir(parents=True)
+        (bundle_dir / "operator_review_ui.html").write_text("<!doctype html>\n", encoding="utf-8")
+
+    captured: list[list[str]] = []
+
+    def fake_run(command: list[str], cwd: Path) -> SimpleNamespace:
+        captured.append(command)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(cli, "BVLOS_FIXTURE_OUTPUT_ROOT", fixture_root)
+    monkeypatch.setattr(cli.subprocess, "run", fake_run)
+
+    result = cli.main(["ui-health", "--outdir", str(tmp_path / "ui-health")])
+
+    assert result == 0
+    assert len(captured) == 3
+    assert {Path(command[command.index("--bundle") + 1]).parent.name for command in captured} == {
+        "bvlos_fixture_ready_evidence",
+        "bvlos_fixture_stale_evidence",
+        "bvlos_fixture_missing_artifact",
+    }
+    for command in captured:
+        fixture_name = Path(command[command.index("--bundle") + 1]).parent.name
+        assert command[command.index("--outdir") + 1] == str(tmp_path / "ui-health" / fixture_name)
+
+
 def test_cli_overrides_yaml_settings_and_accepts_single_dash_aliases(
     tmp_path: Path, monkeypatch: Any
 ) -> None:

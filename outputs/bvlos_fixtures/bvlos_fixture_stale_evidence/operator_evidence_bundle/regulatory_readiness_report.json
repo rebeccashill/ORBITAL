@@ -1,0 +1,234 @@
+{
+  "kind": "regulatory_readiness_report",
+  "mission_id": "BVLOS Stale Evidence Fixture",
+  "status": "operator_action_required",
+  "readiness_state": "operator_action_required",
+  "documentation_only": true,
+  "decision_support_only": true,
+  "not_legal_approval": true,
+  "disclaimer": "ORBITAL provides decision support only and is not legal approval. This report does not provide LAANC, waivers, authorizations, operational clearance, legal advice, or permission to fly. The pilot-in-command and operator remain responsible for all required regulatory review, approvals, and compliance decisions.",
+  "not_legal_approval_disclaimer": "ORBITAL provides decision support only and is not legal approval. This report does not provide LAANC, waivers, authorizations, operational clearance, legal advice, or permission to fly. The pilot-in-command and operator remain responsible for all required regulatory review, approvals, and compliance decisions.",
+  "mission_metadata": {
+    "operator": "ORBITAL Demo Operations",
+    "aircraft_id": "UAV-BVLOS-104",
+    "pilot": "Demo Pilot",
+    "organization": "Utility Inspection Team",
+    "asset_owner": "Palo Alto Grid Demo"
+  },
+  "fleet_metadata": {
+    "drone_model": "Multirotor inspection UAV",
+    "battery_pack_id": "PACK-900WH-A",
+    "sensor_payload": "RGB + thermal inspection camera",
+    "inspection_type": "Powerline corridor inspection"
+  },
+  "regulatory_summary": {
+    "laanc_required": {
+      "id": "laanc_required",
+      "label": "LAANC required",
+      "value": true,
+      "configured": true,
+      "status": "required",
+      "summary": "Scenario indicates LAANC or controlled-airspace authorization is required before flight."
+    },
+    "waiver_or_authorization_required": {
+      "id": "waiver_or_authorization_required",
+      "label": "Waiver / authorization required",
+      "value": true,
+      "configured": true,
+      "status": "required",
+      "summary": "Scenario indicates a waiver or authorization is required before flight."
+    },
+    "airspace_class": {
+      "id": "airspace_class",
+      "label": "Airspace class",
+      "value": "Class D",
+      "configured": "Class D",
+      "status": "provided",
+      "summary": "Scenario airspace class is Class D."
+    },
+    "visual_observer_required": {
+      "id": "visual_observer_required",
+      "label": "Visual observer required",
+      "value": true,
+      "configured": true,
+      "status": "required",
+      "summary": "Scenario indicates visual observer support is required."
+    },
+    "ground_risk_population_note": {
+      "id": "ground_risk_population_note",
+      "label": "Ground-risk / population note",
+      "value": "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch.",
+      "configured": "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch.",
+      "status": "provided",
+      "summary": "Utility corridor inspection over mixed industrial and lightly populated roadside areas; operator should review site-specific ground risk before dispatch."
+    }
+  },
+  "regulatory_evidence": {
+    "documentation_only": true,
+    "authorization_id": "example authorization reference only",
+    "authorization_authority": "FAA / LAANC provider placeholder",
+    "approving_authority_source": "Operator-provided example authority source for documentation-only demo",
+    "authorization_date_checked_utc": "2026-09-11T15:45:00Z",
+    "authorization_expiration_date": "2026-12-31",
+    "operator_confirmation_status": "pending_operator_confirmation",
+    "operating_altitude_limit_m": 120.0,
+    "operating_time_window": {
+      "start_utc": "2026-09-11T16:00:00Z",
+      "end_utc": "2026-09-11T18:00:00Z"
+    },
+    "required_crew_roles": [
+      "Remote pilot in command",
+      "Visual observer"
+    ],
+    "special_conditions_limitations": [
+      "Remain within the modeled utility corridor and geofence buffers.",
+      "Do not launch if current field weather is below operator minimums."
+    ],
+    "emergency_contingency_plan": "Review lost-link, diversion, recovery, flyaway response, and incident-contact procedures before dispatch.",
+    "notice": "Optional documentation-only evidence fields. ORBITAL records these values for operator review but does not verify, approve, or issue authorizations."
+  },
+  "operating_assumptions": [
+    "Pilot-in-command verifies current FAA, local, site, NOTAM, TFR, and airspace requirements before launch.",
+    "Mission remains within the modeled route, altitude, weather, battery, geofence, and crew constraints.",
+    "Visual observer staffing and crew communications are confirmed before dispatch."
+  ],
+  "unresolved_regulatory_items": [
+    {
+      "id": "operator_provided_item_1",
+      "label": "Operator-provided unresolved item",
+      "status": "operator_action_required",
+      "note": "Confirm utility owner site-access approval for the planned inspection window."
+    },
+    {
+      "id": "operator_provided_item_2",
+      "label": "Operator-provided unresolved item",
+      "status": "operator_action_required",
+      "note": "Confirm launch and recovery area permissions with the local site contact."
+    },
+    {
+      "id": "laanc_authorization_confirmation",
+      "label": "LAANC / airspace authorization confirmation",
+      "status": "operator_action_required",
+      "note": "Scenario indicates LAANC is required; authorization evidence must be obtained and checked outside ORBITAL before flight."
+    },
+    {
+      "id": "waiver_or_authorization_confirmation",
+      "label": "Waiver / authorization confirmation",
+      "status": "operator_action_required",
+      "note": "Scenario indicates a waiver or authorization is required; document ID, scope, dates, and operating conditions remain outside ORBITAL."
+    },
+    {
+      "id": "visual_observer_staffing_plan",
+      "label": "Visual observer staffing plan",
+      "status": "operator_action_required",
+      "note": "Scenario indicates a visual observer is required; crew assignment, placement, and communications plan must be confirmed by the operator."
+    },
+    {
+      "id": "current_airspace_status",
+      "label": "Current airspace, NOTAM/TFR, and local restrictions",
+      "status": "operator_action_required",
+      "note": "Current restrictions, UAS facility map limits, site permissions, and local rules must be checked outside ORBITAL close to flight time."
+    },
+    {
+      "id": "pic_final_acceptance",
+      "label": "Pilot-in-command final acceptance",
+      "status": "operator_action_required",
+      "note": "Final operational approval, crew briefing, and go/no-go authority remain with the pilot-in-command and operator."
+    }
+  ],
+  "operator_approval_checklist": [
+    {
+      "id": "laanc_confirmation",
+      "label": "Confirm LAANC / controlled-airspace authorization",
+      "category": "regulatory",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "regulatory.laanc_required",
+      "note": "Scenario sets laanc_required=true; verify authorization evidence, flight window, altitude limits, and operating area outside ORBITAL."
+    },
+    {
+      "id": "waiver_authorization_confirmation",
+      "label": "Confirm waiver / authorization coverage",
+      "category": "regulatory",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "regulatory.waiver_or_authorization_required",
+      "note": "Scenario indicates a waiver or authorization is required; verify document scope, dates, conditions, and mission fit outside ORBITAL."
+    },
+    {
+      "id": "visual_observer_assignment",
+      "label": "Confirm visual observer assignment",
+      "category": "crew",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "regulatory.visual_observer_required",
+      "note": "Assign visual observer coverage, station locations, communications, handoff rules, and responsibilities before dispatch."
+    },
+    {
+      "id": "crew_briefing",
+      "label": "Confirm crew briefing completed",
+      "category": "crew",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "operator_review",
+      "note": "Brief route, roles, communications, geofences, weather, abort criteria, lost-link procedures, and final go/no-go authority."
+    },
+    {
+      "id": "emergency_contingency_plan",
+      "label": "Confirm emergency / contingency plan",
+      "category": "safety",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "operator_review",
+      "note": "Review lost-link response, diversion or landing zones, flyaway response, incident contacts, and recovery responsibilities."
+    },
+    {
+      "id": "notam_local_restriction_review",
+      "label": "Confirm NOTAM / local restriction review",
+      "category": "regulatory",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "operator_review",
+      "note": "Review current NOTAMs, TFRs, local restrictions, site permissions, and customer constraints close to flight time."
+    },
+    {
+      "id": "weather_minimums_confirmation",
+      "label": "Confirm weather minimums",
+      "category": "weather",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "weather",
+      "note": "Confirm launch-time weather and operator minimums, including wind, gusts, visibility, precipitation, and temperature, before flight. Current planning weather: source offline Open-Meteo-shaped sample; timestamp 2026-09-11T16:00:00Z; wind 4.5 m/s; gust 5.9 m/s."
+    },
+    {
+      "id": "battery_reserve_confirmation",
+      "label": "Confirm battery reserve",
+      "category": "energy",
+      "checked": false,
+      "status": "operator_confirmation_required",
+      "source": "vehicle.battery_reserve_Wh",
+      "note": "Confirm launch battery, reserve policy, payload draw, and abort reserve meet operator requirements before release (required reserve 700.0 Wh; planned final battery 836.2 Wh; modeled reserve margin 136.2 Wh)."
+    }
+  ],
+  "documentation_only_notice": "For planning documentation only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, or operational clearance.",
+  "operator_review_required": true,
+  "mission_context": {
+    "hard_constraints_pass": true,
+    "inspection_points": 6,
+    "estimated_time_s": 185.0,
+    "energy_used_Wh": 13.827298068430537,
+    "waypoints_completed": 6.0,
+    "waypoints_total": 6.0
+  },
+  "robustness": {
+    "cases": 1,
+    "hard_pass_rate": 1.0,
+    "worst_hard_margin_min": 0.20130659145489257,
+    "robust_aggregation": "mean",
+    "cvar_alpha": null,
+    "robust_score": 189.8395543239507,
+    "mean_score": 189.8395543239507,
+    "p50_score": 189.8395543239507,
+    "p90_score": 189.8395543239507
+  }
+}

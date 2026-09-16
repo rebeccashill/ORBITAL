@@ -1,10 +1,10 @@
 # ORBITAL Operator Evidence Dashboard
 
-## Mission Verdict: REVIEW REQUIRED
+## Mission Verdict: GO
 
-Modeled feasibility is acceptable, but operator, regulatory, or evidence review items remain.
+Modeled feasibility and bundle evidence are ready for normal operator review.
 
-**Next action:** Complete the listed review items, confirm regulatory readiness outside ORBITAL, then record the operator decision.
+**Next action:** Proceed to normal operator review, verify checksums, and archive the evidence bundle.
 
 ## 30-Second Review Path
 
@@ -14,7 +14,7 @@ Review order: Verdict -> top constraint -> trust signals -> artifacts -> checksu
 
 | Step | Open / verify |
 | --- | --- |
-| Verdict | REVIEW REQUIRED - Complete the listed review items, confirm regulatory readiness outside ORBITAL, then record the operator decision. |
+| Verdict | GO - Proceed to normal operator review, verify checksums, and archive the evidence bundle. |
 | Top constraint | Wind / weather margin, PASS, margin 3.6 m/s |
 | Checksum / freshness | VERIFY REQUIRED; generated 2026-09-15T05:24:50Z; manifest version 1 |
 | Trust signals | Weather evidence, regulatory provenance, robustness, model assumptions, and evidence warnings. |
@@ -46,14 +46,14 @@ Markdown, JSON, CSV, KML, PNG, manifest, checksum, and dashboard artifacts remai
 
 ## Why This Verdict?
 
-The verdict is REVIEW REQUIRED because modeled feasibility is GO but regulatory readiness, missing evidence, or bundle warnings still need operator attention.
+The verdict is GO because modeled mission status is GO, regulatory readiness does not require action, and no missing evidence or bundle warnings are recorded.
 
 | Verdict input | Current value | Derivation rule |
 | --- | --- | --- |
 | Modeled mission status | GO | MODIFY if not GO. |
 | Regulatory readiness | DOCUMENTED_REVIEW_REQUIRED | REVIEW REQUIRED when OPERATOR_ACTION_REQUIRED. |
 | Missing evidence | 0 item(s) | REVIEW REQUIRED when greater than 0. |
-| Bundle warnings | 20 warning(s) | REVIEW REQUIRED when greater than 0. |
+| Bundle warnings | 0 warning(s) | REVIEW REQUIRED when greater than 0. |
 
 ## Model Assumptions Snapshot
 
@@ -68,7 +68,7 @@ The verdict is REVIEW REQUIRED because modeled feasibility is GO but regulatory 
 | Field | Value |
 | --- | --- |
 | Mission | BVLOS Ready Evidence Fixture |
-| Verdict | REVIEW REQUIRED |
+| Verdict | GO |
 | Modeled mission status | GO |
 | Mission risk | LOW |
 | Top limiting constraint | Wind / weather margin, PASS, margin 3.6 m/s |
@@ -83,9 +83,9 @@ The verdict is REVIEW REQUIRED because modeled feasibility is GO but regulatory 
 | Regulatory expiration | 2026-12-31 |
 | Checksum evidence | VERIFY REQUIRED |
 | Robustness status | PASS: 1 case(s), hard pass rate 100.0 %, worst hard margin 0.166. Confidence from configured robustness cases is scenario-limited and should be reviewed against operator uncertainty assumptions. |
-| Evidence warning status | REVIEW REQUIRED: 0 missing artifact(s), 16 stale artifact(s), 0 missing evidence item(s), 20 bundle warning(s) |
+| Evidence warning status | CLEAR: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 0 bundle warning(s) |
 | Missing evidence | 0 item(s) |
-| Bundle warnings | 20 warning(s) |
+| Bundle warnings | 0 warning(s) |
 
 ## Decision-Support Boundary
 
@@ -95,7 +95,7 @@ ORBITAL provides decision support only: not approval, not authorization, not leg
 
 | Signal | Current value | Operator cue |
 | --- | --- | --- |
-| Verdict | REVIEW REQUIRED | Complete the listed review items, confirm regulatory readiness outside ORBITAL, then record the operator decision. |
+| Verdict | GO | Proceed to normal operator review, verify checksums, and archive the evidence bundle. |
 | Modeled mission status | GO | Use as the first feasibility read from the constraint audit. |
 | Mission risk | LOW | Treat higher risk as a cue for additional operator review. |
 | Top limiting constraint | Wind / weather margin, PASS, margin 3.6 m/s | Review this constraint before changing or releasing the mission. |
@@ -106,7 +106,7 @@ ORBITAL provides decision support only: not approval, not authorization, not leg
 | Regulatory provenance | DOCUMENTED: regulatory evidence is documented for review. Source: Operator planning record; checked: 2026-09-15T04:30:00Z; expiration: 2026-12-31; authority: Operator internal review; confirmation: not_required. | Keep source, date checked, expiration, and confirmation record with the bundle. Operator should verify regulatory inputs. |
 | Checksum evidence | Checksum manifest is generated with the bundle; verification must be run against the final archived files. | Run bundle checksum verification after generation and before archiving or sharing the evidence bundle. |
 | Uncertainty / robustness | PASS: 1 case(s), hard pass rate 100.0 %, worst hard margin 0.166. Confidence from configured robustness cases is scenario-limited and should be reviewed against operator uncertainty assumptions. | Review robustness assumptions and rerun with scenario-specific uncertainty ranges if margins are close. |
-| Evidence warnings | REVIEW REQUIRED: 0 missing artifact(s), 16 stale artifact(s), 0 missing evidence item(s), 20 bundle warning(s) | Check stale, missing, or mismatched evidence before archiving. |
+| Evidence warnings | CLEAR: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 0 bundle warning(s) | Check stale, missing, or mismatched evidence before archiving. |
 
 ## Trust And Defensibility
 
@@ -137,36 +137,36 @@ Scenario data note: verify route, weather, regulatory, crew, and customer eviden
 
 | Signal | Value |
 | --- | --- |
-| Status | REVIEW REQUIRED |
+| Status | CLEAR |
 | Missing artifacts | 0 |
-| Stale artifacts | 16 |
+| Stale artifacts | 0 |
 | Missing evidence items | 0 |
-| Bundle warnings | 20 |
+| Bundle warnings | 0 |
 
 ### Stale / Missing / Mismatched Evidence Scan
 
 | Signal | Count |
 | --- | --- |
-| Stale artifacts | 16 |
+| Stale artifacts | 0 |
 | Missing artifacts | 0 |
 | Mismatched artifacts | 0 |
 | Missing evidence items | 0 |
-| Bundle warnings | 20 |
+| Bundle warnings | 0 |
 
-Scan summary: 16 stale, 0 missing, 0 mismatched, 0 missing evidence item(s), 20 warning(s).
+Scan summary: 0 stale, 0 missing, 0 mismatched, 0 missing evidence item(s), 0 warning(s).
 
 ### Artifact Freshness Summary
 
 | Artifact | Status | Source timestamp | Bundle timestamp | Operator should verify |
 | --- | --- | --- | --- | --- |
 | Scenario YAML | CURRENT | 2026-09-16T04:57:45Z | 2026-09-16T04:57:45Z | Verify source timestamp and checksum before archiving. |
-| Primary constraint-audit report | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
-| Regulatory readiness report | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
-| What-if planning report | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
-| Weather snapshot | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
-| Autopilot mission CSV | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
-| Mission review KML | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
-| Flight-planning exports manifest | STALE | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Regenerate this artifact from the current scenario. |
+| Primary constraint-audit report | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Regulatory readiness report | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| What-if planning report | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Weather snapshot | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Autopilot mission CSV | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Mission review KML | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Flight-planning exports manifest | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
 
 Open `evidence_bundle_summary.md`, `manifest.json`, and `checksum_manifest.json` when any warning count is nonzero.
 
@@ -181,7 +181,7 @@ Open `evidence_bundle_summary.md`, `manifest.json`, and `checksum_manifest.json`
 ## Mission Snapshot
 
 - Mission: BVLOS Ready Evidence Fixture
-- Mission verdict: REVIEW REQUIRED
+- Mission verdict: GO
 - Mission status: GO
 - Mission risk: LOW
 - Top limiting constraint: Wind / weather margin, PASS, margin 3.6 m/s
@@ -189,7 +189,7 @@ Open `evidence_bundle_summary.md`, `manifest.json`, and `checksum_manifest.json`
 - Bundle completeness: 100.0 % (17 / 17 artifacts present)
 - Regulatory documentation completeness: 100.0 % (11 / 11 fields documented)
 - Missing evidence items: 0
-- Bundle warnings: 20
+- Bundle warnings: 0
 
 ## Operator Review
 
@@ -241,30 +241,11 @@ Review fields are documentation-only records; they do not change release authori
 
 ## Bundle Warnings
 
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- stale_artifact: Artifact source appears older than the scenario file used for the evidence bundle.
-- route_export_stale: Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review.
-- route_export_stale: Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review.
-- route_export_stale: Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review.
-- route_export_stale: Route/export artifact appears older than the scenario; regenerate exports before field or autopilot review.
+- none
 
 ## Next Operator Actions
 
-- Complete the listed review items, confirm regulatory readiness outside ORBITAL, then record the operator decision.
+- Proceed to normal operator review, verify checksums, and archive the evidence bundle.
 - Review the primary constraint audit and top limiting constraint.
 - Review the what-if plan if any constraint margin is tight.
 - Verify bundle completeness, manifest, and checksum manifest before archiving.

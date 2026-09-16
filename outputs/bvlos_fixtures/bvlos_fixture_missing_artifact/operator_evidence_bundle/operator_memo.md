@@ -1,0 +1,60 @@
+# BVLOS Inspection Operator Memo
+
+Status: GO
+
+ORBITAL is preflight decision support and audit evidence. It is not a LAANC provider, autopilot, or regulatory approval system.
+
+## Mission Summary
+
+- Mission: BVLOS Missing Artifact Fixture
+- Inspection points: 6
+- Planned cruise speed: 13.9 m/s
+- Estimated flight time: 235.0 s
+- Estimated energy used: 11.7 Wh
+- Final battery: 838.3 Wh
+- Objective score: 239.1
+
+## Mission / Fleet Metadata
+
+- Operator: ORBITAL Demo Operations
+- Aircraft ID: UAV-BVLOS-104
+- Pilot: Demo Pilot
+- Organization: Utility Inspection Team
+- Asset owner: Palo Alto Grid Demo
+- Drone model: Multirotor inspection UAV
+- Battery pack ID: PACK-900WH-A
+- Sensor payload: RGB + thermal inspection camera
+- Inspection type: Powerline corridor inspection
+
+## Weather
+
+- Source: Operator-packaged field weather observation
+- Timestamp: 2026-09-15T05:15:00Z
+- Wind speed: 4.2 m/s
+- Wind gust: 5.4 m/s
+- Visibility: 18000.0 m
+- Precipitation: 0.0 mm
+- Fallback used: no
+
+## Regulatory Metadata
+
+- LAANC required: no
+- Waiver / authorization required: no
+- Airspace class: Class G fixture corridor
+- Visual observer required: no
+- Ground-risk / population note: Fixture corridor over controlled utility access roads; no public overflight modeled.
+- Documentation-only notice: Fixture data for customer-discovery testing; ORBITAL does not provide approval or clearance.
+
+## Top Constraints
+
+- PASS: turn_limit (margin 0.244)
+- PASS: geofence_no_entry (margin 0.5)
+- PASS: inspection_completion (margin 1.0)
+- PASS: battery_reserve (margin 138.3)
+- PASS: geofence_clearance (margin 282.7)
+
+## Recommended Next Actions
+
+- Proceed if the pilot-in-command confirms airspace authorization, crew readiness, and field conditions.
+- Wait for better wind if observed conditions exceed the scenario model.
+- Maintain the modeled geofence clearance before export to any flight system.

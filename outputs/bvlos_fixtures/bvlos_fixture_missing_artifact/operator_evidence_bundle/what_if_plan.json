@@ -1,0 +1,1272 @@
+{
+  "kind": "drone_inspection_what_if_plan",
+  "mission_id": "BVLOS Missing Artifact Fixture",
+  "baseline": {
+    "id": "baseline",
+    "label": "Current BVLOS plan",
+    "feasible": true,
+    "mission_risk": "low",
+    "score": 239.0944863549053,
+    "inspection_points": 6,
+    "estimated_time_s": 235.0,
+    "energy_used_Wh": 11.698532442586611,
+    "final_battery_Wh": 838.3014675574134,
+    "battery_reserve_margin_Wh": 138.3014675574134,
+    "wind_weather_margin_mps": 3.5999999999999996,
+    "geofence_clearance_margin_m": 282.7279657400859,
+    "route_completion_margin": 1.0,
+    "turn_bank_margin_radps": 0.24421447368845003
+  },
+  "variants": [
+    {
+      "id": "fewer_waypoints",
+      "label": "Fewer waypoints",
+      "description": "Drop the final inspection points to compare a shorter sortie.",
+      "feasible": true,
+      "mission_risk": "low",
+      "score": 104.03390329329619,
+      "estimated_time_s": 100.0,
+      "energy_used_Wh": 11.525437980846277,
+      "final_battery_Wh": 838.4745620191537,
+      "battery_reserve_margin_Wh": 138.47456201915372,
+      "wind_weather_margin_mps": 3.5999999999999996,
+      "geofence_clearance_margin_m": 273.2374362805291,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.14293017927782387,
+      "top_limiting_constraint": {
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "category": "weather",
+        "category_label": "Weather / wind margin",
+        "status": "pass",
+        "status_meaning": "Modeled margin is above the configured review threshold.",
+        "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+        "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+        "margin": {
+          "value": 3.5999999999999996,
+          "unit": "m/s",
+          "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+        },
+        "warning_margin": {
+          "value": 2.0,
+          "unit": "m/s",
+          "source": "wind.warning_margin_mps or default 2.0 m/s"
+        },
+        "risk_points": 12.0,
+        "observed": {
+          "max_horizontal_wind_mps": 5.397076860311788,
+          "weather_audit_wind_mps": 5.4,
+          "max_safe_wind_mps": 9.0,
+          "weather_source": "Operator-packaged field weather observation",
+          "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+          "weather_wind_speed_mps": 4.2,
+          "weather_wind_direction_deg": 282.0,
+          "weather_wind_gust_mps": 5.4,
+          "visibility_m": 18000.0,
+          "precipitation_mm": 0.0,
+          "temperature_C": 19.0,
+          "weather_fallback_used": false
+        },
+        "recommendation": "Wait for better wind or lower mission scope.",
+        "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "category": "weather",
+          "category_label": "Weather / wind margin",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+          "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+          "margin": {
+            "value": 3.5999999999999996,
+            "unit": "m/s",
+            "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s",
+            "source": "wind.warning_margin_mps or default 2.0 m/s"
+          },
+          "risk_points": 12.0,
+          "observed": {
+            "max_horizontal_wind_mps": 5.397076860311788,
+            "weather_audit_wind_mps": 5.4,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "Operator-packaged field weather observation",
+            "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+            "weather_wind_speed_mps": 4.2,
+            "weather_wind_direction_deg": 282.0,
+            "weather_wind_gust_mps": 5.4,
+            "visibility_m": 18000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 19.0,
+            "weather_fallback_used": false
+          },
+          "recommendation": "Wait for better wind or lower mission scope.",
+          "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+        },
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "category": "energy",
+          "category_label": "Energy / battery reserve",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+          "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
+          "margin": {
+            "value": 138.47456201915372,
+            "unit": "Wh",
+            "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+          },
+          "warning_margin": {
+            "value": 70.0,
+            "unit": "Wh",
+            "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
+          },
+          "risk_points": 10.217919711549468,
+          "observed": {
+            "final_battery_Wh": 838.4745620191537,
+            "required_reserve_Wh": 700.0
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+          "recommended_operator_action": "Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "category": "mission_completion",
+          "category_label": "Route completion",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
+          "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion",
+            "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion",
+            "source": "fixed 0.5 completion warning band"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 4.0,
+            "waypoints_total": 4.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties.",
+          "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": -135.0,
+        "energy_used_Wh": -0.17309446174033383
+      }
+    },
+    {
+      "id": "lower_speed",
+      "label": "Lower speed",
+      "description": "Force a lower cruise speed to compare endurance and turn margin.",
+      "feasible": true,
+      "mission_risk": "low",
+      "score": 219.41781515697483,
+      "estimated_time_s": 215.0,
+      "energy_used_Wh": 12.622329019928088,
+      "final_battery_Wh": 837.3776709800719,
+      "battery_reserve_margin_Wh": 137.3776709800719,
+      "wind_weather_margin_mps": 3.5999999999999996,
+      "geofence_clearance_margin_m": 266.74951146609516,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.2538670010842776,
+      "top_limiting_constraint": {
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "category": "weather",
+        "category_label": "Weather / wind margin",
+        "status": "pass",
+        "status_meaning": "Modeled margin is above the configured review threshold.",
+        "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+        "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+        "margin": {
+          "value": 3.5999999999999996,
+          "unit": "m/s",
+          "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+        },
+        "warning_margin": {
+          "value": 2.0,
+          "unit": "m/s",
+          "source": "wind.warning_margin_mps or default 2.0 m/s"
+        },
+        "risk_points": 12.0,
+        "observed": {
+          "max_horizontal_wind_mps": 5.4,
+          "weather_audit_wind_mps": 5.4,
+          "max_safe_wind_mps": 9.0,
+          "weather_source": "Operator-packaged field weather observation",
+          "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+          "weather_wind_speed_mps": 4.2,
+          "weather_wind_direction_deg": 282.0,
+          "weather_wind_gust_mps": 5.4,
+          "visibility_m": 18000.0,
+          "precipitation_mm": 0.0,
+          "temperature_C": 19.0,
+          "weather_fallback_used": false
+        },
+        "recommendation": "Wait for better wind or lower mission scope.",
+        "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "category": "weather",
+          "category_label": "Weather / wind margin",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+          "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+          "margin": {
+            "value": 3.5999999999999996,
+            "unit": "m/s",
+            "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s",
+            "source": "wind.warning_margin_mps or default 2.0 m/s"
+          },
+          "risk_points": 12.0,
+          "observed": {
+            "max_horizontal_wind_mps": 5.4,
+            "weather_audit_wind_mps": 5.4,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "Operator-packaged field weather observation",
+            "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+            "weather_wind_speed_mps": 4.2,
+            "weather_wind_direction_deg": 282.0,
+            "weather_wind_gust_mps": 5.4,
+            "visibility_m": 18000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 19.0,
+            "weather_fallback_used": false
+          },
+          "recommendation": "Wait for better wind or lower mission scope.",
+          "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+        },
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "category": "energy",
+          "category_label": "Energy / battery reserve",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+          "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
+          "margin": {
+            "value": 137.3776709800719,
+            "unit": "Wh",
+            "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+          },
+          "warning_margin": {
+            "value": 70.0,
+            "unit": "Wh",
+            "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
+          },
+          "risk_points": 10.374618431418298,
+          "observed": {
+            "final_battery_Wh": 837.3776709800719,
+            "required_reserve_Wh": 700.0
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+          "recommended_operator_action": "Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "category": "mission_completion",
+          "category_label": "Route completion",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
+          "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion",
+            "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion",
+            "source": "fixed 0.5 completion warning band"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 6.0,
+            "waypoints_total": 6.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties.",
+          "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": -20.0,
+        "energy_used_Wh": 0.9237965773414771
+      }
+    },
+    {
+      "id": "alternate_launch_point",
+      "label": "Alternate launch point",
+      "description": "Move launch closer to the first tower / inspection corridor.",
+      "feasible": true,
+      "mission_risk": "low",
+      "score": 179.45282442295994,
+      "estimated_time_s": 175.0,
+      "energy_used_Wh": 12.722355494171211,
+      "final_battery_Wh": 837.2776445058288,
+      "battery_reserve_margin_Wh": 137.2776445058288,
+      "wind_weather_margin_mps": 3.5999999999999996,
+      "geofence_clearance_margin_m": 258.72296737902366,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.2049430900768107,
+      "top_limiting_constraint": {
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "category": "weather",
+        "category_label": "Weather / wind margin",
+        "status": "pass",
+        "status_meaning": "Modeled margin is above the configured review threshold.",
+        "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+        "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+        "margin": {
+          "value": 3.5999999999999996,
+          "unit": "m/s",
+          "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+        },
+        "warning_margin": {
+          "value": 2.0,
+          "unit": "m/s",
+          "source": "wind.warning_margin_mps or default 2.0 m/s"
+        },
+        "risk_points": 12.0,
+        "observed": {
+          "max_horizontal_wind_mps": 5.4,
+          "weather_audit_wind_mps": 5.4,
+          "max_safe_wind_mps": 9.0,
+          "weather_source": "Operator-packaged field weather observation",
+          "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+          "weather_wind_speed_mps": 4.2,
+          "weather_wind_direction_deg": 282.0,
+          "weather_wind_gust_mps": 5.4,
+          "visibility_m": 18000.0,
+          "precipitation_mm": 0.0,
+          "temperature_C": 19.0,
+          "weather_fallback_used": false
+        },
+        "recommendation": "Wait for better wind or lower mission scope.",
+        "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "category": "weather",
+          "category_label": "Weather / wind margin",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+          "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+          "margin": {
+            "value": 3.5999999999999996,
+            "unit": "m/s",
+            "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s",
+            "source": "wind.warning_margin_mps or default 2.0 m/s"
+          },
+          "risk_points": 12.0,
+          "observed": {
+            "max_horizontal_wind_mps": 5.4,
+            "weather_audit_wind_mps": 5.4,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "Operator-packaged field weather observation",
+            "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+            "weather_wind_speed_mps": 4.2,
+            "weather_wind_direction_deg": 282.0,
+            "weather_wind_gust_mps": 5.4,
+            "visibility_m": 18000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 19.0,
+            "weather_fallback_used": false
+          },
+          "recommendation": "Wait for better wind or lower mission scope.",
+          "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+        },
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "category": "energy",
+          "category_label": "Energy / battery reserve",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+          "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
+          "margin": {
+            "value": 137.2776445058288,
+            "unit": "Wh",
+            "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+          },
+          "warning_margin": {
+            "value": 70.0,
+            "unit": "Wh",
+            "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
+          },
+          "risk_points": 10.388907927738742,
+          "observed": {
+            "final_battery_Wh": 837.2776445058288,
+            "required_reserve_Wh": 700.0
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+          "recommended_operator_action": "Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "category": "mission_completion",
+          "category_label": "Route completion",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
+          "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion",
+            "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion",
+            "source": "fixed 0.5 completion warning band"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 6.0,
+            "waypoints_total": 6.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties.",
+          "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": -60.0,
+        "energy_used_Wh": 1.0238230515845999
+      }
+    },
+    {
+      "id": "stronger_wind",
+      "label": "Stronger wind case",
+      "description": "Increase modeled wind components by 50 percent.",
+      "feasible": true,
+      "mission_risk": "low",
+      "score": 165.64182887908865,
+      "estimated_time_s": 160.0,
+      "energy_used_Wh": 16.11951108311041,
+      "final_battery_Wh": 833.8804889168896,
+      "battery_reserve_margin_Wh": 133.8804889168896,
+      "wind_weather_margin_mps": 3.5999999999999996,
+      "geofence_clearance_margin_m": 263.6517656039508,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.15738707403156058,
+      "top_limiting_constraint": {
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "category": "weather",
+        "category_label": "Weather / wind margin",
+        "status": "pass",
+        "status_meaning": "Modeled margin is above the configured review threshold.",
+        "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+        "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+        "margin": {
+          "value": 3.5999999999999996,
+          "unit": "m/s",
+          "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+        },
+        "warning_margin": {
+          "value": 2.0,
+          "unit": "m/s",
+          "source": "wind.warning_margin_mps or default 2.0 m/s"
+        },
+        "risk_points": 12.0,
+        "observed": {
+          "max_horizontal_wind_mps": 5.4,
+          "weather_audit_wind_mps": 5.4,
+          "max_safe_wind_mps": 9.0,
+          "weather_source": "Operator-packaged field weather observation",
+          "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+          "weather_wind_speed_mps": 4.2,
+          "weather_wind_direction_deg": 282.0,
+          "weather_wind_gust_mps": 5.4,
+          "visibility_m": 18000.0,
+          "precipitation_mm": 0.0,
+          "temperature_C": 19.0,
+          "weather_fallback_used": false
+        },
+        "recommendation": "Wait for better wind or lower mission scope.",
+        "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "category": "weather",
+          "category_label": "Weather / wind margin",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+          "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+          "margin": {
+            "value": 3.5999999999999996,
+            "unit": "m/s",
+            "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s",
+            "source": "wind.warning_margin_mps or default 2.0 m/s"
+          },
+          "risk_points": 12.0,
+          "observed": {
+            "max_horizontal_wind_mps": 5.4,
+            "weather_audit_wind_mps": 5.4,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "Operator-packaged field weather observation",
+            "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+            "weather_wind_speed_mps": 4.2,
+            "weather_wind_direction_deg": 282.0,
+            "weather_wind_gust_mps": 5.4,
+            "visibility_m": 18000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 19.0,
+            "weather_fallback_used": false
+          },
+          "recommendation": "Wait for better wind or lower mission scope.",
+          "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+        },
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "category": "energy",
+          "category_label": "Energy / battery reserve",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+          "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
+          "margin": {
+            "value": 133.8804889168896,
+            "unit": "Wh",
+            "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+          },
+          "warning_margin": {
+            "value": 70.0,
+            "unit": "Wh",
+            "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
+          },
+          "risk_points": 10.874215869015774,
+          "observed": {
+            "final_battery_Wh": 833.8804889168896,
+            "required_reserve_Wh": 700.0
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+          "recommended_operator_action": "Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "category": "mission_completion",
+          "category_label": "Route completion",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
+          "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion",
+            "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion",
+            "source": "fixed 0.5 completion warning band"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 6.0,
+            "waypoints_total": 6.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties.",
+          "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": -75.0,
+        "energy_used_Wh": 4.420978640523799
+      }
+    },
+    {
+      "id": "larger_battery_reserve",
+      "label": "Larger battery reserve requirement",
+      "description": "Increase the required final battery reserve.",
+      "feasible": true,
+      "mission_risk": "medium",
+      "score": 160.81734456892136,
+      "estimated_time_s": 155.0,
+      "energy_used_Wh": 16.62098448263248,
+      "final_battery_Wh": 833.3790155173675,
+      "battery_reserve_margin_Wh": 28.379015517367634,
+      "wind_weather_margin_mps": 3.5999999999999996,
+      "geofence_clearance_margin_m": 271.26861092470585,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.15046190543447022,
+      "top_limiting_constraint": {
+        "id": "battery_reserve",
+        "label": "Battery reserve margin",
+        "category": "energy",
+        "category_label": "Energy / battery reserve",
+        "status": "warning",
+        "status_meaning": "Modeled margin is positive, but close enough to require operator review.",
+        "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+        "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
+        "margin": {
+          "value": 28.379015517367634,
+          "unit": "Wh",
+          "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+        },
+        "warning_margin": {
+          "value": 80.5,
+          "unit": "Wh",
+          "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
+        },
+        "risk_points": 59.42396937240958,
+        "observed": {
+          "final_battery_Wh": 833.3790155173675,
+          "required_reserve_Wh": 804.9999999999999
+        },
+        "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+        "recommended_operator_action": "Review payload draw and route length; trim inspection scope or stage a battery swap before release."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "category": "energy",
+          "category_label": "Energy / battery reserve",
+          "status": "warning",
+          "status_meaning": "Modeled margin is positive, but close enough to require operator review.",
+          "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+          "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
+          "margin": {
+            "value": 28.379015517367634,
+            "unit": "Wh",
+            "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+          },
+          "warning_margin": {
+            "value": 80.5,
+            "unit": "Wh",
+            "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
+          },
+          "risk_points": 59.42396937240958,
+          "observed": {
+            "final_battery_Wh": 833.3790155173675,
+            "required_reserve_Wh": 804.9999999999999
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+          "recommended_operator_action": "Review payload draw and route length; trim inspection scope or stage a battery swap before release."
+        },
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "category": "weather",
+          "category_label": "Weather / wind margin",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+          "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+          "margin": {
+            "value": 3.5999999999999996,
+            "unit": "m/s",
+            "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s",
+            "source": "wind.warning_margin_mps or default 2.0 m/s"
+          },
+          "risk_points": 12.0,
+          "observed": {
+            "max_horizontal_wind_mps": 5.4,
+            "weather_audit_wind_mps": 5.4,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "Operator-packaged field weather observation",
+            "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+            "weather_wind_speed_mps": 4.2,
+            "weather_wind_direction_deg": 282.0,
+            "weather_wind_gust_mps": 5.4,
+            "visibility_m": 18000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 19.0,
+            "weather_fallback_used": false
+          },
+          "recommendation": "Wait for better wind or lower mission scope.",
+          "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "category": "mission_completion",
+          "category_label": "Route completion",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
+          "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion",
+            "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion",
+            "source": "fixed 0.5 completion warning band"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 6.0,
+            "waypoints_total": 6.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties.",
+          "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": -80.0,
+        "energy_used_Wh": 4.922452040045869
+      }
+    },
+    {
+      "id": "relaunch_battery_swap",
+      "label": "Relaunch / battery swap",
+      "description": "Split the route into two sorties with a fresh battery for the second leg.",
+      "feasible": true,
+      "mission_risk": "low",
+      "score": 165.72198683106058,
+      "estimated_time_s": 160.0,
+      "energy_used_Wh": 16.34853380303025,
+      "final_battery_Wh": 841.2739296708775,
+      "battery_reserve_margin_Wh": 141.27392967087746,
+      "wind_weather_margin_mps": 3.5999999999999996,
+      "geofence_clearance_margin_m": 163.49078678097587,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.14093701228626043,
+      "top_limiting_constraint": {
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "category": "weather",
+        "category_label": "Weather / wind margin",
+        "status": "pass",
+        "status_meaning": "Modeled margin is above the configured review threshold.",
+        "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+        "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+        "margin": {
+          "value": 3.5999999999999996,
+          "unit": "m/s",
+          "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+        },
+        "warning_margin": {
+          "value": 2.0,
+          "unit": "m/s",
+          "source": "wind.warning_margin_mps or default 2.0 m/s"
+        },
+        "risk_points": 12.0,
+        "observed": {
+          "max_horizontal_wind_mps": 5.364354871531195,
+          "weather_audit_wind_mps": 5.4,
+          "max_safe_wind_mps": 9.0,
+          "weather_source": "Operator-packaged field weather observation",
+          "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+          "weather_wind_speed_mps": 4.2,
+          "weather_wind_direction_deg": 282.0,
+          "weather_wind_gust_mps": 5.4,
+          "visibility_m": 18000.0,
+          "precipitation_mm": 0.0,
+          "temperature_C": 19.0,
+          "weather_fallback_used": false
+        },
+        "recommendation": "Wait for better wind or lower mission scope.",
+        "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "category": "weather",
+          "category_label": "Weather / wind margin",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+          "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+          "margin": {
+            "value": 3.5999999999999996,
+            "unit": "m/s",
+            "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s",
+            "source": "wind.warning_margin_mps or default 2.0 m/s"
+          },
+          "risk_points": 12.0,
+          "observed": {
+            "max_horizontal_wind_mps": 5.364354871531195,
+            "weather_audit_wind_mps": 5.4,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "Operator-packaged field weather observation",
+            "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+            "weather_wind_speed_mps": 4.2,
+            "weather_wind_direction_deg": 282.0,
+            "weather_wind_gust_mps": 5.4,
+            "visibility_m": 18000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 19.0,
+            "weather_fallback_used": false
+          },
+          "recommendation": "Wait for better wind or lower mission scope.",
+          "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "category": "mission_completion",
+          "category_label": "Route completion",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
+          "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion",
+            "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion",
+            "source": "fixed 0.5 completion warning band"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 3.0,
+            "waypoints_total": 3.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties.",
+          "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
+        },
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "category": "energy",
+          "category_label": "Energy / battery reserve",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+          "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
+          "margin": {
+            "value": 141.27392967087746,
+            "unit": "Wh",
+            "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+          },
+          "warning_margin": {
+            "value": 70.0,
+            "unit": "Wh",
+            "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
+          },
+          "risk_points": 9.818010047017506,
+          "observed": {
+            "final_battery_Wh": 841.2739296708775,
+            "required_reserve_Wh": 700.0
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+          "recommended_operator_action": "Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch."
+        }
+      ],
+      "sorties": [
+        {
+          "id": "relaunch_battery_swap_sortie_1",
+          "label": "Relaunch / battery swap sortie 1",
+          "description": "One sortie in a split-route battery swap option.",
+          "feasible": true,
+          "mission_risk": "low",
+          "score": 78.05412461519289,
+          "estimated_time_s": 75.0,
+          "energy_used_Wh": 8.726070329122535,
+          "final_battery_Wh": 841.2739296708775,
+          "battery_reserve_margin_Wh": 141.27392967087746,
+          "wind_weather_margin_mps": 3.5999999999999996,
+          "geofence_clearance_margin_m": 332.57532772692804,
+          "route_completion_margin": 1.0,
+          "turn_bank_margin_radps": 0.14093701228626043,
+          "top_limiting_constraint": {
+            "id": "wind_weather",
+            "label": "Wind / weather margin",
+            "category": "weather",
+            "category_label": "Weather / wind margin",
+            "status": "pass",
+            "status_meaning": "Modeled margin is above the configured review threshold.",
+            "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+            "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+            "margin": {
+              "value": 3.5999999999999996,
+              "unit": "m/s",
+              "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+            },
+            "warning_margin": {
+              "value": 2.0,
+              "unit": "m/s",
+              "source": "wind.warning_margin_mps or default 2.0 m/s"
+            },
+            "risk_points": 12.0,
+            "observed": {
+              "max_horizontal_wind_mps": 5.364354871531195,
+              "weather_audit_wind_mps": 5.4,
+              "max_safe_wind_mps": 9.0,
+              "weather_source": "Operator-packaged field weather observation",
+              "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+              "weather_wind_speed_mps": 4.2,
+              "weather_wind_direction_deg": 282.0,
+              "weather_wind_gust_mps": 5.4,
+              "visibility_m": 18000.0,
+              "precipitation_mm": 0.0,
+              "temperature_C": 19.0,
+              "weather_fallback_used": false
+            },
+            "recommendation": "Wait for better wind or lower mission scope.",
+            "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+          },
+          "top_three_risk_drivers": [
+            {
+              "id": "wind_weather",
+              "label": "Wind / weather margin",
+              "category": "weather",
+              "category_label": "Weather / wind margin",
+              "status": "pass",
+              "status_meaning": "Modeled margin is above the configured review threshold.",
+              "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+              "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+              "margin": {
+                "value": 3.5999999999999996,
+                "unit": "m/s",
+                "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+              },
+              "warning_margin": {
+                "value": 2.0,
+                "unit": "m/s",
+                "source": "wind.warning_margin_mps or default 2.0 m/s"
+              },
+              "risk_points": 12.0,
+              "observed": {
+                "max_horizontal_wind_mps": 5.364354871531195,
+                "weather_audit_wind_mps": 5.4,
+                "max_safe_wind_mps": 9.0,
+                "weather_source": "Operator-packaged field weather observation",
+                "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+                "weather_wind_speed_mps": 4.2,
+                "weather_wind_direction_deg": 282.0,
+                "weather_wind_gust_mps": 5.4,
+                "visibility_m": 18000.0,
+                "precipitation_mm": 0.0,
+                "temperature_C": 19.0,
+                "weather_fallback_used": false
+              },
+              "recommendation": "Wait for better wind or lower mission scope.",
+              "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+            },
+            {
+              "id": "route_completion",
+              "label": "Route completion status",
+              "category": "mission_completion",
+              "category_label": "Route completion",
+              "status": "pass",
+              "status_meaning": "Modeled margin is above the configured review threshold.",
+              "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
+              "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
+              "margin": {
+                "value": 1.0,
+                "unit": "completion",
+                "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
+              },
+              "warning_margin": {
+                "value": 0.5,
+                "unit": "completion",
+                "source": "fixed 0.5 completion warning band"
+              },
+              "risk_points": 10.000000000000002,
+              "observed": {
+                "waypoints_completed": 3.0,
+                "waypoints_total": 3.0,
+                "reached_all": true
+              },
+              "recommendation": "Split the inspection into shorter sorties.",
+              "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
+            },
+            {
+              "id": "battery_reserve",
+              "label": "Battery reserve margin",
+              "category": "energy",
+              "category_label": "Energy / battery reserve",
+              "status": "pass",
+              "status_meaning": "Modeled margin is above the configured review threshold.",
+              "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+              "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
+              "margin": {
+                "value": 141.27392967087746,
+                "unit": "Wh",
+                "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+              },
+              "warning_margin": {
+                "value": 70.0,
+                "unit": "Wh",
+                "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
+              },
+              "risk_points": 9.818010047017506,
+              "observed": {
+                "final_battery_Wh": 841.2739296708775,
+                "required_reserve_Wh": 700.0
+              },
+              "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+              "recommended_operator_action": "Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch."
+            }
+          ],
+          "delta_vs_baseline": {
+            "estimated_time_s": -160.0,
+            "energy_used_Wh": -2.9724621134640756
+          }
+        },
+        {
+          "id": "relaunch_battery_swap_sortie_2",
+          "label": "Relaunch / battery swap sortie 2",
+          "description": "One sortie in a split-route battery swap option.",
+          "feasible": true,
+          "mission_risk": "low",
+          "score": 87.6678622158677,
+          "estimated_time_s": 85.0,
+          "energy_used_Wh": 7.622463473907715,
+          "final_battery_Wh": 842.3775365260923,
+          "battery_reserve_margin_Wh": 142.37753652609229,
+          "wind_weather_margin_mps": 3.5999999999999996,
+          "geofence_clearance_margin_m": 163.49078678097587,
+          "route_completion_margin": 1.0,
+          "turn_bank_margin_radps": 0.1714564673666387,
+          "top_limiting_constraint": {
+            "id": "wind_weather",
+            "label": "Wind / weather margin",
+            "category": "weather",
+            "category_label": "Weather / wind margin",
+            "status": "pass",
+            "status_meaning": "Modeled margin is above the configured review threshold.",
+            "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+            "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+            "margin": {
+              "value": 3.5999999999999996,
+              "unit": "m/s",
+              "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+            },
+            "warning_margin": {
+              "value": 2.0,
+              "unit": "m/s",
+              "source": "wind.warning_margin_mps or default 2.0 m/s"
+            },
+            "risk_points": 12.0,
+            "observed": {
+              "max_horizontal_wind_mps": 5.38176930361465,
+              "weather_audit_wind_mps": 5.4,
+              "max_safe_wind_mps": 9.0,
+              "weather_source": "Operator-packaged field weather observation",
+              "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+              "weather_wind_speed_mps": 4.2,
+              "weather_wind_direction_deg": 282.0,
+              "weather_wind_gust_mps": 5.4,
+              "visibility_m": 18000.0,
+              "precipitation_mm": 0.0,
+              "temperature_C": 19.0,
+              "weather_fallback_used": false
+            },
+            "recommendation": "Wait for better wind or lower mission scope.",
+            "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+          },
+          "top_three_risk_drivers": [
+            {
+              "id": "wind_weather",
+              "label": "Wind / weather margin",
+              "category": "weather",
+              "category_label": "Weather / wind margin",
+              "status": "pass",
+              "status_meaning": "Modeled margin is above the configured review threshold.",
+              "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+              "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+              "margin": {
+                "value": 3.5999999999999996,
+                "unit": "m/s",
+                "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+              },
+              "warning_margin": {
+                "value": 2.0,
+                "unit": "m/s",
+                "source": "wind.warning_margin_mps or default 2.0 m/s"
+              },
+              "risk_points": 12.0,
+              "observed": {
+                "max_horizontal_wind_mps": 5.38176930361465,
+                "weather_audit_wind_mps": 5.4,
+                "max_safe_wind_mps": 9.0,
+                "weather_source": "Operator-packaged field weather observation",
+                "weather_timestamp_utc": "2026-09-15T05:15:00Z",
+                "weather_wind_speed_mps": 4.2,
+                "weather_wind_direction_deg": 282.0,
+                "weather_wind_gust_mps": 5.4,
+                "visibility_m": 18000.0,
+                "precipitation_mm": 0.0,
+                "temperature_C": 19.0,
+                "weather_fallback_used": false
+              },
+              "recommendation": "Wait for better wind or lower mission scope.",
+              "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+            },
+            {
+              "id": "route_completion",
+              "label": "Route completion status",
+              "category": "mission_completion",
+              "category_label": "Route completion",
+              "status": "pass",
+              "status_meaning": "Modeled margin is above the configured review threshold.",
+              "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
+              "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
+              "margin": {
+                "value": 1.0,
+                "unit": "completion",
+                "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
+              },
+              "warning_margin": {
+                "value": 0.5,
+                "unit": "completion",
+                "source": "fixed 0.5 completion warning band"
+              },
+              "risk_points": 10.000000000000002,
+              "observed": {
+                "waypoints_completed": 3.0,
+                "waypoints_total": 3.0,
+                "reached_all": true
+              },
+              "recommendation": "Split the inspection into shorter sorties.",
+              "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
+            },
+            {
+              "id": "battery_reserve",
+              "label": "Battery reserve margin",
+              "category": "energy",
+              "category_label": "Energy / battery reserve",
+              "status": "pass",
+              "status_meaning": "Modeled margin is above the configured review threshold.",
+              "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+              "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
+              "margin": {
+                "value": 142.37753652609229,
+                "unit": "Wh",
+                "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+              },
+              "warning_margin": {
+                "value": 70.0,
+                "unit": "Wh",
+                "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
+              },
+              "risk_points": 9.660351924843958,
+              "observed": {
+                "final_battery_Wh": 842.3775365260923,
+                "required_reserve_Wh": 700.0
+              },
+              "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+              "recommended_operator_action": "Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch."
+            }
+          ],
+          "delta_vs_baseline": {
+            "estimated_time_s": -150.0,
+            "energy_used_Wh": -4.0760689686788965
+          }
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": -75.0,
+        "energy_used_Wh": 4.650001360443639
+      }
+    }
+  ],
+  "before_after_improvements": [
+    {
+      "variant_id": "fewer_waypoints",
+      "label": "Fewer waypoints",
+      "description": "Drop the final inspection points to compare a shorter sortie.",
+      "improvements": [
+        {
+          "metric": "battery_reserve_margin_Wh",
+          "label": "Battery reserve margin",
+          "unit": "Wh",
+          "before": 138.3014675574134,
+          "after": 138.47456201915372,
+          "delta": 0.17309446174033383
+        }
+      ],
+      "summary": "Improves battery reserve margin versus the baseline."
+    },
+    {
+      "variant_id": "lower_speed",
+      "label": "Lower speed",
+      "description": "Force a lower cruise speed to compare endurance and turn margin.",
+      "improvements": [
+        {
+          "metric": "turn_bank_margin_radps",
+          "label": "Turn / bank margin",
+          "unit": "rad/s",
+          "before": 0.24421447368845003,
+          "after": 0.2538670010842776,
+          "delta": 0.009652527395827587
+        }
+      ],
+      "summary": "Improves turn / bank margin versus the baseline."
+    },
+    {
+      "variant_id": "relaunch_battery_swap",
+      "label": "Relaunch / battery swap",
+      "description": "Split the route into two sorties with a fresh battery for the second leg.",
+      "improvements": [
+        {
+          "metric": "battery_reserve_margin_Wh",
+          "label": "Battery reserve margin",
+          "unit": "Wh",
+          "before": 138.3014675574134,
+          "after": 141.27392967087746,
+          "delta": 2.9724621134640756
+        }
+      ],
+      "summary": "Improves battery reserve margin versus the baseline."
+    }
+  ]
+}

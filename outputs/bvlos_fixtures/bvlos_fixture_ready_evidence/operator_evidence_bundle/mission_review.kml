@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>BVLOS Ready Evidence Fixture - ORBITAL Planning Export</name>
+    <description>Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.</description>
+    <Placemark>
+      <name>Planned Route</name>
+      <description>Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.</description>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>absolute</altitudeMode>
+        <coordinates>
+          -122.14300000,37.44190000,90.00 -122.13451434,37.44261865,90.00 -122.12602867,37.44297798,90.00 -122.11754301,37.44261865,90.00 -122.10905734,37.44297798,90.00 -122.10057168,37.44261865,90.00 -122.09208602,37.44297798,90.00
+        </coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>START</name>
+      <description>Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.</description>
+      <Point>
+        <coordinates>-122.14300000,37.44190000,90.00</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>TOWER_01</name>
+      <description>Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.</description>
+      <Point>
+        <coordinates>-122.13451434,37.44261865,90.00</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>TOWER_02</name>
+      <description>Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.</description>
+      <Point>
+        <coordinates>-122.12602867,37.44297798,90.00</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>TOWER_03</name>
+      <description>Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.</description>
+      <Point>
+        <coordinates>-122.11754301,37.44261865,90.00</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>TOWER_04</name>
+      <description>Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.</description>
+      <Point>
+        <coordinates>-122.10905734,37.44297798,90.00</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>TOWER_05</name>
+      <description>Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.</description>
+      <Point>
+        <coordinates>-122.10057168,37.44261865,90.00</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>TOWER_06</name>
+      <description>Planning artifact only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, autopilot control, or operational clearance.</description>
+      <Point>
+        <coordinates>-122.09208602,37.44297798,90.00</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>
