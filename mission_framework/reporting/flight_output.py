@@ -5988,6 +5988,9 @@ def export_operator_evidence_bundle(
     generated_timestamp_utc = normalize_generated_timestamp(generated_timestamp_utc)
     scenario_sha256 = _file_sha256(scenario_path)
     scenario_modified_ts = _file_modified_timestamp(scenario_path)
+    generated_modified_ts = _generated_timestamp_epoch(generated_timestamp_utc)
+    if scenario_modified_ts is not None and generated_modified_ts is not None:
+        scenario_modified_ts = min(scenario_modified_ts, generated_modified_ts)
     weather = _weather_metadata(cfg)
     weather_evidence_readiness = _weather_evidence_readiness(
         weather,

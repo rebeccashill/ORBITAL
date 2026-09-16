@@ -21,6 +21,7 @@ from mission_framework.reporting.flight_output import (
     _regulatory_documentation_completeness,
     _regulatory_evidence_provenance,
     _weather_evidence_readiness,
+    export_operator_evidence_bundle,
     normalize_generated_timestamp,
     verify_evidence_bundle_checksums,
 )
@@ -542,6 +543,31 @@ def test_artifact_freshness_metadata_handles_missing_and_scenario_artifacts(tmp_
     assert missing_freshness["source_sha256"] is None
     assert missing_freshness["bundle_sha256"] is None
     assert missing_freshness["stale_against_scenario"] is False
+
+
+def test_fixed_generated_timestamp_caps_scenario_freshness_baseline(tmp_path) -> None:
+    scenario = tmp_path / "scenario.yaml"
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    scenario.write_text("scenario:\n  name: Checkout Mtime Demo\n", encoding="utf-8")
+    (out_dir / "plan.json").write_text('{"kind": "aircraft"}\n', encoding="utf-8")
+
+    os.utime(scenario, (2_000_000_000.0, 2_000_000_000.0))
+
+    manifest = export_operator_evidence_bundle(
+        out_dir,
+        scenario,
+        generated_timestamp_utc="2026-09-15T05:24:50Z",
+    )
+
+    plan_freshness = next(
+        artifact["freshness"] for artifact in manifest["artifacts"] if artifact["id"] == "plan_json"
+    )
+    assert plan_freshness["source_modified_utc"] == "2026-09-15T05:24:50Z"
+    assert plan_freshness["stale_against_scenario"] is False
+    assert not any(
+        warning.get("id") == "stale_plan_json" for warning in manifest["bundle_warnings"]
+    )
 
 
 def test_normalize_generated_timestamp_supports_fixed_demo_clock() -> None:
