@@ -9,9 +9,9 @@
       "reduce_mode": "min",
       "weight": 1.0,
       "is_satisfied": true,
-      "min_margin": 0.1390076277875651,
+      "min_margin": 0.2364696406790953,
       "max_violation": 0.0,
-      "worst_index": 3,
+      "worst_index": 1,
       "worst_time": null,
       "metadata_keys": [
         "bank_max_deg"
@@ -26,9 +26,9 @@
       "reduce_mode": "min",
       "weight": 1.0,
       "is_satisfied": true,
-      "min_margin": 832.0599780312521,
+      "min_margin": 838.0941005976379,
       "max_violation": 0.0,
-      "worst_index": 28,
+      "worst_index": 44,
       "worst_time": null,
       "metadata_keys": [
         "t"
@@ -40,7 +40,7 @@
       "reduce_mode": "min",
       "weight": 1.0,
       "is_satisfied": true,
-      "min_margin": 132.05997803125206,
+      "min_margin": 138.09410059763786,
       "max_violation": 0.0,
       "worst_index": 0,
       "worst_time": null,
@@ -66,9 +66,9 @@
       "reduce_mode": "min",
       "weight": 1.0,
       "is_satisfied": true,
-      "min_margin": 0.1390076277875651,
+      "min_margin": 0.2364696406790953,
       "max_violation": 0.0,
-      "worst_index": 3,
+      "worst_index": 1,
       "worst_time": null,
       "metadata_keys": [
         "bank_max_deg"
@@ -92,7 +92,7 @@
       "reduce_mode": "min",
       "weight": 1.0,
       "is_satisfied": true,
-      "min_margin": 276.69524979477507,
+      "min_margin": 266.00330512469594,
       "max_violation": 0.0,
       "worst_index": 0,
       "worst_time": null,

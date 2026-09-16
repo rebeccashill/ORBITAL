@@ -4,15 +4,68 @@ import copy
 import json
 import subprocess
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
+from urllib.parse import unquote, urlparse
 
 import yaml
 
 from run_all import build_cli_cmd
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class _OperatorReviewLinkParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.hrefs: list[str] = []
+        self.srcs: list[str] = []
+        self.scripts_by_id: dict[str, str] = {}
+        self.text_parts: list[str] = []
+        self._script_stack: list[tuple[str | None, list[str]]] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attrs_dict = {name: value or "" for name, value in attrs}
+        if tag == "a" and "href" in attrs_dict:
+            self.hrefs.append(attrs_dict["href"])
+        if tag == "img" and "src" in attrs_dict:
+            self.srcs.append(attrs_dict["src"])
+        if tag == "script":
+            self._script_stack.append((attrs_dict.get("id"), []))
+
+    def handle_data(self, data: str) -> None:
+        self.text_parts.append(data)
+        if self._script_stack:
+            self._script_stack[-1][1].append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag != "script" or not self._script_stack:
+            return
+        script_id, parts = self._script_stack.pop()
+        if script_id:
+            self.scripts_by_id[script_id] = "".join(parts)
+
+    @property
+    def text(self) -> str:
+        return " ".join("".join(self.text_parts).split())
+
+
+def _parse_operator_review_links(html: str) -> _OperatorReviewLinkParser:
+    parser = _OperatorReviewLinkParser()
+    parser.feed(html)
+    parser.close()
+    return parser
+
+
+def _local_review_target(value: str) -> str | None:
+    if value.startswith("#") or value.startswith("data:"):
+        return None
+    parsed = urlparse(value)
+    if parsed.scheme or parsed.netloc:
+        return None
+    return unquote(parsed.path).replace("\\", "/")
 
 
 def test_run_all_builds_supported_no_plots_commands() -> None:
@@ -48,6 +101,8 @@ def test_cli_no_plots_writes_core_artifacts_without_pngs(tmp_path: Path) -> None
             "0",
             "--seed",
             "0",
+            "--generated-at",
+            "2026-09-15T05:24:50Z",
             "--no-plots",
             "--outdir",
             str(outdir),
@@ -129,6 +184,8 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
             "0",
             "--seed",
             "0",
+            "--generated-at",
+            "2026-09-15T05:24:50Z",
             "--no-plots",
             "--outdir",
             str(outdir),
@@ -203,6 +260,7 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert reproducibility["robustness_cases_configured"] == 0
     assert reproducibility["robustness_cases_run"] == 0
     assert "mission_framework.cli" in reproducibility["command"]["display"]
+    assert "--generated-at 2026-09-15T05:24:50Z" in reproducibility["command"]["display"]
     assert transparency["top_limiting_constraint_selection"]["selected_constraint_id"] == (
         audit["top_limiting_constraint"]["id"]
     )
@@ -278,7 +336,12 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert manifest["artifact_completeness"]["score"] == manifest["bundle_completeness_score"]
     assert manifest["regulatory_documentation_completeness"]["score"] == 100.0
     assert manifest["review_metadata"]["status"] == "draft"
-    assert manifest["freshness"]["generated_timestamp_utc"].endswith("Z")
+    assert manifest["freshness"]["generated_timestamp_utc"] == "2026-09-15T05:24:50Z"
+    plan_freshness = next(
+        artifact["freshness"] for artifact in manifest["artifacts"] if artifact["id"] == "plan_json"
+    )
+    assert plan_freshness["source_modified_utc"] == "2026-09-15T05:24:50Z"
+    assert plan_freshness["bundle_modified_utc"] == "2026-09-15T05:24:50Z"
     assert manifest["freshness"]["orbital_version"] != "unknown"
     assert len(manifest["freshness"]["scenario_hash"]["value"]) == 64
     assert "mission_framework.cli" in manifest["freshness"]["command"]["display"]
@@ -337,6 +400,36 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
     assert "local review surface" in ui_text
     assert "decision support, not approval" in ui_text
     assert "does not approve a mission" in ui_text
+
+    parsed_ui = _parse_operator_review_links(ui_text)
+    embedded_manifest = json.loads(parsed_ui.scripts_by_id["manifest-snapshot"])
+    assert embedded_manifest == manifest
+    manifest_artifact_entries = [
+        *manifest["artifacts"],
+        *manifest["generated_artifacts"],
+    ]
+    available_artifact_targets = {
+        str(entry["bundle_path"]).replace("\\", "/")
+        for entry in manifest_artifact_entries
+        if entry.get("present") and entry.get("bundle_path")
+    }
+    missing_artifact_targets = {
+        str(entry["bundle_path"]).replace("\\", "/")
+        for entry in manifest_artifact_entries
+        if not entry.get("present") and entry.get("bundle_path")
+    }
+    linked_artifact_targets = {
+        target
+        for value in [*parsed_ui.hrefs, *parsed_ui.srcs]
+        if (target := _local_review_target(value)) is not None
+    }
+    assert linked_artifact_targets <= available_artifact_targets
+    for target in linked_artifact_targets:
+        assert (bundle_dir / target).is_file(), target
+    assert linked_artifact_targets.isdisjoint(missing_artifact_targets)
+    assert missing_artifact_targets
+    assert "unavailable" in parsed_ui.text
+
     dashboard_text = operator_dashboard.read_text(encoding="utf-8")
     assert "ORBITAL Operator Evidence Dashboard" in dashboard_text
     assert "Mission Verdict: REVIEW REQUIRED" in dashboard_text
@@ -555,6 +648,41 @@ def test_cli_bvlos_demo_writes_full_evidence_workflow_artifacts(tmp_path: Path) 
         serve_result.stdout
     )
     assert "Dry run: server not started." in serve_result.stdout
+
+
+def test_cli_ui_health_invokes_layout_checker(tmp_path: Path, monkeypatch: Any) -> None:
+    import mission_framework.cli as cli
+
+    bundle_dir = tmp_path / "operator_evidence_bundle"
+    bundle_dir.mkdir()
+    (bundle_dir / "operator_review_ui.html").write_text("<!doctype html>\n", encoding="utf-8")
+    captured: dict[str, Any] = {}
+
+    def fake_run(command: list[str], cwd: Path) -> SimpleNamespace:
+        captured["command"] = command
+        captured["cwd"] = cwd
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(cli.subprocess, "run", fake_run)
+
+    result = cli.main(
+        [
+            "ui-health",
+            str(bundle_dir),
+            "--json",
+            "--outdir",
+            str(tmp_path / "ui-health"),
+        ]
+    )
+
+    assert result == 0
+    command = captured["command"]
+    assert command[:2] == ["node", str(ROOT / "scripts" / "check_operator_review_ui_layout.js")]
+    assert "--bundle" in command
+    assert command[command.index("--bundle") + 1] == str(bundle_dir)
+    assert "--json" in command
+    assert command[command.index("--outdir") + 1] == str(tmp_path / "ui-health")
+    assert captured["cwd"] == ROOT
 
 
 def test_cli_overrides_yaml_settings_and_accepts_single_dash_aliases(

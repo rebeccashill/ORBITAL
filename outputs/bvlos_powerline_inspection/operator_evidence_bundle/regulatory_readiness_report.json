@@ -207,7 +207,7 @@
       "checked": false,
       "status": "operator_confirmation_required",
       "source": "vehicle.battery_reserve_Wh",
-      "note": "Confirm launch battery, reserve policy, payload draw, and abort reserve meet operator requirements before release (required reserve 700.0 Wh; planned final battery 832.1 Wh; modeled reserve margin 132.1 Wh)."
+      "note": "Confirm launch battery, reserve policy, payload draw, and abort reserve meet operator requirements before release (required reserve 700.0 Wh; planned final battery 838.1 Wh; modeled reserve margin 138.1 Wh)."
     }
   ],
   "documentation_only_notice": "For planning documentation only. ORBITAL does not provide LAANC, waivers, authorizations, legal approval, or operational clearance.",
@@ -215,20 +215,10 @@
   "mission_context": {
     "hard_constraints_pass": true,
     "inspection_points": 6,
-    "estimated_time_s": 140.0,
-    "energy_used_Wh": 17.940021968747942,
+    "estimated_time_s": 220.0,
+    "energy_used_Wh": 11.905899402362138,
     "waypoints_completed": 6.0,
     "waypoints_total": 6.0
   },
-  "robustness": {
-    "cases": 20,
-    "hard_pass_rate": 1.0,
-    "worst_hard_margin_min": 0.1390076277875651,
-    "robust_aggregation": "mean",
-    "cvar_alpha": null,
-    "robust_score": 146.2790076890618,
-    "mean_score": 146.2790076890618,
-    "p50_score": 146.27900768906179,
-    "p90_score": 146.27900768906179
-  }
+  "robustness": {}
 }

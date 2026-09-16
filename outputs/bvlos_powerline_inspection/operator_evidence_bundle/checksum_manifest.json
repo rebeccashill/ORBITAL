@@ -12,18 +12,18 @@
     },
     {
       "bundle_path": "autopilot_mission.csv",
-      "sha256": "9189cd93204ddb505dba7b135a9bed0c81b745e8adfcb05d12ea9535bc46bd29",
-      "size_bytes": 2086
+      "sha256": "979b15c5eb219ec37da80b2a53e42709f1a3c97907b088e2408ed5219e72de6b",
+      "size_bytes": 2087
     },
     {
       "bundle_path": "evidence_bundle_summary.md",
-      "sha256": "6a4f35b2d6dbb55bc4e7c11cf12997e962749fe298cc443dc9f38f1d3bc08517",
-      "size_bytes": 6788
+      "sha256": "4afcdb5daa3606bb431c7108d68bc28a7f6efb8c5f9a39a951402309cd3661e4",
+      "size_bytes": 6694
     },
     {
       "bundle_path": "flight_path.png",
-      "sha256": "edba6e825e8ebbfc334172769fb444373c08968c23826e9ab841d1db36735002",
-      "size_bytes": 57053
+      "sha256": "854f989a0356a1b4121dec19952686c40f6d455998764ad14b7eb9198586b93d",
+      "size_bytes": 57304
     },
     {
       "bundle_path": "flight_planning_exports.json",
@@ -37,18 +37,18 @@
     },
     {
       "bundle_path": "inspection_constraint_audit.json",
-      "sha256": "2018495252cab68d3d002217375c4fe63f544bc5b69301895cad14e06d89b423",
-      "size_bytes": 50850
+      "sha256": "5b88d290d08d1e961417267ccf7e5599b2a6fc60997ff5c4d3a88198ed06b233",
+      "size_bytes": 50796
     },
     {
       "bundle_path": "inspection_constraint_audit.md",
-      "sha256": "e9dea4fa50bb1c45c13af8c454aada7cc983656eb7fff87e6757b23420db01b8",
-      "size_bytes": 17124
+      "sha256": "3d0036f03a00b33fcd53919e2ae6de10432197a8c743c572a8464f6b833a199d",
+      "size_bytes": 17215
     },
     {
       "bundle_path": "manifest.json",
-      "sha256": "e3cd720744ee580d3ce65b28c2d28f9e654266c976543c307e0a6f466a2654fc",
-      "size_bytes": 51234
+      "sha256": "cf98c12895439f8c90a7355b93ff195345c417b727c40dcd33ab483ba608e729",
+      "size_bytes": 51325
     },
     {
       "bundle_path": "mission_review.kml",
@@ -57,23 +57,23 @@
     },
     {
       "bundle_path": "operator_dashboard.md",
-      "sha256": "e257c83edc07610fa5c0ebcb0a4a2119905f08b3ab36856ffce04866ecb923e9",
-      "size_bytes": 16068
+      "sha256": "81d0f3ebed44d8185cc9acbea21319cd8fb02a1ec35869bb5db1541bc6d46723",
+      "size_bytes": 15851
     },
     {
       "bundle_path": "operator_memo.md",
-      "sha256": "0a01dd2eccd98f400c243dbf18e62e193bc1ea0142a97124be084bcf49d80570",
-      "size_bytes": 2127
+      "sha256": "50ecbfbb972140df5e0773bc3c65138348127023d3e6963323212a1bf763f267",
+      "size_bytes": 2031
     },
     {
       "bundle_path": "operator_review_ui.html",
-      "sha256": "19fc292bcd9e074f1f7eeecaca6f80ffde1f9ddc54a107eaf493373354392e1d",
-      "size_bytes": 142271
+      "sha256": "75951c083369223491666c88e0ea614ac57a3e4c93d3c5442439e88acb14a445",
+      "size_bytes": 150682
     },
     {
       "bundle_path": "plan.json",
-      "sha256": "622dd764b3b1ca3b8d4a0e4db035dab77298f3c7c63307ba522f843089daafa8",
-      "size_bytes": 2542
+      "sha256": "12fd5384163a3da20a984dc7468b92fab211524e9f862d89148c34b565c86797",
+      "size_bytes": 2543
     },
     {
       "bundle_path": "README.md",
@@ -82,12 +82,12 @@
     },
     {
       "bundle_path": "regulatory_readiness_report.json",
-      "sha256": "a83de4f37add9116f01973e843dc957579f88463e7bb29755c53c88550161119",
-      "size_bytes": 11230
+      "sha256": "b1b9a28cee7d0d6f533be23460bd3a95cdf6438527196fbdae50cda03fdc1155",
+      "size_bytes": 10917
     },
     {
       "bundle_path": "regulatory_readiness_report.md",
-      "sha256": "3dc309b5016b06e81a375c14d98c7e6504ee353c83b608e15748fb37a8da3fe4",
+      "sha256": "8b344fd31322c2d0a0605574b7f7fefc8c6703c70219d062f74570a230a65c11",
       "size_bytes": 5953
     },
     {
@@ -102,8 +102,8 @@
     },
     {
       "bundle_path": "score.json",
-      "sha256": "e3cb2a7098d4fe8716cd7fcadab220bd74b4f525b5f645b5ff0f2231548e1d10",
-      "size_bytes": 1119
+      "sha256": "e992b73fffaeafc9187dcb7bd5c8fef750948835c1d6750d2408750c4dbba1e0",
+      "size_bytes": 1069
     },
     {
       "bundle_path": "weather.json",
@@ -112,13 +112,13 @@
     },
     {
       "bundle_path": "what_if_plan.json",
-      "sha256": "03e9abda42d20b469093fa8c1a90565323640556d1ad73de8005213031ffbc61",
-      "size_bytes": 63529
+      "sha256": "9854c04ec13bda8c445ee4c7356aff51827cdcc670bae86871377402fc3b9828",
+      "size_bytes": 64082
     },
     {
       "bundle_path": "what_if_plan.md",
-      "sha256": "163f7e2475d12eed2e8c8698d5ef1f13fcb7392a75a37fa9d5731cff05dd8685",
-      "size_bytes": 2791
+      "sha256": "43dd3a9b96949eda3eefc25673000a8231c10aa97836c4dc41494888ed7e0fc1",
+      "size_bytes": 2912
     }
   ]
 }

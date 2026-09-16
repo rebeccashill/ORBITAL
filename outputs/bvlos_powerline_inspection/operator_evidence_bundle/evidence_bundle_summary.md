@@ -13,10 +13,10 @@ Reviewer: not provided
 Review timestamp UTC: not provided
 Operator decision: pending operator review
 Review notes: Demo bundle ready for operator review; final approval remains outside ORBITAL.
-Generated timestamp UTC: 2026-09-15T11:27:12Z
-ORBITAL version: 1.0.15
+Generated timestamp UTC: 2026-09-15T05:24:50Z
+ORBITAL version: 1.0.16
 Scenario SHA-256: dd3aa6749c6aee97d6e60dfaef6954677e660aa6bb93d9ea75eb843f241f308c
-Command used: python -m mission_framework.cli examples\bvlos_powerline_inspection_demo.yaml --outdir outputs
+Command used: python -m mission_framework.cli examples\bvlos_powerline_inspection_demo.yaml --iterations 5 --restarts 1 --robustness 0 --seed 0 --generated-at 2026-09-15T05:24:50Z --outdir outputs
 Manifest version: 1
 UI schema version: 1
 
@@ -36,7 +36,7 @@ ORBITAL evidence bundles are decision-support packages. Bundle completeness, rev
 | Weather evidence | STALE | Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field conditions. |
 | Regulatory provenance | STALE | Refresh regulatory evidence checks before relying on this bundle for review. Operator should verify regulatory inputs. |
 | Checksum evidence | VERIFY REQUIRED | Run bundle checksum verification after generation and before archiving or sharing the evidence bundle. |
-| Robustness | PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139. Confidence from configured robustness cases is scenario-limited and should be reviewed against operator uncertainty assumptions. | Review uncertainty assumptions before release. |
+| Robustness | No robustness cases were recorded for this bundle. Confidence from uncertainty testing is not estimated. | Review uncertainty assumptions before release. |
 | Evidence warnings | REVIEW REQUIRED: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 2 bundle warning(s) | Check stale, missing, or mismatched evidence before archiving. |
 | Review status | ready for review | Current operator review state. |
 | Operator decision | pending operator review | Documentation-only review outcome. |
@@ -44,10 +44,10 @@ ORBITAL evidence bundles are decision-support packages. Bundle completeness, rev
 ## Trust And Defensibility
 
 - Sample data / demo scenario note: Sample data / demo scenario: this bundle uses demonstration planning inputs, including offline or sample weather where configured. Replace route, weather, regulatory, crew, and customer evidence before operational use. Operator should verify sample data outside ORBITAL.
-- Weather evidence readiness: STALE: weather evidence is 91.5 hours old, outside the 2-hour review window. Source: offline Open-Meteo-shaped sample; timestamp: 2026-09-11T16:00:00Z.
-- Regulatory evidence provenance: STALE: regulatory evidence was checked 91.7 hours old, outside the 24-hour review window. Source: Operator-provided example authority source for documentation-only demo; checked: 2026-09-11T15:45:00Z; expiration: 2026-12-31; authority: FAA / LAANC provider placeholder; confirmation: pending_operator_confirmation.
+- Weather evidence readiness: STALE: weather evidence is 85.4 hours old, outside the 2-hour review window. Source: offline Open-Meteo-shaped sample; timestamp: 2026-09-11T16:00:00Z.
+- Regulatory evidence provenance: STALE: regulatory evidence was checked 85.7 hours old, outside the 24-hour review window. Source: Operator-provided example authority source for documentation-only demo; checked: 2026-09-11T15:45:00Z; expiration: 2026-12-31; authority: FAA / LAANC provider placeholder; confirmation: pending_operator_confirmation.
 - Checksum evidence readiness: Checksum manifest is generated with the bundle; verification must be run against the final archived files.
-- Uncertainty / robustness status: PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139. Confidence from configured robustness cases is scenario-limited and should be reviewed against operator uncertainty assumptions.
+- Uncertainty / robustness status: No robustness cases were recorded for this bundle. Confidence from uncertainty testing is not estimated.
 - Stale or missing evidence status: REVIEW REQUIRED: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 2 bundle warning(s)
 
 ## Start Here

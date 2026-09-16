@@ -24,6 +24,7 @@ import csv
 import hashlib
 import json
 import math
+import os
 import subprocess
 from copy import deepcopy
 from datetime import datetime, timezone
@@ -2665,6 +2666,19 @@ def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
+def normalize_generated_timestamp(value: Optional[Any] = None) -> str:
+    """Return a normalized UTC timestamp for generated demo artifacts."""
+    if value is None or str(value).strip() == "":
+        return _utc_now_iso()
+    parsed = _parse_utc_datetime(value)
+    if parsed is None:
+        raise ValueError(
+            "generated timestamp must be an ISO-8601 UTC timestamp, for example "
+            "2026-09-15T05:24:50Z"
+        )
+    return parsed.isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
 def _utc_from_timestamp(timestamp: float) -> str:
     return (
         datetime.fromtimestamp(timestamp, timezone.utc)
@@ -2700,6 +2714,29 @@ def _file_modified_timestamp(path: Path) -> Optional[float]:
         return float(path.stat().st_mtime)
     except OSError:
         return None
+
+
+def _generated_timestamp_epoch(generated_timestamp_utc: str) -> Optional[float]:
+    parsed = _parse_utc_datetime(generated_timestamp_utc)
+    return None if parsed is None else parsed.timestamp()
+
+
+def _touch_generated_file(path: Path, generated_timestamp_utc: str) -> None:
+    timestamp = _generated_timestamp_epoch(generated_timestamp_utc)
+    if timestamp is None:
+        return
+    try:
+        os.utime(path, (timestamp, timestamp))
+    except OSError:
+        return
+
+
+def _path_is_inside(child: Path, parent: Path) -> bool:
+    try:
+        child.resolve().relative_to(parent.resolve())
+        return True
+    except (OSError, ValueError):
+        return False
 
 
 def _orbital_version() -> str:
@@ -5941,13 +5978,14 @@ def export_operator_evidence_bundle(
     bundle_dir_name: str = "operator_evidence_bundle",
     cfg: Optional[Dict[str, Any]] = None,
     command_used: Optional[Any] = None,
+    generated_timestamp_utc: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Copy operator-facing BVLOS evidence artifacts into one review bundle."""
     out_dir = Path(out_dir)
     scenario_path = Path(scenario_path)
     bundle_dir = out_dir / bundle_dir_name
     bundle_dir.mkdir(parents=True, exist_ok=True)
-    generated_timestamp_utc = _utc_now_iso()
+    generated_timestamp_utc = normalize_generated_timestamp(generated_timestamp_utc)
     scenario_sha256 = _file_sha256(scenario_path)
     scenario_modified_ts = _file_modified_timestamp(scenario_path)
     weather = _weather_metadata(cfg)
@@ -6102,6 +6140,13 @@ def export_operator_evidence_bundle(
                 },
             ]
         )
+
+    for artifact in artifacts:
+        if artifact["id"] == "scenario_yaml":
+            continue
+        source = Path(artifact["source"])
+        if source.exists() and _path_is_inside(source, out_dir):
+            _touch_generated_file(source, generated_timestamp_utc)
 
     manifest_entries: List[Dict[str, Any]] = []
     for artifact in artifacts:
@@ -6259,7 +6304,9 @@ def export_operator_evidence_bundle(
             "operational clearance."
         ),
     }
-    write_strict_json(bundle_dir / "manifest.json", manifest)
+    manifest_path = bundle_dir / "manifest.json"
+    write_strict_json(manifest_path, manifest)
+    _touch_generated_file(manifest_path, generated_timestamp_utc)
 
     readme_lines = [
         "# ORBITAL Operator Evidence Bundle",
@@ -6421,33 +6468,44 @@ def export_operator_evidence_bundle(
             ]
         )
 
-    (bundle_dir / "README.md").write_text(
+    generated_bundle_paths = [
+        bundle_dir / "README.md",
+        bundle_dir / "evidence_bundle_summary.md",
+        bundle_dir / "operator_dashboard.md",
+        bundle_dir / "artifact_index.md",
+        bundle_dir / "operator_review_ui.html",
+    ]
+    generated_bundle_paths[0].write_text(
         "\n".join(readme_lines).rstrip() + "\n",
         encoding="utf-8",
     )
-    (bundle_dir / "evidence_bundle_summary.md").write_text(
+    generated_bundle_paths[1].write_text(
         _format_evidence_bundle_summary(manifest),
         encoding="utf-8",
     )
-    (bundle_dir / "operator_dashboard.md").write_text(
+    generated_bundle_paths[2].write_text(
         _format_operator_evidence_dashboard(manifest),
         encoding="utf-8",
     )
-    (bundle_dir / "artifact_index.md").write_text(
+    generated_bundle_paths[3].write_text(
         _format_artifact_index(manifest),
         encoding="utf-8",
     )
-    (bundle_dir / "operator_review_ui.html").write_text(
+    generated_bundle_paths[4].write_text(
         format_operator_review_ui_html(manifest),
         encoding="utf-8",
     )
+    for generated_path in generated_bundle_paths:
+        _touch_generated_file(generated_path, generated_timestamp_utc)
     checksum_payload = {
         "kind": "evidence_bundle_checksum_manifest",
         "algorithm": "sha256",
         "excludes": ["checksum_manifest.json"],
         "files": _bundle_checksum_entries(bundle_dir),
     }
-    write_strict_json(bundle_dir / "checksum_manifest.json", checksum_payload)
+    checksum_path = bundle_dir / "checksum_manifest.json"
+    write_strict_json(checksum_path, checksum_payload)
+    _touch_generated_file(checksum_path, generated_timestamp_utc)
     return manifest
 
 

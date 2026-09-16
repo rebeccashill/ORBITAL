@@ -453,6 +453,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path, monkeypatch):
         tmp_path,
         EXAMPLES_DIR / "bvlos_powerline_inspection_demo.yaml",
         cfg=cfg,
+        generated_timestamp_utc="2026-09-15T05:24:50Z",
     )
 
     assert evidence["kind"] == "operator_evidence_bundle"
@@ -500,7 +501,7 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path, monkeypatch):
     assert evidence["review_metadata"]["schema_version"] == 1
     assert evidence["review_metadata"]["status"] == "ready_for_review"
     assert evidence["review_metadata"]["operator_decision"] == "pending operator review"
-    assert evidence["freshness"]["generated_timestamp_utc"].endswith("Z")
+    assert evidence["freshness"]["generated_timestamp_utc"] == "2026-09-15T05:24:50Z"
     assert evidence["freshness"]["orbital_version"] != "unknown"
     assert evidence["freshness"]["scenario_hash"]["algorithm"] == "sha256"
     assert len(evidence["freshness"]["scenario_hash"]["value"]) == 64
@@ -515,6 +516,11 @@ def test_bvlos_powerline_demo_runs_end_to_end(tmp_path: Path, monkeypatch):
         == "pending_operator_confirmation"
     )
     assert evidence["checksum_evidence_readiness"]["status"] == "VERIFY REQUIRED"
+    plan_freshness = next(
+        artifact["freshness"] for artifact in evidence["artifacts"] if artifact["id"] == "plan_json"
+    )
+    assert plan_freshness["source_modified_utc"] == "2026-09-15T05:24:50Z"
+    assert plan_freshness["bundle_modified_utc"] == "2026-09-15T05:24:50Z"
     assert evidence["regulatory_metadata"]["laanc_required"] is True
     assert evidence["regulatory_metadata"]["waiver_or_authorization_required"] is True
     assert evidence["regulatory_metadata"]["airspace_class"] == "Class D"

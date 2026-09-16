@@ -5,6 +5,9 @@ import hashlib
 import json
 import os
 import re
+from html.parser import HTMLParser
+from typing import Any
+from urllib.parse import unquote, urlparse
 
 from mission_framework.reporting.flight_output import (
     _artifact_freshness_metadata,
@@ -18,6 +21,7 @@ from mission_framework.reporting.flight_output import (
     _regulatory_documentation_completeness,
     _regulatory_evidence_provenance,
     _weather_evidence_readiness,
+    normalize_generated_timestamp,
     verify_evidence_bundle_checksums,
 )
 from mission_framework.reporting.operator_review_ui import (
@@ -285,19 +289,84 @@ def _sample_operator_review_manifest(**updates) -> dict:
 
 
 def _embedded_manifest_snapshot(html: str) -> dict:
-    match = re.search(
-        r'<script type="application/json" id="manifest-snapshot">(.*?)</script>',
-        html,
-        re.S,
-    )
-    assert match is not None
-    return json.loads(match.group(1))
+    snapshot = _parse_operator_review_html(html).scripts_by_id.get("manifest-snapshot")
+    assert snapshot is not None
+    return json.loads(snapshot)
 
 
 def _rendered_verdict_label(html: str) -> str:
     match = re.search(r'data-field="verdict-label">([^<]+)</span>', html)
     assert match is not None
     return match.group(1)
+
+
+class _OperatorReviewHTMLParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.elements: list[dict[str, Any]] = []
+        self.elements_by_id: dict[str, dict[str, Any]] = {}
+        self.links: list[dict[str, Any]] = []
+        self.images: list[dict[str, Any]] = []
+        self.headings: list[tuple[int, str, dict[str, str]]] = []
+        self.scripts_by_id: dict[str, str] = {}
+        self.text_parts: list[str] = []
+        self._captures: list[dict[str, Any]] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attrs_dict = {name: value or "" for name, value in attrs}
+        element = {"tag": tag, "attrs": attrs_dict}
+        self.elements.append(element)
+        if element_id := attrs_dict.get("id"):
+            self.elements_by_id[element_id] = element
+        if tag == "a" and "href" in attrs_dict:
+            self.links.append(element)
+        if tag == "img" and "src" in attrs_dict:
+            self.images.append(element)
+        if tag in {"h1", "h2", "h3", "h4", "h5", "h6", "script"}:
+            self._captures.append({"tag": tag, "attrs": attrs_dict, "text": []})
+
+    def handle_data(self, data: str) -> None:
+        self.text_parts.append(data)
+        for capture in self._captures:
+            capture["text"].append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        for index in range(len(self._captures) - 1, -1, -1):
+            capture = self._captures[index]
+            if capture["tag"] != tag:
+                continue
+            raw_text = "".join(capture["text"])
+            if tag.startswith("h") and len(tag) == 2 and tag[1].isdigit():
+                heading_text = " ".join(raw_text.split())
+                self.headings.append((int(tag[1]), heading_text, capture["attrs"]))
+            elif tag == "script" and (script_id := capture["attrs"].get("id")):
+                self.scripts_by_id[script_id] = raw_text
+            del self._captures[index:]
+            break
+
+    @property
+    def text(self) -> str:
+        return " ".join("".join(self.text_parts).split())
+
+
+def _parse_operator_review_html(html: str) -> _OperatorReviewHTMLParser:
+    parser = _OperatorReviewHTMLParser()
+    parser.feed(html)
+    parser.close()
+    return parser
+
+
+def _class_names(element: dict[str, Any]) -> set[str]:
+    return set(str(element["attrs"].get("class", "")).split())
+
+
+def _local_review_target(value: str) -> str | None:
+    if value.startswith("#") or value.startswith("data:"):
+        return None
+    parsed = urlparse(value)
+    if parsed.scheme or parsed.netloc:
+        return None
+    return unquote(parsed.path).replace("\\", "/")
 
 
 def test_operator_review_ui_verdict_derivation_covers_all_release_paths() -> None:
@@ -473,6 +542,11 @@ def test_artifact_freshness_metadata_handles_missing_and_scenario_artifacts(tmp_
     assert missing_freshness["source_sha256"] is None
     assert missing_freshness["bundle_sha256"] is None
     assert missing_freshness["stale_against_scenario"] is False
+
+
+def test_normalize_generated_timestamp_supports_fixed_demo_clock() -> None:
+    assert normalize_generated_timestamp("2026-09-15T05:24:50Z") == "2026-09-15T05:24:50Z"
+    assert normalize_generated_timestamp("2026-09-15T01:24:50-04:00") == ("2026-09-15T05:24:50Z")
 
 
 def test_weather_evidence_readiness_distinguishes_stale_sample_and_live_weather() -> None:
@@ -1219,7 +1293,7 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "@page" in html
     assert "align-items: start;" in html
     assert "Artifacts present" in html
-    assert ".dashboard-sidebar {\n        order: 4;\n        display: block;" in html
+    assert ".dashboard-sidebar {\n        order: 5;\n        display: block;" in html
     assert ".review-sections {\n        display: block;" in html
     assert 'class="skip-link"' in html
     assert 'id="mission-verdict"' in html
@@ -1291,7 +1365,7 @@ def test_operator_review_ui_renders_first_screen_and_product_boundary() -> None:
     assert "Open first: first artifact to open" in html
     assert "Start here for the verdict, next action, and 30-second mission read." in html
     assert "outputs/bvlos_powerline_inspection/operator_evidence_bundle/manifest.json" in html
-    assert "Loading primary data from manifest.json" in html
+    assert "Preparing review data from embedded snapshot or manifest.json" in html
     assert "Loaded primary data from manifest.json" in html
     assert "Using embedded fallback snapshot" in html
     assert "Manifest JSON could not be loaded or parsed" in html
@@ -1354,6 +1428,7 @@ def test_operator_review_ui_embeds_manifest_loader_and_snapshot() -> None:
     html = format_operator_review_ui_html(manifest)
     snapshot = _embedded_manifest_snapshot(html)
 
+    assert snapshot == manifest
     assert snapshot["manifest_version"] == 1
     assert snapshot["ui_compatibility"]["schema_version"] == 1
     assert snapshot["constraint_audit"]["mission_id"] == "BVLOS Powerline Inspection Demo"
@@ -1364,7 +1439,141 @@ def test_operator_review_ui_embeds_manifest_loader_and_snapshot() -> None:
     assert 'const manifestUrl = "manifest.json";' in html
     assert 'fetch(manifestUrl, { cache: "no-store" })' in html
     assert "Loaded primary data from manifest.json. No backend database is required." in html
+    assert "Loaded embedded manifest snapshot." in html
     assert "Using embedded fallback snapshot" in html
+
+
+def test_operator_review_ui_html_structure_exposes_accessible_review_regions() -> None:
+    html = format_operator_review_ui_html(_sample_operator_review_manifest())
+    parsed = _parse_operator_review_html(html)
+
+    required_ids = {
+        "mission-verdict",
+        "review-sections",
+        "feasibility",
+        "regulatory-readiness",
+        "live-evidence-readiness",
+        "evidence-completeness",
+        "trust-defensibility",
+        "warnings",
+        "data-loading",
+        "artifact-navigation",
+        "operator-review-metadata",
+        "source-artifacts",
+        "checksum-review",
+        "raw-evidence-links",
+        "manifest-compatibility",
+    }
+    assert required_ids <= set(parsed.elements_by_id)
+
+    skip_links = [link for link in parsed.links if "skip-link" in _class_names(link)]
+    assert len(skip_links) == 1
+    assert skip_links[0]["attrs"]["href"] == "#review-sections"
+
+    review_stack = parsed.elements_by_id["review-sections"]
+    assert review_stack["tag"] == "section"
+    assert {"review-sections", "dashboard-review-sections"} <= _class_names(review_stack)
+
+    review_cards = [
+        element
+        for element in parsed.elements
+        if element["tag"] == "article" and "review-section" in _class_names(element)
+    ]
+    assert required_ids - {
+        "mission-verdict",
+        "review-sections",
+        "source-artifacts",
+        "checksum-review",
+        "raw-evidence-links",
+        "manifest-compatibility",
+    } <= {card["attrs"].get("id") for card in review_cards}
+    for card in review_cards:
+        assert card["attrs"].get("tabindex") == "0"
+        heading_id = card["attrs"].get("aria-labelledby")
+        assert heading_id in parsed.elements_by_id
+        assert parsed.elements_by_id[heading_id]["tag"] == "h2"
+
+    heading_levels = [level for level, _text, _attrs in parsed.headings]
+    assert heading_levels[0] == 1
+    assert all(
+        current <= previous + 1 for previous, current in zip(heading_levels, heading_levels[1:])
+    )
+    assert any(text.startswith("Mission Verdict:") for _level, text, _attrs in parsed.headings)
+    assert "Data Loading" in {text for _level, text, _attrs in parsed.headings}
+
+
+def test_operator_review_ui_artifact_links_follow_manifest_availability() -> None:
+    manifest = _sample_operator_review_manifest(
+        artifacts=[
+            {
+                "id": "flight_path_plot",
+                "label": "Flight path plot",
+                "bundle_path": "flight_path.png",
+                "present": False,
+            },
+            {
+                "id": "what_if_plan_markdown",
+                "label": "What-if planning report",
+                "bundle_path": "what_if_plan.md",
+                "present": False,
+            },
+            {
+                "id": "autopilot_mission_csv",
+                "label": "Autopilot mission CSV",
+                "bundle_path": "exports/autopilot mission.csv",
+                "present": True,
+            },
+        ],
+        generated_artifacts=[
+            {
+                "id": "operator_dashboard",
+                "label": "Operator evidence dashboard",
+                "bundle_path": "review files/operator dashboard.md",
+                "present": True,
+                "generated": True,
+            },
+            {
+                "id": "manifest_json",
+                "label": "Evidence bundle manifest",
+                "bundle_path": "manifest.json",
+                "present": True,
+                "generated": True,
+            },
+        ],
+    )
+    html = format_operator_review_ui_html(manifest)
+    parsed = _parse_operator_review_html(html)
+
+    artifact_entries = [
+        *manifest["artifacts"],
+        *manifest["generated_artifacts"],
+    ]
+    available_targets = {
+        str(entry["bundle_path"]).replace("\\", "/")
+        for entry in artifact_entries
+        if entry.get("present") and entry.get("bundle_path")
+    }
+    missing_targets = {
+        str(entry["bundle_path"]).replace("\\", "/")
+        for entry in artifact_entries
+        if not entry.get("present") and entry.get("bundle_path")
+    }
+    linked_targets = {
+        target
+        for value in [
+            *(link["attrs"]["href"] for link in parsed.links),
+            *(image["attrs"]["src"] for image in parsed.images),
+        ]
+        if (target := _local_review_target(value)) is not None
+    }
+
+    assert linked_targets <= available_targets
+    assert "review files/operator dashboard.md" in linked_targets
+    assert "exports/autopilot mission.csv" in linked_targets
+    assert linked_targets.isdisjoint(missing_targets)
+    assert "what_if_plan.md unavailable" in parsed.text
+    assert "flight_path.png unavailable" in parsed.text
+    assert "Route preview unavailable" in parsed.text
 
 
 def test_operator_review_ui_renders_freshness_and_provenance_fields() -> None:
@@ -1464,10 +1673,8 @@ def test_operator_review_ui_includes_malformed_manifest_fallback_handling() -> N
 
     assert "manifest.json returned HTTP " in html
     assert "await response.json()" in html
-    assert (
-        "Using embedded fallback snapshot because manifest.json could not be loaded or parsed"
-        in html
-    )
+    assert 'window.location.protocol === "file:"' in html
+    assert "Using embedded fallback snapshot; primary manifest.json was unavailable." in html
     assert (
         "Manifest JSON could not be loaded or parsed, and the embedded fallback snapshot "
         "is unavailable"

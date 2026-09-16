@@ -47,6 +47,20 @@ DEFAULT_BVLOS_REVIEW_BUNDLE = (
 OPERATOR_REVIEW_UI_FILE = "operator_review_ui.html"
 
 
+def _normalize_generated_at_for_cli(
+    value: Optional[str], parser: argparse.ArgumentParser
+) -> Optional[str]:
+    if not value:
+        return None
+    from mission_framework.reporting.flight_output import normalize_generated_timestamp
+
+    try:
+        return normalize_generated_timestamp(value)
+    except ValueError as exc:
+        parser.error(str(exc))
+    return None
+
+
 def _load_yaml(path: Path) -> Dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
         return yaml.safe_load(f)
@@ -591,6 +605,72 @@ def _bundle_serve_ui_command(argv: Sequence[str]) -> int:
     return 0
 
 
+def _bundle_ui_health_command(argv: Sequence[str]) -> int:
+    ap = argparse.ArgumentParser(
+        description=(
+            "Run the pre-release operator review UI layout, print, and accessibility health check."
+        )
+    )
+    ap.add_argument(
+        "bundle",
+        nargs="?",
+        default=str(DEFAULT_BVLOS_REVIEW_BUNDLE),
+        help=(
+            "Evidence bundle directory or manifest.json path. Defaults to the generated "
+            "BVLOS demo bundle."
+        ),
+    )
+    ap.add_argument(
+        "--outdir",
+        default=None,
+        help="Optional directory for transient screenshots and print PDF artifacts.",
+    )
+    ap.add_argument(
+        "--keep-artifacts",
+        action="store_true",
+        help="Keep screenshots and print PDF after a passing run.",
+    )
+    ap.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
+    args = ap.parse_args(list(argv))
+
+    bundle_dir = _resolve_bundle_dir(args.bundle)
+    ui_path = bundle_dir / OPERATOR_REVIEW_UI_FILE
+    if not bundle_dir.is_dir():
+        print(f"INVALID: evidence bundle directory not found: {bundle_dir}", file=sys.stderr)
+        return 2
+    if not ui_path.is_file():
+        print(f"INVALID: operator review UI not found: {ui_path}", file=sys.stderr)
+        return 2
+
+    repo_root = Path(__file__).resolve().parents[1]
+    checker = repo_root / "scripts" / "check_operator_review_ui_layout.js"
+    if not checker.is_file():
+        print(f"INVALID: UI health checker not found: {checker}", file=sys.stderr)
+        return 2
+
+    command = ["node", str(checker), "--bundle", str(bundle_dir)]
+    if args.outdir:
+        command.extend(["--outdir", str(args.outdir)])
+    if args.keep_artifacts:
+        command.append("--keep-artifacts")
+    if args.json:
+        command.append("--json")
+    elif sys.stdout.isatty():
+        print("=== ORBITAL Operator Review UI Health ===")
+        print(f"Bundle: {bundle_dir}")
+        print("Checking desktop, tablet, mobile, print/PDF, and accessibility layout...")
+
+    try:
+        result = subprocess.run(command, cwd=repo_root)
+    except FileNotFoundError:
+        print(
+            "INVALID: Node.js is required to run the UI health check.",
+            file=sys.stderr,
+        )
+        return 2
+    return result.returncode
+
+
 def _bundle_verdict_command(argv: Sequence[str]) -> int:
     ap = argparse.ArgumentParser(description="Print the mission verdict for an evidence bundle.")
     ap.add_argument("bundle", help="Evidence bundle directory or manifest.json path.")
@@ -911,6 +991,8 @@ BUNDLE_COMMANDS = {
     "serve-ui": _bundle_serve_ui_command,
     "bundle-serve": _bundle_serve_ui_command,
     "serve-bundle": _bundle_serve_ui_command,
+    "ui-health": _bundle_ui_health_command,
+    "operator-ui-health": _bundle_ui_health_command,
     "bundle-verdict": _bundle_verdict_command,
     "mission-verdict": _bundle_verdict_command,
     "verdict": _bundle_verdict_command,
@@ -1018,15 +1100,26 @@ def _batch_command(argv: Sequence[str]) -> int:
     ap.add_argument("--iterations", type=int, default=None, help="Override planner.iterations")
     ap.add_argument("--restarts", type=int, default=None, help="Override planner.restarts")
     ap.add_argument("--robustness", type=int, default=None, help="Override robustness.cases")
+    ap.add_argument(
+        "--generated-at",
+        default=None,
+        help=(
+            "Use a fixed ISO-8601 UTC timestamp for generated evidence metadata and "
+            "artifact freshness, e.g. 2026-09-15T05:24:50Z."
+        ),
+    )
     ap.add_argument("--seed", type=int, default=None, help="Override planner seed")
     ap.add_argument("--no-plots", action="store_true", help="Skip PNG plot generation")
     args = ap.parse_args(list(argv))
+    generated_at = _normalize_generated_at_for_cli(args.generated_at, ap)
 
     outdir = Path(args.outdir).resolve()
     rows: list[Dict[str, Any]] = []
     for scenario_yaml in args.scenario_yamls:
         scenario_path = Path(scenario_yaml).resolve()
         run_args = [str(scenario_path), "--outdir", str(outdir)]
+        if generated_at is not None:
+            run_args.extend(["--generated-at", generated_at])
         if args.iterations is not None:
             run_args.extend(["--iterations", str(args.iterations)])
         if args.restarts is not None:
@@ -1093,6 +1186,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         default=argparse.SUPPRESS,
         help=argparse.SUPPRESS,
     )
+    ap.add_argument(
+        "--generated-at",
+        default=None,
+        help=(
+            "Use a fixed ISO-8601 UTC timestamp for generated evidence metadata and "
+            "artifact freshness, e.g. 2026-09-15T05:24:50Z."
+        ),
+    )
     ap.add_argument("--seed", type=int, default=None, help="Random seed for reproducible runs")
     ap.add_argument(
         "-seed",
@@ -1111,6 +1212,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
 
     args = ap.parse_args(raw_args)
+    generated_at = _normalize_generated_at_for_cli(args.generated_at, ap)
     if args.seed is not None:
         import random
 
@@ -1389,6 +1491,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 scenario_path,
                 cfg=cfg,
                 command_used=command_used,
+                generated_timestamp_utc=generated_at,
             )
         except Exception as e:
             print(f"(operator evidence bundle skipped: {e})")

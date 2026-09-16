@@ -48,11 +48,11 @@ Mission risk: LOW
 
 | Group | Status | Margin | What ORBITAL checked | Why this matters | Recommended operator action |
 | --- | --- | ---: | --- | --- | --- |
-| Energy / battery reserve | PASS | 132.1 Wh | Checks whether the planned sortie lands with the operator-required battery reserve still available. | A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions. | Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch. |
+| Energy / battery reserve | PASS | 138.1 Wh | Checks whether the planned sortie lands with the operator-required battery reserve still available. | A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions. | Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch. |
 | Weather / wind margin | PASS | 3.1 m/s | Checks whether modeled or forecast wind stays below the configured safe operating limit. | Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem. | Confirm launch-time weather against operator minimums and keep the forecast source with the mission package. |
-| Geofence / no-fly-zone clearance | PASS | 276.7 m | Checks whether the route remains outside no-fly zones and preserves the configured stand-off buffer. | Geofence clearance protects people, assets, restricted areas, and customer boundaries when navigation or wind uncertainty appears. | Keep the geofence file and route review in the evidence bundle, then confirm site boundaries before flight. |
+| Geofence / no-fly-zone clearance | PASS | 266.0 m | Checks whether the route remains outside no-fly zones and preserves the configured stand-off buffer. | Geofence clearance protects people, assets, restricted areas, and customer boundaries when navigation or wind uncertainty appears. | Keep the geofence file and route review in the evidence bundle, then confirm site boundaries before flight. |
 | Route completion | PASS | 1.0 completion | Checks whether the candidate plan reaches all required inspection points. | Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field. | Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy. |
-| Turn / bank feasibility | PASS | 0.139 rad/s | Checks whether planned turns stay within configured bank-angle and turn-rate capability. | Overly aggressive turns can break route tracking, increase energy use, and reduce safety margins near assets or geofences. | Keep the planned speed and turn assumptions, then verify they match the aircraft operating envelope. |
+| Turn / bank feasibility | PASS | 0.236 rad/s | Checks whether planned turns stay within configured bank-angle and turn-rate capability. | Overly aggressive turns can break route tracking, increase energy use, and reduce safety margins near assets or geofences. | Keep the planned speed and turn assumptions, then verify they match the aircraft operating envelope. |
 
 ## Model Transparency
 
@@ -69,8 +69,8 @@ Mission risk: LOW
 | initial battery | 850.0 | Wh | initial_state.battery_Wh |
 | battery capacity | 900.0 | Wh | vehicle.battery_capacity_Wh |
 | required battery reserve | 700.0 | Wh | vehicle.battery_reserve_Wh |
-| final simulated battery | 832.0599780312521 | Wh | simulation.scalars.final_battery_Wh |
-| energy used | 17.940021968747942 | Wh | simulation.scalars.energy_used_Wh |
+| final simulated battery | 838.0941005976379 | Wh | simulation.scalars.final_battery_Wh |
+| energy used | 11.905899402362138 | Wh | simulation.scalars.energy_used_Wh |
 
 #### Wind / weather model
 
@@ -97,7 +97,7 @@ Mission risk: LOW
 | required clearance | 75.0 | m | geofence.clearance_m |
 | manual no-fly zones | 1 | zones | geofence.no_fly_zones |
 | GeoJSON geofence path | examples/geojson/bvlos_powerline_geofences.geojson |  | geofence.geojson_path |
-| minimum simulated clearance | 351.69524979477507 | m | simulation.scalars.geofence_min_clearance_m |
+| minimum simulated clearance | 341.00330512469594 | m | simulation.scalars.geofence_min_clearance_m |
 
 #### Route completion model
 
@@ -122,7 +122,7 @@ Mission risk: LOW
 | Input | Value | Unit | Source |
 | --- | ---: | --- | --- |
 | bank limit | 30.0 | deg | vehicle.bank_max_deg |
-| planned cruise speed | 27.407211792031063 | m/s | plan.metadata.cruise_speed_mps |
+| planned cruise speed | 14.907998572897315 | m/s | plan.metadata.cruise_speed_mps |
 | minimum airspeed | 12.0 | m/s | vehicle.min_speed_mps |
 | maximum airspeed | 28.0 | m/s | vehicle.max_speed_mps |
 
@@ -134,11 +134,11 @@ Mission risk: LOW
 
 | Input | Value | Unit | Source |
 | --- | ---: | --- | --- |
-| robustness cases configured | 20 | cases | robustness.cases |
-| robustness cases run | 20 | cases | robustness summary |
+| robustness cases configured | 0 | cases | robustness.cases |
+| robustness cases run | 0 | cases | robustness summary |
 | wind scale range | [0.8, 1.2] | multiplier | robustness.wind_scale_range |
 | battery variation | 0.05 | fraction | robustness.battery_variation_pct |
-| hard pass rate | 1.0 | ratio | robustness summary.hard_pass_rate |
+| hard pass rate | not provided | ratio | robustness summary.hard_pass_rate |
 
 ### Constraint Margin Units And Sources
 
@@ -153,13 +153,13 @@ Mission risk: LOW
 ### Reproducibility
 
 - Scenario path: examples/bvlos_powerline_inspection_demo.yaml
-- Seed: 7
-- Iterations: 300
+- Seed: 0
+- Iterations: 5
 - Restarts: 1
-- Robustness cases configured: 20
-- Robustness cases run: 20
-- Command: python -m mission_framework.cli examples\bvlos_powerline_inspection_demo.yaml --outdir outputs
-- ORBITAL version: 1.0.15
+- Robustness cases configured: 0
+- Robustness cases run: 0
+- Command: python -m mission_framework.cli examples\bvlos_powerline_inspection_demo.yaml --iterations 5 --restarts 1 --robustness 0 --seed 0 --generated-at 2026-09-15T05:24:50Z --outdir outputs
+- ORBITAL version: 1.0.16
 
 ### Model Limitations
 
@@ -207,7 +207,7 @@ Mission risk: LOW
 ## Top Three Risk Drivers
 
 - Wind / weather margin: PASS, margin 3.1 m/s, risk points 14.5
-- Battery reserve margin: PASS, margin 132.1 Wh, risk points 11.1
+- Battery reserve margin: PASS, margin 138.1 Wh, risk points 10.3
 - Route completion status: PASS, margin 1.0 completion, risk points 10.0
 
 ## Detailed Operator Review
@@ -219,9 +219,9 @@ Mission risk: LOW
 - Why this matters to an operator: A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.
 - Status: PASS
 - Status meaning: Modeled margin is above the configured review threshold.
-- Margin: 132.1 Wh
+- Margin: 138.1 Wh
 - Warning margin: 70.0 Wh
-- Observed evidence: final battery Wh: 832.1; required reserve Wh: 700.0
+- Observed evidence: final battery Wh: 838.1; required reserve Wh: 700.0
 - Recommended operator action: Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch.
 
 ### Wind / weather margin
@@ -243,9 +243,9 @@ Mission risk: LOW
 - Why this matters to an operator: Geofence clearance protects people, assets, restricted areas, and customer boundaries when navigation or wind uncertainty appears.
 - Status: PASS
 - Status meaning: Modeled margin is above the configured review threshold.
-- Margin: 276.7 m
+- Margin: 266.0 m
 - Warning margin: 25.0 m
-- Observed evidence: required clearance m: 75.0; min clearance m: 351.7; geofence violated: no
+- Observed evidence: required clearance m: 75.0; min clearance m: 341.0; geofence violated: no
 - Recommended operator action: Keep the geofence file and route review in the evidence bundle, then confirm site boundaries before flight.
 
 ### Route completion status
@@ -267,7 +267,7 @@ Mission risk: LOW
 - Why this matters to an operator: Overly aggressive turns can break route tracking, increase energy use, and reduce safety margins near assets or geofences.
 - Status: PASS
 - Status meaning: Modeled margin is above the configured review threshold.
-- Margin: 0.139 rad/s
+- Margin: 0.236 rad/s
 - Warning margin: 0.05 rad/s
 - Observed evidence: bank max deg: 30.0
 - Recommended operator action: Keep the planned speed and turn assumptions, then verify they match the aircraft operating envelope.

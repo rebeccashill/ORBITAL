@@ -7,7 +7,7 @@
 Constraint audits, what-if planning, regulatory readiness, and evidence bundles
 for drone inspection operators.
 
-Current release: `v1.0.15`
+Current release: `v1.0.16`
 
 > ORBITAL tells inspection teams whether a BVLOS mission is feasible before
 > they send a crew.
@@ -21,9 +21,10 @@ Current product focus: make ORBITAL's BVLOS evidence workflow faster to scan,
 clearer to demo, and more operator-friendly before customer-discovery and
 Foundry-readiness work.
 
-## What Improved In v1.0.15
+## What Improved In v1.0.16
 
-v1.0.15 makes the BVLOS operator demo easier to run, scan, print, and explain.
+v1.0.16 makes the BVLOS operator demo easier to run, scan, print, validate,
+and explain before customer discovery.
 
 - `run_all.py` now prints periodic "still running" progress while long demo
   commands execute, so optimization and robustness runs no longer look frozen
@@ -36,6 +37,16 @@ v1.0.15 makes the BVLOS operator demo easier to run, scan, print, and explain.
   coverage, artifacts present, missing evidence, and bundle warnings.
 - The print/demo view uses compact artifact freshness columns and block-based
   review sections to reduce empty space in PDF or customer-discovery printouts.
+- Demo generation accepts a fixed `--generated-at` timestamp so committed BVLOS
+  evidence outputs can stay deterministic when refreshing the bundle.
+- Operator review tests now parse the generated HTML structure, verify embedded
+  manifest JSON against `manifest.json`, and ensure artifact links point only
+  to available bundle files.
+- The operator review UI health check now covers 1366px, 1440px, 1920px,
+  tablet, mobile, print/PDF spacing, heading order, skip-link behavior,
+  keyboard focus, and color contrast.
+- `python -m mission_framework.cli ui-health` runs the pre-release layout and
+  accessibility check against a generated evidence bundle.
 - The generated BVLOS evidence bundle and checksum manifest are refreshed so
   `operator_review_ui.html` matches the current layout.
 
@@ -115,7 +126,7 @@ alternatives.
 
 For a presenter-ready BVLOS walkthrough, see the
 [BVLOS powerline demo script](docs/BVLOS_POWERLINE_DEMO_SCRIPT.md). The
-v1.0.15 operator review starts with
+v1.0.16 operator review starts with
 `outputs/bvlos_powerline_inspection/operator_evidence_bundle/operator_review_ui.html`;
 `operator_dashboard.md` remains the first source artifact to open from the raw
 evidence bundle.
@@ -294,7 +305,7 @@ database, accounts, auth, build step, or manual file copying is required.
 UI-first demo flow:
 
 1. Regenerate the demo bundle with
-   `python -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml --outdir outputs`.
+   `python -m mission_framework.cli examples/bvlos_powerline_inspection_demo.yaml --outdir outputs --generated-at 2026-09-15T05:24:50Z`.
 2. Launch the read-only local UI with `python -m mission_framework.cli serve-ui`
    and open the printed `operator_review_ui.html` URL.
 3. Follow the review order strip: verdict, top constraint, trust signals,
@@ -454,6 +465,7 @@ the full subprocess output in timestamped logs under `runs_logs/`.
 
 ```bash
 python scripts/focused_secret_scan.py
+python -m mission_framework.cli ui-health outputs/bvlos_powerline_inspection/operator_evidence_bundle
 python -m ruff check .
 python -m black --check .
 python -m mypy --python-version 3.12 mission_framework

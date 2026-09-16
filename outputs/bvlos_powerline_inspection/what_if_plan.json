@@ -6,16 +6,16 @@
     "label": "Current BVLOS plan",
     "feasible": true,
     "mission_risk": "low",
-    "score": 146.2790076890618,
+    "score": 224.16706479082674,
     "inspection_points": 6,
-    "estimated_time_s": 140.0,
-    "energy_used_Wh": 17.940021968747942,
-    "final_battery_Wh": 832.0599780312521,
-    "battery_reserve_margin_Wh": 132.05997803125206,
+    "estimated_time_s": 220.0,
+    "energy_used_Wh": 11.905899402362138,
+    "final_battery_Wh": 838.0941005976379,
+    "battery_reserve_margin_Wh": 138.09410059763786,
     "wind_weather_margin_mps": 3.0999999999999996,
-    "geofence_clearance_margin_m": 276.69524979477507,
+    "geofence_clearance_margin_m": 266.00330512469594,
     "route_completion_margin": 1.0,
-    "turn_bank_margin_radps": 0.1390076277875651
+    "turn_bank_margin_radps": 0.2364696406790953
   },
   "variants": [
     {
@@ -24,15 +24,15 @@
       "description": "Drop the final inspection points to compare a shorter sortie.",
       "feasible": true,
       "mission_risk": "low",
-      "score": 99.12424318975452,
-      "estimated_time_s": 95.0,
-      "energy_used_Wh": 11.783551970727217,
-      "final_battery_Wh": 838.2164480292728,
-      "battery_reserve_margin_Wh": 138.21644802927278,
+      "score": 118.50174696365752,
+      "estimated_time_s": 115.0,
+      "energy_used_Wh": 10.004991324735784,
+      "final_battery_Wh": 839.9950086752642,
+      "battery_reserve_margin_Wh": 139.99500867526422,
       "wind_weather_margin_mps": 3.0999999999999996,
-      "geofence_clearance_margin_m": 278.44267203228713,
+      "geofence_clearance_margin_m": 274.83220115368385,
       "route_completion_margin": 1.0,
-      "turn_bank_margin_radps": 0.1390076277875651,
+      "turn_bank_margin_radps": 0.1768863585410104,
       "top_limiting_constraint": {
         "id": "wind_weather",
         "label": "Wind / weather margin",
@@ -54,7 +54,7 @@
         },
         "risk_points": 14.500000000000002,
         "observed": {
-          "max_horizontal_wind_mps": 5.892330653515582,
+          "max_horizontal_wind_mps": 5.9,
           "weather_audit_wind_mps": 5.9,
           "max_safe_wind_mps": 9.0,
           "weather_source": "offline Open-Meteo-shaped sample",
@@ -92,7 +92,7 @@
           },
           "risk_points": 14.500000000000002,
           "observed": {
-            "max_horizontal_wind_mps": 5.892330653515582,
+            "max_horizontal_wind_mps": 5.9,
             "weather_audit_wind_mps": 5.9,
             "max_safe_wind_mps": 9.0,
             "weather_source": "offline Open-Meteo-shaped sample",
@@ -118,7 +118,7 @@
           "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
           "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
           "margin": {
-            "value": 138.21644802927278,
+            "value": 139.99500867526422,
             "unit": "Wh",
             "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
           },
@@ -127,9 +127,9 @@
             "unit": "Wh",
             "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
           },
-          "risk_points": 10.254793138675316,
+          "risk_points": 10.000713046390826,
           "observed": {
-            "final_battery_Wh": 838.2164480292728,
+            "final_battery_Wh": 839.9950086752642,
             "required_reserve_Wh": 700.0
           },
           "recommendation": "Reduce route length or plan a relaunch / battery swap.",
@@ -165,8 +165,8 @@
         }
       ],
       "delta_vs_baseline": {
-        "estimated_time_s": -45.0,
-        "energy_used_Wh": -6.156469998020725
+        "estimated_time_s": -105.0,
+        "energy_used_Wh": -1.9009080776263545
       }
     },
     {
@@ -316,8 +316,8 @@
         }
       ],
       "delta_vs_baseline": {
-        "estimated_time_s": 70.0,
-        "energy_used_Wh": -5.61058849048618
+        "estimated_time_s": -10.0,
+        "energy_used_Wh": 0.42353407589962444
       }
     },
     {
@@ -326,15 +326,15 @@
       "description": "Move launch closer to the first tower / inspection corridor.",
       "feasible": true,
       "mission_risk": "low",
-      "score": 188.32707290484865,
-      "estimated_time_s": 180.0,
-      "energy_used_Wh": 23.79163687099617,
-      "final_battery_Wh": 826.2083631290038,
-      "battery_reserve_margin_Wh": 126.20836312900383,
+      "score": 223.58736419783472,
+      "estimated_time_s": 220.0,
+      "energy_used_Wh": 10.24961199381346,
+      "final_battery_Wh": 839.7503880061865,
+      "battery_reserve_margin_Wh": 139.75038800618654,
       "wind_weather_margin_mps": 3.0999999999999996,
-      "geofence_clearance_margin_m": 277.2716101242169,
+      "geofence_clearance_margin_m": 288.85710726739,
       "route_completion_margin": 1.0,
-      "turn_bank_margin_radps": 0.10422106875706796,
+      "turn_bank_margin_radps": 0.25087603036332307,
       "top_limiting_constraint": {
         "id": "wind_weather",
         "label": "Wind / weather margin",
@@ -420,7 +420,7 @@
           "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
           "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
           "margin": {
-            "value": 126.20836312900383,
+            "value": 139.75038800618654,
             "unit": "Wh",
             "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
           },
@@ -429,160 +429,9 @@
             "unit": "Wh",
             "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
           },
-          "risk_points": 11.970233838713739,
+          "risk_points": 10.035658856259065,
           "observed": {
-            "final_battery_Wh": 826.2083631290038,
-            "required_reserve_Wh": 700.0
-          },
-          "recommendation": "Reduce route length or plan a relaunch / battery swap.",
-          "recommended_operator_action": "Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch."
-        },
-        {
-          "id": "route_completion",
-          "label": "Route completion status",
-          "category": "mission_completion",
-          "category_label": "Route completion",
-          "status": "pass",
-          "status_meaning": "Modeled margin is above the configured review threshold.",
-          "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
-          "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
-          "margin": {
-            "value": 1.0,
-            "unit": "completion",
-            "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
-          },
-          "warning_margin": {
-            "value": 0.5,
-            "unit": "completion",
-            "source": "fixed 0.5 completion warning band"
-          },
-          "risk_points": 10.000000000000002,
-          "observed": {
-            "waypoints_completed": 6.0,
-            "waypoints_total": 6.0,
-            "reached_all": true
-          },
-          "recommendation": "Split the inspection into shorter sorties.",
-          "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
-        }
-      ],
-      "delta_vs_baseline": {
-        "estimated_time_s": 40.0,
-        "energy_used_Wh": 5.8516149022482296
-      }
-    },
-    {
-      "id": "stronger_wind",
-      "label": "Stronger wind case",
-      "description": "Increase modeled wind components by 50 percent.",
-      "feasible": true,
-      "mission_risk": "low",
-      "score": 146.2798454441629,
-      "estimated_time_s": 140.0,
-      "energy_used_Wh": 17.942415554751165,
-      "final_battery_Wh": 832.0575844452488,
-      "battery_reserve_margin_Wh": 132.05758444524884,
-      "wind_weather_margin_mps": 3.0999999999999996,
-      "geofence_clearance_margin_m": 276.67234471030395,
-      "route_completion_margin": 1.0,
-      "turn_bank_margin_radps": 0.1390076277875651,
-      "top_limiting_constraint": {
-        "id": "wind_weather",
-        "label": "Wind / weather margin",
-        "category": "weather",
-        "category_label": "Weather / wind margin",
-        "status": "pass",
-        "status_meaning": "Modeled margin is above the configured review threshold.",
-        "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
-        "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
-        "margin": {
-          "value": 3.0999999999999996,
-          "unit": "m/s",
-          "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
-        },
-        "warning_margin": {
-          "value": 2.0,
-          "unit": "m/s",
-          "source": "wind.warning_margin_mps or default 2.0 m/s"
-        },
-        "risk_points": 14.500000000000002,
-        "observed": {
-          "max_horizontal_wind_mps": 5.9,
-          "weather_audit_wind_mps": 5.9,
-          "max_safe_wind_mps": 9.0,
-          "weather_source": "offline Open-Meteo-shaped sample",
-          "weather_timestamp_utc": "2026-09-11T16:00:00Z",
-          "weather_wind_speed_mps": 4.5,
-          "weather_wind_direction_deg": 285.0,
-          "weather_wind_gust_mps": 5.9,
-          "visibility_m": 16000.0,
-          "precipitation_mm": 0.0,
-          "temperature_C": 18.5,
-          "weather_fallback_used": true
-        },
-        "recommendation": "Wait for better wind or lower mission scope.",
-        "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
-      },
-      "top_three_risk_drivers": [
-        {
-          "id": "wind_weather",
-          "label": "Wind / weather margin",
-          "category": "weather",
-          "category_label": "Weather / wind margin",
-          "status": "pass",
-          "status_meaning": "Modeled margin is above the configured review threshold.",
-          "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
-          "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
-          "margin": {
-            "value": 3.0999999999999996,
-            "unit": "m/s",
-            "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
-          },
-          "warning_margin": {
-            "value": 2.0,
-            "unit": "m/s",
-            "source": "wind.warning_margin_mps or default 2.0 m/s"
-          },
-          "risk_points": 14.500000000000002,
-          "observed": {
-            "max_horizontal_wind_mps": 5.9,
-            "weather_audit_wind_mps": 5.9,
-            "max_safe_wind_mps": 9.0,
-            "weather_source": "offline Open-Meteo-shaped sample",
-            "weather_timestamp_utc": "2026-09-11T16:00:00Z",
-            "weather_wind_speed_mps": 4.5,
-            "weather_wind_direction_deg": 285.0,
-            "weather_wind_gust_mps": 5.9,
-            "visibility_m": 16000.0,
-            "precipitation_mm": 0.0,
-            "temperature_C": 18.5,
-            "weather_fallback_used": true
-          },
-          "recommendation": "Wait for better wind or lower mission scope.",
-          "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
-        },
-        {
-          "id": "battery_reserve",
-          "label": "Battery reserve margin",
-          "category": "energy",
-          "category_label": "Energy / battery reserve",
-          "status": "pass",
-          "status_meaning": "Modeled margin is above the configured review threshold.",
-          "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
-          "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
-          "margin": {
-            "value": 132.05758444524884,
-            "unit": "Wh",
-            "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
-          },
-          "warning_margin": {
-            "value": 70.0,
-            "unit": "Wh",
-            "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
-          },
-          "risk_points": 11.134630793535882,
-          "observed": {
-            "final_battery_Wh": 832.0575844452488,
+            "final_battery_Wh": 839.7503880061865,
             "required_reserve_Wh": 700.0
           },
           "recommendation": "Reduce route length or plan a relaunch / battery swap.",
@@ -619,7 +468,158 @@
       ],
       "delta_vs_baseline": {
         "estimated_time_s": 0.0,
-        "energy_used_Wh": 0.002393586003222481
+        "energy_used_Wh": -1.6562874085486783
+      }
+    },
+    {
+      "id": "stronger_wind",
+      "label": "Stronger wind case",
+      "description": "Increase modeled wind components by 50 percent.",
+      "feasible": true,
+      "mission_risk": "low",
+      "score": 155.91485661965584,
+      "estimated_time_s": 150.0,
+      "energy_used_Wh": 16.899590341873818,
+      "final_battery_Wh": 833.1004096581262,
+      "battery_reserve_margin_Wh": 133.10040965812618,
+      "wind_weather_margin_mps": 3.0999999999999996,
+      "geofence_clearance_margin_m": 251.947471813913,
+      "route_completion_margin": 1.0,
+      "turn_bank_margin_radps": 0.14561471747986546,
+      "top_limiting_constraint": {
+        "id": "wind_weather",
+        "label": "Wind / weather margin",
+        "category": "weather",
+        "category_label": "Weather / wind margin",
+        "status": "pass",
+        "status_meaning": "Modeled margin is above the configured review threshold.",
+        "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+        "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+        "margin": {
+          "value": 3.0999999999999996,
+          "unit": "m/s",
+          "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+        },
+        "warning_margin": {
+          "value": 2.0,
+          "unit": "m/s",
+          "source": "wind.warning_margin_mps or default 2.0 m/s"
+        },
+        "risk_points": 14.500000000000002,
+        "observed": {
+          "max_horizontal_wind_mps": 5.9,
+          "weather_audit_wind_mps": 5.9,
+          "max_safe_wind_mps": 9.0,
+          "weather_source": "offline Open-Meteo-shaped sample",
+          "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+          "weather_wind_speed_mps": 4.5,
+          "weather_wind_direction_deg": 285.0,
+          "weather_wind_gust_mps": 5.9,
+          "visibility_m": 16000.0,
+          "precipitation_mm": 0.0,
+          "temperature_C": 18.5,
+          "weather_fallback_used": true
+        },
+        "recommendation": "Wait for better wind or lower mission scope.",
+        "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+      },
+      "top_three_risk_drivers": [
+        {
+          "id": "wind_weather",
+          "label": "Wind / weather margin",
+          "category": "weather",
+          "category_label": "Weather / wind margin",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether modeled or forecast wind stays below the configured safe operating limit.",
+          "why_this_matters_to_operator": "Wind reduces endurance, increases tracking error, and can turn a feasible route into a recovery or containment problem.",
+          "margin": {
+            "value": 3.0999999999999996,
+            "unit": "m/s",
+            "source": "wind.max_safe_wind_mps minus the larger of simulation wind resources and weather.resolved wind speed or gust"
+          },
+          "warning_margin": {
+            "value": 2.0,
+            "unit": "m/s",
+            "source": "wind.warning_margin_mps or default 2.0 m/s"
+          },
+          "risk_points": 14.500000000000002,
+          "observed": {
+            "max_horizontal_wind_mps": 5.9,
+            "weather_audit_wind_mps": 5.9,
+            "max_safe_wind_mps": 9.0,
+            "weather_source": "offline Open-Meteo-shaped sample",
+            "weather_timestamp_utc": "2026-09-11T16:00:00Z",
+            "weather_wind_speed_mps": 4.5,
+            "weather_wind_direction_deg": 285.0,
+            "weather_wind_gust_mps": 5.9,
+            "visibility_m": 16000.0,
+            "precipitation_mm": 0.0,
+            "temperature_C": 18.5,
+            "weather_fallback_used": true
+          },
+          "recommendation": "Wait for better wind or lower mission scope.",
+          "recommended_operator_action": "Confirm launch-time weather against operator minimums and keep the forecast source with the mission package."
+        },
+        {
+          "id": "battery_reserve",
+          "label": "Battery reserve margin",
+          "category": "energy",
+          "category_label": "Energy / battery reserve",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
+          "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
+          "margin": {
+            "value": 133.10040965812618,
+            "unit": "Wh",
+            "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
+          },
+          "warning_margin": {
+            "value": 70.0,
+            "unit": "Wh",
+            "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
+          },
+          "risk_points": 10.98565576312483,
+          "observed": {
+            "final_battery_Wh": 833.1004096581262,
+            "required_reserve_Wh": 700.0
+          },
+          "recommendation": "Reduce route length or plan a relaunch / battery swap.",
+          "recommended_operator_action": "Keep the reserve assumption, confirm launch battery state, and brief abort reserve before dispatch."
+        },
+        {
+          "id": "route_completion",
+          "label": "Route completion status",
+          "category": "mission_completion",
+          "category_label": "Route completion",
+          "status": "pass",
+          "status_meaning": "Modeled margin is above the configured review threshold.",
+          "plain_english": "Checks whether the candidate plan reaches all required inspection points.",
+          "why_this_matters_to_operator": "Incomplete route coverage can waste a crew deployment and create pressure to improvise in the field.",
+          "margin": {
+            "value": 1.0,
+            "unit": "completion",
+            "source": "simulation.metadata.reached_all and simulation.scalars waypoint counts"
+          },
+          "warning_margin": {
+            "value": 0.5,
+            "unit": "completion",
+            "source": "fixed 0.5 completion warning band"
+          },
+          "risk_points": 10.000000000000002,
+          "observed": {
+            "waypoints_completed": 6.0,
+            "waypoints_total": 6.0,
+            "reached_all": true
+          },
+          "recommendation": "Split the inspection into shorter sorties.",
+          "recommended_operator_action": "Confirm the waypoint list matches the inspection scope and brief any acceptable skipped-point policy."
+        }
+      ],
+      "delta_vs_baseline": {
+        "estimated_time_s": -70.0,
+        "energy_used_Wh": 4.99369093951168
       }
     },
     {
@@ -628,13 +628,13 @@
       "description": "Increase the required final battery reserve.",
       "feasible": true,
       "mission_risk": "medium",
-      "score": 146.2951633898005,
+      "score": 146.48346804368194,
       "estimated_time_s": 140.0,
-      "energy_used_Wh": 17.986181113715702,
-      "final_battery_Wh": 832.0138188862843,
-      "battery_reserve_margin_Wh": 27.01381888628441,
+      "energy_used_Wh": 18.52419441051984,
+      "final_battery_Wh": 831.4758055894802,
+      "battery_reserve_margin_Wh": 26.475805589480274,
       "wind_weather_margin_mps": 3.0999999999999996,
-      "geofence_clearance_margin_m": 276.25179230165264,
+      "geofence_clearance_margin_m": 270.78325445857934,
       "route_completion_margin": 1.0,
       "turn_bank_margin_radps": 0.1390076277875651,
       "top_limiting_constraint": {
@@ -647,7 +647,7 @@
         "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
         "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
         "margin": {
-          "value": 27.01381888628441,
+          "value": 26.475805589480274,
           "unit": "Wh",
           "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
         },
@@ -656,9 +656,9 @@
           "unit": "Wh",
           "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
         },
-        "risk_points": 59.932738303248044,
+        "risk_points": 60.13324015298872,
         "observed": {
-          "final_battery_Wh": 832.0138188862843,
+          "final_battery_Wh": 831.4758055894802,
           "required_reserve_Wh": 804.9999999999999
         },
         "recommendation": "Reduce route length or plan a relaunch / battery swap.",
@@ -675,7 +675,7 @@
           "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
           "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
           "margin": {
-            "value": 27.01381888628441,
+            "value": 26.475805589480274,
             "unit": "Wh",
             "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
           },
@@ -684,9 +684,9 @@
             "unit": "Wh",
             "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
           },
-          "risk_points": 59.932738303248044,
+          "risk_points": 60.13324015298872,
           "observed": {
-            "final_battery_Wh": 832.0138188862843,
+            "final_battery_Wh": 831.4758055894802,
             "required_reserve_Wh": 804.9999999999999
           },
           "recommendation": "Reduce route length or plan a relaunch / battery swap.",
@@ -759,8 +759,8 @@
         }
       ],
       "delta_vs_baseline": {
-        "estimated_time_s": 0.0,
-        "energy_used_Wh": 0.04615914496775986
+        "estimated_time_s": -80.0,
+        "energy_used_Wh": 6.618295008157702
       }
     },
     {
@@ -769,15 +769,15 @@
       "description": "Split the route into two sorties with a fresh battery for the second leg.",
       "feasible": true,
       "mission_risk": "low",
-      "score": 155.8778982681432,
-      "estimated_time_s": 150.0,
-      "energy_used_Wh": 16.793995051837783,
-      "final_battery_Wh": 841.5808026449887,
-      "battery_reserve_margin_Wh": 141.5808026449887,
+      "score": 204.54313040882056,
+      "estimated_time_s": 200.0,
+      "energy_used_Wh": 12.980372596630218,
+      "final_battery_Wh": 843.3840089282708,
+      "battery_reserve_margin_Wh": 143.38400892827076,
       "wind_weather_margin_mps": 3.0999999999999996,
-      "geofence_clearance_margin_m": 162.23615642716717,
+      "geofence_clearance_margin_m": 181.45433694896673,
       "route_completion_margin": 1.0,
-      "turn_bank_margin_radps": 0.14363842080732245,
+      "turn_bank_margin_radps": 0.21328538118649562,
       "top_limiting_constraint": {
         "id": "wind_weather",
         "label": "Wind / weather margin",
@@ -799,7 +799,7 @@
         },
         "risk_points": 14.500000000000002,
         "observed": {
-          "max_horizontal_wind_mps": 5.858414016786395,
+          "max_horizontal_wind_mps": 5.899147157826734,
           "weather_audit_wind_mps": 5.9,
           "max_safe_wind_mps": 9.0,
           "weather_source": "offline Open-Meteo-shaped sample",
@@ -837,7 +837,7 @@
           },
           "risk_points": 14.500000000000002,
           "observed": {
-            "max_horizontal_wind_mps": 5.858414016786395,
+            "max_horizontal_wind_mps": 5.899147157826734,
             "weather_audit_wind_mps": 5.9,
             "max_safe_wind_mps": 9.0,
             "weather_source": "offline Open-Meteo-shaped sample",
@@ -891,7 +891,7 @@
           "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
           "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
           "margin": {
-            "value": 141.5808026449887,
+            "value": 143.38400892827076,
             "unit": "Wh",
             "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
           },
@@ -900,9 +900,9 @@
             "unit": "Wh",
             "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
           },
-          "risk_points": 9.7741710507159,
+          "risk_points": 9.516570153104176,
           "observed": {
-            "final_battery_Wh": 841.5808026449887,
+            "final_battery_Wh": 843.3840089282708,
             "required_reserve_Wh": 700.0
           },
           "recommendation": "Reduce route length or plan a relaunch / battery swap.",
@@ -916,15 +916,15 @@
           "description": "One sortie in a split-route battery swap option.",
           "feasible": true,
           "mission_risk": "low",
-          "score": 77.93117919388926,
-          "estimated_time_s": 75.0,
-          "energy_used_Wh": 8.374797696826477,
-          "final_battery_Wh": 841.6252023031735,
-          "battery_reserve_margin_Wh": 141.62520230317352,
+          "score": 107.22753353371535,
+          "estimated_time_s": 105.0,
+          "energy_used_Wh": 6.364381524900978,
+          "final_battery_Wh": 843.635618475099,
+          "battery_reserve_margin_Wh": 143.63561847509902,
           "wind_weather_margin_mps": 3.0999999999999996,
-          "geofence_clearance_margin_m": 342.8878861484889,
+          "geofence_clearance_margin_m": 325.93457940153587,
           "route_completion_margin": 1.0,
-          "turn_bank_margin_radps": 0.14406382842694823,
+          "turn_bank_margin_radps": 0.22673397630275952,
           "top_limiting_constraint": {
             "id": "wind_weather",
             "label": "Wind / weather margin",
@@ -946,7 +946,7 @@
             },
             "risk_points": 14.500000000000002,
             "observed": {
-              "max_horizontal_wind_mps": 5.858414016786395,
+              "max_horizontal_wind_mps": 5.899147157826734,
               "weather_audit_wind_mps": 5.9,
               "max_safe_wind_mps": 9.0,
               "weather_source": "offline Open-Meteo-shaped sample",
@@ -984,7 +984,7 @@
               },
               "risk_points": 14.500000000000002,
               "observed": {
-                "max_horizontal_wind_mps": 5.858414016786395,
+                "max_horizontal_wind_mps": 5.899147157826734,
                 "weather_audit_wind_mps": 5.9,
                 "max_safe_wind_mps": 9.0,
                 "weather_source": "offline Open-Meteo-shaped sample",
@@ -1038,7 +1038,7 @@
               "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
               "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
               "margin": {
-                "value": 141.62520230317352,
+                "value": 143.63561847509902,
                 "unit": "Wh",
                 "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
               },
@@ -1047,9 +1047,9 @@
                 "unit": "Wh",
                 "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
               },
-              "risk_points": 9.76782824240378,
+              "risk_points": 9.48062593212871,
               "observed": {
-                "final_battery_Wh": 841.6252023031735,
+                "final_battery_Wh": 843.635618475099,
                 "required_reserve_Wh": 700.0
               },
               "recommendation": "Reduce route length or plan a relaunch / battery swap.",
@@ -1057,8 +1057,8 @@
             }
           ],
           "delta_vs_baseline": {
-            "estimated_time_s": -65.0,
-            "energy_used_Wh": -9.565224271921466
+            "estimated_time_s": -115.0,
+            "energy_used_Wh": -5.54151787746116
           }
         },
         {
@@ -1067,15 +1067,15 @@
           "description": "One sortie in a split-route battery swap option.",
           "feasible": true,
           "mission_risk": "low",
-          "score": 77.94671907425396,
-          "estimated_time_s": 75.0,
-          "energy_used_Wh": 8.419197355011306,
-          "final_battery_Wh": 841.5808026449887,
-          "battery_reserve_margin_Wh": 141.5808026449887,
+          "score": 97.31559687510523,
+          "estimated_time_s": 95.0,
+          "energy_used_Wh": 6.6159910717292405,
+          "final_battery_Wh": 843.3840089282708,
+          "battery_reserve_margin_Wh": 143.38400892827076,
           "wind_weather_margin_mps": 3.0999999999999996,
-          "geofence_clearance_margin_m": 162.23615642716717,
+          "geofence_clearance_margin_m": 181.45433694896673,
           "route_completion_margin": 1.0,
-          "turn_bank_margin_radps": 0.14363842080732245,
+          "turn_bank_margin_radps": 0.21328538118649562,
           "top_limiting_constraint": {
             "id": "wind_weather",
             "label": "Wind / weather margin",
@@ -1097,7 +1097,7 @@
             },
             "risk_points": 14.500000000000002,
             "observed": {
-              "max_horizontal_wind_mps": 5.858414016786395,
+              "max_horizontal_wind_mps": 5.892330653515582,
               "weather_audit_wind_mps": 5.9,
               "max_safe_wind_mps": 9.0,
               "weather_source": "offline Open-Meteo-shaped sample",
@@ -1135,7 +1135,7 @@
               },
               "risk_points": 14.500000000000002,
               "observed": {
-                "max_horizontal_wind_mps": 5.858414016786395,
+                "max_horizontal_wind_mps": 5.892330653515582,
                 "weather_audit_wind_mps": 5.9,
                 "max_safe_wind_mps": 9.0,
                 "weather_source": "offline Open-Meteo-shaped sample",
@@ -1189,7 +1189,7 @@
               "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
               "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
               "margin": {
-                "value": 141.5808026449887,
+                "value": 143.38400892827076,
                 "unit": "Wh",
                 "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
               },
@@ -1198,9 +1198,9 @@
                 "unit": "Wh",
                 "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
               },
-              "risk_points": 9.7741710507159,
+              "risk_points": 9.516570153104176,
               "observed": {
-                "final_battery_Wh": 841.5808026449887,
+                "final_battery_Wh": 843.3840089282708,
                 "required_reserve_Wh": 700.0
               },
               "recommendation": "Reduce route length or plan a relaunch / battery swap.",
@@ -1208,14 +1208,14 @@
             }
           ],
           "delta_vs_baseline": {
-            "estimated_time_s": -65.0,
-            "energy_used_Wh": -9.520824613736636
+            "estimated_time_s": -125.0,
+            "energy_used_Wh": -5.289908330632898
           }
         }
       ],
       "delta_vs_baseline": {
-        "estimated_time_s": 10.0,
-        "energy_used_Wh": -1.1460269169101593
+        "estimated_time_s": -20.0,
+        "energy_used_Wh": 1.07447319426808
       }
     }
   ],
@@ -1229,17 +1229,17 @@
           "metric": "battery_reserve_margin_Wh",
           "label": "Battery reserve margin",
           "unit": "Wh",
-          "before": 132.05997803125206,
-          "after": 138.21644802927278,
-          "delta": 6.156469998020725
+          "before": 138.09410059763786,
+          "after": 139.99500867526422,
+          "delta": 1.9009080776263545
         },
         {
           "metric": "geofence_clearance_margin_m",
           "label": "Geofence clearance margin",
           "unit": "m",
-          "before": 276.69524979477507,
-          "after": 278.44267203228713,
-          "delta": 1.747422237512069
+          "before": 266.00330512469594,
+          "after": 274.83220115368385,
+          "delta": 8.828896028987913
         }
       ],
       "summary": "Improves battery reserve margin, and geofence clearance margin versus the baseline."
@@ -1250,31 +1250,23 @@
       "description": "Force a lower cruise speed to compare endurance and turn margin.",
       "improvements": [
         {
-          "metric": "battery_reserve_margin_Wh",
-          "label": "Battery reserve margin",
-          "unit": "Wh",
-          "before": 132.05997803125206,
-          "after": 137.67056652173824,
-          "delta": 5.61058849048618
-        },
-        {
           "metric": "geofence_clearance_margin_m",
           "label": "Geofence clearance margin",
           "unit": "m",
-          "before": 276.69524979477507,
+          "before": 266.00330512469594,
           "after": 284.3915548806467,
-          "delta": 7.696305085871643
+          "delta": 18.388249755950767
         },
         {
           "metric": "turn_bank_margin_radps",
           "label": "Turn / bank margin",
           "unit": "rad/s",
-          "before": 0.1390076277875651,
+          "before": 0.2364696406790953,
           "after": 0.2538670010842776,
-          "delta": 0.11485937329671253
+          "delta": 0.017397360405182333
         }
       ],
-      "summary": "Improves battery reserve margin, geofence clearance margin, and turn / bank margin versus the baseline."
+      "summary": "Improves geofence clearance margin, and turn / bank margin versus the baseline."
     },
     {
       "variant_id": "alternate_launch_point",
@@ -1282,12 +1274,44 @@
       "description": "Move launch closer to the first tower / inspection corridor.",
       "improvements": [
         {
+          "metric": "battery_reserve_margin_Wh",
+          "label": "Battery reserve margin",
+          "unit": "Wh",
+          "before": 138.09410059763786,
+          "after": 139.75038800618654,
+          "delta": 1.6562874085486783
+        },
+        {
           "metric": "geofence_clearance_margin_m",
           "label": "Geofence clearance margin",
           "unit": "m",
-          "before": 276.69524979477507,
-          "after": 277.2716101242169,
-          "delta": 0.5763603294418544
+          "before": 266.00330512469594,
+          "after": 288.85710726739,
+          "delta": 22.853802142694065
+        },
+        {
+          "metric": "turn_bank_margin_radps",
+          "label": "Turn / bank margin",
+          "unit": "rad/s",
+          "before": 0.2364696406790953,
+          "after": 0.25087603036332307,
+          "delta": 0.014406389684227777
+        }
+      ],
+      "summary": "Improves battery reserve margin, geofence clearance margin, and turn / bank margin versus the baseline."
+    },
+    {
+      "variant_id": "larger_battery_reserve",
+      "label": "Larger battery reserve requirement",
+      "description": "Increase the required final battery reserve.",
+      "improvements": [
+        {
+          "metric": "geofence_clearance_margin_m",
+          "label": "Geofence clearance margin",
+          "unit": "m",
+          "before": 266.00330512469594,
+          "after": 270.78325445857934,
+          "delta": 4.779949333883394
         }
       ],
       "summary": "Improves geofence clearance margin versus the baseline."
@@ -1301,20 +1325,12 @@
           "metric": "battery_reserve_margin_Wh",
           "label": "Battery reserve margin",
           "unit": "Wh",
-          "before": 132.05997803125206,
-          "after": 141.5808026449887,
-          "delta": 9.520824613736636
-        },
-        {
-          "metric": "turn_bank_margin_radps",
-          "label": "Turn / bank margin",
-          "unit": "rad/s",
-          "before": 0.1390076277875651,
-          "after": 0.14363842080732245,
-          "delta": 0.004630793019757357
+          "before": 138.09410059763786,
+          "after": 143.38400892827076,
+          "delta": 5.289908330632898
         }
       ],
-      "summary": "Improves battery reserve margin, and turn / bank margin versus the baseline."
+      "summary": "Improves battery reserve margin versus the baseline."
     }
   ]
 }

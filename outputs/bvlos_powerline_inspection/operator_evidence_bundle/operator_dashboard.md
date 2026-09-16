@@ -16,7 +16,7 @@ Review order: Verdict -> top constraint -> trust signals -> artifacts -> checksu
 | --- | --- |
 | Verdict | REVIEW REQUIRED - Complete the listed review items, confirm regulatory readiness outside ORBITAL, then record the operator decision. |
 | Top constraint | Wind / weather margin, PASS, margin 3.1 m/s |
-| Checksum / freshness | VERIFY REQUIRED; generated 2026-09-15T11:27:12Z; manifest version 1 |
+| Checksum / freshness | VERIFY REQUIRED; generated 2026-09-15T05:24:50Z; manifest version 1 |
 | Trust signals | Weather evidence, regulatory provenance, robustness, model assumptions, and evidence warnings. |
 | Artifacts | Open raw Markdown, JSON, CSV, KML, plots, manifest, and checksum links below. |
 | Checksum | Run bundle checksum verification before archiving or sharing. |
@@ -82,7 +82,7 @@ The verdict is REVIEW REQUIRED because modeled feasibility is GO but regulatory 
 | Regulatory date checked | 2026-09-11T15:45:00Z |
 | Regulatory expiration | 2026-12-31 |
 | Checksum evidence | VERIFY REQUIRED |
-| Robustness status | PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139. Confidence from configured robustness cases is scenario-limited and should be reviewed against operator uncertainty assumptions. |
+| Robustness status | No robustness cases were recorded for this bundle. Confidence from uncertainty testing is not estimated. |
 | Evidence warning status | REVIEW REQUIRED: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 2 bundle warning(s) |
 | Missing evidence | 0 item(s) |
 | Bundle warnings | 2 warning(s) |
@@ -102,10 +102,10 @@ ORBITAL provides decision support only: not approval, not authorization, not leg
 | Regulatory readiness | OPERATOR_ACTION_REQUIRED | Confirm required approvals, waivers, roles, and restrictions outside ORBITAL. |
 | Evidence completeness | 100.0 % (17 / 17 artifacts present) | Confirm expected artifacts are present before sharing. |
 | Regulatory documentation completeness | 100.0 % (11 / 11 fields documented) | Confirm optional evidence fields are documented where needed. |
-| Weather evidence | STALE: weather evidence is 91.5 hours old, outside the 2-hour review window. Source: offline Open-Meteo-shaped sample; timestamp: 2026-09-11T16:00:00Z. | Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field conditions. |
-| Regulatory provenance | STALE: regulatory evidence was checked 91.7 hours old, outside the 24-hour review window. Source: Operator-provided example authority source for documentation-only demo; checked: 2026-09-11T15:45:00Z; expiration: 2026-12-31; authority: FAA / LAANC provider placeholder; confirmation: pending_operator_confirmation. | Refresh regulatory evidence checks before relying on this bundle for review. Operator should verify regulatory inputs. |
+| Weather evidence | STALE: weather evidence is 85.4 hours old, outside the 2-hour review window. Source: offline Open-Meteo-shaped sample; timestamp: 2026-09-11T16:00:00Z. | Refresh weather evidence close to launch and keep the source timestamp with the evidence bundle. Operator should verify field conditions. |
+| Regulatory provenance | STALE: regulatory evidence was checked 85.7 hours old, outside the 24-hour review window. Source: Operator-provided example authority source for documentation-only demo; checked: 2026-09-11T15:45:00Z; expiration: 2026-12-31; authority: FAA / LAANC provider placeholder; confirmation: pending_operator_confirmation. | Refresh regulatory evidence checks before relying on this bundle for review. Operator should verify regulatory inputs. |
 | Checksum evidence | Checksum manifest is generated with the bundle; verification must be run against the final archived files. | Run bundle checksum verification after generation and before archiving or sharing the evidence bundle. |
-| Uncertainty / robustness | PASS: 20 case(s), hard pass rate 100.0 %, worst hard margin 0.139. Confidence from configured robustness cases is scenario-limited and should be reviewed against operator uncertainty assumptions. | Review robustness assumptions and rerun with scenario-specific uncertainty ranges if margins are close. |
+| Uncertainty / robustness | No robustness cases were recorded for this bundle. Confidence from uncertainty testing is not estimated. | Run robustness cases when uncertainty or margin sensitivity matters. |
 | Evidence warnings | REVIEW REQUIRED: 0 missing artifact(s), 0 stale artifact(s), 0 missing evidence item(s), 2 bundle warning(s) | Check stale, missing, or mismatched evidence before archiving. |
 
 ## Trust And Defensibility
@@ -160,13 +160,13 @@ Scan summary: 0 stale, 0 missing, 0 mismatched, 0 missing evidence item(s), 2 wa
 | Artifact | Status | Source timestamp | Bundle timestamp | Operator should verify |
 | --- | --- | --- | --- | --- |
 | Scenario YAML | CURRENT | 2026-09-13T19:48:39Z | 2026-09-13T19:48:39Z | Verify source timestamp and checksum before archiving. |
-| Primary constraint-audit report | CURRENT | 2026-09-15T11:27:10Z | 2026-09-15T11:27:10Z | Verify source timestamp and checksum before archiving. |
-| Regulatory readiness report | CURRENT | 2026-09-15T11:27:10Z | 2026-09-15T11:27:10Z | Verify source timestamp and checksum before archiving. |
-| What-if planning report | CURRENT | 2026-09-15T11:27:11Z | 2026-09-15T11:27:11Z | Verify source timestamp and checksum before archiving. |
-| Weather snapshot | CURRENT | 2026-09-15T11:27:12Z | 2026-09-15T11:27:12Z | Verify source timestamp and checksum before archiving. |
-| Autopilot mission CSV | CURRENT | 2026-09-15T11:27:12Z | 2026-09-15T11:27:12Z | Verify source timestamp and checksum before archiving. |
-| Mission review KML | CURRENT | 2026-09-15T11:27:12Z | 2026-09-15T11:27:12Z | Verify source timestamp and checksum before archiving. |
-| Flight-planning exports manifest | CURRENT | 2026-09-15T11:27:12Z | 2026-09-15T11:27:12Z | Verify source timestamp and checksum before archiving. |
+| Primary constraint-audit report | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Regulatory readiness report | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| What-if planning report | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Weather snapshot | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Autopilot mission CSV | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Mission review KML | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
+| Flight-planning exports manifest | CURRENT | 2026-09-15T05:24:50Z | 2026-09-15T05:24:50Z | Verify source timestamp and checksum before archiving. |
 
 Open `evidence_bundle_summary.md`, `manifest.json`, and `checksum_manifest.json` when any warning count is nonzero.
 

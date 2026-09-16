@@ -159,9 +159,9 @@
         "id": "battery_reserve",
         "label": "Battery reserve margin",
         "status": "pass",
-        "risk_points": 11.13428885267828,
+        "risk_points": 10.272271343194591,
         "margin": {
-          "value": 132.05997803125206,
+          "value": 138.09410059763786,
           "unit": "Wh",
           "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
         }
@@ -180,26 +180,26 @@
       },
       {
         "rank": 4,
-        "id": "turn_bank_feasibility",
-        "label": "Turn / bank feasibility",
-        "status": "pass",
-        "risk_points": 2.198474442486985,
-        "margin": {
-          "value": 0.1390076277875651,
-          "unit": "rad/s",
-          "source": "constraint_result.bank_angle_turn_limit.min_margin"
-        }
-      },
-      {
-        "rank": 5,
         "id": "geofence_clearance",
         "label": "Geofence / no-fly-zone clearance",
         "status": "pass",
         "risk_points": 0.0,
         "margin": {
-          "value": 276.69524979477507,
+          "value": 266.00330512469594,
           "unit": "m",
           "source": "constraint_result.geofence_clearance.min_margin with no-entry violation override from constraint_result.geofence_no_entry"
+        }
+      },
+      {
+        "rank": 5,
+        "id": "turn_bank_feasibility",
+        "label": "Turn / bank feasibility",
+        "status": "pass",
+        "risk_points": 0.0,
+        "margin": {
+          "value": 0.2364696406790953,
+          "unit": "rad/s",
+          "source": "constraint_result.bank_angle_turn_limit.min_margin"
         }
       }
     ]
@@ -252,7 +252,7 @@
       "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
       "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
       "margin": {
-        "value": 132.05997803125206,
+        "value": 138.09410059763786,
         "unit": "Wh",
         "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
       },
@@ -261,9 +261,9 @@
         "unit": "Wh",
         "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
       },
-      "risk_points": 11.13428885267828,
+      "risk_points": 10.272271343194591,
       "observed": {
-        "final_battery_Wh": 832.0599780312521,
+        "final_battery_Wh": 838.0941005976379,
         "required_reserve_Wh": 700.0
       },
       "recommendation": "Reduce route length or plan a relaunch / battery swap.",
@@ -309,7 +309,7 @@
       "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
       "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
       "margin": {
-        "value": 132.05997803125206,
+        "value": 138.09410059763786,
         "unit": "Wh",
         "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
       },
@@ -318,9 +318,9 @@
         "unit": "Wh",
         "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
       },
-      "risk_points": 11.13428885267828,
+      "risk_points": 10.272271343194591,
       "observed": {
-        "final_battery_Wh": 832.0599780312521,
+        "final_battery_Wh": 838.0941005976379,
         "required_reserve_Wh": 700.0
       },
       "recommendation": "Reduce route length or plan a relaunch / battery swap.",
@@ -373,7 +373,7 @@
       "plain_english": "Checks whether the route remains outside no-fly zones and preserves the configured stand-off buffer.",
       "why_this_matters_to_operator": "Geofence clearance protects people, assets, restricted areas, and customer boundaries when navigation or wind uncertainty appears.",
       "margin": {
-        "value": 276.69524979477507,
+        "value": 266.00330512469594,
         "unit": "m",
         "source": "constraint_result.geofence_clearance.min_margin with no-entry violation override from constraint_result.geofence_no_entry"
       },
@@ -385,7 +385,7 @@
       "risk_points": 0.0,
       "observed": {
         "required_clearance_m": 75.0,
-        "min_clearance_m": 351.69524979477507,
+        "min_clearance_m": 341.00330512469594,
         "geofence_violated": false
       },
       "recommendation": "Adjust route geometry or increase no-fly-zone clearance.",
@@ -429,7 +429,7 @@
       "plain_english": "Checks whether planned turns stay within configured bank-angle and turn-rate capability.",
       "why_this_matters_to_operator": "Overly aggressive turns can break route tracking, increase energy use, and reduce safety margins near assets or geofences.",
       "margin": {
-        "value": 0.1390076277875651,
+        "value": 0.2364696406790953,
         "unit": "rad/s",
         "source": "constraint_result.bank_angle_turn_limit.min_margin"
       },
@@ -438,7 +438,7 @@
         "unit": "rad/s",
         "source": "vehicle.turn_warning_margin_radps or default 0.05 rad/s"
       },
-      "risk_points": 2.198474442486985,
+      "risk_points": 0.0,
       "observed": {
         "bank_max_deg": 30.0
       },
@@ -457,7 +457,7 @@
       "plain_english": "Checks whether the planned sortie lands with the operator-required battery reserve still available.",
       "why_this_matters_to_operator": "A BVLOS inspection needs enough remaining energy for delay, diversion, recovery, and conservative abort decisions.",
       "margin": {
-        "value": 132.05997803125206,
+        "value": 138.09410059763786,
         "unit": "Wh",
         "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
       },
@@ -466,9 +466,9 @@
         "unit": "Wh",
         "source": "max(50 Wh, 10 percent of vehicle.battery_reserve_Wh)"
       },
-      "risk_points": 11.13428885267828,
+      "risk_points": 10.272271343194591,
       "observed": {
-        "final_battery_Wh": 832.0599780312521,
+        "final_battery_Wh": 838.0941005976379,
         "required_reserve_Wh": 700.0
       },
       "recommendation": "Reduce route length or plan a relaunch / battery swap.",
@@ -521,7 +521,7 @@
       "plain_english": "Checks whether the route remains outside no-fly zones and preserves the configured stand-off buffer.",
       "why_this_matters_to_operator": "Geofence clearance protects people, assets, restricted areas, and customer boundaries when navigation or wind uncertainty appears.",
       "margin": {
-        "value": 276.69524979477507,
+        "value": 266.00330512469594,
         "unit": "m",
         "source": "constraint_result.geofence_clearance.min_margin with no-entry violation override from constraint_result.geofence_no_entry"
       },
@@ -533,7 +533,7 @@
       "risk_points": 0.0,
       "observed": {
         "required_clearance_m": 75.0,
-        "min_clearance_m": 351.69524979477507,
+        "min_clearance_m": 341.00330512469594,
         "geofence_violated": false
       },
       "recommendation": "Adjust route geometry or increase no-fly-zone clearance.",
@@ -577,7 +577,7 @@
       "plain_english": "Checks whether planned turns stay within configured bank-angle and turn-rate capability.",
       "why_this_matters_to_operator": "Overly aggressive turns can break route tracking, increase energy use, and reduce safety margins near assets or geofences.",
       "margin": {
-        "value": 0.1390076277875651,
+        "value": 0.2364696406790953,
         "unit": "rad/s",
         "source": "constraint_result.bank_angle_turn_limit.min_margin"
       },
@@ -586,7 +586,7 @@
         "unit": "rad/s",
         "source": "vehicle.turn_warning_margin_radps or default 0.05 rad/s"
       },
-      "risk_points": 2.198474442486985,
+      "risk_points": 0.0,
       "observed": {
         "bank_max_deg": 30.0
       },
@@ -621,13 +621,13 @@
           },
           {
             "name": "final simulated battery",
-            "value": 832.0599780312521,
+            "value": 838.0941005976379,
             "unit": "Wh",
             "source": "simulation.scalars.final_battery_Wh"
           },
           {
             "name": "energy used",
-            "value": 17.940021968747942,
+            "value": 11.905899402362138,
             "unit": "Wh",
             "source": "simulation.scalars.energy_used_Wh"
           }
@@ -699,7 +699,7 @@
           },
           {
             "name": "minimum simulated clearance",
-            "value": 351.69524979477507,
+            "value": 341.00330512469594,
             "unit": "m",
             "source": "simulation.scalars.geofence_min_clearance_m"
           }
@@ -759,7 +759,7 @@
           },
           {
             "name": "planned cruise speed",
-            "value": 27.407211792031063,
+            "value": 14.907998572897315,
             "unit": "m/s",
             "source": "plan.metadata.cruise_speed_mps"
           },
@@ -786,13 +786,13 @@
         "inputs": [
           {
             "name": "robustness cases configured",
-            "value": 20,
+            "value": 0,
             "unit": "cases",
             "source": "robustness.cases"
           },
           {
             "name": "robustness cases run",
-            "value": 20,
+            "value": 0,
             "unit": "cases",
             "source": "robustness summary"
           },
@@ -813,7 +813,7 @@
           },
           {
             "name": "hard pass rate",
-            "value": 1.0,
+            "value": null,
             "unit": "ratio",
             "source": "robustness summary.hard_pass_rate"
           }
@@ -895,9 +895,9 @@
           "id": "battery_reserve",
           "label": "Battery reserve margin",
           "status": "pass",
-          "risk_points": 11.13428885267828,
+          "risk_points": 10.272271343194591,
           "margin": {
-            "value": 132.05997803125206,
+            "value": 138.09410059763786,
             "unit": "Wh",
             "source": "constraint_result.battery_reserve.min_margin with fallback to simulation.scalars.final_battery_Wh - vehicle.battery_reserve_Wh"
           }
@@ -916,49 +916,59 @@
         },
         {
           "rank": 4,
-          "id": "turn_bank_feasibility",
-          "label": "Turn / bank feasibility",
-          "status": "pass",
-          "risk_points": 2.198474442486985,
-          "margin": {
-            "value": 0.1390076277875651,
-            "unit": "rad/s",
-            "source": "constraint_result.bank_angle_turn_limit.min_margin"
-          }
-        },
-        {
-          "rank": 5,
           "id": "geofence_clearance",
           "label": "Geofence / no-fly-zone clearance",
           "status": "pass",
           "risk_points": 0.0,
           "margin": {
-            "value": 276.69524979477507,
+            "value": 266.00330512469594,
             "unit": "m",
             "source": "constraint_result.geofence_clearance.min_margin with no-entry violation override from constraint_result.geofence_no_entry"
+          }
+        },
+        {
+          "rank": 5,
+          "id": "turn_bank_feasibility",
+          "label": "Turn / bank feasibility",
+          "status": "pass",
+          "risk_points": 0.0,
+          "margin": {
+            "value": 0.2364696406790953,
+            "unit": "rad/s",
+            "source": "constraint_result.bank_angle_turn_limit.min_margin"
           }
         }
       ]
     },
     "reproducibility": {
       "scenario_path": "examples/bvlos_powerline_inspection_demo.yaml",
-      "seed": 7,
-      "iterations": 300,
+      "seed": 0,
+      "iterations": 5,
       "restarts": 1,
-      "robustness_cases_configured": 20,
-      "robustness_cases_run": 20,
+      "robustness_cases_configured": 0,
+      "robustness_cases_run": 0,
       "command": {
-        "display": "python -m mission_framework.cli examples\\bvlos_powerline_inspection_demo.yaml --outdir outputs",
+        "display": "python -m mission_framework.cli examples\\bvlos_powerline_inspection_demo.yaml --iterations 5 --restarts 1 --robustness 0 --seed 0 --generated-at 2026-09-15T05:24:50Z --outdir outputs",
         "argv": [
           "python",
           "-m",
           "mission_framework.cli",
           "examples\\bvlos_powerline_inspection_demo.yaml",
+          "--iterations",
+          "5",
+          "--restarts",
+          "1",
+          "--robustness",
+          "0",
+          "--seed",
+          "0",
+          "--generated-at",
+          "2026-09-15T05:24:50Z",
           "--outdir",
           "outputs"
         ]
       },
-      "orbital_version": "1.0.15"
+      "orbital_version": "1.0.16"
     },
     "model_limitations": [
       {
@@ -1004,13 +1014,13 @@
         },
         {
           "name": "final simulated battery",
-          "value": 832.0599780312521,
+          "value": 838.0941005976379,
           "unit": "Wh",
           "source": "simulation.scalars.final_battery_Wh"
         },
         {
           "name": "energy used",
-          "value": 17.940021968747942,
+          "value": 11.905899402362138,
           "unit": "Wh",
           "source": "simulation.scalars.energy_used_Wh"
         }
@@ -1082,7 +1092,7 @@
         },
         {
           "name": "minimum simulated clearance",
-          "value": 351.69524979477507,
+          "value": 341.00330512469594,
           "unit": "m",
           "source": "simulation.scalars.geofence_min_clearance_m"
         }
@@ -1142,7 +1152,7 @@
         },
         {
           "name": "planned cruise speed",
-          "value": 27.407211792031063,
+          "value": 14.907998572897315,
           "unit": "m/s",
           "source": "plan.metadata.cruise_speed_mps"
         },
@@ -1169,13 +1179,13 @@
       "inputs": [
         {
           "name": "robustness cases configured",
-          "value": 20,
+          "value": 0,
           "unit": "cases",
           "source": "robustness.cases"
         },
         {
           "name": "robustness cases run",
-          "value": 20,
+          "value": 0,
           "unit": "cases",
           "source": "robustness summary"
         },
@@ -1196,7 +1206,7 @@
         },
         {
           "name": "hard pass rate",
-          "value": 1.0,
+          "value": null,
           "unit": "ratio",
           "source": "robustness summary.hard_pass_rate"
         }
@@ -1205,21 +1215,11 @@
       "operator_review_note": "Increase robustness cases or add scenario-specific uncertainty ranges when margin sensitivity matters."
     }
   ],
-  "robustness": {
-    "cases": 20,
-    "hard_pass_rate": 1.0,
-    "worst_hard_margin_min": 0.1390076277875651,
-    "robust_aggregation": "mean",
-    "cvar_alpha": null,
-    "robust_score": 146.2790076890618,
-    "mean_score": 146.2790076890618,
-    "p50_score": 146.27900768906179,
-    "p90_score": 146.27900768906179
-  },
+  "robustness": {},
   "summary": {
     "hard_constraints_pass": true,
     "inspection_points": 6,
-    "estimated_time_s": 140.0,
-    "energy_used_Wh": 17.940021968747942
+    "estimated_time_s": 220.0,
+    "energy_used_Wh": 11.905899402362138
   }
 }

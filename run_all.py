@@ -5,7 +5,6 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-
 PROGRESS_INTERVAL_SECONDS = 15
 
 

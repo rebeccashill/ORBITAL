@@ -1,5 +1,36 @@
 # Release Notes
 
+## v1.0.16 - September 15, 2026
+
+### Changed
+
+- Bumped package, README, and generated BVLOS evidence metadata to `v1.0.16`.
+- Added deterministic demo-output generation with `--generated-at` and refreshed
+  the committed BVLOS bundle with a fixed release timestamp.
+- Refactored the operator review UI into smaller Python, CSS, and JavaScript
+  helpers while preserving the generated single-file review page.
+- Tightened Weather / Live Evidence, Evidence Completeness, Trust /
+  Defensibility, and Warnings card density with compact grids and collapsed
+  detail sections for longer provenance and warning notes.
+- Expanded responsive UI validation across 1366px, 1440px, 1920px, tablet,
+  mobile, and print/PDF review views.
+- Added parsed-HTML tests for generated UI structure, artifact link targets,
+  embedded manifest JSON parity with `manifest.json`, and accessible review
+  regions.
+- Added `python -m mission_framework.cli ui-health` as the lightweight
+  pre-release operator review layout and accessibility health check.
+
+### Verified
+
+- Ran `python -m ruff check .`.
+- Ran `python -m black --check .`.
+- Ran `python -m pytest tests\test_evidence_bundle_reporting.py tests\test_cli_contract.py`.
+- Ran `python -m pytest`.
+- Ran `python -m mypy --python-version 3.12 mission_framework`.
+- Ran `python scripts\focused_secret_scan.py`.
+- Ran `python -m mission_framework.cli bundle-verify outputs\bvlos_powerline_inspection\operator_evidence_bundle`.
+- Ran `python -m mission_framework.cli ui-health outputs\bvlos_powerline_inspection\operator_evidence_bundle --json`.
+
 ## v1.0.15 - September 15, 2026
 
 ### Changed
